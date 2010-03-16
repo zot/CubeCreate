@@ -1,7 +1,9 @@
-Tutorial: Making a Game, Quickly
-================================
+Tutorial: Making a Game, Quickly (Locally/Standalone)
+=====================================================
 
 The Intensity Engine lets you play multiplayer games, and even **create** them in a multiplayer, networked way. However, if your goal is to make a singleplayer game, or you don't want to run with a master server, or you just want to create your game locally, then this tutorial will show you how to get up and running fast.
+
+(The other way to do this is to use a master server, which lets multiple people work together on creating content easily, has a user account system, assets, etc. For that, see README-standalone.txt)
 
 Preparations:
 
@@ -36,9 +38,9 @@ Inside mygame/, which has been created, you can now begin to set up your game co
 
 Into mygame/packages/base/mymap/, place the contents of master_django/intensity/tracker/fixtures/emptymap.tar.gz. That archive contains files for an empty map. So, your mymap/ folder should now contain the following:
 
-    * entities.json
-    * map.js
-    * map.ogz
+* entities.json
+* map.js
+* map.ogz
 
 Let's run the map. Run the client again if you closed it, with the same command as before, and tell the server_runner plugin to run **mymap**. You should now be inside the map, which doesn't contain anything interesting yet. You can enter edit mode and start building the map.
 
@@ -52,7 +54,7 @@ After doing some changes, you can save them using the server_runner plugin. In t
 Advanced Topics
 ---------------
 
-    * You can use a server plugin that calls set_map to switch to another map, when the player completes the current one. For something similar see the map_control plugin in src/python/intensity/components, and see packages/library/1_3/mapscripts/swarm.js for a map that uses it (search for signalComponent).
+* You can use a server plugin that calls set_map to switch to another map, when the player completes the current one. For something similar see the map_control plugin in src/python/intensity/components, and see packages/library/1_3/mapscripts/swarm.js for a map that uses it (search for signalComponent).
 
 TODO: Expand on these
 
