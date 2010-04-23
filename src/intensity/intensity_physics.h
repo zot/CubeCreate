@@ -115,7 +115,7 @@ namespace PhysicsManager
     extern void setupWorldGeometryVerts(vector<vertex>& verts);
 
     //! Sets up a submesh for a group of tris, all using the same material
-    extern void setupWorldGeometryTriGroup(usvector& data, int tex, int lightmapTex, int orientation);
+    extern void setupWorldGeometryTriGroup(vector<ushort>& data, int tex, int lightmapTex, int orientation);
 
     //! After presenting vertexes and a series of trigroups using those vertexes, create a mesh, if necessary
     extern void finishWorldGeometryVerts();

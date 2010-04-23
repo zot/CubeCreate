@@ -64,10 +64,7 @@ void CharacterRendering::render(fpsent* entity)
 
     // INTENSITY: Class above head in edit mode
     if (editmode)
-    {
-        std::string _class = '@' + logicEntity.get()->getClass(); // '@' makes Sauer create a copy
-        particle_text(entity->abovehead(), _class.c_str(), 16, 1);
-    }
+        particle_textcopy(entity->abovehead(), logicEntity.get()->getClass().c_str(), 16, 1);
 
     Logging::log(Logging::INFO, "CharacterRendering::render complete.\r\n");
 }

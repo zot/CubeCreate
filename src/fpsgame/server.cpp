@@ -58,7 +58,7 @@ namespace server
 
     struct clientinfo
     {
-        int clientnum;
+        int clientnum, overflow;
 
         std::string username; // Kripken: DV username. Is "" when not logged in
         int         uniqueId; // Kripken: Unique ID in the current module of this client
@@ -70,19 +70,29 @@ namespace server
         int gameoffset, lastevent;
         gamestate state;
         vector<uchar> position, messages; // Kripken: These are buffers for channels 0 (positions) and 1 (normal messages)
+        ENetPacket *clipboard;
+        int lastclipboard, needclipboard;
 
         //! The current scenario being run by the client
         bool runningCurrentScenario;
 
-        clientinfo() { reset(); }
+        clientinfo() : clipboard(NULL) { reset(); }
+        ~clientinfo() { cleanclipboard(); }
 
         void mapchange()
         {
             state.reset();
             timesync = false;
             lastevent = 0;
+            overflow = 0;
 
             runningCurrentScenario = false;
+        }
+
+        void cleanclipboard(bool fullclean = true)
+        {
+            if(clipboard) { if(--clipboard->referenceCount <= 0) enet_packet_destroy(clipboard); clipboard = NULL; }
+            if(fullclean) lastclipboard = 0;
         }
 
         void reset()
@@ -94,8 +104,10 @@ namespace server
             name[0] = team[0] = 0;
             privilege = PRIV_NONE;
             connected = spectator = local = wantsmaster = false;
-            position.setsizenodelete(0);
-            messages.setsizenodelete(0);
+            position.setsize(0);
+            messages.setsize(0);
+            needclipboard = 0;
+            cleanclipboard();
             mapchange();
         }
     };
@@ -232,7 +244,7 @@ namespace server
     void deleteinfo(void *ci) { delete (clientinfo *)ci; } 
     int getUniqueIdFromInfo(void *ci) { return ((clientinfo *)ci)->uniqueId; }
 
-    void sendservmsg(const char *s) { sendf(-1, 1, "ris", SV_SERVMSG, s); }
+    void sendservmsg(const char *s) { sendf(-1, 1, "ris", N_SERVMSG, s); }
 
     void resetitems() 
     { 
@@ -270,7 +282,7 @@ namespace server
 #if 0
         // other message types can get sent by accident if a master forces spectator on someone, so disabling this case for now and checking for spectator state in message handlers
         // spectators can only connect and talk
-        static int spectypes[] = { SV_INITC2S, SV_POS, SV_TEXT, SV_PING, SV_CLIENTPING, SV_GETMAP, SV_SETMASTER };
+        static int spectypes[] = { N_INITC2S, N_POS, N_TEXT, N_PING, N_CLIENTPING, N_GETMAP, N_SETMASTER };
         if(ci && ci->state.state==CS_SPECTATOR && !ci->privilege)
         {
             loopi(sizeof(spectypes)/sizeof(int)) if(type == spectypes[i]) return type;
@@ -278,13 +290,23 @@ namespace server
         }
 #endif
         // only allow edit messages in coop-edit mode
-//        if(type>=SV_EDITENT && type<=SV_GETMAP && gamemode!=1) return -1; // Kripken: FIXME: For now, allowing editing all the time
+//        if(type>=N_EDITENT && type<=N_GETMAP && gamemode!=1) return -1; // Kripken: FIXME: For now, allowing editing all the time
         // server only messages
-        static int servtypes[] = { SV_SERVINFO, SV_INITCLIENT, SV_WELCOME, SV_MAPRELOAD, SV_SERVMSG, SV_DAMAGE, SV_HITPUSH, SV_SHOTFX, SV_DIED, SV_SPAWNSTATE, SV_FORCEDEATH, SV_ITEMACC, SV_ITEMSPAWN, SV_TIMEUP, SV_CDIS, SV_CURRENTMASTER, SV_PONG, SV_RESUME, SV_BASESCORE, SV_BASEINFO, SV_BASEREGEN, SV_ANNOUNCE, SV_SENDDEMOLIST, SV_SENDDEMO, SV_DEMOPLAYBACK, SV_SENDMAP, SV_DROPFLAG, SV_SCOREFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_INVISFLAG, SV_CLIENT, SV_AUTHCHAL, SV_INITAI };
-        if(ci) loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i])
+        static const int servtypes[] = { N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPRELOAD, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTFX, N_DIED, N_SPAWNSTATE, N_FORCEDEATH, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_BASESCORE, N_BASEINFO, N_BASEREGEN, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_INVISFLAG, N_CLIENT, N_AUTHCHAL, N_INITAI };
+        if(ci)
         {
-            Logging::log(Logging::ERROR, "checktype has decided to return -1 for %d\r\n", type);
-            return -1;
+            loopi(sizeof(servtypes)/sizeof(int))
+            {
+                if(type == servtypes[i])
+                {
+                    Logging::log(Logging::ERROR, "checktype has decided to return -1 for %d\r\n", type);
+                    return -1;
+                }
+            }
+            if(type < N_EDITENT || type > N_EDITVAR || !editmode) 
+            {
+                if(++ci->overflow >= 200) return -2;
+            }
         }
         return type;
     }
@@ -313,15 +335,16 @@ namespace server
         loopv(clients)
         {
             clientinfo &ci = *clients[i];
+            ci.overflow = 0;
 
             if(ci.position.empty()) pkt[i].posoff = -1;
             else
             {
-                Logging::log(Logging::INFO, "SERVER: prepping relayed SV_POS data for sending %d, size: %d\r\n", ci.clientnum,
+                Logging::log(Logging::INFO, "SERVER: prepping relayed N_POS data for sending %d, size: %d\r\n", ci.clientnum,
                              ci.position.length());
 
                 pkt[i].posoff = ws.positions.length();
-                loopvj(ci.position) ws.positions.add(ci.position[j]);
+                ws.positions.put(ci.position.getbuf(), ci.position.length());
             }
 
             if(ci.messages.empty())
@@ -329,12 +352,10 @@ namespace server
             else
             {
                 pkt[i].msgoff = ws.messages.length();
-                ucharbuf p = ws.messages.reserve(16);
-                putint(p, SV_CLIENT);
-                putint(p, ci.clientnum);
-                putuint(p, ci.messages.length());
-                ws.messages.addbuf(p);
-                loopvj(ci.messages) ws.messages.add(ci.messages[j]);
+                putint(ws.messages, N_CLIENT);
+                putint(ws.messages, ci.clientnum);
+                putuint(ws.messages, ci.messages.length());
+                ws.messages.put(ci.messages.getbuf(), ci.messages.length());
                 pkt[i].msglen = ws.messages.length() - pkt[i].msgoff;
             }
         }
@@ -342,10 +363,20 @@ namespace server
         Logging::log(Logging::INFO, "SERVER: prepping sum of relayed data for sending, size: %d,%d\r\n", ws.positions.length(), ws.messages.length());
 
         int psize = ws.positions.length(), msize = ws.messages.length();
-//        if(psize) recordpacket(0, ws.positions.getbuf(), psize);
-//        if(msize) recordpacket(1, ws.messages.getbuf(), msize);
-        loopi(psize) { uchar c = ws.positions[i]; ws.positions.add(c); }
-        loopi(msize) { uchar c = ws.messages[i]; ws.messages.add(c); }
+        if(psize)
+        {
+            //recordpacket(0, ws.positions.getbuf(), psize);
+            ucharbuf p = ws.positions.reserve(psize);
+            p.put(ws.positions.getbuf(), psize);
+            ws.positions.addbuf(p);
+        }
+        if(msize)
+        {
+            //recordpacket(1, ws.messages.getbuf(), msize);
+            ucharbuf p = ws.messages.reserve(msize);
+            p.put(ws.messages.getbuf(), msize);
+            ws.messages.addbuf(p);
+        }
         ws.uses = 0;
 
         loopv(clients)
@@ -399,8 +430,8 @@ namespace server
             // Kripken: Do this, if we sent to this client or if not - either way. Note that the only reason 
             // Sauer does this in this loop and not elsewhere is so that we can do the index trickery above to prevent
             // relaying back to the same client
-            ci.position.setsizenodelete(0);
-            ci.messages.setsizenodelete(0); // Kripken: Client's relayed messages have been processed; clear them
+            ci.position.setsize(0);
+            ci.messages.setsize(0); // Kripken: Client's relayed messages have been processed; clear them
         }
 
         reliablemessages = false;
@@ -416,14 +447,29 @@ namespace server
         }
     }
 
-    bool sendpackets()
+    bool sendpackets(bool force)
     {
         if(clients.empty()) return false;
         enet_uint32 curtime = enet_time_get()-lastsend;
-        if(curtime<33) return false; // kripken: Server sends packets at most every 33ms? FIXME: fast rate, we might slow or dynamic this
+        if(curtime<33 && !force) return false; // kripken: Server sends packets at most every 33ms? FIXME: fast rate, we might slow or dynamic this
         bool flush = buildworldstate();
         lastsend += curtime - (curtime%33);
         return flush;
+    }
+
+    void sendclipboard(clientinfo *ci)
+    {
+        if(!ci->lastclipboard || !ci->clipboard) return;
+        bool flushed = false;
+        loopv(clients)
+        {
+            clientinfo &e = *clients[i];
+            if(e.clientnum != ci->clientnum && e.needclipboard >= ci->lastclipboard)
+            {
+                if(!flushed) { flushserver(true); flushed = true; }
+                sendpacket(e.clientnum, 1, ci->clipboard);
+            }
+        }
     }
 
     void parsepacket(int sender, int chan, packetbuf &p)     // has to parse exactly each byte of the packet
@@ -447,18 +493,16 @@ namespace server
         // Note that it puts the message in the messages for the current client. This is apparently what prevents
         // the client from getting it back.
         #define QUEUE_MSG { if(ci->uniqueId == DUMMY_SINGLETON_CLIENT_UNIQUE_ID || !ci->local) while(curmsg<p.length()) ci->messages.add(p.buf[curmsg++]); } // Kripken: We need to send messages through the dummy singleton
-        #define QUEUE_BUF(size, body) { \
+        #define QUEUE_BUF(body) { \
             if(!ci->local) \
             { \
                 curmsg = p.length(); \
-                ucharbuf buf = ci->messages.reserve(size); \
                 { body; } \
-                ci->messages.addbuf(buf); \
             } \
         }
-        #define QUEUE_INT(n) QUEUE_BUF(5, putint(buf, n))
-        #define QUEUE_UINT(n) QUEUE_BUF(4, putuint(buf, n))
-        #define QUEUE_STR(text) QUEUE_BUF(2*strlen(text)+1, sendstring(text, buf))
+        #define QUEUE_INT(n) QUEUE_BUF(putint(ci->messages, n))
+        #define QUEUE_UINT(n) QUEUE_BUF(putuint(ci->messages, n))
+        #define QUEUE_STR(text) QUEUE_BUF(sendstring(text, ci->messages))
         int curmsg;
         while((curmsg = p.length()) < p.maxlen)
         {
@@ -466,7 +510,7 @@ namespace server
           Logging::log(Logging::INFO, "Server: Parsing a message of type %d\r\n", type);
           switch(type)
           { // Kripken: Mangling sauer indentation as little as possible
-            case SV_POS: // Kripken: position update for a client
+            case N_POS: // Kripken: position update for a client
             {
                 NetworkSystem::PositionUpdater::QuantizedInfo info;
                 info.generateFrom(p);
@@ -487,7 +531,7 @@ namespace server
                 //if(!ci->local) // Kripken: We relay even our local clients, PCs need to hear about NPC positions
                 // && (ci->state.state==CS_ALIVE || ci->state.state==CS_EDITING)) // Kripken: We handle death differently
                 {
-                    Logging::log(Logging::INFO, "SERVER: relaying SV_POS data for client %d\r\n", cn);
+                    Logging::log(Logging::INFO, "SERVER: relaying N_POS data for client %d\r\n", cn);
 
                     // Modify the info depending on various server parameters
                     NetworkSystem::PositionUpdater::processServerPositionReception(info);
@@ -497,7 +541,7 @@ namespace server
                     unsigned char* data = new unsigned char[maxLength];
                     ucharbuf temp(data, maxLength);
                     info.applyToBuffer(temp);
-                    ci->position.setsizenodelete(0);
+                    ci->position.setsize(0);
                     loopk(temp.length()) ci->position.add(temp.buf[k]);
                     delete[] data;
                 }
@@ -505,7 +549,7 @@ namespace server
                 break;
             }
 
-            case SV_TEXT:
+            case N_TEXT:
             {
                 getstring(text, p);
                 filtertext(text, text);
@@ -526,16 +570,58 @@ namespace server
                 break;
             }
 
-            case SV_PING:
-                sendf(sender, 1, "i2", SV_PONG, getint(p));
+            case N_PING:
+                sendf(sender, 1, "i2", N_PONG, getint(p));
                 break;
 
-            case SV_CLIENTPING:
+            case N_CLIENTPING:
                 getint(p);
 //                QUEUE_MSG; // Kripken: Do not let clients know other clients' pings
                 break;
 
-            default:
+            case N_COPY:
+                ci->cleanclipboard();
+                ci->lastclipboard = totalmillis;
+                goto genericmsg;
+
+            case N_PASTE:
+                if(ci->state.state!=CS_SPECTATOR) sendclipboard(ci);
+                goto genericmsg;
+    
+            case N_CLIPBOARD:
+            {
+                int unpacklen = getint(p), packlen = getint(p); 
+                ci->cleanclipboard(false);
+                if(ci->state.state==CS_SPECTATOR)
+                {
+                    if(packlen > 0) p.subbuf(packlen);
+                    break;
+                }
+                if(packlen <= 0 || packlen > (1<<16) || unpacklen <= 0) 
+                {
+                    if(packlen > 0) p.subbuf(packlen);
+                    packlen = unpacklen = 0;
+                }
+                packetbuf q(32 + packlen, ENET_PACKET_FLAG_RELIABLE);
+                putint(q, N_CLIPBOARD);
+                putint(q, ci->clientnum);
+                putint(q, unpacklen);
+                putint(q, packlen); 
+                if(packlen > 0) p.get(q.subbuf(packlen).buf, packlen);
+                ci->clipboard = q.finalize();
+                ci->clipboard->referenceCount++;
+                break;
+            } 
+
+            case -1:
+                disconnect_client(sender, DISC_TAGT);
+                return;
+
+            case -2:
+                disconnect_client(sender, DISC_OVERFLOW);
+                return;
+
+            default: genericmsg:
             {
                 Logging::log(Logging::DEBUG, "Server: Handling a non-typical message: %d\r\n", type);
                 if (!MessageSystem::MessageManager::receive(type, -1, sender, p))
@@ -543,8 +629,8 @@ namespace server
                     Logging::log(Logging::DEBUG, "Relaying Sauer protocol message: %d\r\n", type);
 
                     int size = msgsizelookup(type);
-                    if(size==-1) { disconnect_client(sender, DISC_TAGT); return; }
-                    if(size>0) loopi(size-1) getint(p);
+                    if(size<=0) { disconnect_client(sender, DISC_TAGT); return; }
+                    loopi(size-1) getint(p);
 
                     if ( !isRunningCurrentScenario(sender) ) break; // Silently ignore info from previous scenario
 
@@ -587,6 +673,7 @@ namespace server
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
         ci->clientnum = n;
+        ci->needclipboard = totalmillis;
         ci->local = true;
 
         clients.add(ci);
@@ -728,6 +815,7 @@ if (i == 0) {
 */
         clientinfo *ci = (clientinfo *)getinfo(n);
         ci->clientnum = n;
+        ci->needclipboard = totalmillis;
         clients.add(ci);
 
 //        FPSClientInterface::newClient(n); // INTENSITY: Also connect to the server's internal client - XXX NO - do in parallel to client
@@ -798,28 +886,28 @@ if (i == 0) {
         // Kripken: Moved here from game.h, to prevent warnings
         static int msgsizes[] =               // size inclusive message token, 0 for variable or not-checked sizes
         {
-            SV_CONNECT, 0, SV_SERVINFO, 5, SV_WELCOME, 2, SV_INITCLIENT, 0, SV_POS, 0, SV_TEXT, 0, SV_SOUND, 2, SV_CDIS, 2,
-            SV_SHOOT, 0, SV_EXPLODE, 0, SV_SUICIDE, 1,
-            SV_DIED, 4, SV_DAMAGE, 6, SV_HITPUSH, 7, SV_SHOTFX, 9,
-            SV_TRYSPAWN, 1, SV_SPAWNSTATE, 14, SV_SPAWN, 3, SV_FORCEDEATH, 2,
-            SV_GUNSELECT, 2, SV_TAUNT, 1,
-            SV_MAPCHANGE, 0, SV_MAPVOTE, 0, SV_ITEMSPAWN, 2, SV_ITEMPICKUP, 2, SV_ITEMACC, 3,
-            SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
-            SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_FORCEINTERMISSION, 1,
-            SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
-            SV_EDITMODE, 2, SV_EDITENT, 11, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 16, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0, SV_EDITVAR, 0,
-            SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0,
-            SV_BASES, 0, SV_BASEINFO, 0, SV_BASESCORE, 0, SV_REPAMMO, 1, SV_BASEREGEN, 6, SV_ANNOUNCE, 2,
-            SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
-            SV_DEMOPLAYBACK, 3, SV_RECORDDEMO, 2, SV_STOPDEMO, 1, SV_CLEARDEMOS, 2,
-            SV_TAKEFLAG, 2, SV_RETURNFLAG, 3, SV_RESETFLAG, 4, SV_INVISFLAG, 3, SV_TRYDROPFLAG, 1, SV_DROPFLAG, 6, SV_SCOREFLAG, 6, SV_INITFLAGS, 6,
-            SV_SAYTEAM, 0,
-            SV_CLIENT, 0,
-            SV_AUTHTRY, 0, SV_AUTHCHAL, 0, SV_AUTHANS, 0, SV_REQAUTH, 0,
-            SV_PAUSEGAME, 2,
-            SV_ADDBOT, 2, SV_DELBOT, 1, SV_INITAI, 0, SV_FROMAI, 2, SV_BOTLIMIT, 2, SV_BOTBALANCE, 2,
-            SV_MAPCRC, 0, SV_CHECKMAPS, 1,
-            SV_SWITCHNAME, 0, SV_SWITCHMODEL, 2, SV_SWITCHTEAM, 0,
+            N_CONNECT, 0, N_SERVINFO, 5, N_WELCOME, 2, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 2, N_CDIS, 2,
+            N_SHOOT, 0, N_EXPLODE, 0, N_SUICIDE, 1,
+            N_DIED, 4, N_DAMAGE, 6, N_HITPUSH, 7, N_SHOTFX, 9,
+            N_TRYSPAWN, 1, N_SPAWNSTATE, 14, N_SPAWN, 3, N_FORCEDEATH, 2,
+            N_GUNSELECT, 2, N_TAUNT, 1,
+            N_MAPCHANGE, 0, N_MAPVOTE, 0, N_ITEMSPAWN, 2, N_ITEMPICKUP, 2, N_ITEMACC, 3,
+            N_PING, 2, N_PONG, 2, N_CLIENTPING, 2,
+            N_TIMEUP, 2, N_MAPRELOAD, 1, N_FORCEINTERMISSION, 1,
+            N_SERVMSG, 0, N_ITEMLIST, 0, N_RESUME, 0,
+            N_EDITMODE, 2, N_EDITENT, 11, N_EDITF, 16, N_EDITT, 16, N_EDITM, 16, N_FLIP, 14, N_COPY, 14, N_PASTE, 14, N_ROTATE, 15, N_REPLACE, 16, N_DELCUBE, 14, N_REMIP, 1, N_NEWMAP, 2, N_GETMAP, 1, N_SENDMAP, 0, N_EDITVAR, 0,
+            N_MASTERMODE, 2, N_KICK, 2, N_CLEARBANS, 1, N_CURRENTMASTER, 3, N_SPECTATOR, 3, N_SETMASTER, 0, N_SETTEAM, 0,
+            N_BASES, 0, N_BASEINFO, 0, N_BASESCORE, 0, N_REPAMMO, 1, N_BASEREGEN, 6, N_ANNOUNCE, 2,
+            N_LISTDEMOS, 1, N_SENDDEMOLIST, 0, N_GETDEMO, 2, N_SENDDEMO, 0,
+            N_DEMOPLAYBACK, 3, N_RECORDDEMO, 2, N_STOPDEMO, 1, N_CLEARDEMOS, 2,
+            N_TAKEFLAG, 2, N_RETURNFLAG, 3, N_RESETFLAG, 4, N_INVISFLAG, 3, N_TRYDROPFLAG, 1, N_DROPFLAG, 6, N_SCOREFLAG, 6, N_INITFLAGS, 6,
+            N_SAYTEAM, 0,
+            N_CLIENT, 0,
+            N_AUTHTRY, 0, N_AUTHCHAL, 0, N_AUTHANS, 0, N_REQAUTH, 0,
+            N_PAUSEGAME, 2,
+            N_ADDBOT, 2, N_DELBOT, 1, N_INITAI, 0, N_FROMAI, 2, N_BOTLIMIT, 2, N_BOTBALANCE, 2,
+            N_MAPCRC, 0, N_CHECKMAPS, 1,
+            N_SWITCHNAME, 0, N_SWITCHMODEL, 2, N_SWITCHTEAM, 0,
             -1
         };
         for(int *p = msgsizes; *p>=0; p += 2) if(*p==msg) return p[1];

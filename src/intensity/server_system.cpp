@@ -310,7 +310,7 @@ int shaderdetail = 1; // For texture.h
 Shader *Shader::lastshader = NULL;
 void Shader::bindprograms() { assert(0); };
 void Shader::flushenvparams(Slot* slot) { assert(0); };
-void Shader::setslotparams(Slot& slot) { assert(0); };
+void Shader::setslotparams(Slot& slot, VSlot &vslot) { assert(0); };
 
 bool glaring = false; // glare.cpp
 
@@ -364,7 +364,7 @@ int gamespeed = 100;
 int initing = NOT_INITING;
 bool shadowmapping = false;
 int ati_oq_bug = 0;
-Shader *nocolorshader = NULL, *notextureshader = NULL;
+Shader *nocolorshader = NULL, *notextureshader = NULL, *lineshader = NULL;
 bool fading = false;
 int xtraverts = 0, xtravertsva = 0;
 int shadowmap = 0;
@@ -377,9 +377,9 @@ bool fogging = false;
 int reflectdist, vertwater, refractfog, waterrefract, waterreflect, waterfade, caustics, waterfallrefract, waterfog, lavafog;
 int showblobs;
 int maxtmus = 0;
-int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams;
+int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams, maxvsuniforms;
 
-bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false, hasRN = false;
+bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false, hasRN = false, hasPBO = false, hasFBB = false, hasUBO = false, hasBUE = false;
 
 GLuint fogtex = -1;
 glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
@@ -427,11 +427,12 @@ void writecompletions(stream *f) { };
 const char *addreleaseaction(const char *s) { return NULL; };
 void freesurfaces(cube &c) { };
 occludequery *newquery(void *owner) { return NULL; };
-void drawbb(const ivec &bo, const ivec &br, const vec &camera, int scale, const ivec &origin) { };
+void drawbb(const ivec &bo, const ivec &br, const vec &camera) { };
 void renderblob(int type, const vec &o, float radius, float fade) { };
 void flushblobs() { };
 bool bboccluded(const ivec &bo, const ivec &br) { return true; };
 int isvisiblesphere(float rad, const vec &cv) { return 0; };
+bool isfoggedsphere(float rad, const vec &cv) { return false; };
 bool isshadowmapcaster(const vec &o, float rad) { return false; };
 bool checkquery(occludequery *query, bool nowait) { return true; };
 bool addshadowmapcaster(const vec &o, float xyrad, float zrad) { return false; };
@@ -455,13 +456,43 @@ GLuint lookupenvmap(Slot &slot) { return 0; };
 GLuint lookupenvmap(ushort emid) { return 0; };
 void loadalphamask(Texture *t) { };
 
-Slot &lookuptexture(int slot, bool load)
+vector<VSlot *> vslots;
+vector<Slot *> slots;
+
+Slot &lookupslot(int index, bool load)
     {
         static Slot sl;
         static Shader sh;
         sl.shader = &sh;
         return sl;
     };
+
+VSlot &lookupvslot(int index, bool load)
+{
+	static VSlot vsl;
+	static Slot sl = lookupslot(0, 0);
+	vsl.slot = &sl;
+    return vsl;
+}
+
+VSlot *editvslot(const VSlot &src, const VSlot &delta)
+{
+    return &lookupvslot(0, 0);
+}
+
+VSlot *findvslot(Slot &slot, const VSlot &src, const VSlot &delta)
+{
+    return &lookupvslot(0, 0);
+}
+
+void clearslots() { };
+void compactvslots(cube *c, int n) { };
+int compactvslots() { return 0; };
+void mergevslot(VSlot &dst, const VSlot &src, const VSlot &delta) { };
+
+const char *getshaderparamname(const char *name) { return ""; };
+
+int Shader::uniformlocversion() { return 0; };
 
 void check_calclight_canceled() { };
 void setupmaterials(int start, int len) { };
@@ -482,6 +513,8 @@ int optimizematsurfs(materialsurface *matbuf, int matsurfs) { return 0; };
 void texturereset(int *n) { };
 
 void seedparticles() { };
+
+glmatrixf fogmatrix;
 
 #ifdef WINDOWS
 // Need to create a 'stub' DLL, like with Linux, but for now try this FIXME
@@ -546,4 +579,7 @@ PFNGLVERTEXATTRIBPOINTERARBPROC      glVertexAttribPointer_      = NULL;
 PFNGLACTIVETEXTUREARBPROC       glActiveTexture_ = NULL;
 PFNGLDRAWRANGEELEMENTSEXTPROC glDrawRangeElements_ = NULL;
 PFNGLGETBUFFERSUBDATAARBPROC glGetBufferSubData_ = NULL;
-
+PFNGLUNIFORM4FVARBPROC                glUniform4fv_               = NULL;
+PFNGLBUFFERSUBDATAARBPROC    glBufferSubData_    = NULL;
+PFNGLBINDBUFFERBASEPROC          glBindBufferBase_          = NULL;
+PFNGLUNIFORMBUFFEREXTPROC        glUniformBuffer_        = NULL;

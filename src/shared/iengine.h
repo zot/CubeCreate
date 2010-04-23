@@ -40,7 +40,7 @@ extern void lightent(extentity &e, float height = 8.0f);
 extern void lightreaching(const vec &target, vec &color, vec &dir, extentity *e = 0, float ambient = 0.4f);
 extern entity *brightestlight(const vec &target, const vec &dir);
 
-enum { RAY_BB = 1, RAY_POLY = 3, RAY_ALPHAPOLY = 7, RAY_ENTS = 9, RAY_CLIPMAT = 16, RAY_SKIPFIRST = 32, RAY_EDITMAT = 64, RAY_SHADOW = 128, RAY_PASS = 256 };
+enum { RAY_BB = 1, RAY_POLY = 3, RAY_ALPHAPOLY = 7, RAY_ENTS = 9, RAY_CLIPMAT = 16, RAY_SKIPFIRST = 32, RAY_EDITMAT = 64, RAY_SHADOW = 128, RAY_PASS = 256, RAY_SKIPSKY = 512 };
 
 extern float raycube   (const vec &o, const vec &ray,     float radius = 0, int mode = RAY_CLIPMAT, int size = 0, extentity *t = 0);
 extern float raycubepos(const vec &o, const vec &ray, vec &hit, float radius = 0, int mode = RAY_CLIPMAT, int size = 0);
@@ -50,7 +50,7 @@ extern bool  raycubelos(const vec &o, const vec &dest, vec &hitpos);
 extern int thirdperson;
 extern bool isthirdperson();
 
-extern void settexture(const char *name, int clamp = 0);
+extern bool settexture(const char *name, int clamp = 0);
 
 // octaedit
 
@@ -62,6 +62,7 @@ struct selinfo
     int cx, cxs, cy, cys;
     ivec o, s;
     int grid, orient;
+    selinfo() : corner(0), cx(0), cxs(0), cy(0), cys(0), o(0, 0, 0), s(0, 0, 0), grid(8), orient(0) {}
     int size() const    { return s.x*s.y*s.z; }
     int us(int d) const { return s[d]*grid; }
     bool operator==(const selinfo &sel) const { return o==sel.o && s==sel.s && grid==sel.grid && orient==sel.orient; }
@@ -72,6 +73,8 @@ extern editinfo *localedit;
 
 extern bool editmode;
 
+extern bool packeditinfo(editinfo *e, int &inlen, uchar *&outbuf, int &outlen);
+extern bool unpackeditinfo(editinfo *&e, const uchar *inbuf, int inlen, int outlen);
 extern void freeeditinfo(editinfo *&e);
 extern void pruneundos(int maxremain = 0);
 extern bool noedit(bool view = false, bool msg = true);
@@ -83,7 +86,7 @@ extern void mpflip(selinfo &sel, bool local);
 extern void mpcopy(editinfo *&e, selinfo &sel, bool local);
 extern void mppaste(editinfo *&e, selinfo &sel, bool local);
 extern void mprotate(int cw, selinfo &sel, bool local);
-extern void mpreplacetex(int oldtex, int newtex, selinfo &sel, bool local);
+extern void mpreplacetex(int oldtex, int newtex, bool insel, selinfo &sel, bool local);
 extern void mpdelcube(selinfo &sel, bool local);
 extern void mpremip(bool local);
 
@@ -94,12 +97,16 @@ extern char *svariable(const char *name, const char *cur, char **storage, void (
 extern void setvar(const char *name, int i, bool dofunc = true, bool doclamp = true);
 extern void setfvar(const char *name, float f, bool dofunc = true, bool doclamp = true);
 extern void setsvar(const char *name, const char *str, bool dofunc = true);
+extern void setvarchecked(ident *id, int val);
+extern void setfvarchecked(ident *id, float val);
+extern void setsvarchecked(ident *id, const char *val);
 extern void touchvar(const char *name);
 extern int getvar(const char *name);
 extern int getvarmin(const char *name);
 extern int getvarmax(const char *name);
 extern bool identexists(const char *name);
 extern ident *getident(const char *name);
+extern ident *newident(const char *name);
 extern bool addcommand(const char *name, void (*fun)(), const char *narg);
 extern int execute(const char *p);
 extern char *executeret(const char *p);
@@ -145,8 +152,6 @@ extern void renderentarrow(const extentity &e, const vec &dir, float radius);
 extern void renderentattachment(const extentity &e);
 extern void renderentsphere(const extentity &e, float radius);
 extern void renderentring(const extentity &e, float radius, int axis = 0);
-extern void resettriggers();
-extern void checktriggers();
 
 // main
 extern void fatal(const char *s, ...);
@@ -154,6 +159,8 @@ extern void keyrepeat(bool on);
 
 // rendertext
 extern bool setfont(const char *name);
+extern void pushfont();
+extern bool popfont();
 extern void gettextres(int &w, int &h);
 extern void draw_text(const char *str, int left, int top, int r = 255, int g = 255, int b = 255, int a = 255, int cursor = -1, int maxwidth = -1);
 extern void draw_textf(const char *fstr, int left, int top, ...);
@@ -195,7 +202,7 @@ enum
     PART_FLAME,
     PART_FIREBALL1, PART_FIREBALL2, PART_FIREBALL3,
     PART_STREAK, PART_LIGHTNING,
-    PART_EXPLOSION, PART_EXPLOSION_NO_GLARE,
+    PART_EXPLOSION, PART_EXPLOSION_BLUE,
     PART_SPARK, PART_EDIT,
     PART_MUZZLE_FLASH1, PART_MUZZLE_FLASH2, PART_MUZZLE_FLASH3,
     PART_TEXT,
@@ -205,9 +212,11 @@ enum
 
 extern bool canaddparticles();
 extern void regular_particle_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 1.0f, int radius = 150, int gravity = 2, int delay = 0);
+extern void regular_particle_flame(int type, const vec &p, float radius, float height, int color, int density = 3, float scale = 2.0f, float speed = 200.0f, float fade = 600.0f, int gravity = -15);
 extern void particle_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 1.0f, int radius = 150, int gravity = 2);
 extern void particle_trail(int type, int fade, const vec &from, const vec &to, int color = 0xFFFFFF, float size = 1.0f, int gravity = 20);
 extern void particle_text(const vec &s, const char *t, int type, int fade = 2000, int color = 0xFFFFFF, float size = 2.0f, int gravity = 0);
+extern void particle_textcopy(const vec &s, const char *t, int type, int fade = 2000, int color = 0xFFFFFF, float size = 2.0f, int gravity = 0);
 extern void particle_meter(const vec &s, float val, int type, int fade = 1, int color = 0xFFFFFF, int color2 = 0xFFFFF, float size = 2.0f);
 extern void particle_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 0.28f, physent *owner = NULL);
 extern void particle_fireball(const vec &dest, float max, int type, int fade = -1, int color = 0xFFFFFF, float size = 4.0f);
@@ -236,6 +245,7 @@ extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0.
 extern bool bounce(physent *d, float secs, float elasticity, float waterfric);
 extern bool bounce(physent *d, float elasticity, float waterfric);
 extern void avoidcollision(physent *d, const vec &dir, physent *obstacle, float space);
+extern bool overlapsdynent(const vec &o, float radius);
 extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
 extern void physicsframe();
 extern void dropenttofloor(entity *e);
@@ -251,14 +261,14 @@ extern bool entinmap(dynent *d, bool avoidplayers = false);
 extern void findplayerspawn(dynent *d, int forceent = -1, int tag = 0);
 
 // sound
-extern int playsound(int n, const vec *loc = NULL, extentity *ent = NULL, int loops = 0, int fade = 0, int chanid = -1, int radius = 0);
-extern int playsoundname(const char *s, const vec *loc = NULL, int vol = 0, int loops = 0, int fade = 0, int chanid = -1, int radius = 0);
+extern int playsound(int n, const vec *loc = NULL, extentity *ent = NULL, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);
+extern int playsoundname(const char *s, const vec *loc = NULL, int vol = 0, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);
 extern bool stopsound(int n, int chanid, int fade = 0);
 extern void stopsounds();
 extern void initsound();
 
 // rendermodel
-enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_LIGHT = 1<<6, MDL_DYNLIGHT = 1<<7, MDL_FULLBRIGHT = 1<<8, MDL_NORENDER = 1<<9 };
+enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_LIGHT = 1<<6, MDL_DYNLIGHT = 1<<7, MDL_FULLBRIGHT = 1<<8, MDL_NORENDER = 1<<9, MDL_GHOST = 1<<10 };
 
 struct model;
 struct modelattach
@@ -297,25 +307,30 @@ extern void cleanragdoll(dynent *d);
 
 extern int maxclients;
 
-enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_PRIVATE, DISC_MAXCLIENTS, DISC_TIMEOUT, DISC_NUM };
+enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_PRIVATE, DISC_MAXCLIENTS, DISC_TIMEOUT, DISC_OVERFLOW, DISC_NUM };
 
 extern void *getclientinfo(int i);
 extern void sendf(int cn, int chan, const char *format, ...);
 extern void sendfile(int cn, int chan, stream *file, const char *format = "", ...);
 extern void sendpacket(int cn, int chan, ENetPacket *packet, int exclude = -1);
+extern void flushserver(bool force);
 extern int getnumclients();
 extern uint getclientip(int n);
 extern void putint(ucharbuf &p, int n);
 extern void putint(packetbuf &p, int n);
+extern void putint(vector<uchar> &p, int n);
 extern int getint(ucharbuf &p);
 extern void putuint(ucharbuf &p, int n);
 extern void putuint(packetbuf &p, int n);
+extern void putuint(vector<uchar> &p, int n);
 extern int getuint(ucharbuf &p);
 extern void putfloat(ucharbuf &p, float f);
 extern void putfloat(packetbuf &p, float f);
+extern void putfloat(vector<uchar> &p, float f);
 extern float getfloat(ucharbuf &p);
 extern void sendstring(const char *t, ucharbuf &p);
 extern void sendstring(const char *t, packetbuf &p);
+extern void sendstring(const char *t, vector<uchar> &p);
 extern void getstring(char *t, ucharbuf &p, int len = MAXTRANS);
 extern void filtertext(char *dst, const char *src, bool whitespace = true, int len = sizeof(string)-1);
 extern int localconnect(); // INTENSITY: Added returning of client number
@@ -332,6 +347,7 @@ extern void sendclientpacket(ENetPacket *packet, int chan, int cn=-1); // INTENS
 extern void flushclient();
 extern void disconnect(bool async = false, bool cleanup = true);
 extern bool isconnected(bool attempt = false);
+extern const ENetAddress *connectedpeer();
 extern bool multiplayer(bool msg = true);
 extern void neterr(const char *s, bool disc = true);
 extern void gets2c();
@@ -407,7 +423,8 @@ enum
 {
     GUI_2D       = 1<<0,
     GUI_FOLLOW   = 1<<1,
-    GUI_FORCE_2D = 1<<2
+    GUI_FORCE_2D = 1<<2,
+    GUI_BOTTOM   = 1<<3
 };
 
 extern void g3d_addgui(g3d_callback *cb, vec &origin, int flags = 0);

@@ -94,7 +94,7 @@ struct movableset
         if(movables.length())
         {
             cleardynentcache();
-            movables.deletecontentsp();
+            movables.deletecontents();
         }
         if(!m_dmsp && !m_classicsp) return;
         loopv(cl.et.ents) // Kripken: Looks like we sift the movables out of the list of entities

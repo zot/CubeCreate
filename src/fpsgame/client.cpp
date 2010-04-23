@@ -44,6 +44,26 @@ namespace game
     {
     }
 
+    int needclipboard = -1;
+
+    void sendclipboard()
+    {
+        uchar *outbuf = NULL;
+        int inlen = 0, outlen = 0;
+        if(!packeditinfo(localedit, inlen, outbuf, outlen))
+        {
+            outbuf = NULL;
+            inlen = outlen = 0;
+        }
+        packetbuf p(16 + outlen, ENET_PACKET_FLAG_RELIABLE);
+        putint(p, N_CLIPBOARD);
+        putint(p, inlen);
+        putint(p, outlen);
+        if(outlen > 0) p.put(outbuf, outlen);
+        sendclientpacket(p.finalize(), 1);
+        needclipboard = -1;
+    }
+
     void gameconnect(bool _remote)
     {
         connected = true;
@@ -62,7 +82,7 @@ namespace game
         player1->lifesequence = 0;
         player1->privilege = PRIV_NONE;
         spectator = false;
-//        loopv(players) if(players[i]) clientdisconnected(i, false); Kripken: When we disconnect, we should shut down anyhow...
+//        loopv(players) clientdisconnected(i, false); Kripken: When we disconnect, we should shut down anyhow...
         Logging::log(Logging::WARNING, "Not doing normal Sauer disconnecting of other clients\r\n");
 
         #ifdef CLIENT
@@ -95,7 +115,7 @@ namespace game
     void edittoggled(bool on)
     {
         MessageSystem::send_EditModeC2S(on);
-//        addmsg(SV_EDITMODE, "ri", on ? 1 : 0);
+//        addmsg(N_EDITMODE, "ri", on ? 1 : 0);
 //        if(player1->state==CS_DEAD) deathstate(player1, true); Kripken
 //        else if(player1->state==CS_EDITING && player1->editstate==CS_DEAD) sb.showscores(false); Kripken
         setvar("zoom", -1, true);
@@ -148,7 +168,7 @@ namespace game
             buf.put(cn, strlen(cn));
             numclients++;
         }
-        loopv(players) if(players[i])
+        loopv(players)
         {
             formatstring(cn)("%d", players[i]->clientnum);
             if(numclients++) buf.add(' ');
@@ -162,7 +182,7 @@ namespace game
     {
         if(!remote) return;
         int i = who[0] ? parseplayer(who) : player1->clientnum;
-        if(i>=0) addmsg(SV_SPECTATOR, "rii", i, val);
+        if(i>=0) addmsg(N_SPECTATOR, "rii", i, val);
     }
 
     // collect c2s messages conveniently
@@ -230,7 +250,7 @@ namespace game
         {
             static uchar mbuf[16];
             ucharbuf m(mbuf, sizeof(mbuf));
-            putint(m, SV_FROMAI);
+            putint(m, N_FROMAI);
             putint(m, mcn);
             messages.put(mbuf, m.length());
             messagecn = mcn;
@@ -245,7 +265,7 @@ namespace game
 #endif // XXX - Need a similar check for NPCs on the server, if/when we have them
         {
             conoutf(CON_CHAT, "%s:\f0 %s", colorname(player1), text);
-            addmsg(SV_TEXT, "rcs", player1, text);
+            addmsg(N_TEXT, "rcs", player1, text);
         }
     }
     COMMANDN(say, toserver, "C");
@@ -256,13 +276,13 @@ namespace game
 #ifdef CLIENT
         conoutf(CON_TEAMCHAT, "%s:\f1 %s", colorname(player1), text);
 #endif
-        addmsg(SV_SAYTEAM, "rs", text);
+        addmsg(N_SAYTEAM, "rs", text);
     }
 #endif
 
     void printvar(fpsent *d, ident *id)
     {
-        switch(id->type)
+        if(id) switch(id->type)
         {
             case ID_VAR:
             {
@@ -284,7 +304,7 @@ namespace game
         }
     }
 
-    void sendposition(fpsent *d)
+    void sendposition(fpsent *d, bool reliable)
     {
         Logging::log(Logging::INFO, "sendposition?, %d)\r\n", curtime);
 
@@ -300,7 +320,7 @@ namespace game
                                          d->clientnum, d->o.x, d->o.y, d->o.z);
 
             // send position updates separately so as to not stall out aiming
-            packetbuf q(100);
+            packetbuf q(100, reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
 
             NetworkSystem::PositionUpdater::QuantizedInfo info;
             info.generateFrom(d);
@@ -323,28 +343,28 @@ namespace game
         if(messages.length())
         {
             p.put(messages.getbuf(), messages.length());
-            messages.setsizenodelete(0);
+            messages.setsize(0);
             if(messagereliable) p.reliable();
             messagereliable = false;
             messagecn = -1;
         }
         if(lastmillis-lastping>250)
         {
-            putint(p, SV_PING);
+            putint(p, N_PING);
             putint(p, lastmillis);
             lastping = lastmillis;
         }
         sendclientpacket(p.finalize(), 1, d->clientnum);
     }
 
-    void c2sinfo() // send update to the server
+    void c2sinfo(bool force) // send update to the server
     {
         static int lastupdate = -1000;
 
         Logging::log(Logging::INFO, "c2sinfo: %d,%d\r\n", totalmillis, lastupdate);
 
         int rate = Utility::Config::getInt("Network", "rate", 33);
-        if(totalmillis - lastupdate < rate) return;    // don't update faster than the rate
+        if(totalmillis - lastupdate < rate && !force) return;    // don't update faster than the rate
         lastupdate = totalmillis;
 
 #ifdef CLIENT
@@ -403,7 +423,7 @@ namespace game
         int type;
         while(p.remaining()) switch(type = getint(p))
         {
-            case SV_POS:                        // position of another client
+            case N_POS:                        // position of another client
             {
                 NetworkSystem::PositionUpdater::QuantizedInfo info;
                 info.generateFrom(p);
@@ -458,7 +478,7 @@ namespace game
           switch(type)
           { // Kripken: Mangling sauer indentation as little as possible
 
-            case SV_CLIENT:
+            case N_CLIENT:
             {
                 int cn = getint(p), len = getuint(p);
                 ucharbuf q = p.subbuf(len);
@@ -466,17 +486,14 @@ namespace game
                 break;
             }
 
-            case SV_TEXT:
+            case N_TEXT:
             {
                 if(!d) return;
                 getstring(text, p);
                 filtertext(text, text);
 #ifdef CLIENT
                 if(d->state!=CS_SPECTATOR)
-                {
-                    defformatstring(ds)("@%s", &text);
-                    particle_text(d->abovehead(), ds, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
-                }
+                    particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
                 if (chat_sound[0])
                     playsoundname(chat_sound);
 #endif
@@ -484,16 +501,24 @@ namespace game
                 break;
             }
 
+            case N_CLIPBOARD:
+            {
+                int cn = getint(p), unpacklen = getint(p), packlen = getint(p);
+                fpsent *d = getclient(cn);
+                ucharbuf q = p.subbuf(max(packlen, 0));
+                if(d) unpackeditinfo(d->edit, q.buf, q.maxlen, unpacklen);
+                break;
+            }
 
-            case SV_EDITF:              // coop editing messages
-            case SV_EDITT:
-            case SV_EDITM:
-            case SV_FLIP:
-            case SV_COPY:
-            case SV_PASTE:
-            case SV_ROTATE:
-            case SV_REPLACE:
-            case SV_DELCUBE:
+            case N_EDITF:              // coop editing messages
+            case N_EDITT:
+            case N_EDITM:
+            case N_FLIP:
+            case N_COPY:
+            case N_PASTE:
+            case N_ROTATE:
+            case N_REPLACE:
+            case N_DELCUBE:
             {
 //                if(!d) return; Kripken: We can get edit commands from the server, which has no 'd' to speak of XXX FIXME - might be buggy
 
@@ -507,34 +532,34 @@ namespace game
                 sel.corner = getint(p);
                 int dir, mode, mat, filter;
                 #ifdef CLIENT
-                    int tex, newtex, allfaces;
+                    int tex, newtex, allfaces, insel;
                 #endif
                 ivec moveo;
                 switch(type)
                 {
-                    case SV_EDITF: dir = getint(p); mode = getint(p); mpeditface(dir, mode, sel, false); break;
-                    case SV_EDITT:
+                    case N_EDITF: dir = getint(p); mode = getint(p); mpeditface(dir, mode, sel, false); break;
+                    case N_EDITT:
                         #ifdef CLIENT
                             tex = getint(p); allfaces = getint(p); mpedittex(tex, allfaces, sel, false); break;
                         #else // SERVER
                             getint(p); getint(p); Logging::log(Logging::DEBUG, "Server ignoring texture change (a)\r\n"); break;
                         #endif
-                    case SV_EDITM: mat = getint(p); filter = getint(p); mpeditmat(mat, filter, sel, false); break;
-                    case SV_FLIP: mpflip(sel, false); break;
-                    case SV_COPY: if(d) mpcopy(d->edit, sel, false); break;
-                    case SV_PASTE: if(d) mppaste(d->edit, sel, false); break;
-                    case SV_ROTATE: dir = getint(p); mprotate(dir, sel, false); break;
-                    case SV_REPLACE:
+                    case N_EDITM: mat = getint(p); filter = getint(p); mpeditmat(mat, filter, sel, false); break;
+                    case N_FLIP: mpflip(sel, false); break;
+                    case N_COPY: if(d) mpcopy(d->edit, sel, false); break;
+                    case N_PASTE: if(d) mppaste(d->edit, sel, false); break;
+                    case N_ROTATE: dir = getint(p); mprotate(dir, sel, false); break;
+                    case N_REPLACE:
                         #ifdef CLIENT
-                            tex = getint(p); newtex = getint(p); mpreplacetex(tex, newtex, sel, false); break;
+                            tex = getint(p); newtex = getint(p); insel = getint(p); mpreplacetex(tex, newtex, insel>0, sel, false); break;
                         #else // SERVER
                             getint(p); getint(p); Logging::log(Logging::DEBUG, "Server ignoring texture change (b)\r\n"); break;
                         #endif
-                    case SV_DELCUBE: mpdelcube(sel, false); break;
+                    case N_DELCUBE: mpdelcube(sel, false); break;
                 }
                 break;
             }
-            case SV_REMIP:
+            case N_REMIP:
             {
               #ifdef CLIENT
                 if(!d) return;
@@ -545,22 +570,22 @@ namespace game
                 break;
             }
 
-            case SV_EDITVAR:
+            case N_EDITVAR:
             {
                 assert(0);
                 break;
             }
 
-            case SV_PONG:
+            case N_PONG:
 #ifdef SERVER
 assert(0);
 #endif
                 // Kripken: Do not let clients know other clients' pings
                 player1->ping = (player1->ping*5+lastmillis-getint(p))/6;
-//                addmsg(SV_CLIENTPING, "i", player1->ping = (player1->ping*5+lastmillis-getint(p))/6);
+//                addmsg(N_CLIENTPING, "i", player1->ping = (player1->ping*5+lastmillis-getint(p))/6);
                 break;
 
-            case SV_CLIENTPING:
+            case N_CLIENTPING:
 //#ifdef SERVER
 assert(0); // Kripken: Do not let clients know other clients' pings
 //#endif
@@ -568,6 +593,15 @@ assert(0); // Kripken: Do not let clients know other clients' pings
                 d->ping = getint(p);
                 break;
 
+            case N_INITCLIENT:
+            {
+                int cn = getint(p);
+                fpsent *d = newclient(cn);
+                if(!d->name[0])
+                  if(needclipboard >= 0)
+                    needclipboard++;
+                break;
+            }
 
             default:
             {
@@ -610,7 +644,7 @@ assert(0); // Kripken: Do not let clients know other clients' pings
 
         if(spectator && !player1->privilege) return;
 //        int nextmode = nextmode; // in case stopdemo clobbers nextmode
-//        addmsg(SV_MAPVOTE, "rsi", name, nextmode);
+//        addmsg(N_MAPVOTE, "rsi", name, nextmode);
 #ifdef CLIENT
         MessageSystem::send_MapVote(name);
 #endif
@@ -666,14 +700,25 @@ assert(0); // Kripken: Do not let clients know other clients' pings
             case EDIT_PASTE:
             case EDIT_DELCUBE:
             {
-                addmsg(SV_EDITF + op, "ri9i4",
+                switch(op)
+                {
+                    case EDIT_COPY: needclipboard = 0; break;
+                    case EDIT_PASTE:
+                        if(needclipboard > 0)
+                        {
+                            c2sinfo(true);
+                            sendclipboard();
+                        }
+                        break;
+                }
+                addmsg(N_EDITF + op, "ri9i4",
                    sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
                    sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner);
                 break;
             }
             case EDIT_ROTATE:
             {
-                addmsg(SV_EDITF + op, "ri9i5",
+                addmsg(N_EDITF + op, "ri9i5",
                    sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
                    sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner,
                    arg1);
@@ -682,17 +727,24 @@ assert(0); // Kripken: Do not let clients know other clients' pings
             case EDIT_MAT:
             case EDIT_FACE:
             case EDIT_TEX:
-            case EDIT_REPLACE:
             {
-                addmsg(SV_EDITF + op, "ri9i6",
+                addmsg(N_EDITF + op, "ri9i6",
                    sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
                    sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner,
                    arg1, arg2);
                 break;
             }
+            case EDIT_REPLACE:
+            {
+                addmsg(N_EDITF + op, "ri9i7",
+                   sel.o.x, sel.o.y, sel.o.z, sel.s.x, sel.s.y, sel.s.z, sel.grid, sel.orient,
+                   sel.cx, sel.cxs, sel.cy, sel.cys, sel.corner,
+                   arg1, arg2, arg3);
+                break;
+            }
             case EDIT_REMIP:
             {
-                addmsg(SV_EDITF + op, "r");
+                addmsg(N_EDITF + op, "r");
                 break;
             }
         }

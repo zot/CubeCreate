@@ -129,9 +129,9 @@ void testPositionUpdater()
         ucharbuf q(data, maxLength);
         info.applyToBuffer(q);
 
-        // Initialize the the buffer and read the protocol code, which should be SV_POS
+        // Initialize the the buffer and read the protocol code, which should be N_POS
         q.len = 0;
-        assert(getint(q) == SV_POS);
+        assert(getint(q) == N_POS);
 
         // Read into another Info, and apply to another entity
 

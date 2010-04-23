@@ -1340,7 +1340,7 @@ namespace MessageSystem
 
         if (!is_npc)
         {
-            Logging::log(Logging::DEBUG, "client.h: SV_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
+            Logging::log(Logging::DEBUG, "client.h: N_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
             if(protocolVersion != PROTOCOL_VERSION)
             {
                 conoutf(CON_ERROR, "You are using a different network protocol (you: %d, server: %d)", PROTOCOL_VERSION, protocolVersion);
@@ -1355,7 +1355,7 @@ namespace MessageSystem
             #endif
         } else {
             // NPC
-            Logging::log(Logging::INFO, "client.h (npc): SV_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
+            Logging::log(Logging::INFO, "client.h (npc): N_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
             assert(0); //does this ever occur?
         }
     }
@@ -1645,7 +1645,7 @@ namespace MessageSystem
 
         if (!ServerSystem::isRunningMap()) return;
         #if 0 // The old sauer code from fpsserver.h
-            case SV_EDITMODE:
+            case N_EDITMODE:
             {
                 int val = getint(p);
                 if(!ci->local && gamemode!=1) break;

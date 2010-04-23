@@ -43,10 +43,7 @@ namespace game
         /* TODO:
             // INTENSITY: Class above head in edit mode
             if (editmode)
-            {
-                std::string _class = '@' + logicEntity.get()->getClass(); // '@' makes Sauer create a copy
-                particle_text(entity->abovehead(), _class.c_str(), 16, 1);
-            }
+                particle_text(entity->abovehead(), logicEntity.get()->getClass(), 16, 1);
         */
 #else // Scripting rendering system
 //        fpsent *exclude = isthirdperson() ? NULL : followingplayer(), *d; // XXX: Apply this!

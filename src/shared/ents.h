@@ -13,15 +13,6 @@ struct entity                                   // persistent map entity
     uchar reserved;
 };
 
-enum
-{
-    TRIGGER_RESET = 0,
-    TRIGGERING,
-    TRIGGERED,
-    TRIGGER_RESETTING,
-    TRIGGER_DISAPPEARED
-};
-
 struct entitylight
 {
     vec color, dir;
@@ -32,14 +23,21 @@ struct entitylight
 
 struct extentity : entity                       // part of the entity that doesn't get saved to disk
 {
-    uchar spawned, inoctanode, visible, triggerstate;        // the only dynamic state of a map entity
+    enum
+    {
+        F_NOVIS     = 1<<0,
+        F_NOSHADOW  = 1<<1,
+        F_NOCOLLIDE = 1<<2,
+        F_ANIM      = 1<<3
+    };
+
+    uchar spawned, inoctanode, visible, flags;  // the only dynamic state of a map entity
     entitylight light;
-    int lasttrigger;
     extentity *attached;
 
     int uniqueId; // Kripken: Added this
 
-    extentity() : visible(false), triggerstate(TRIGGER_RESET), lasttrigger(0), attached(NULL), uniqueId(-1) {}
+    extentity() : visible(false), flags(0), attached(NULL), uniqueId(-1) {}
 };
 
 #define MAXENTS 10000
@@ -52,7 +50,7 @@ enum { PHYS_FLOAT = 0, PHYS_FALL, PHYS_SLIDE, PHYS_SLOPE, PHYS_FLOOR, PHYS_STEP_
 
 enum { ENT_PLAYER = 0, ENT_AI, ENT_INANIMATE, ENT_CAMERA, ENT_BOUNCE };
 
-enum { COLLIDE_AABB = 0, COLLIDE_ELLIPSE };
+enum { COLLIDE_AABB = 0, COLLIDE_OBB, COLLIDE_ELLIPSE };
 
 struct physent                                  // base entity type, can be affected by physics
 {
@@ -76,14 +74,14 @@ struct physent                                  // base entity type, can be affe
 
     bool blocked, moving;                       // used by physics to signal ai
     physent *onplayer;
-    int lastmove, lastmoveattempt, collisions, stacks;
+    int lastmove, lastmoveattempt;
 
     physent() : o(0, 0, 0), deltapos(0, 0, 0), newpos(0, 0, 0), yaw(270), pitch(0), roll(0), maxspeed(100), 
                radius(4.1f), eyeheight(14), aboveeye(1), xradius(4.1f), yradius(4.1f), zmargin(0),
                state(CS_ALIVE), editstate(CS_ALIVE), type(ENT_PLAYER),
                collidetype(COLLIDE_ELLIPSE),
                blocked(false), moving(true),
-               onplayer(NULL), lastmove(0), lastmoveattempt(0), collisions(0), stacks(0)
+               onplayer(NULL), lastmove(0), lastmoveattempt(0)
                { reset(); }
               
     void resetinterp()
@@ -121,6 +119,20 @@ enum
     NUMANIMS
 };
 
+static const char * const animnames[] =
+{
+       "dead", "dying", "idle", 
+       "forward", "backward", "left", "right", 
+       "hold1", "hold2", "hold3", "hold4", "hold5", "hold6", "hold7", // INTENSITY: No spaces, so can be validated as non-spaced
+       "attack1", "attack2", "attack3", "attack4", "attack5", "attack6", "attack7", // INTENSITY: No spaces, so can be validated as non-spaced
+       "pain", 
+       "jump", "sink", "swim", 
+       "edit", "lag", "taunt", "win", "lose", 
+       "gun idle", "gun shoot",
+       "vwep idle", "vwep shoot", "shield", "powerup", 
+       "mapmodel", "trigger"
+};
+
 #define ANIM_ALL         0x7F
 #define ANIM_INDEX       0x7F
 #define ANIM_LOOP        (1<<7)
@@ -136,6 +148,7 @@ enum
 #define ANIM_NORENDER    (1<<26)
 #define ANIM_RAGDOLL     (1<<27)
 #define ANIM_SETSPEED    (1<<28)
+#define ANIM_GHOST       (1<<29)
 #define ANIM_FLAGS       (0x1FF<<22)
 
 struct animinfo // description of a character's animation
@@ -159,7 +172,7 @@ struct animinterpinfo // used for animation blending of animated characters
     animinterpinfo() : lastswitch(-1), lastmodel(NULL) {}
 };
 
-#define MAXANIMPARTS 2
+#define MAXANIMPARTS 3
 
 struct occludequery;
 struct ragdolldata;
@@ -167,7 +180,6 @@ struct ragdolldata;
 struct dynent : physent                         // animated characters, or characters that can receive input
 {
     bool k_left, k_right, k_up, k_down;         // see input code
-    float targetyaw, rotspeed;                  // AI rotation
 
     entitylight light;
     animinterpinfo animinterp[MAXANIMPARTS];
@@ -192,7 +204,6 @@ struct dynent : physent                         // animated characters, or chara
     {
         k_left = k_right = k_up = k_down = jumping = false;
         move = strafe = 0;
-        targetyaw = rotspeed = 0;
     }
         
     virtual void reset() // INTENSITY: Made virtual

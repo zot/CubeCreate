@@ -584,7 +584,7 @@ namespace game
         if(!d || d==player1)
         {
             MessageSystem::send_SoundToServer(n);
-//            addmsg(SV_SOUND, "i", n); 
+//            addmsg(N_SOUND, "i", n); 
 
             playsound(n); 
         }

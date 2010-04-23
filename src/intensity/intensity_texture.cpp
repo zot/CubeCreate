@@ -15,16 +15,16 @@
 
 static std::set<int> requested_slots;
 
-Slot &lookuptexture(int slot, bool load)
+Slot &lookupslot(int index, bool load)
 {
-    Slot &s = slots.inrange(slot) ? slots[slot] : (slots.empty() ? dummyslot : slots[0]);
+    Slot &s = slots.inrange(index) ? *slots[index] : (slots.length() ? *slots[0] : dummyslot);
     if (load && !s.loaded)
     {
-        if (slots.inrange(slot))
+        if (slots.inrange(index))
         {
-            if (requested_slots.count(slot) == 0)
+            if (requested_slots.count(index) == 0)
             {
-                requested_slots.insert(slot);
+                requested_slots.insert(index);
                 loopv(s.sts) s.sts[i].t = notexture; // Until we load them, do not crash in rendering code
             }
         } else
@@ -49,7 +49,7 @@ void doBackgroundLoading(bool all)
         requested_slots.erase(slot);
 
         assert(slots.inrange(slot));
-        Slot &s = slots[slot];
+        Slot &s = *slots[slot];
         loadslot(s, false); // for materials, would be true
 
         if (!all) break;

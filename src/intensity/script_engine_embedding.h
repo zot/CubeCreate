@@ -447,8 +447,7 @@ V8_FUNC_dddd(__script__rayFloor, {
 
     V8_FUNC_dddsiiidi(__script__particleText, {
         vec s(arg1, arg2, arg3);
-        std::string safeString = std::string("@") + arg4; // Make sauer copy this, as it will not persist
-        particle_text(s, safeString.c_str(), arg5, arg6, arg7, arg8, arg9);
+        particle_textcopy(s, arg4, arg5, arg6, arg7, arg8, arg9);
     });
 
     V8_FUNC_ii(__script__clientDamageEffect, {

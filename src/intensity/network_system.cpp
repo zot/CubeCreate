@@ -333,7 +333,7 @@ void QuantizedInfo::applyToEntity(fpsent *d)
 
 void QuantizedInfo::applyToBuffer(ucharbuf& q)
 {
-    putint(q, SV_POS);// printf("(PUT SV_POS): %d\r\n", SV_POS);
+    putint(q, N_POS);// printf("(PUT N_POS): %d\r\n", N_POS);
 
     putint(q, clientNumber);// printf("START PUT: %d\r\n", clientNumber);
 

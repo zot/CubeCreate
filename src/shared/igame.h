@@ -2,7 +2,7 @@
 
 namespace entities
 {
-    extern void editent(int i);
+    extern void editent(int i, bool local);
     extern const char *entnameinfo(entity &e);
     extern const char *entname(int i);
     extern int extraentinfosize();
@@ -21,6 +21,9 @@ namespace entities
     extern void clearents();
     extern vector<extentity *> &getents();
     extern const char *entmodel(const entity &e);
+    extern void resettriggers();
+    extern void checktriggers();
+    extern void animatemapmodel(const extentity &e, int &anim, int &basetime);
 }
 
 namespace game
@@ -101,7 +104,7 @@ namespace server
     extern void recordpacket(int chan, void *data, int len);
     extern void parsepacket(int sender, int chan, packetbuf &p);
     extern void sendservmsg(const char *s);
-    extern bool sendpackets();
+    extern bool sendpackets(bool force = false);
     extern void serverinforeply(ucharbuf &req, ucharbuf &p);
     extern void serverupdate();
     extern bool servercompatible(char *name, char *sdec, char *map, int ping, const vector<int> &attr, int np);
