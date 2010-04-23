@@ -455,8 +455,6 @@ struct blobrenderer
 
     static void setuprenderstate()
     {
-        if(renderpath!=R_FIXEDFUNCTION && fogging) setfogplane(1, reflectz);
-
         foggedshader->set();
 
         enablepolygonoffset(GL_POLYGON_OFFSET_FILL);
@@ -566,8 +564,8 @@ VARFP(blobdyntris, 128, 4096, 1<<16, initblobs(BLOB_DYNAMIC));
 
 static blobrenderer blobs[] = 
 {
-    blobrenderer("packages/particles/blob.png"),
-    blobrenderer("packages/particles/blob.png")
+    blobrenderer("<grey>packages/particles/blob.png"),
+    blobrenderer("<grey>packages/particles/blob.png")
 };
 
 void initblobs(int type)

@@ -529,9 +529,11 @@ COMMAND(setblendbrush, "s");
 COMMAND(getblendbrushname, "i");
 COMMAND(curblendbrush, "");
 
+extern int nompedit;
+
 bool canpaintblendmap(bool brush = true, bool sel = false, bool msg = true)
 {
-    if(noedit(!sel, msg)) return false;
+    if(noedit(!sel, msg) || (nompedit && multiplayer())) return false;
     if(!blendpaintmode)
     {
         if(msg) conoutf(CON_ERROR, "operation only allowed in blend paint mode");
@@ -603,7 +605,7 @@ ICOMMAND(paintblendmap, "D", (int *isdown),
     
 void clearblendmapsel()
 {
-    if(noedit(false)) return;
+    if(noedit(false) || (nompedit && multiplayer())) return;
     extern selinfo sel;
     int x1 = sel.o.x>>BM_SCALE, y1 = sel.o.y>>BM_SCALE,
         x2 = (sel.o.x+sel.s.x*sel.grid+(1<<BM_SCALE)-1)>>BM_SCALE,
@@ -617,7 +619,7 @@ COMMAND(clearblendmapsel, "");
 
 void showblendmap()
 {
-    if(noedit(true)) return;
+    if(noedit(true) || (nompedit && multiplayer())) return;
     previewblends(ivec(0, 0, 0), ivec(worldsize, worldsize, worldsize));
 }
 
@@ -625,7 +627,7 @@ COMMAND(showblendmap, "");
 COMMAND(optimizeblendmap, "");
 ICOMMAND(clearblendmap, "", (),
 {
-    if(noedit(true)) return;
+    if(noedit(true) || (nompedit && multiplayer())) return;
     resetblendmap();
     showblendmap();
 });

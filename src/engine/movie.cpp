@@ -197,7 +197,7 @@ struct aviwriter
         f = openfile(seqfilename, "wb");
         if(!f) return false;
         
-        index.setsize(0);
+        index.shrink(0);
         chunkdepth = -1;
         
         listchunk("RIFF", "AVI ");
@@ -782,6 +782,15 @@ namespace recorder
         if(file->soundfrequency > 0) Mix_SetPostMix(soundencoder, NULL);
     }
     
+    void cleanup()
+    {
+        if(scalefb) { glDeleteFramebuffers_(1, &scalefb); scalefb = 0; }
+        if(scaletex[0] || scaletex[1]) { glDeleteTextures(2, scaletex); memset(scaletex, 0, sizeof(scaletex)); }
+        scalew = scaleh = 0;
+        if(encodefb) { glDeleteFramebuffers_(1, &encodefb); encodefb = 0; }
+        if(encoderb) { glDeleteRenderbuffers_(1, &encoderb); encoderb = 0; }
+    }
+
     void stop()
     {
         if(!file) return;
@@ -794,11 +803,7 @@ namespace recorder
         
         SDL_WaitThread(thread, NULL); // block until thread is finished
 
-        if(scalefb) { glDeleteFramebuffers_(1, &scalefb); scalefb = 0; }
-        if(scaletex[0] || scaletex[1]) { glDeleteTextures(2, scaletex); memset(scaletex, 0, sizeof(scaletex)); }
-        scalew = scaleh = 0;
-        if(encodefb) { glDeleteFramebuffers_(1, &encodefb); encodefb = 0; }
-        if(encoderb) { glDeleteRenderbuffers_(1, &encoderb); encoderb = 0; }
+        cleanup();
 
         loopi(MAXVIDEOBUFFERS) videobuffers.data[i].cleanup();
         loopi(MAXSOUNDBUFFERS) soundbuffers.data[i].cleanup();
@@ -821,7 +826,7 @@ namespace recorder
   
     void drawquad(float tw, float th, float x, float y, float w, float h)
     {
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         glTexCoord2f(0,  0);  glVertex2f(x,   y);
         glTexCoord2f(tw, 0);  glVertex2f(x+w, y);
         glTexCoord2f(tw, th); glVertex2f(x+w, y+h);

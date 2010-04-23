@@ -49,7 +49,7 @@ struct gui : g3d_gui
 
     static void reset()
     {
-        lists.setsize(0);
+        lists.shrink(0);
     }
 
     static int ty, tx, tpos, *tcurrent, tcolor; //tracking tab size and position since uses different layout method...
@@ -336,6 +336,8 @@ struct gui : g3d_gui
         char *result = NULL;
         if(visible() && !layoutpass)
         {
+            e->rendered = true;
+
             bool hit = ishit(w, h);
             if(hit) 
             {
@@ -359,7 +361,7 @@ struct gui : g3d_gui
             
             e->draw(curx+FONTW/2, cury, color, hit && editing);
             
-            notextureshader->set();
+            lineshader->set();
             glDisable(GL_TEXTURE_2D);
             if(editing) glColor3f(1, 0, 0);
             else glColor3ub(color>>16, (color>>8)&0xFF, color&0xFF);
@@ -433,7 +435,7 @@ struct gui : g3d_gui
             }
             h = lists[parenth].h;
         }
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         rect_(curx, cury, w, h);
         glEnd();
         glEnable(GL_TEXTURE_2D);
@@ -465,7 +467,7 @@ struct gui : g3d_gui
             glDisable(GL_TEXTURE_2D);
             notextureshader->set();
             glColor4f(0, 0, 0, 0.75f);
-            glBegin(GL_QUADS);
+            glBegin(GL_TRIANGLE_FAN);
             rect_(x+SHADOW, y+SHADOW, xs, ys);
             glEnd();
             glEnable(GL_TEXTURE_2D);
@@ -488,7 +490,7 @@ struct gui : g3d_gui
         vec color = hit ? vec(1, 0.5f, 0.5f) : (overlaid ? vec(1, 1, 1) : light);
         glBindTexture(GL_TEXTURE_2D, t->id);
         glColor3fv(color.v);
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         glTexCoord2fv(tc[0]); glVertex2f(x,    y);
         glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
         glTexCoord2fv(tc[2]); glVertex2f(x+xs, y+ys);
@@ -500,7 +502,7 @@ struct gui : g3d_gui
             glBindTexture(GL_TEXTURE_2D, glowtex->id);
             if(hit || overlaid) { loopk(3) color[k] *= glowcolor[k]; glColor3fv(color.v); }
             else glColor3fv(glowcolor.v);
-            glBegin(GL_QUADS);
+            glBegin(GL_TRIANGLE_FAN);
             glTexCoord2fv(tc[0]); glVertex2f(x,    y);
             glTexCoord2fv(tc[1]); glVertex2f(x+xs, y);
             glTexCoord2fv(tc[2]); glVertex2f(x+xs, y+ys);
@@ -512,7 +514,7 @@ struct gui : g3d_gui
         {
             glBindTexture(GL_TEXTURE_2D, layertex->id);
             glColor3fv(color.v);
-            glBegin(GL_QUADS);
+            glBegin(GL_TRIANGLE_FAN);
             glTexCoord2fv(tc[0]); glVertex2f(x+xs/2, y+ys/2);
             glTexCoord2fv(tc[1]); glVertex2f(x+xs,   y+ys/2);
             glTexCoord2fv(tc[2]); glVertex2f(x+xs,   y+ys);
@@ -526,7 +528,7 @@ struct gui : g3d_gui
             if(!overlaytex) overlaytex = textureload("data/guioverlay.png", 3);
             glBindTexture(GL_TEXTURE_2D, overlaytex->id);
             glColor3fv(light.v);
-            glBegin(GL_QUADS);
+            glBegin(GL_TRIANGLE_FAN);
             rect_(x, y, xs, ys, 0);
             glEnd();
         }
@@ -539,7 +541,7 @@ struct gui : g3d_gui
             if(!slidertex) slidertex = textureload("data/guislider.png", 3);
             glEnable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, slidertex->id);
-            glBegin(GL_QUADS);
+            glBegin(GL_TRIANGLE_FAN);
             if(percent < 0.99f) 
             {
                 glColor4f(light.x, light.y, light.z, 0.375f);
@@ -966,12 +968,14 @@ void g3d_resetcursor()
     cursorx = cursory = 0.5f;
 }
 
+FVARP(guisens, 1e-3f, 1, 1e3f);
+
 bool g3d_movecursor(int dx, int dy)
 {
     if((!guis2d.length() || !hascursor) && GuiControl::isMouselooking()) return false; // INTENSITY: Added our mouselooking check
     const float CURSORSCALE = 500.0f;
-    cursorx = max(0.0f, min(1.0f, cursorx+dx*(screen->h/(screen->w*CURSORSCALE))));
-    cursory = max(0.0f, min(1.0f, cursory+dy/CURSORSCALE));
+    cursorx = max(0.0f, min(1.0f, cursorx+guisens*dx*(screen->h/(screen->w*CURSORSCALE))));
+    cursory = max(0.0f, min(1.0f, cursory+guisens*dy/CURSORSCALE));
     return true;
 }
 
@@ -986,7 +990,7 @@ void g3d_addgui(g3d_callback *cb, vec &origin, int flags)
     g.cb = cb;
     g.origin = origin;
     g.savedorigin = &origin;
-    g.dist = camera1->o.dist(g.origin);
+    g.dist = flags&GUI_BOTTOM && gui2d ? 1e16f : camera1->o.dist(g.origin);
     g.gui2d = gui2d;
 }
 
@@ -1017,8 +1021,8 @@ void g3d_render()
     if(actionon) mousebuttons |= G3D_PRESSED;
     
     gui::reset();
-    guis2d.setsize(0);
-    guis3d.setsize(0);
+    guis2d.shrink(0);
+    guis3d.shrink(0);
  
     // call all places in the engine that may want to render a gui from here, they call g3d_addgui()
     extern void g3d_texturemenu();

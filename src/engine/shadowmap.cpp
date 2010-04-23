@@ -104,6 +104,7 @@ static struct shadowmaptexture : rendertarget
         return hasFBO ? &rgbafmts[fpshadowmap && hasTF ? 0 : (shadowmapprecision ? 1 : 2)] : rgbfmts;
     }
 
+    bool shadowcompare() const { return renderpath==R_FIXEDFUNCTION; }
     bool filter() const { return renderpath!=R_FIXEDFUNCTION || hasNVPCF; }
     bool swaptexs() const { return renderpath!=R_FIXEDFUNCTION; }
 
@@ -400,11 +401,12 @@ void pushshadowmap()
 
     if(renderpath==R_FIXEDFUNCTION)
     {
-        static GLfloat texgenS[4] = { 1, 0, 0, 0 },
-                       texgenT[4] = { 0, 1, 0, 0 },
-                       texgenR[4] = { 0, 0, 1, 0 };
-
         glBindTexture(GL_TEXTURE_2D, shadowmaptex.rendertex);
+
+        const GLfloat *v = shadowmapmatrix.v;
+        GLfloat texgenS[4] = { v[0], v[4], v[8], v[12] },
+                texgenT[4] = { v[1], v[5], v[9], v[13] },
+                texgenR[4] = { v[2], v[6], v[10], v[14] };
 
         glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
         glTexGenfv(GL_S, GL_OBJECT_PLANE, texgenS);
@@ -422,18 +424,6 @@ void pushshadowmap()
         // MUST set Q with glTexCoord4f, glTexCoord3f does not work
         glTexCoord4f(0, 0, 0, 1);
 
-        if(hasDT && hasSH)
-        {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_GEQUAL);
-            glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE_ARB, GL_LUMINANCE);
-        }
-        else
-        {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_SGIX, GL_TRUE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_OPERATOR_SGIX, GL_TEXTURE_GEQUAL_R_SGIX);
-        }
-
         glColor3f(shadowmapintensity/100.0f, shadowmapintensity/100.0f, shadowmapintensity/100.0f);
 
         if(ffsmscissor) calcscissorbox();
@@ -446,7 +436,6 @@ void pushshadowmap()
     glActiveTexture_(GL_TEXTURE2_ARB);
     glMatrixMode(GL_TEXTURE);
     glLoadMatrixf(shadowmapmatrix.v);
-    glPushMatrix();
     glMatrixMode(GL_MODELVIEW);
 
     glActiveTexture_(GL_TEXTURE0_ARB);
@@ -472,56 +461,17 @@ void pushshadowmap()
     setenvparamf("shadowmapambient", SHPARAM_PIXEL, 7, r/255.0f, g/255.0f, b/255.0f);
 }
 
-void adjustshadowmatrix(const ivec &o, float scale)
-{
-    if(!shadowmap || !shadowmaptex.rendertex) return;
-
-    if(renderpath==R_FIXEDFUNCTION)
-    {
-        const GLfloat *v = shadowmapmatrix.v;
-        GLfloat texgenS[4] = { v[0]*scale, v[4]*scale, v[8]*scale, v[0]*o.x + v[4]*o.y + v[8]*o.z + v[12] },
-                texgenT[4] = { v[1]*scale, v[5]*scale, v[9]*scale, v[1]*o.x + v[5]*o.y + v[9]*o.z + v[13] },
-                texgenR[4] = { v[2]*scale, v[6]*scale, v[10]*scale, v[2]*o.x + v[6]*o.y + v[10]*o.z + v[14] };
-        glTexGenfv(GL_S, GL_OBJECT_PLANE, texgenS);
-        glTexGenfv(GL_T, GL_OBJECT_PLANE, texgenT);
-        glTexGenfv(GL_R, GL_OBJECT_PLANE, texgenR);
-    }
-    else
-    {
-        glActiveTexture_(GL_TEXTURE2_ARB);
-        glMatrixMode(GL_TEXTURE);
-        glPopMatrix();
-        glPushMatrix();
-        glTranslatef(o.x, o.y, o.z);
-        glScalef(scale, scale, scale);
-        glMatrixMode(GL_MODELVIEW);
-        glActiveTexture_(GL_TEXTURE0_ARB);
-    }
-}
-
 void popshadowmap()
 {
     if(!shadowmap || !shadowmaptex.rendertex) return;
 
-    if(renderpath!=R_FIXEDFUNCTION) 
-    {
-        glActiveTexture_(GL_TEXTURE2_ARB);
-        glMatrixMode(GL_TEXTURE);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
-
-        glActiveTexture_(GL_TEXTURE0_ARB);
-    }
-    else
+    if(renderpath==R_FIXEDFUNCTION) 
     {
         popscissor();
 
         glDisable(GL_TEXTURE_GEN_S);
         glDisable(GL_TEXTURE_GEN_T);
         glDisable(GL_TEXTURE_GEN_R);
-
-        if(hasDT && hasSH) glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE);
-        else glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_SGIX, GL_FALSE);
     }
 }
 
@@ -530,9 +480,9 @@ void rendershadowmap()
     if(!shadowmap || (renderpath==R_FIXEDFUNCTION && (!hasSGIDT || !hasSGISH))) return;
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
-    if(renderpath!=R_FIXEDFUNCTION || !fogging) glDisable(GL_FOG); 
+    glDisable(GL_FOG); 
     shadowmaptex.render(1<<shadowmapsize, 1<<shadowmapsize, renderpath!=R_FIXEDFUNCTION ? blurshadowmap : 0, blursmsigma/100.0f);
-    if(renderpath!=R_FIXEDFUNCTION || !fogging) glEnable(GL_FOG);
+    glEnable(GL_FOG);
 }
 
 VAR(debugsm, 0, 0, 1);

@@ -10,7 +10,7 @@ void boxs(int orient, vec o, const vec &s)
     float f = !outline ? 0 : (dc>0 ? 0.2f : -0.2f);
     o[D[d]] += float(dc) * s[D[d]] + f,
 
-    glBegin(GL_POLYGON);
+    glBegin(GL_LINE_LOOP);
 
     glVertex3fv(o.v); o[R[d]] += s[R[d]];
     glVertex3fv(o.v); o[C[d]] += s[C[d]];
@@ -59,7 +59,7 @@ void boxsgrid(int orient, vec o, vec s, int g)
     xtraverts += 2*int(xs+ys);
 }
 
-selinfo sel, lastsel; // INTENSITY: WAS: selinfo sel = { 0 }, lastsel; // but that fails on gcc 4.4
+selinfo sel, lastsel;
 
 int orient = 0;
 int gridsize = 8;
@@ -89,7 +89,7 @@ VARF(moving, 0, 0, 1,
     if(moving) havesel = false; // tell cursorupdate to create handle
 );
 
-VARF(gridpower, 3-VVEC_FRAC, 3, VVEC_INT-1,
+VARF(gridpower, 0, 3, 12,
 {
     if(dragging) return;
     gridsize = 1<<gridpower;
@@ -149,9 +149,7 @@ bool noedit(bool view, bool msg)
     if(!editmode) { if(msg) conoutf(CON_ERROR, "operation only allowed in edit mode"); return true; }
     if(view || haveselent()) return false;
     float r = 1.0f;
-    vec o, s;
-    o = sel.o.v;
-    s = sel.s.v;
+    vec o = sel.o.tovec(), s = sel.s.tovec();
     s.mul(float(sel.grid) / 2.0f);
     o.add(s);
     r = float(max(s.x, max(s.y, s.z)));
@@ -199,9 +197,11 @@ COMMAND(selextend, "");
 
 cube &blockcube(int x, int y, int z, const block3 &b, int rgrid) // looks up a world cube, based on coordinates mapped by the block
 {
-    ivec s(dimension(b.orient), x*b.grid, y*b.grid, dimcoord(b.orient)*(b.s[dimension(b.orient)]-1)*b.grid);
-
-    return neighbourcube(b.o.x+s.x, b.o.y+s.y, b.o.z+s.z, -z*b.grid, rgrid, b.orient);
+    int dim = dimension(b.orient), dc = dimcoord(b.orient);
+    ivec s(dim, x*b.grid, y*b.grid, dc*(b.s[dim]-1)*b.grid);
+    s.add(b.o);
+    if(dc) s[dim] -= z*b.grid; else s[dim] += z*b.grid;
+    return lookupcube(s.x, s.y, s.z, rgrid);
 }
 
 #define loopxy(b)        loop(y,(b).s[C[dimension((b).orient)]]) loop(x,(b).s[R[dimension((b).orient)]])
@@ -284,8 +284,6 @@ VAR(passthroughcube, 0, 1, 1);
 
 void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so can edit in thirdperson
 {
-    if(sel.grid == 0) sel.grid = gridsize;
-
     int d   = dimension(sel.orient),
         od  = dimension(orient),
         odc = dimcoord(orient);
@@ -302,7 +300,7 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
         {
             v.add(handle);
             (e = handle).mask(~(sel.grid-1));
-            v.sub(handle = e.v);
+            v.sub(handle = e.tovec());
             havesel = true;
         }
         (e = v).mask(~(sel.grid-1));
@@ -426,6 +424,8 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
 
     renderentselection(camera1->o, camdir, entmoving!=0);
 
+    lineshader->set();
+
     enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 
     if(!moving && !hovering && !hidecursor)
@@ -462,6 +462,8 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
    
     disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
 
+    notextureshader->set();
+
     glDisable(GL_BLEND);
 }
 
@@ -495,7 +497,7 @@ void readychanges(block3 &b, cube *c, const ivec &cor, int size)
         }
         if(c[i].children)
         {
-            if(size<=(8>>VVEC_FRAC))
+            if(size<=1)
             {
                 solidfaces(c[i]);
                 discardchildren(c[i]);
@@ -761,11 +763,135 @@ void swapundo(undolist &a, undolist &b, const char *s)
 void editundo() { swapundo(undos, redos, "undo"); }
 void editredo() { swapundo(redos, undos, "redo"); }
 
+vector<editinfo *> editinfos;
 editinfo *localedit = NULL;
+
+static void packcube(cube &c, vector<uchar> &buf)
+{
+    if(c.children)
+    {
+        buf.put(0xFF);
+        loopi(8) packcube(c.children[i], buf);
+    }
+    else
+    {
+        buf.put(c.ext ? c.ext->material : 0);
+        cube data = c;
+        lilswap(data.texture, 6);
+        buf.put(data.edges, sizeof(data.edges));
+        buf.put((uchar *)data.texture, sizeof(data.texture));
+    }
+}
+
+static bool packeditinfo(editinfo *e, vector<uchar> &buf)
+{
+    if(!e || !e->copy || e->copy->size() > (16<<20)) return false;
+    block3 &b = *e->copy;
+    block3 hdr = b; 
+    lilswap(hdr.o.v, 3);
+    lilswap(hdr.s.v, 3);
+    lilswap(&hdr.grid, 1);
+    lilswap(&hdr.orient, 1);
+    buf.put((const uchar *)&hdr, sizeof(hdr));
+    cube *c = b.c();
+    loopi(b.size()) packcube(c[i], buf);
+    return true;
+}
+
+static void unpackcube(cube &c, ucharbuf &buf)
+{
+    int mat = buf.get();
+    if(mat == 0xFF)
+    {
+        c.children = newcubes(F_EMPTY);
+        loopi(8) unpackcube(c.children[i], buf);
+    }
+    else
+    {
+        if(mat != MAT_AIR) ext(c).material = mat;
+        buf.get(c.edges, sizeof(c.edges));
+        buf.get((uchar *)c.texture, sizeof(c.texture));
+        lilswap(c.texture, 6);
+    }
+}
+
+static bool unpackeditinfo(editinfo *&e, ucharbuf &buf)
+{
+    if(!e) e = editinfos.add(new editinfo);
+    if(e->copy) { freeblock(e->copy); e->copy = NULL; }
+    block3 hdr;
+    buf.get((uchar *)&hdr, sizeof(hdr));
+    lilswap(hdr.o.v, 3);
+    lilswap(hdr.s.v, 3);
+    lilswap(&hdr.grid, 1);
+    lilswap(&hdr.orient, 1);
+    if(hdr.size() > (16<<20)) return false;
+    e->copy = (block3 *)new uchar[sizeof(block3)+hdr.size()*sizeof(cube)];
+    block3 &b = *e->copy;
+    b = hdr; 
+    cube *c = b.c(); 
+    memset(c, 0, b.size()*sizeof(cube));
+    loopi(b.size()) unpackcube(c[i], buf);
+    return true;
+}
+
+static bool compresseditinfo(const uchar *inbuf, int inlen, uchar *&outbuf, int &outlen)
+{
+    uLongf len = compressBound(inlen);
+    if(len > (1<<20)) return false;
+    outbuf = new uchar[len];
+    if(compress2((Bytef *)outbuf, &len, (const Bytef *)inbuf, inlen, Z_BEST_COMPRESSION) != Z_OK || len > (1<<16))
+    {
+        delete[] outbuf;
+        outbuf = NULL;
+        return false;
+    }
+    outlen = len;
+    return true;
+}
+
+static bool uncompresseditinfo(const uchar *inbuf, int inlen, uchar *&outbuf, int &outlen)
+{
+    if(compressBound(outlen) > (1<<20)) return false;
+    uLongf len = outlen;            
+    outbuf = new uchar[len];
+    if(uncompress((Bytef *)outbuf, &len, (const Bytef *)inbuf, inlen) != Z_OK)
+    {
+        delete[] outbuf;
+        outbuf = NULL;
+        return false;
+    } 
+    outlen = len;
+    return true;
+}
+
+bool packeditinfo(editinfo *e, int &inlen, uchar *&outbuf, int &outlen)
+{
+    vector<uchar> buf;
+    if(!packeditinfo(e, buf)) return false;
+    inlen = buf.length();
+    return compresseditinfo(buf.getbuf(), buf.length(), outbuf, outlen);
+}
+
+bool unpackeditinfo(editinfo *&e, const uchar *inbuf, int inlen, int outlen)
+{
+    if(e && e->copy) { freeblock(e->copy); e->copy = NULL; }
+    uchar *outbuf = NULL;
+    if(!uncompresseditinfo(inbuf, inlen, outbuf, outlen)) return false;
+    ucharbuf buf(outbuf, outlen);
+    if(!unpackeditinfo(e, buf))
+    {
+        delete[] outbuf;
+        return false;
+    }
+    delete[] outbuf;
+    return true;     
+}
 
 void freeeditinfo(editinfo *&e)
 {
     if(!e) return;
+    editinfos.removeobj(e);
     if(e->copy) freeblock(e->copy);
     delete e;
     e = NULL;
@@ -777,7 +903,7 @@ void freeeditinfo(editinfo *&e)
 void mpcopy(editinfo *&e, selinfo &sel, bool local)
 {
     if(local) game::edittrigger(sel, EDIT_COPY);
-    if(e==NULL) e = new editinfo;
+    if(e==NULL) e = editinfos.add(new editinfo);
     if(e->copy) freeblock(e->copy);
     e->copy = NULL;
     protectsel(e->copy = blockcopy(block3(sel), sel.grid));
@@ -825,6 +951,21 @@ COMMAND(paste, "");
 COMMANDN(undo, editundo, "");
 COMMANDN(redo, editredo, "");
 
+void compacteditvslots()
+{
+    loopv(editinfos) 
+    {
+        editinfo *e = editinfos[i];
+        compactvslots(e->copy->c(), e->copy->size());
+    }
+    for(undoblock *u = undos.first; u; u = u->next)
+        if(!u->numents)
+            compactvslots(u->block()->c(), u->block()->size());
+    for(undoblock *u = redos.first; u; u = u->next)
+        if(!u->numents)
+            compactvslots(u->block()->c(), u->block()->size());
+}
+
 ///////////// height maps ////////////////
 
 #define MAXBRUSH    64
@@ -862,7 +1003,7 @@ vector<int> htextures;
 
 COMMAND(clearbrush, "");
 COMMAND(brushvert, "iii");
-ICOMMAND(hmapcancel, "", (), htextures.setsizenodelete(0); );
+ICOMMAND(hmapcancel, "", (), htextures.setsize(0); );
 ICOMMAND(hmapselect, "", (), 
     int t = lookupcube(cur.x, cur.y, cur.z).texture[orient];
     int i = htextures.find(t);
@@ -1258,7 +1399,7 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
                 solidfaces(c);
                 cube &o = blockcube(x, y, 1, sel, -sel.grid);
                 loopi(6)
-                    c.texture[i] = o.texture[i];
+                    c.texture[i] = o.children ? 2+i : o.texture[i];
             }
             else
                 emptyfaces(c);
@@ -1360,6 +1501,70 @@ void tofronttex()                                       // maintain most recentl
 selinfo repsel;
 int reptex = -1;
 
+struct vslotmap
+{
+    int index;
+    VSlot *vslot;
+
+    vslotmap() {}
+    vslotmap(int index, VSlot *vslot) : index(index), vslot(vslot) {}
+};
+static vector<vslotmap> remappedvslots;
+
+VAR(usevdelta, 1, 0, 0);
+
+static VSlot *remapvslot(int index, const VSlot &ds)
+{
+    loopv(remappedvslots) if(remappedvslots[i].index == index) return remappedvslots[i].vslot;
+    VSlot &vs = lookupvslot(index, false);
+    if(vs.index < 0) return NULL;
+    VSlot *edit = NULL;
+    if(usevdelta)
+    {
+        VSlot ms;
+        mergevslot(ms, vs, ds);
+        edit = ms.changed ? editvslot(vs, ms) : vs.slot->variants;
+    }
+    else edit = ds.changed ? editvslot(vs, ds) : vs.slot->variants;
+    if(!edit) edit = &vs;
+    remappedvslots.add(vslotmap(vs.index, edit));
+    return edit;
+}
+
+static void remapvslots(cube &c, const VSlot &ds, int orient, bool &findrep, VSlot *&findedit)
+{
+    if(c.children)
+    {
+        loopi(8) remapvslots(c.children[i], ds, orient, findrep, findedit);
+        return;
+    }
+    static VSlot ms;
+    if(orient<0) loopi(6)
+    {
+        VSlot *edit = remapvslot(c.texture[i], ds);
+        if(edit)
+        {
+            c.texture[i] = edit->index;
+            if(!findedit) findedit = edit;
+        }
+    }
+    else
+    {
+        int i = visibleorient(c, orient);
+        VSlot *edit = remapvslot(c.texture[i], ds);
+        if(edit)
+        {
+            if(findrep)
+            {
+                if(reptex < 0) reptex = c.texture[i];
+                else if(reptex != c.texture[i]) findrep = false;
+            }
+            c.texture[i] = edit->index;
+            if(!findedit) findedit = edit;
+        }
+    }
+}
+
 void edittexcube(cube &c, int tex, int orient, bool &findrep)
 {
     if(orient<0) loopi(6) c.texture[i] = tex;
@@ -1376,9 +1581,116 @@ void edittexcube(cube &c, int tex, int orient, bool &findrep)
     if(c.children) loopi(8) edittexcube(c.children[i], tex, orient, findrep);
 }
 
-extern int curtexnum;
 VAR(allfaces, 0, 0, 1);
 
+void mpeditvslot(const VSlot &ds, int allfaces, selinfo &sel, bool local)
+{
+    if(local)
+    {
+        if(!(lastsel==sel)) tofronttex();
+        if(allfaces || !(repsel == sel)) reptex = -1;
+        repsel = sel;
+    }
+    bool findrep = local && !allfaces && reptex < 0;
+    VSlot *findedit = NULL;
+    loopselxyz(remapvslots(c, ds, allfaces ? -1 : sel.orient, findrep, findedit));
+    remappedvslots.setsize(0);
+    if(local && findedit)
+    {
+        lasttex = findedit->index;
+        lasttexmillis = totalmillis;
+        curtexindex = texmru.find(lasttex);
+        if(curtexindex < 0)
+        {
+            curtexindex = texmru.length();
+            texmru.add(lasttex);
+        }
+    }
+}
+
+void vdelta(char *body)
+{
+    if(noedit() || (nompedit && multiplayer())) return;
+    usevdelta++;
+    execute(body);
+    usevdelta--;
+}
+COMMAND(vdelta, "s");
+
+void vrotate(int *n)
+{
+    if(noedit() || (nompedit && multiplayer())) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_ROTATION;
+    ds.rotation = usevdelta ? *n : clamp(*n, 0, 5);
+    mpeditvslot(ds, allfaces, sel, true);
+}
+COMMAND(vrotate, "i");
+
+void voffset(int *x, int *y)
+{
+    if(noedit() || (nompedit && multiplayer())) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_OFFSET;
+    ds.xoffset = usevdelta ? *x : max(*x, 0);
+    ds.yoffset = usevdelta ? *y : max(*y, 0);
+    mpeditvslot(ds, allfaces, sel, true);
+}
+COMMAND(voffset, "ii");
+
+void vscroll(float *s, float *t)
+{
+    if(noedit() || (nompedit && multiplayer())) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_SCROLL;
+    ds.scrollS = *s/1000.0f;
+    ds.scrollT = *t/1000.0f;
+    mpeditvslot(ds, allfaces, sel, true);
+}
+COMMAND(vscroll, "ff");
+
+void vscale(float *scale)
+{
+    if(noedit() || (nompedit && multiplayer())) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_SCALE;
+    ds.scale = *scale <= 0 ? 1 : (usevdelta ? *scale : clamp(*scale, 1/8.0f, 8.0f));
+    mpeditvslot(ds, allfaces, sel, true);
+}
+COMMAND(vscale, "f");
+
+void vlayer(int *n)
+{
+    if(noedit() || (nompedit && multiplayer())) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_LAYER;
+    ds.layer = vslots.inrange(*n) ? *n : 0;
+    mpeditvslot(ds, allfaces, sel, true);
+}
+COMMAND(vlayer, "i");
+
+void vreset()
+{
+    if(noedit() || (nompedit && multiplayer())) return;
+    VSlot ds;
+    mpeditvslot(ds, allfaces, sel, true);
+}
+COMMAND(vreset, "");
+
+void vshaderparam(const char *name, float *x, float *y, float *z, float *w)
+{
+    if(noedit() || (nompedit && multiplayer())) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_SHPARAM;
+    if(name[0])
+    {
+        ShaderParam p = { getshaderparamname(name), SHPARAM_LOOKUP, -1, -1, {*x, *y, *z, *w} };
+        ds.params.add(p);
+    }
+    mpeditvslot(ds, allfaces, sel, true);
+}
+COMMAND(vshaderparam, "sffff");
+ 
 void mpedittex(int tex, int allfaces, selinfo &sel, bool local)
 {
     if(local)
@@ -1393,11 +1705,43 @@ void mpedittex(int tex, int allfaces, selinfo &sel, bool local)
 
 void filltexlist()
 {
-    if(texmru.length()!=curtexnum)
+    if(texmru.length()!=vslots.length())
     {
-        loopv(texmru) if(texmru[i]>=curtexnum) texmru.remove(i--);
-        loopi(curtexnum) if(texmru.find(i)<0) texmru.add(i);
+        loopvrev(texmru) if(texmru[i]>=vslots.length()) 
+        {
+            if(curtexindex > i) curtexindex--;
+            else if(curtexindex == i) curtexindex = -1;
+            texmru.remove(i);
+        }
+        loopv(vslots) if(texmru.find(i)<0) texmru.add(i);
     }
+}
+
+void compactmruvslots()
+{
+    remappedvslots.setsize(0);
+    loopvrev(texmru) 
+    {
+        if(vslots.inrange(texmru[i]))
+        {
+            VSlot &vs = *vslots[texmru[i]];
+            if(vs.index >= 0) 
+            {
+                texmru[i] = vs.index;
+                continue;
+            }
+        }
+        if(curtexindex > i) curtexindex--;
+        else if(curtexindex == i) curtexindex = -1;    
+        texmru.remove(i);
+    }
+    if(vslots.inrange(lasttex))
+    {
+        VSlot &vs = *vslots[lasttex];
+        lasttex = vs.index >= 0 ? vs.index : 0;
+    }
+    else lasttex = 0;
+    reptex = vslots.inrange(reptex) ? vslots[reptex]->index : -1;
 }
 
 void edittex(int i, bool save = true)
@@ -1417,16 +1761,17 @@ void edittex_(int *dir)
     filltexlist();
     texpaneltimer = 5000;
     if(!(lastsel==sel)) tofronttex();
-    curtexindex = clamp(curtexindex<0 ? 0 : curtexindex+*dir, 0, curtexnum-1);
+    curtexindex = clamp(curtexindex<0 ? 0 : curtexindex+*dir, 0, texmru.length()-1);
     edittex(texmru[curtexindex], false);
 }
 
 void gettex()
 {
-    if(noedit()) return;
+    if(noedit(true)) return;
     filltexlist();
-    loopxyz(sel, sel.grid, curtexindex = c.texture[sel.orient]);
-    loopi(curtexnum) if(texmru[i]==curtexindex)
+    int tex = -1;
+    loopxyz(sel, sel.grid, tex = c.texture[sel.orient]);
+    loopv(texmru) if(texmru[i]==tex)
     {
         curtexindex = i;
         tofronttex();
@@ -1445,7 +1790,7 @@ void getcurtex()
 
 void getseltex()
 {
-    if(noedit()) return;
+    if(noedit(true)) return;
     cube &c = lookupcube(sel.o.x, sel.o.y, sel.o.z, -sel.grid);
     if(c.children || isempty(c)) return;
     intret(c.texture[sel.orient]);
@@ -1454,7 +1799,8 @@ void getseltex()
 void gettexname(int *tex, int *subslot)
 {
     if(noedit() || *tex<0) return;
-    Slot &slot = lookuptexture(*tex);
+    VSlot &vslot = lookupvslot(*tex);
+    Slot &slot = *vslot.slot;
     if(!slot.sts.inrange(*subslot)) return;
     result(slot.sts[*subslot].name);
 }
@@ -1463,6 +1809,7 @@ COMMANDN(edittex, edittex_, "i");
 COMMAND(gettex, "");
 COMMAND(getcurtex, "");
 COMMAND(getseltex, "");
+ICOMMAND(getreptex, "", (), { if(!noedit()) intret(vslots.inrange(reptex) ? reptex : -1); });
 COMMAND(gettexname, "ii");
 
 void replacetexcube(cube &c, int oldtex, int newtex)
@@ -1471,21 +1818,29 @@ void replacetexcube(cube &c, int oldtex, int newtex)
     if(c.children) loopi(8) replacetexcube(c.children[i], oldtex, newtex);
 }
 
-void mpreplacetex(int oldtex, int newtex, selinfo &sel, bool local)
+void mpreplacetex(int oldtex, int newtex, bool insel, selinfo &sel, bool local)
 {
-    if(local) game::edittrigger(sel, EDIT_REPLACE, oldtex, newtex);
-    loopi(8) replacetexcube(worldroot[i], oldtex, newtex);
+    if(local) game::edittrigger(sel, EDIT_REPLACE, oldtex, newtex, insel ? 1 : 0);
+    if(insel) 
+    {
+        loopselxyz(replacetexcube(c, oldtex, newtex));
+    }
+    else
+    {
+        loopi(8) replacetexcube(worldroot[i], oldtex, newtex);
+    }
     allchanged();
 }
 
-void replace()
+void replace(bool insel)
 {
     if(noedit()) return;
     if(reptex < 0) { conoutf(CON_ERROR, "can only replace after a texture edit"); return; }
-    mpreplacetex(reptex, lasttex, sel, true);
+    mpreplacetex(reptex, lasttex, insel, sel, true);
 }
 
-COMMAND(replace, "");
+ICOMMAND(replace, "", (), replace(false));
+ICOMMAND(replacesel, "", (), replace(true));
 
 ////////// flip and rotate ///////////////
 uint dflip(uint face) { return face==F_EMPTY ? face : 0x88888888 - (((face&0xF0F0F0F0)>>4) | ((face&0x0F0F0F0F)<<4)); }
@@ -1667,37 +2022,38 @@ struct texturegui : g3d_callback
 
     void gui(g3d_gui &g, bool firstpass)
     {
-        int origtab = menutab, numtabs = max((curtexnum + TEXGUI_WIDTH*TEXGUI_HEIGHT - 1)/(TEXGUI_WIDTH*TEXGUI_HEIGHT), 1);
+        int origtab = menutab, numtabs = max((slots.length() + TEXGUI_WIDTH*TEXGUI_HEIGHT - 1)/(TEXGUI_WIDTH*TEXGUI_HEIGHT), 1);
         g.start(menustart, 0.04f, &menutab);
         loopi(numtabs)
         {   
             g.tab(!i ? "Textures" : NULL, 0xAAFFAA);
             if(i+1 != origtab) continue; //don't load textures on non-visible tabs!
-            loopj(TEXGUI_HEIGHT) 
+            loop(h, TEXGUI_HEIGHT) 
             {
                 g.pushlist();
-                loopk(TEXGUI_WIDTH) 
+                loop(w, TEXGUI_WIDTH) 
                 {
-                    int ti = (i*TEXGUI_HEIGHT+j)*TEXGUI_WIDTH+k;
-                    if(ti<curtexnum) 
+                    int ti = (i*TEXGUI_HEIGHT+h)*TEXGUI_WIDTH+w;
+                    if(ti<slots.length()) 
                     {
                         Texture *tex = notexture, *glowtex = NULL, *layertex = NULL;
-                        Slot &slot = lookuptexture(ti, false);
+                        Slot &slot = lookupslot(ti, false);
+                        VSlot &vslot = *slot.variants;
                         if(slot.sts.empty()) continue;
                         else if(slot.loaded) 
                         {
                             tex = slot.sts[0].t;
-                            if(slot.texmask&(1<<TEX_GLOW)) { loopv(slot.sts) if(slot.sts[i].type==TEX_GLOW) { glowtex = slot.sts[i].t; break; } }
-                            if(slot.layer)
+                            if(slot.texmask&(1<<TEX_GLOW)) { loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; } }
+                            if(vslot.layer)
                             {
-                                Slot &layer = lookuptexture(slot.layer);
-                                if(!layer.sts.empty()) layertex = layer.sts[0].t;
+                                VSlot &layer = lookupvslot(vslot.layer);
+                                if(!layer.slot->sts.empty()) layertex = layer.slot->sts[0].t;
                             }
                         }
                         else if(slot.thumbnail) tex = slot.thumbnail;
                         else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
-                        if(g.texture(tex, 1.0, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor, layertex)&G3D_UP && (slot.loaded || tex!=notexture)) 
-                            edittex(ti);
+                        if(g.texture(tex, 1.0, vslot.rotation, vslot.xoffset, vslot.yoffset, glowtex, vslot.glowcolor, layertex)&G3D_UP && (slot.loaded || tex!=notexture)) 
+                            edittex(vslot.index);
                     }
                     else
                         g.texture(notexture, 1.0); //create an empty space
@@ -1712,7 +2068,8 @@ struct texturegui : g3d_callback
     {
         if(on != menuon && (menuon = on)) 
         { 
-            if(menustart <= lasttexmillis) menutab = 1+clamp(lasttex, 0, curtexnum-1)/(TEXGUI_WIDTH*TEXGUI_HEIGHT);
+            if(menustart <= lasttexmillis) 
+                menutab = 1+clamp(lookupvslot(lasttex, false).slot->index, 0, slots.length()-1)/(TEXGUI_WIDTH*TEXGUI_HEIGHT);
             menupos = menuinfrontofplayer(); 
             menustart = starttime(); 
         }
@@ -1760,28 +2117,29 @@ void rendertexturepanel(int w, int h)
         loopi(7)
         {
             int s = (i == 3 ? 285 : 220), ti = curtexindex+i-3;
-            if(ti>=0 && ti<curtexnum)
+            if(ti>=0 && ti<texmru.length())
             {
-                Slot &slot = lookuptexture(texmru[ti]);
-                Texture *tex = slot.sts[0].t, *glowtex = NULL, *layertex = NULL;
+                VSlot &vslot = lookupvslot(texmru[ti]);
+                Slot &slot = *vslot.slot;
+                Texture *tex = slot.sts.empty() ? notexture : slot.sts[0].t, *glowtex = NULL, *layertex = NULL;
                 if(slot.texmask&(1<<TEX_GLOW))
                 {
                     loopvj(slot.sts) if(slot.sts[j].type==TEX_GLOW) { glowtex = slot.sts[j].t; break; }
                 }
-                if(slot.layer)
+                if(vslot.layer)
                 {
-                    Slot &layer = lookuptexture(slot.layer);
-                    layertex = layer.sts[0].t;
+                    VSlot &layer = lookupvslot(vslot.layer);
+                    layertex = layer.slot->sts.empty() ? notexture : layer.slot->sts[0].t;
                 }
                 float sx = min(1.0f, tex->xs/(float)tex->ys), sy = min(1.0f, tex->ys/(float)tex->xs);
                 int x = w*1800/h-s-50, r = s;
                 float tc[4][2] = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 } };
-                float xoff = slot.xoffset, yoff = slot.yoffset;
-                if(slot.rotation)
+                float xoff = vslot.xoffset, yoff = vslot.yoffset;
+                if(vslot.rotation)
                 {
-                    if((slot.rotation&5) == 1) { swap(xoff, yoff); loopk(4) swap(tc[k][0], tc[k][1]); }
-                    if(slot.rotation >= 2 && slot.rotation <= 4) { xoff *= -1; loopk(4) tc[k][0] *= -1; }
-                    if(slot.rotation <= 2 || slot.rotation == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
+                    if((vslot.rotation&5) == 1) { swap(xoff, yoff); loopk(4) swap(tc[k][0], tc[k][1]); }
+                    if(vslot.rotation >= 2 && vslot.rotation <= 4) { xoff *= -1; loopk(4) tc[k][0] *= -1; }
+                    if(vslot.rotation <= 2 || vslot.rotation == 5) { yoff *= -1; loopk(4) tc[k][1] *= -1; }
                 }
                 loopk(4) { tc[k][0] = tc[k][0]/sx - xoff/tex->xs; tc[k][1] = tc[k][1]/sy - yoff/tex->ys; }
                 glBindTexture(GL_TEXTURE_2D, tex->id);
@@ -1792,9 +2150,9 @@ void rendertexturepanel(int w, int h)
                     {
                         glBindTexture(GL_TEXTURE_2D, glowtex->id);
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-                        glColor4f(slot.glowcolor.x, slot.glowcolor.y, slot.glowcolor.z, texpaneltimer/1000.0f);
+                        glColor4f(vslot.glowcolor.x, vslot.glowcolor.y, vslot.glowcolor.z, texpaneltimer/1000.0f);
                     }
-                    glBegin(GL_QUADS);
+                    glBegin(GL_TRIANGLE_FAN);
                     glTexCoord2fv(tc[0]); glVertex2f(x,   y);
                     glTexCoord2fv(tc[1]); glVertex2f(x+r, y);
                     glTexCoord2fv(tc[2]); glVertex2f(x+r, y+r);
@@ -1804,7 +2162,7 @@ void rendertexturepanel(int w, int h)
                     if(j==1 && layertex)
                     {
                         glBindTexture(GL_TEXTURE_2D, layertex->id);
-                        glBegin(GL_QUADS);
+                        glBegin(GL_TRIANGLE_FAN);
                         glTexCoord2fv(tc[0]); glVertex2f(x+r/2, y+r/2);
                         glTexCoord2fv(tc[1]); glVertex2f(x+r,   y+r/2);
                         glTexCoord2fv(tc[2]); glVertex2f(x+r,   y+r);

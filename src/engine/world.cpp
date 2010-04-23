@@ -76,11 +76,7 @@ void modifyoctaentity(int flags, int id, cube *c, const ivec &cor, int size, con
                         if(va)
                         {
                             va->bbmin.x = -1;
-                            if(oe.mapmodels.empty()) 
-                            {
-                                if(!va->mapmodels) va->mapmodels = new vector<octaentities *>;
-                                va->mapmodels->add(&oe);
-                            }
+                            if(oe.mapmodels.empty()) va->mapmodels.add(&oe);
                         }
                         oe.mapmodels.add(id);
                         loopk(3)
@@ -109,11 +105,7 @@ void modifyoctaentity(int flags, int id, cube *c, const ivec &cor, int size, con
                         if(va)
                         {
                             va->bbmin.x = -1;
-                            if(va->mapmodels && oe.mapmodels.empty())
-                            {
-                                va->mapmodels->removeobj(&oe);
-                                if(va->mapmodels->empty()) DELETEP(va->mapmodels);
-                            }
+                            if(oe.mapmodels.empty()) va->mapmodels.removeobj(&oe);
                         }
                         oe.bbmin = oe.bbmax = oe.o;
                         oe.bbmin.add(oe.size);
@@ -162,7 +154,7 @@ static bool modifyoctaent(int flags, int id)
     if(!ents.inrange(id)) return false;
     ivec o, r;
     extentity &e = *ents[id];
-    if((e.inoctanode!=0)==flags || !getentboundingbox(e, o, r)) return false;
+    if((flags&MODOE_ADD ? e.inoctanode : !e.inoctanode) || !getentboundingbox(e, o, r)) return false;
 
     if(!insideworld(e.o)) 
     {
@@ -263,8 +255,7 @@ void findents(int low, int high, bool notspawned, const vec &pos, const vec &rad
 char *entname(entity &e)
 {
     static string fullentname;
-    copystring(fullentname, "@");
-    concatstring(fullentname, entities::entname(e.type));
+    copystring(fullentname, entities::entname(e.type));
     const char *einfo = entities::entnameinfo(e);
     if(*einfo)
     {
@@ -307,7 +298,7 @@ bool haveselent()
 
 void entcancel()
 {
-    entgroup.setsize(0);
+    entgroup.shrink(0);
 }
 
 void entadd(int id)
@@ -412,7 +403,7 @@ void attachentities()
     f; \
     if(oldtype!=e.type) detachentity(e); \
     if(e.type!=ET_EMPTY) { addentity(n); if(oldtype!=e.type) attachentity(e); } \
-    entities::editent(n)); \
+    entities::editent(n, true)); \
 }
 #define addgroup(exp)   { loopv(entities::getents()) entfocus(i, if(exp) entadd(n)); }
 #define setgroup(exp)   { entcancel(); addgroup(exp); }
@@ -668,9 +659,9 @@ void renderentradius(extentity &e, bool color)
         case ET_PLAYERSTART:
         {
             if(color) glColor3f(0, 1, 1);
+            entities::entradius(e, color);
             vec dir;
             vecfromyawpitch(e.attr1, 0, 1, 0, dir);
-            if(e.type==ET_MAPMODEL && e.attr3) renderentring(e, checktriggertype(e.attr3, TRIG_COLLIDE) ? 20 : 12);
             renderentarrow(e, dir, 4);
             break;
         }
@@ -716,7 +707,6 @@ void renderentselection(const vec &o, const vec &ray, bool entmoving)
 
     if(showentradius && (entgroup.length() || enthover >= 0))
     {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         glDepthFunc(GL_GREATER);
         glColor3f(0.25f, 0.25f, 0.25f);
         loopv(entgroup) entfocus(entgroup[i], renderentradius(e, false));
@@ -724,7 +714,6 @@ void renderentselection(const vec &o, const vec &ray, bool entmoving)
         glDepthFunc(GL_LESS);
         loopv(entgroup) entfocus(entgroup[i], renderentradius(e, true));
         if(enthover>=0) entfocus(enthover, renderentradius(e, true));
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
 }
 
@@ -861,7 +850,7 @@ bool dropentity(entity &e, int drop = -1)
             cx = (sel.cx ? 1 : -1) * sel.grid / 2;
             cy = (sel.cy ? 1 : -1) * sel.grid / 2;
         }
-        e.o = sel.o.v;
+        e.o = sel.o.tovec();
         int d = dimension(sel.orient), dc = dimcoord(sel.orient);
         e.o[R[d]] += sel.grid / 2 + cx;
         e.o[C[d]] += sel.grid / 2 + cy;
@@ -963,9 +952,9 @@ void entcopy()
 {
     if(noentedit()) return;
     entcopygrid = sel.grid;
-    entcopybuf.setsize(0);
+    entcopybuf.shrink(0);
     loopv(entgroup) 
-        entfocus(entgroup[i], entcopybuf.add(e).o.sub(sel.o.v));
+        entfocus(entgroup[i], entcopybuf.add(e).o.sub(sel.o.tovec()));
 }
 
 void entpaste()
@@ -979,7 +968,7 @@ void entpaste()
     {
         extentity &c = entcopybuf[i]; // INTENSITY: extentity, for uniqueID
         vec o(c.o);
-        o.mul(m).add(sel.o.v);
+        o.mul(m).add(sel.o.tovec());
 
         // INTENSITY: Create entity using new system
         LogicEntityPtr entity = LogicSystem::getLogicEntity(c);
@@ -1164,7 +1153,7 @@ void findplayerspawn(dynent *d, int forceent, int tag)   // place at random spaw
 
 void splitocta(cube *c, int size)
 {
-    if(size <= VVEC_INT_MASK+1) return;
+    if(size <= 0x1000) return;
     loopi(8)
     {
         if(!c[i].children) c[i].children = newcubes(isempty(c[i]) ? F_EMPTY : F_SOLID);
@@ -1180,6 +1169,7 @@ void resetmap()
     resetblendmap();
     resetlightmaps();
     clearpvs();
+    clearslots();
     clearparticles();
     cleardecals();
     clearsleep();
@@ -1190,7 +1180,7 @@ void resetmap()
     setvar("paused", 0, false);
 
     entities::clearents();
-    outsideents.setsizenodelete(0);
+    outsideents.setsize(0);
 }
 
 void startmap(const char *name)
@@ -1211,12 +1201,12 @@ bool emptymap(int scale, bool force, const char *mname, bool usecfg)    // main 
     setvar("mapscale", scale<10 ? 10 : (scale>16 ? 16 : scale), true, false);
     setvar("mapsize", 1<<worldscale, true, false);
     
-    texmru.setsize(0);
+    texmru.shrink(0);
     freeocta(worldroot);
     worldroot = newcubes(F_EMPTY);
     loopi(4) solidfaces(worldroot[i]);
 
-    if(worldsize > VVEC_INT_MASK+1) splitocta(worldroot, worldsize>>1);
+    if(worldsize > 0x1000) splitocta(worldroot, worldsize>>1);
 
     clearmainmenu();
 
@@ -1228,7 +1218,7 @@ bool emptymap(int scale, bool force, const char *mname, bool usecfg)    // main 
     }
 
     clearlights();
-    allchanged();
+    allchanged(true);
 
     startmap(mname);
 
@@ -1253,7 +1243,7 @@ bool enlargemap(bool force)
     loopi(3) solidfaces(c[i+1]);
     worldroot = c;
 
-    if(worldsize > VVEC_INT_MASK+1) splitocta(worldroot, worldsize>>1);
+    if(worldsize > 0x1000) splitocta(worldroot, worldsize>>1);
 
     enlargeblendmap();
 
@@ -1276,9 +1266,9 @@ COMMAND(mapname, "");
 
 void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool local)
 {
+    if(i < 0 || i >= MAXENTS) return;
     if(entities::getents().length()<=i)
     {
-        if(i >= MAXENTS) return;
         while(entities::getents().length()<i) entities::getents().add(entities::newentity())->type = ET_EMPTY;
         extentity *e = newentity(local, o, type, attr1, attr2, attr3, attr4, attr5);
         entities::getents().add(e);
@@ -1296,152 +1286,12 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
         e.attr1 = attr1; e.attr2 = attr2; e.attr3 = attr3; e.attr4 = attr4; e.attr5 = attr5;
         addentity(i);
         if(oldtype!=type) attachentity(e);
+        entities::editent(i, local);
     }
 }
 
 int getworldsize() { return worldsize; }
 int getmapversion() { return mapversion; }
-
-int triggertypes[NUMTRIGGERTYPES] =
-{
-    0,
-    TRIG_ONCE,
-    TRIG_RUMBLE,
-    TRIG_TOGGLE,
-    TRIG_TOGGLE | TRIG_RUMBLE,
-    TRIG_MANY,
-    TRIG_MANY | TRIG_RUMBLE,
-    TRIG_MANY | TRIG_TOGGLE,
-    TRIG_MANY | TRIG_TOGGLE | TRIG_RUMBLE,
-    TRIG_COLLIDE | TRIG_TOGGLE | TRIG_RUMBLE,
-    TRIG_COLLIDE | TRIG_TOGGLE | TRIG_AUTO_RESET | TRIG_RUMBLE,
-    TRIG_COLLIDE | TRIG_TOGGLE | TRIG_LOCKED | TRIG_RUMBLE,
-    TRIG_DISAPPEAR,
-    TRIG_DISAPPEAR | TRIG_RUMBLE,
-    TRIG_DISAPPEAR | TRIG_COLLIDE | TRIG_LOCKED,
-    0 /* reserved */
-};
-
-void resettriggers()
-{
-    const vector<extentity *> &ents = entities::getents();
-    loopv(ents)
-    {
-        extentity &e = *ents[i];
-        if(e.type != ET_MAPMODEL || !e.attr3) continue;
-        e.triggerstate = TRIGGER_RESET;
-        e.lasttrigger = 0;
-    }
-}
-
-void unlocktriggers(int tag, int oldstate = TRIGGER_RESET, int newstate = TRIGGERING)
-{
-    const vector<extentity *> &ents = entities::getents();
-    loopv(ents)
-    {
-        extentity &e = *ents[i];
-        if(e.type != ET_MAPMODEL || !e.attr3) continue;
-        if(e.attr4 == tag && e.triggerstate == oldstate && checktriggertype(e.attr3, TRIG_LOCKED))
-        {
-            if(newstate == TRIGGER_RESETTING && checktriggertype(e.attr3, TRIG_COLLIDE) && overlapsdynent(e.o, 20)) continue;
-            e.triggerstate = newstate;
-            e.lasttrigger = lastmillis;
-            if(checktriggertype(e.attr3, TRIG_RUMBLE)) entities::rumble(e);
-        }
-    }
-}
-
-void trigger(int *tag, int *state)
-{
-    if(*state) unlocktriggers(*tag);
-    else unlocktriggers(*tag, TRIGGERED, TRIGGER_RESETTING);
-}
-
-COMMAND(trigger, "ii");
-
-VAR(triggerstate, -1, 0, 1);
-
-void doleveltrigger(int trigger, int state)
-{
-    defformatstring(aliasname)("level_trigger_%d", trigger);
-    if(identexists(aliasname))
-    {
-        triggerstate = state;
-        execute(aliasname);
-    }
-}
-
-void checktriggers()
-{
-    if(player->state != CS_ALIVE) return;
-    vec o = player->feetpos();
-    const vector<extentity *> &ents = entities::getents();
-    loopv(ents)
-    {
-        extentity &e = *ents[i];
-        if(e.type != ET_MAPMODEL || !e.attr3) continue;
-        switch(e.triggerstate)
-        {
-            case TRIGGERING:
-            case TRIGGER_RESETTING:
-                if(lastmillis-e.lasttrigger>=1000)
-                {
-                    if(e.attr4)
-                    {
-                        if(e.triggerstate == TRIGGERING) unlocktriggers(e.attr4);
-                        else unlocktriggers(e.attr4, TRIGGERED, TRIGGER_RESETTING);
-                    }
-                    if(checktriggertype(e.attr3, TRIG_DISAPPEAR)) e.triggerstate = TRIGGER_DISAPPEARED;
-                    else if(e.triggerstate==TRIGGERING && checktriggertype(e.attr3, TRIG_TOGGLE)) e.triggerstate = TRIGGERED;
-                    else e.triggerstate = TRIGGER_RESET;
-                }
-                break;
-            case TRIGGER_RESET:
-                if(e.lasttrigger)
-                {
-                    if(checktriggertype(e.attr3, TRIG_AUTO_RESET|TRIG_MANY|TRIG_LOCKED) && e.o.dist(o)-player->radius>=(checktriggertype(e.attr3, TRIG_COLLIDE) ? 20 : 12))
-                        e.lasttrigger = 0;
-                    break;
-                }
-                else if(e.o.dist(o)-player->radius>=(checktriggertype(e.attr3, TRIG_COLLIDE) ? 20 : 12)) break;
-                else if(checktriggertype(e.attr3, TRIG_LOCKED))
-                {
-                    if(!e.attr4) break;
-                    doleveltrigger(e.attr4, -1);
-                    e.lasttrigger = lastmillis;
-                    break;
-                }
-                e.triggerstate = TRIGGERING;
-                e.lasttrigger = lastmillis;
-                if(checktriggertype(e.attr3, TRIG_RUMBLE)) entities::rumble(e);
-                entities::trigger(e);
-                if(e.attr4) doleveltrigger(e.attr4, 1);
-                break;
-            case TRIGGERED:
-                if(e.o.dist(o)-player->radius<(checktriggertype(e.attr3, TRIG_COLLIDE) ? 20 : 12))
-                {
-                    if(e.lasttrigger) break;
-                }
-                else if(checktriggertype(e.attr3, TRIG_AUTO_RESET))
-                {
-                    if(lastmillis-e.lasttrigger<6000) break;
-                }
-                else if(checktriggertype(e.attr3, TRIG_MANY))
-                {
-                    e.lasttrigger = 0;
-                    break;
-                }
-                else break;
-                if(checktriggertype(e.attr3, TRIG_COLLIDE) && overlapsdynent(e.o, 20)) break;
-                e.triggerstate = TRIGGER_RESETTING;
-                e.lasttrigger = lastmillis;
-                if(checktriggertype(e.attr3, TRIG_RUMBLE)) entities::rumble(e);
-                entities::trigger(e);
-                if(e.attr4) doleveltrigger(e.attr4, 0);
-                break;
-        }
-    }
-}
 
 // INTENSITY: In our new system, this is called when dragging concludes. Only then do we update the server.
 // This facilitates smooth dragging on the client, and a single bandwidth use at the end.

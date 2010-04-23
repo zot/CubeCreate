@@ -47,15 +47,13 @@ void addglare()
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    static Shader *glareshader = NULL;
-    if(!glareshader) glareshader = lookupshaderbyname("glare");
-    glareshader->set();
+    SETSHADER(glare);
 
     glBindTexture(GL_TEXTURE_2D, glaretex.rendertex);
 
     setlocalparamf("glarescale", SHPARAM_PIXEL, 0, glarescale, glarescale, glarescale);
 
-    glBegin(GL_QUADS);
+    glBegin(GL_TRIANGLE_FAN);
     glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);
     glTexCoord2f(1, 0); glVertex3f( 1, -1, 0);
     glTexCoord2f(1, 1); glVertex3f( 1,  1, 0);

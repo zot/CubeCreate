@@ -22,7 +22,7 @@ vector<resolverresult> resolverresults;
 SDL_mutex *resolvermutex;
 SDL_cond *querycond, *resultcond;
 
-#define RESOLVERTHREADS 1
+#define RESOLVERTHREADS 2
 #define RESOLVERLIMIT 3000
 
 int resolverloop(void * data)
@@ -96,8 +96,8 @@ void resolverclear()
     if(resolverthreads.empty()) return;
 
     SDL_LockMutex(resolvermutex);
-    resolverqueries.setsize(0);
-    resolverresults.setsize(0);
+    resolverqueries.shrink(0);
+    resolverresults.shrink(0);
     loopv(resolverthreads)
     {
         resolverthread &rt = resolverthreads[i];
@@ -290,6 +290,7 @@ struct serverinfo
         if(lastping >= 0 && totalmillis - lastping >= decay)
         {
             ping = INT_MAX;
+            numplayers = 0;
             lastping = -1;
         }
         if(lastping < 0) lastping = totalmillis;
@@ -370,7 +371,7 @@ void addserver(const char *name, int port, const char *password, bool keep)
 VARP(searchlan, 0, 0, 1);
 VARP(servpingrate, 1000, 5000, 60000);
 VARP(servpingdecay, 1000, 15000, 60000);
-VARP(maxservpings, 0, 25, 1000);
+VARP(maxservpings, 0, 10, 1000);
 
 void pingservers()
 {
@@ -471,7 +472,7 @@ void checkpings()
         if(rtt < servpingdecay) si->addping(rtt, millis);
         si->numplayers = getint(p);
         int numattr = getint(p);
-        si->attr.setsize(0);
+        si->attr.shrink(0);
         loopj(numattr) si->attr.add(getint(p));
         getstring(text, p);
         filtertext(si->map, text);
@@ -530,7 +531,7 @@ char *showservers(g3d_gui *cgui)
 void clearservers(bool full = false)
 {
     resolverclear();
-    if(full) servers.deletecontentsp();
+    if(full) servers.deletecontents();
     else loopvrev(servers) if(!servers[i]->keep) delete servers.remove(i);
 }
 
@@ -574,7 +575,7 @@ void retrieveservers(vector<char> &data)
         if(enet_socket_wait(sock, &events, 250) >= 0 && events)
         {
             if(data.length() >= data.capacity()) data.reserve(4096);
-            buf.data = &data[data.length()];
+            buf.data = data.getbuf() + data.length();
             buf.dataLength = data.capacity() - data.length();
             int recv = enet_socket_receive(sock, NULL, &buf, 1);
             if(recv <= 0) break;

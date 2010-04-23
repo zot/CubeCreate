@@ -68,42 +68,6 @@ int rendercommand(int x, int y, int w)
     return height;
 }
 
-void blendbox(int x1, int y1, int x2, int y2, bool border)
-;
-#if 0
-{
-    notextureshader->set();
-
-    glDepthMask(GL_FALSE);
-    glDisable(GL_TEXTURE_2D);
-    glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-    glBegin(GL_QUADS);
-    if(border) glColor3d(0.5, 0.3, 0.4);
-    else glColor3d(1.0, 1.0, 1.0);
-    glVertex2f(x1, y1);
-    glVertex2f(x2, y1);
-    glVertex2f(x2, y2);
-    glVertex2f(x1, y2);
-    glEnd();
-    glDisable(GL_BLEND);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBegin(GL_QUADS);
-    glColor3d(0.2, 0.7, 0.4);
-    glVertex2f(x1, y1);
-    glVertex2f(x2, y1);
-    glVertex2f(x2, y2);
-    glVertex2f(x1, y2);
-    glEnd();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    xtraverts += 8;
-    glEnable(GL_BLEND);
-    glEnable(GL_TEXTURE_2D);
-    glDepthMask(GL_TRUE);
-
-    defaultshader->set();
-}
-#endif
-
 VARP(consize, 0, 5, 100);
 VARP(miniconsize, 0, 5, 100);
 VARP(miniconwidth, 0, 40, 100);
@@ -134,6 +98,8 @@ void setconskip(int &skip, int filter, int n)
 
 ICOMMAND(conskip, "i", (int *n), setconskip(conskip, fullconsole ? fullconfilter : confilter, *n));
 ICOMMAND(miniconskip, "i", (int *n), setconskip(miniconskip, miniconfilter, *n));
+
+ICOMMAND(clearconsole, "", (), { while(conlines.length()) delete[] conlines.pop().line; });
 
 int drawconlines(int conskip, int confade, int conwidth, int conheight, int conoff, int filter, int y = 0, int dir = 1)
 {
@@ -397,6 +363,8 @@ struct hline
 vector<hline *> history;
 int histpos = 0;
 
+VARP(maxhistory, 0, 1000, 10000);
+
 void history_(int *n)
 {
     static bool inhistory = false;
@@ -518,11 +486,12 @@ void consolekey(int code, bool isdown, int cooked)
                 break;
 
             case SDLK_UP:
-                if(histpos>0) history[--histpos]->restore(); 
+                if(histpos > history.length()) histpos = history.length();
+                if(histpos > 0) history[--histpos]->restore(); 
                 break;
 
             case SDLK_DOWN:
-                if(histpos+1<history.length()) history[++histpos]->restore();
+                if(histpos + 1 < history.length()) history[++histpos]->restore();
                 break;
 
             case SDLK_TAB:
@@ -564,7 +533,14 @@ void consolekey(int code, bool isdown, int cooked)
             if(commandbuf[0])
             {
                 if(history.empty() || history.last()->shouldsave())
-                    history.add(h = new hline)->save(); // cap this?
+                {
+                    if(maxhistory && history.length() >= maxhistory)
+                    {
+                        loopi(history.length()-maxhistory+1) delete history[i];
+                        history.remove(0, history.length()-maxhistory+1);
+                    }
+                    history.add(h = new hline)->save();
+                }
                 else h = history.last();
             }
             histpos = history.length();
@@ -640,14 +616,14 @@ struct filesval
     int millis;
     
     filesval(int type, const char *dir, const char *ext) : type(type), dir(newstring(dir)), ext(ext && ext[0] ? newstring(ext) : NULL), millis(-1) {}
-    ~filesval() { DELETEA(dir); DELETEA(ext); files.deletecontentsa(); }
+    ~filesval() { DELETEA(dir); DELETEA(ext); files.deletearrays(); }
 
     static int comparefiles(char **x, char **y) { return strcmp(*x, *y); }
 
     void update()
     {
         if(type!=FILES_DIR || millis >= commandmillis) return;
-        files.deletecontentsa();        
+        files.deletearrays();        
         listfiles(dir, ext, files);
         files.sort(comparefiles); 
         loopv(files) if(i && !strcmp(files[i], files[i-1])) delete[] files.remove(i--);

@@ -4,105 +4,151 @@ VARFP(waterreflect, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
 VARFP(waterrefract, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
 VARFP(waterenvmap, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
 VARFP(waterfallrefract, 0, 0, 1, { cleanreflections(); preloadwatershaders(); });
-VARP(refractfog, 0, 1, 1);
 
 /* vertex water */
 VARP(watersubdiv, 0, 2, 3);
 VARP(waterlod, 0, 1, 3);
 
 static int wx1, wy1, wx2, wy2, wsize;
-float wcol[4];
+static float whscale, whoffset;
+static uchar wcol[4];
 
-#define VERTW(vertw, body) \
-    inline void vertw(float v1, float v2, float v3, float t) \
+#define VERTW(vertw, defbody, body) \
+    static inline void def##vertw() \
     { \
-        float angle = (v1-wx1)/wsize*(v2-wy1)/wsize*(v1-wx2)*(v2-wy2)*59/23+t; \
+        varray::defattrib(varray::ATTRIB_VERTEX, 3, GL_FLOAT); \
+        defbody; \
+    } \
+    static inline void vertw(float v1, float v2, float v3) \
+    { \
+        float angle = float((v1-wx1)*(v2-wy1))*float((v1-wx2)*(v2-wy2))*whscale+whoffset; \
         float s = sinf(angle), h = WATER_AMPLITUDE*s-WATER_OFFSET; \
+        varray::attrib<float>(v1, v2, v3+h); \
         body; \
-        glVertex3f(v1, v2, v3+h); \
     }
-#define VERTWN(vertw, body) \
-    inline void vertw(float v1, float v2, float v3) \
+#define VERTWN(vertw, defbody, body) \
+    static inline void def##vertw() \
+    { \
+        varray::defattrib(varray::ATTRIB_VERTEX, 3, GL_FLOAT); \
+        defbody; \
+    } \
+    static inline void vertw(float v1, float v2, float v3) \
     { \
         float h = -WATER_OFFSET; \
+        varray::attrib<float>(v1, v2, v3+h); \
         body; \
-        glVertex3f(v1, v2, v3+h); \
     }
-#define VERTWT(vertwt, body) VERTW(vertwt, { float v = cosf(angle); float duv = 0.5f*v; body; })
+#define VERTWT(vertwt, defbody, body) VERTW(vertwt, defbody, { float v = cosf(angle); float duv = 0.5f*v; body; })
+
 VERTW(vertwt, {
-    glTexCoord2f(v1/8.0f, v2/8.0f);
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 2, GL_FLOAT);
+}, {
+    varray::attrib<float>(v1/8.0f, v2/8.0f);
 })
 VERTWN(vertwtn, {
-    glTexCoord2f(v1/8.0f, v2/8.0f);
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 2, GL_FLOAT);
+}, {
+    varray::attrib<float>(v1/8.0f, v2/8.0f);
 })
 VERTW(vertwc, {
-    glColor4f(wcol[0], wcol[1], wcol[2], wcol[3] + fabs(s)*0.1f);
+    varray::defattrib(varray::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE);
+}, {
+    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], clamp(int(wcol[3] + fabs(s)*0x18), 0, 255));
 })
 VERTWN(vertwcn, {
-    glColor4f(wcol[0], wcol[1], wcol[2], wcol[3]);
+    varray::defattrib(varray::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE);
+}, {
+    varray::attribv<4>(wcol);
 })
 VERTWT(vertwtc, {
-    glColor4f(1, 1, 1, 0.2f + fabs(s)*0.1f);
-    glTexCoord3f(v1+duv, v2+duv, v3+h);
+    varray::defattrib(varray::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE);
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
+}, {
+    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], int(0x33 + fabs(s)*0x18));
+    varray::attrib<float>(v1+duv, v2+duv, v3+h);
 })
 VERTWN(vertwtcn, {
-    glColor4f(1, 1, 1, 0.2f);
-    glTexCoord3f(v1, v2, v3+h);
+    glColor4ub(wcol[0], wcol[1], wcol[2], 0x33);
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
+}, {
+    varray::attrib<float>(v1, v2, v3+h);
 })
 VERTWT(vertwmtc, {
-    glColor4f(1, 1, 1, 0.2f + fabs(s)*0.1f);
-    glMultiTexCoord3f_(GL_TEXTURE0_ARB, v1-duv, v2+duv, v3+h);
-    glMultiTexCoord3f_(GL_TEXTURE1_ARB, v1+duv, v2+duv, v3+h);
+    varray::defattrib(varray::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE);
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
+    varray::defattrib(varray::ATTRIB_TEXCOORD1, 3, GL_FLOAT);
+}, {
+    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], int(0x33 + fabs(s)*0x18));
+    varray::attrib<float>(v1-duv, v2+duv, v3+h);
+    varray::attrib<float>(v1+duv, v2+duv, v3+h);
 })
 VERTWN(vertwmtcn, {
-    glColor4f(1, 1, 1, 0.2f);
-    glMultiTexCoord3f_(GL_TEXTURE0_ARB, v1, v2, v3+h);
-    glMultiTexCoord3f_(GL_TEXTURE1_ARB, v1, v2, v3+h);
+    glColor4ub(wcol[0], wcol[1], wcol[2], 0x33);
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
+    varray::defattrib(varray::ATTRIB_TEXCOORD1, 3, GL_FLOAT);
+}, {
+    varray::attrib<float>(v1, v2, v3+h);
+    varray::attrib<float>(v1, v2, v3+h);
 })
 VERTWT(vertwetc, {
-    glColor4f(1, 1, 1, 0.2f + fabs(s)*0.1f);
-    glTexCoord3f(v1+duv-camera1->o.x, v2+duv-camera1->o.y, camera1->o.z-(v3+h));
+    varray::defattrib(varray::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE);
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
+}, {
+    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], int(0x33 + fabs(s)*0x18));
+    varray::attrib<float>(v1+duv-camera1->o.x, v2+duv-camera1->o.y, camera1->o.z-(v3+h));
 })
 VERTWN(vertwetcn, {
-    glColor4f(1, 1, 1, 0.2f);
-    glTexCoord3f(v1-camera1->o.x, v2-camera1->o.y, camera1->o.z-(v3+h));
+    glColor4ub(wcol[0], wcol[1], wcol[2], 0x33);
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
+}, {
+    varray::attrib<float>(v1-camera1->o.x, v2-camera1->o.y, camera1->o.z-(v3+h));
 })
 VERTWT(vertwemtc, {
-    glColor4f(1, 1, 1, 0.2f + fabs(s)*0.1f);
-    glMultiTexCoord3f_(GL_TEXTURE0_ARB, v1-duv, v2+duv, v3+h);
-    glMultiTexCoord3f_(GL_TEXTURE1_ARB, v1+duv-camera1->o.x, v2+duv-camera1->o.y, camera1->o.z-(v3+h));
+    varray::defattrib(varray::ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE);
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
+    varray::defattrib(varray::ATTRIB_TEXCOORD1, 3, GL_FLOAT);
+}, {
+    varray::attrib<uchar>(wcol[0], wcol[1], wcol[2], int(0x33 + fabs(s)*0x18));
+    varray::attrib<float>(v1-duv, v2+duv, v3+h);
+    varray::attrib<float>(v1+duv-camera1->o.x, v2+duv-camera1->o.y, camera1->o.z-(v3+h));
 })
 VERTWN(vertwemtcn, {
-    glColor4f(1, 1, 1, 0.2f);
-    glMultiTexCoord3f_(GL_TEXTURE0_ARB, v1, v2, v3+h);
-    glMultiTexCoord3f_(GL_TEXTURE1_ARB, v1-camera1->o.x, v2-camera1->o.y, camera1->o.z-(v3+h));
+    glColor4ub(wcol[0], wcol[1], wcol[2], 0x33);
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 3, GL_FLOAT);
+    varray::defattrib(varray::ATTRIB_TEXCOORD1, 3, GL_FLOAT);
+}, {
+    varray::attrib<float>(v1, v2, v3+h);
+    varray::attrib<float>(v1-camera1->o.x, v2-camera1->o.y, camera1->o.z-(v3+h));
 })
 
 static float lavaxk = 1.0f, lavayk = 1.0f, lavascroll = 0.0f;
 
 VERTW(vertl, {
-    glTexCoord2f(lavaxk*(v1+lavascroll), lavayk*(v2+lavascroll));
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 2, GL_FLOAT);
+}, {
+    varray::attrib<float>(lavaxk*(v1+lavascroll), lavayk*(v2+lavascroll));
 })
 VERTWN(vertln, {
-    glTexCoord2f(lavaxk*(v1+lavascroll), lavayk*(v2+lavascroll));
+    varray::defattrib(varray::ATTRIB_TEXCOORD0, 2, GL_FLOAT);
+}, {
+    varray::attrib<float>(lavaxk*(v1+lavascroll), lavayk*(v2+lavascroll));
 })
 
-#define renderwaterstrips(vertw, z, t) \
+#define renderwaterstrips(vertw, z) { \
+    def##vertw(); \
     for(int x = wx1; x<wx2; x += subdiv) \
     { \
-        glBegin(GL_TRIANGLE_STRIP); \
-        vertw(x,        wy1, z, t); \
-        vertw(x+subdiv, wy1, z, t); \
+        varray::begin(GL_TRIANGLE_STRIP); \
+        vertw(x,        wy1, z); \
+        vertw(x+subdiv, wy1, z); \
         for(int y = wy1; y<wy2; y += subdiv) \
         { \
-            vertw(x,        y+subdiv, z, t); \
-            vertw(x+subdiv, y+subdiv, z, t); \
+            vertw(x,        y+subdiv, z); \
+            vertw(x+subdiv, y+subdiv, z); \
         } \
-        glEnd(); \
-        int n = (wy2-wy1-1)/subdiv; \
-        n = (n+2)*2; \
-        xtraverts += n; \
-    }
+        xtraverts += varray::end(); \
+    } \
+}
 
 void rendervertwater(uint subdiv, int xo, int yo, int z, uint size, uchar mat = MAT_WATER)
 {   
@@ -111,6 +157,7 @@ void rendervertwater(uint subdiv, int xo, int yo, int z, uint size, uchar mat = 
     wx2 = wx1 + size,
     wy2 = wy1 + size;
     wsize = size;
+    whscale = 59.0f/(23.0f*wsize*wsize);
 
     ASSERT((wx1 & (subdiv - 1)) == 0);
     ASSERT((wy1 & (subdiv - 1)) == 0);
@@ -119,29 +166,29 @@ void rendervertwater(uint subdiv, int xo, int yo, int z, uint size, uchar mat = 
     {
         case MAT_WATER:
         {
-            float t = lastmillis/(renderpath!=R_FIXEDFUNCTION ? 600.0f : 300.0f);
-            if(renderpath!=R_FIXEDFUNCTION) { renderwaterstrips(vertwt, z, t); }
+            whoffset = lastmillis/(renderpath!=R_FIXEDFUNCTION ? 600.0f : 300.0f);
+            if(renderpath!=R_FIXEDFUNCTION) { renderwaterstrips(vertwt, z); }
             else 
             {
                 bool below = camera1->o.z < z-WATER_OFFSET;
-                if(nowater) { renderwaterstrips(vertwc, z, t); }
+                if(nowater || envmapping) { renderwaterstrips(vertwc, z); }
                 else if(waterrefract)
                 {
-                    if(waterreflect && !below) { renderwaterstrips(vertwmtc, z, t); }
-                    else if(waterenvmap && hasCM && !below) { renderwaterstrips(vertwemtc, z, t); }
-                    else { renderwaterstrips(vertwtc, z, t); }
+                    if(waterreflect && !below) { renderwaterstrips(vertwmtc, z); }
+                    else if(waterenvmap && hasCM && !below) { renderwaterstrips(vertwemtc, z); }
+                    else { renderwaterstrips(vertwtc, z); }
                 } 
-                else if(waterreflect && !below) { renderwaterstrips(vertwtc, z, t); }
-                else if(waterenvmap && hasCM && !below) { renderwaterstrips(vertwetc, z, t); }
-                else { renderwaterstrips(vertwc, z, t); }
+                else if(waterreflect && !below) { renderwaterstrips(vertwtc, z); }
+                else if(waterenvmap && hasCM && !below) { renderwaterstrips(vertwetc, z); }
+                else { renderwaterstrips(vertwc, z); }
             }
             break;
         }
 
         case MAT_LAVA:
         {
-            float t = lastmillis/2000.0f;
-            renderwaterstrips(vertl, z, t);
+            whoffset = lastmillis/2000.0f;
+            renderwaterstrips(vertl, z);
             break;
         }
     }
@@ -208,6 +255,7 @@ uint renderwaterlod(int x, int y, int z, uint size, uchar mat = MAT_WATER)
 
 #define renderwaterquad(vertwn, z) \
     { \
+        if(varray::data.empty()) { def##vertwn(); varray::begin(GL_QUADS); } \
         vertwn(x, y, z); \
         vertwn(x+rsize, y, z); \
         vertwn(x+rsize, y+csize, z); \
@@ -224,7 +272,7 @@ void renderflatwater(int x, int y, int z, uint rsize, uint csize, uchar mat = MA
             else
             {
                 bool below = camera1->o.z < z-WATER_OFFSET;
-                if(nowater) { renderwaterquad(vertwcn, z); }
+                if(nowater || envmapping) { renderwaterquad(vertwcn, z); }
                 else if(waterrefract)
                 {
                     if(waterreflect && !below) { renderwaterquad(vertwmtcn, z); }
@@ -245,7 +293,7 @@ void renderflatwater(int x, int y, int z, uint rsize, uint csize, uchar mat = MA
 
 VARFP(vertwater, 0, 1, 1, allchanged());
 
-void renderlava(materialsurface &m, Texture *tex, float scale)
+void renderlava(const materialsurface &m, Texture *tex, float scale)
 {
     lavaxk = 8.0f/(tex->xs*scale);
     lavayk = 8.0f/(tex->ys*scale); 
@@ -305,7 +353,7 @@ void setprojtexmatrix(Reflection &ref, bool init = true)
 
 void setuprefractTMUs()
 {
-    if(!refractfog) setuptmu(0, "K , T @ Ka");
+    setuptmu(0, "= T");
 
     if(waterreflect || (waterenvmap && hasCM))
     { 
@@ -313,15 +361,14 @@ void setuprefractTMUs()
         glEnable(waterreflect ? GL_TEXTURE_2D : GL_TEXTURE_CUBE_MAP_ARB);
         if(!waterreflect) glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(lookupmaterialslot(MAT_WATER)));
  
-        setuptmu(1, "P , T @ C~a");
-
+        setuptmu(1, "T , P @ Ca");
         glActiveTexture_(GL_TEXTURE0_ARB);
     }
 }
 
 void setupreflectTMUs()
 {
-    setuptmu(0, "T , K @ Ca", "Ka * P~a");
+    setuptmu(0, "T , K @ Ca", "Ka * C~a");
 
     glDepthMask(GL_FALSE);
     glEnable(GL_BLEND);
@@ -373,7 +420,8 @@ void renderwaterff()
 {
     glDisable(GL_CULL_FACE);
     
-    if(!nowater && (waterreflect || waterrefract || (waterenvmap && hasCM)))
+    if(envmapping) glDisable(GL_TEXTURE_2D);
+    else if(!nowater && (waterreflect || waterrefract || (waterenvmap && hasCM)))
     {
         if(waterrefract) setuprefractTMUs();
         else setupreflectTMUs();
@@ -390,8 +438,10 @@ void renderwaterff()
 
     float offset = -WATER_OFFSET;
 
-    loopi(3) wcol[i] = watercolor[i]/255.0f;
-
+    memcpy(wcol, watercolor.v, 3);
+    
+    varray::enable();
+ 
     bool wasbelow = false;
     loopi(MAXREFLECTIONS)
     {
@@ -399,7 +449,7 @@ void renderwaterff()
         if(ref.height<0 || ref.lastused<totalmillis || ref.matsurfs.empty()) continue;
 
         bool below = camera1->o.z < ref.height + offset;
-        if(!nowater && (waterrefract || waterreflect || (waterenvmap && hasCM)))
+        if(!nowater && (waterrefract || waterreflect || (waterenvmap && hasCM)) && !envmapping)
         {
             if(hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref && checkquery(ref.query)) continue;
             bool projtex = false;
@@ -438,7 +488,6 @@ void renderwaterff()
         }
 
         int lastdepth = -1;
-        bool begin = false;
         loopvj(ref.matsurfs)
         {
             materialsurface &m = *ref.matsurfs[j];
@@ -447,29 +496,26 @@ void renderwaterff()
             {
                 float depth = !waterfog ? 1.0f : min(0.75f*m.depth/waterfog, 0.95f);
                 if(nowater || !waterrefract) depth = max(depth, nowater || (!waterreflect && (!waterenvmap || !hasCM)) || below ? 0.6f : 0.3f);
-                wcol[3] = depth;
-                if(!nowater && (waterrefract || ((waterreflect || (waterenvmap && hasCM)) && !below)))
+                wcol[3] = int(depth*255);
+                if(!nowater && !waterrefract && ((waterreflect || (waterenvmap && hasCM)) && !below))
                 {
-                    if(begin) { glEnd(); begin = false; }
-                    float ec[4] = { wcol[0], wcol[1], wcol[2], depth };
-                    if(!waterrefract) { loopk(3) ec[k] *= depth; ec[3] = 1-ec[3]; }
-                    colortmu(0, ec[0], ec[1], ec[2], ec[3]);
+                    if(varray::data.length()) varray::end();
+                    colortmu(0, depth*wcol[0]/255.0f, depth*wcol[1]/255.0f, depth*wcol[2]/255.0f, 1-depth);
                 }
                 lastdepth = m.depth;
             }
 
-            if(!vertwater)
-            {
-                if(!begin) { glBegin(GL_QUADS); begin = true; }
-                renderflatwater(m.o.x, m.o.y, m.o.z, m.rsize, m.csize);
-            }
+            if(!vertwater) renderflatwater(m.o.x, m.o.y, m.o.z, m.rsize, m.csize);
             else if(renderwaterlod(m.o.x, m.o.y, m.o.z, m.csize) >= (uint)m.csize * 2)
                 rendervertwater(m.csize, m.o.x, m.o.y, m.o.z, m.csize);
         }
-        if(begin) glEnd();
+        if(varray::data.length()) varray::end();
     }
 
-    if(!nowater && (waterrefract || waterreflect || (waterenvmap && hasCM)))
+    varray::disable();
+
+    if(envmapping) glEnable(GL_TEXTURE_2D);
+    else if(!nowater && (waterrefract || waterreflect || (waterenvmap && hasCM)))
     {
         if(!waterrefract && (wasbelow || !waterreflect)) 
         {
@@ -513,7 +559,7 @@ void preloadwatershaders(bool force)
 
 void renderwater()
 {
-    if(editmode && showmat) return;
+    if(editmode && showmat && !envmapping) return;
     if(!rplanes) return;
 
     if(renderpath==R_FIXEDFUNCTION) { renderwaterff(); return; }
@@ -522,7 +568,7 @@ void renderwater()
 
     glColor3ubv(watercolor.v);
 
-    Slot &s = lookupmaterialslot(MAT_WATER);
+    MSlot &s = lookupmaterialslot(MAT_WATER);
 
     glActiveTexture_(GL_TEXTURE1_ARB);
     glEnable(GL_TEXTURE_2D);
@@ -531,7 +577,7 @@ void renderwater()
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, s.sts.inrange(3) ? s.sts[3].t->id : notexture->id);
 
-    if(!glaring)
+    if(!glaring && !envmapping)
     {
         if(waterrefract)
         {
@@ -552,7 +598,7 @@ void renderwater()
     }
     glActiveTexture_(GL_TEXTURE0_ARB);
 
-    if(!glaring && waterenvmap && !waterreflect && hasCM)
+    if(!glaring && waterenvmap && !waterreflect && hasCM && !envmapping)
     {
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_TEXTURE_CUBE_MAP_ARB);
@@ -571,6 +617,7 @@ void renderwater()
 
     Shader *aboveshader = NULL;
     if(glaring) SETWATERSHADER(above, waterglare);
+    else if(envmapping) aboveshader = notextureshader;
     else if(waterenvmap && !waterreflect && hasCM)
     {
         if(waterrefract)
@@ -589,7 +636,7 @@ void renderwater()
     else SETWATERSHADER(above, water);
 
     Shader *belowshader = NULL;
-    if(!glaring)
+    if(!glaring && !envmapping)
     {
         if(waterrefract)
         {
@@ -600,6 +647,8 @@ void renderwater()
 
         if(waterreflect || waterrefract) glMatrixMode(GL_TEXTURE);
     }
+
+    varray::enable();
 
     vec ambient(max(skylightcolor[0], ambientcolor[0]), max(skylightcolor[1], ambientcolor[1]), max(skylightcolor[2], ambientcolor[2]));
     float offset = -WATER_OFFSET;
@@ -617,7 +666,7 @@ void renderwater()
         }
         else aboveshader->set();
 
-        if(!glaring)
+        if(!glaring && !envmapping)
         {
             if(waterreflect || waterrefract)
             {
@@ -640,7 +689,6 @@ void renderwater()
 
         entity *lastlight = (entity *)-1;
         int lastdepth = -1;
-        bool begin = false;
         loopvj(ref.matsurfs)
         {
             materialsurface &m = *ref.matsurfs[j];
@@ -648,7 +696,7 @@ void renderwater()
             entity *light = (m.light && m.light->type==ET_LIGHT ? m.light : NULL);
             if(light!=lastlight)
             {
-                if(begin) { glEnd(); begin = false; }
+                if(varray::data.length()) varray::end();
                 const vec &lightpos = light ? light->o : vec(worldsize/2, worldsize/2, worldsize);
                 float lightrad = light && light->attr1 ? light->attr1 : worldsize*8.0f;
                 const vec &lightcol = (light ? vec(light->attr2, light->attr3, light->attr4) : vec(ambient)).div(255.0f).mul(waterspec/100.0f);
@@ -660,25 +708,23 @@ void renderwater()
 
             if(!glaring && !waterrefract && m.depth!=lastdepth)
             {
-                if(begin) { glEnd(); begin = false; }
+                if(varray::data.length()) varray::end();
                 float depth = !waterfog ? 1.0f : min(0.75f*m.depth/waterfog, 0.95f);
                 depth = max(depth, !below && (waterreflect || (waterenvmap && hasCM)) ? 0.3f : 0.6f);
                 setlocalparamf("depth", SHPARAM_PIXEL, 5, depth, 1.0f-depth);
                 lastdepth = m.depth;
             }
 
-            if(!vertwater)
-            {
-                if(!begin) { glBegin(GL_QUADS); begin = true; }
-                renderflatwater(m.o.x, m.o.y, m.o.z, m.rsize, m.csize);
-            }
+            if(!vertwater || envmapping) renderflatwater(m.o.x, m.o.y, m.o.z, m.rsize, m.csize);
             else if(renderwaterlod(m.o.x, m.o.y, m.o.z, m.csize) >= (uint)m.csize * 2)
                 rendervertwater(m.csize, m.o.x, m.o.y, m.o.z, m.csize);
         }
-        if(begin) glEnd();
+        if(varray::data.length()) varray::end();
     }
 
-    if(!glaring)
+    varray::disable();
+
+    if(!glaring && !envmapping)
     {
         if(waterreflect || waterrefract)
         {
@@ -705,7 +751,7 @@ void renderwater()
     }
     glActiveTexture_(GL_TEXTURE0_ARB);
 
-    if(!glaring && waterenvmap && !waterreflect && hasCM)
+    if(!glaring && waterenvmap && !waterreflect && hasCM && !envmapping)
     {
         glDisable(GL_TEXTURE_CUBE_MAP_ARB);
         glEnable(GL_TEXTURE_2D);
@@ -849,7 +895,7 @@ void addwaterfallrefraction(materialsurface &m)
     if(ref.lastused!=totalmillis)
     {
         ref.lastused = totalmillis;
-        ref.matsurfs.setsizenodelete(0);
+        ref.matsurfs.setsize(0);
         ref.height = INT_MAX;
     }
     ref.matsurfs.add(&m);
@@ -886,17 +932,17 @@ void addreflection(materialsurface &m)
     if(ref->height!=height) ref->height = height;
     rplanes++;
     ref->lastused = totalmillis;
-    ref->matsurfs.setsizenodelete(0);
+    ref->matsurfs.setsize(0);
     ref->matsurfs.add(&m);
     ref->depth = m.depth;
-    if(nowater) return;
+    if(nowater || envmapping) return;
 
     if(waterreflect && !ref->tex) genwatertex(ref->tex, reflectionfb, reflectiondb);
     if(waterrefract && !ref->refracttex) genwatertex(ref->refracttex, reflectionfb, reflectiondb, true);
 }
 
 extern vtxarray *visibleva;
-extern void drawreflection(float z, bool refract, bool clear);
+extern void drawreflection(float z, bool refract);
 
 int rplanes = 0;
 
@@ -912,7 +958,6 @@ void queryreflection(Reflection &ref, bool init)
         glDisable(GL_CULL_FACE);
     }
     startquery(ref.query);
-    glBegin(GL_QUADS);
     loopvj(ref.matsurfs)
     {
         materialsurface &m = *ref.matsurfs[j];
@@ -926,7 +971,7 @@ void queryreflection(Reflection &ref, bool init)
         }
         drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, offset);
     }
-    glEnd();
+    xtraverts += varray::end();
     endquery(ref.query);
 }
 
@@ -960,7 +1005,7 @@ void queryreflections()
         Reflection &ref = reflections[i];
         if(ref.height>=0 && ref.lastused>=totalmillis && ref.matsurfs.length())
         {
-            if(waterpvsoccluded(ref.height)) ref.matsurfs.setsizenodelete(0);
+            if(waterpvsoccluded(ref.height)) ref.matsurfs.setsize(0);
         }
     }
     if(renderpath!=R_FIXEDFUNCTION && waterfallrefract)
@@ -968,13 +1013,15 @@ void queryreflections()
         Reflection &ref = waterfallrefraction;
         if(ref.height>=0 && ref.lastused>=totalmillis && ref.matsurfs.length())
         {
-            if(waterpvsoccluded(-1)) ref.matsurfs.setsizenodelete(0);
+            if(waterpvsoccluded(-1)) ref.matsurfs.setsize(0);
         }
     }
 
     lastquery = totalmillis;
 
-    if((editmode && showmat) || !hasOQ || !oqfrags || !oqwater || nowater) return;
+    if((editmode && showmat) || !hasOQ || !oqfrags || !oqwater || nowater || envmapping) return;
+
+    varray::enable();
 
     int refs = 0;
     if(waterreflect || waterrefract) loopi(MAXREFLECTIONS)
@@ -989,6 +1036,8 @@ void queryreflections()
         ref.query = ref.height>=0 && ref.lastused>=totalmillis && ref.matsurfs.length() ? newquery(&ref) : NULL;
         if(ref.query) queryreflection(ref, !refs++);
     }
+
+    varray::disable();
 
     if(refs)
     {
@@ -1007,11 +1056,13 @@ float reflectz = 1e16f;
 
 VAR(maskreflect, 0, 2, 16);
 
-void maskreflection(Reflection &ref, float offset, bool reflect)
+void maskreflection(Reflection &ref, float offset, bool reflect, bool clear = false)
 {
+    float fogc[4] = { watercolor[0]/255.0f, watercolor[1]/255.0f, watercolor[2]/255.0f, 1.0f };
     if(!maskreflect)
     {
-        glClear(GL_DEPTH_BUFFER_BIT | (hasstencil && hasDS ? GL_STENCIL_BUFFER_BIT : 0));
+        if(clear) glClearColor(fogc[0], fogc[1], fogc[2], fogc[3]);
+        glClear(GL_DEPTH_BUFFER_BIT | (clear ? GL_COLOR_BUFFER_BIT : 0) | (hasstencil && hasDS ? GL_STENCIL_BUFFER_BIT : 0));
         return;
     }
     glClearDepth(0);
@@ -1019,10 +1070,18 @@ void maskreflection(Reflection &ref, float offset, bool reflect)
     glClearDepth(1);
     glDepthRange(1, 1);
     glDepthFunc(GL_ALWAYS);
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_CULL_FACE);
-    nocolorshader->set();
+    if(clear)
+    {
+        notextureshader->set();
+        glColor3f(fogc[0], fogc[1], fogc[2]);
+    }
+    else
+    {
+        nocolorshader->set();
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    }
     if(reflect)
     {
         glPushMatrix();
@@ -1030,7 +1089,7 @@ void maskreflection(Reflection &ref, float offset, bool reflect)
         glScalef(1, 1, -1);
     }
     int border = maskreflect;
-    glBegin(GL_QUADS);
+    varray::enable();
     loopv(ref.matsurfs)
     {
         materialsurface &m = *ref.matsurfs[i];
@@ -1039,12 +1098,13 @@ void maskreflection(Reflection &ref, float offset, bool reflect)
         o[C[dimension(m.orient)]] -= border;
         drawmaterial(m.orient, o.x, o.y, o.z, m.csize+2*border, m.rsize+2*border, -offset);
     }
-    glEnd();
+    xtraverts += varray::end();
+    varray::disable();
     if(reflect) glPopMatrix();
+    if(!clear) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     defaultshader->set();
     glEnable(GL_CULL_FACE);
     glEnable(GL_TEXTURE_2D);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glDepthFunc(GL_LESS);
     glDepthRange(0, 1);
 }
@@ -1122,9 +1182,11 @@ static bool calcscissorbox(Reflection &ref, int size, float &minyaw, float &maxy
     return sx1 > -1 || sy1 > -1 || sx2 < 1 || sy2 < 1;
 }
 
+VARR(refractclear, 0, 0, 1);
+
 void drawreflections()
 {
-    if((editmode && showmat) || nowater) return;
+    if((editmode && showmat) || nowater || envmapping) return;
 
     extern int nvidia_scissor_bug;
 
@@ -1168,7 +1230,7 @@ void drawreflections()
             maskreflection(ref, offset, true);
             if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
             reflectvfcP(ref.height+offset, minyaw, maxyaw, minpitch, maxpitch);
-            drawreflection(ref.height+offset, false, false);
+            drawreflection(ref.height+offset, false);
             restorevfcP();
             if(scissor) glDisable(GL_SCISSOR_TEST);
             if(!hasFBO)
@@ -1182,11 +1244,14 @@ void drawreflections()
         {
             if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.refracttex, 0);
             if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
-            maskreflection(ref, offset, false);
+            maskreflection(ref, offset, false, refractclear || !waterfog || (ref.depth>=10000 && camera1->o.z >= ref.height + offset));
             if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
-            reflectvfcP(-1, minyaw, maxyaw, minpitch, maxpitch);
-            drawreflection(ref.height+offset, true, ref.depth>=10000);
-            restorevfcP();
+            if(waterfog || (renderpath!=R_FIXEDFUNCTION && waterfade && hasFBO))
+            {
+                reflectvfcP(-1, minyaw, maxyaw, minpitch, maxpitch);
+                drawreflection(ref.height+offset, true);
+                restorevfcP();
+            }
             if(scissor) glDisable(GL_SCISSOR_TEST);
             if(!hasFBO)
             {
@@ -1226,11 +1291,14 @@ void drawreflections()
 
         if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.refracttex, 0);
         if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
-        maskreflection(ref, -0.1f, false);
+        maskreflection(ref, -0.1f, false, !waterfog);
         if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
-        reflectvfcP(-1, minyaw, maxyaw, minpitch, maxpitch);
-        drawreflection(-1, true, false); 
-        restorevfcP();
+        if(waterfog)
+        {
+            reflectvfcP(-1, minyaw, maxyaw, minpitch, maxpitch);
+            drawreflection(-1, true); 
+            restorevfcP();
+        }
         if(scissor) glDisable(GL_SCISSOR_TEST);
         if(!hasFBO)
         {

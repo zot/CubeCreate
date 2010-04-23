@@ -52,7 +52,7 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
     tmax = min(tmax, maxdist);
 
     static vector<BIHStack> stack;
-    stack.setsizenodelete(0);
+    stack.setsize(0);
 
     ivec order(ray.x>0 ? 0 : 1, ray.y>0 ? 0 : 1, ray.z>0 ? 0 : 1);
     BIHNode *curnode = &nodes[0];
@@ -115,88 +115,68 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
     }
 }
 
-static BIH::tri *sorttris = NULL;
-static int sortaxis = 0;
-
-static int bihsort(const ushort *x, const ushort *y)
-{
-    BIH::tri &xtri = sorttris[*x], &ytri = sorttris[*y];
-    float xmin = min(xtri.a[sortaxis], min(xtri.b[sortaxis], xtri.c[sortaxis])),
-          ymin = min(ytri.a[sortaxis], min(ytri.b[sortaxis], ytri.c[sortaxis]));
-    if(xmin < ymin) return -1;
-    if(xmin > ymin) return 1;
-    return 0;
-}
-
-void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, int depth)
+void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, const vec &vmin, const vec &vmax, int depth)
 {
     maxdepth = max(maxdepth, depth);
    
-    vec vmin(1e16f, 1e16f, 1e16f), vmax(-1e16f, -1e16f, -1e16f);
-    loopi(numindices)
-    {
-        tri &tri = tris[indices[i]];
-        loopk(3)
-        {
-            float amin = min(tri.a[k], min(tri.b[k], tri.c[k])),
-                  amax = max(tri.a[k], max(tri.b[k], tri.c[k]));
-            vmin[k] = min(vmin[k], amin);
-            vmax[k] = max(vmax[k], amax);
-        }
-    }
-    if(depth==1)
-    {
-        bbmin = vmin;
-        bbmax = vmax;
-    }
-
     int axis = 2;
     loopk(2) if(vmax[k] - vmin[k] > vmax[axis] - vmin[axis]) axis = k;
 
-/*
-    sorttris = tris;
-    sortaxis = axis;
-    qsort(indices, numindices, sizeof(ushort), (int (__cdecl *)(const void *, const void *))bihsort);
-    tri &median = tris[numindices/2];
-    float split = min(median.a[axis], min(median.b[axis], median.c[axis]));
-*/
-
-    float split = 0.5f*(vmax[axis] + vmin[axis]);
-
-    float splitleft = SHRT_MIN, splitright = SHRT_MAX;
+    vec leftmin, leftmax, rightmin, rightmax;
+    float splitleft, splitright;
     int left, right;
-    for(left = 0, right = numindices; left < right;)
+    loopk(3)
     {
-        tri &tri = tris[indices[left]];
-        float amin = min(tri.a[axis], min(tri.b[axis], tri.c[axis])),
-              amax = max(tri.a[axis], max(tri.b[axis], tri.c[axis]));
-        if(max(split - amin, 0.0f) > max(amax - split, 0.0f)) 
+        leftmin = rightmin = vec(1e16f, 1e16f, 1e16f);
+        leftmax = rightmax = vec(-1e16f, -1e16f, -1e16f);
+        float split = 0.5f*(vmax[axis] + vmin[axis]);
+        for(left = 0, right = numindices, splitleft = SHRT_MIN, splitright = SHRT_MAX; left < right;)
         {
-            ++left;
-            splitleft = max(splitleft, amax);
+            tri &tri = tris[indices[left]];
+            float amin = min(tri.a[axis], min(tri.b[axis], tri.c[axis])),
+                  amax = max(tri.a[axis], max(tri.b[axis], tri.c[axis]));
+            if(max(split - amin, 0.0f) > max(amax - split, 0.0f)) 
+            {
+                ++left;
+                splitleft = max(splitleft, amax);
+                leftmin.min(tri.a).min(tri.b).min(tri.c);
+                leftmax.max(tri.a).max(tri.b).max(tri.c);
+            }
+            else 
+            {    
+                --right; 
+                swap(indices[left], indices[right]); 
+                splitright = min(splitright, amin);
+                rightmin.min(tri.a).min(tri.b).min(tri.c);
+                rightmax.max(tri.a).max(tri.b).max(tri.c);
+            }
         }
-        else 
-        { 
-            --right; 
-            swap(indices[left], indices[right]); 
-            splitright = min(splitright, amin);
-        }
+        if(left > 0 && right < numindices) break;
+        axis = (axis+1)%3;
     }
 
-    if(!left || right==numindices)
+    if(!left || right==numindices) 
     {
-        sorttris = tris;
-        sortaxis = axis;
-        qsort(indices, numindices, sizeof(ushort), (int (__cdecl *)(const void *, const void *))bihsort);
-
+        leftmin = rightmin = vec(1e16f, 1e16f, 1e16f);
+        leftmax = rightmax = vec(-1e16f, -1e16f, -1e16f);
         left = right = numindices/2;
         splitleft = SHRT_MIN;
         splitright = SHRT_MAX;
         loopi(numindices)
         {
             tri &tri = tris[indices[i]];
-            if(i < left) splitleft = max(splitleft, max(tri.a[axis], max(tri.b[axis], tri.c[axis])));
-            else splitright = min(splitright, min(tri.a[axis], min(tri.b[axis], tri.c[axis])));
+            if(i < left) 
+            {
+                splitleft = max(splitleft, max(tri.a[axis], max(tri.b[axis], tri.c[axis])));
+                leftmin.min(tri.a).min(tri.b).min(tri.c);
+                leftmax.max(tri.a).max(tri.b).max(tri.c);
+            }
+            else 
+            {
+                splitright = min(splitright, min(tri.a[axis], min(tri.b[axis], tri.c[axis])));
+                rightmin.min(tri.a).min(tri.b).min(tri.c);
+                rightmax.max(tri.a).max(tri.b).max(tri.c);
+            }
         }
     }
 
@@ -209,33 +189,34 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, in
     else
     {
         buildnodes[node].child[0] = (axis<<14) | buildnodes.length();
-        build(buildnodes, indices, left, depth+1);
+        build(buildnodes, indices, left, leftmin, leftmax, depth+1);
     }
 
     if(numindices-right==1) buildnodes[node].child[1] = (1<<15) | (left==1 ? 1<<14 : 0) | indices[right];
     else 
     {
         buildnodes[node].child[1] = (left==1 ? 1<<14 : 0) | buildnodes.length();
-        build(buildnodes, &indices[right], numindices-right, depth+1);
+        build(buildnodes, &indices[right], numindices-right, rightmin, rightmax, depth+1);
     }
 }
- 
+
 BIH::BIH(vector<tri> *t)
+  : maxdepth(0), numnodes(0), nodes(NULL), numtris(0), tris(NULL), noclip(NULL), bbmin(1e16f, 1e16f, 1e16f), bbmax(-1e16f, -1e16f, -1e16f)
 {
     numtris = t[0].length() + t[1].length();
-    if(!numtris) 
-    {
-        tris = NULL;
-        numnodes = 0;
-        nodes = NULL;
-        maxdepth = 0;
-        return;
-    }
+    if(!numtris) return; 
 
     tris = new tri[numtris];
     noclip = &tris[t[0].length()];
     memcpy(tris, t[0].getbuf(), t[0].length()*sizeof(tri));
     memcpy(noclip, t[1].getbuf(), t[1].length()*sizeof(tri));
+
+    loopi(numtris)
+    {
+        tri &tri = tris[i];
+        bbmin.min(tri.a).min(tri.b).min(tri.c);
+        bbmax.max(tri.a).max(tri.b).max(tri.c);
+    }
     
     vector<BIHNode> buildnodes;
     ushort *indices = new ushort[numtris];
@@ -243,7 +224,7 @@ BIH::BIH(vector<tri> *t)
 
     maxdepth = 0;
 
-    build(buildnodes, indices, numtris);
+    build(buildnodes, indices, numtris, bbmin, bbmax);
 
     delete[] indices;
 
@@ -280,9 +261,9 @@ bool mmintersect(const extentity &e, const vec &o, const vec &ray, float maxdist
     if(!m) return false;
     if(mode&RAY_SHADOW)
     {
-        if(!m->shadow || checktriggertype(e.attr3, TRIG_COLLIDE|TRIG_DISAPPEAR)) return false;
+        if(!m->shadow || e.flags&extentity::F_NOSHADOW) return false;
     }
-    else if((mode&RAY_ENTS)!=RAY_ENTS && !m->collide) return false;
+    else if((mode&RAY_ENTS)!=RAY_ENTS && (!m->collide || e.flags&extentity::F_NOCOLLIDE)) return false;
 //    if((mode&RAY_ENTS)!=RAY_ENTS && m->collisionsonlyfortriggering) return false; // INTENSITY: Might need this
     if(!m->bih && !m->setBIH()) return false;
     if(!maxdist) maxdist = 1e16f;

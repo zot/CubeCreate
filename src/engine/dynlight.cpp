@@ -78,7 +78,7 @@ void cleardynlights()
 {
     int faded = -1;
     loopv(dynlights) if(lastmillis<dynlights[i].expire) { faded = i; break; }
-    if(faded<0) dynlights.setsizenodelete(0);
+    if(faded<0) dynlights.setsize(0);
     else if(faded>0) dynlights.remove(0, faded);
 }
 
@@ -103,16 +103,17 @@ void updatedynlights()
 
 int finddynlights()
 {
-    closedynlights.setsizenodelete(0);
+    closedynlights.setsize(0);
     if(renderpath==R_FIXEDFUNCTION ? !ffdynlights || maxtmus<3 : !maxdynlights) return 0;
     physent e;
     e.type = ENT_CAMERA;
+    e.collidetype = COLLIDE_AABB;
     loopvj(dynlights)
     {
         dynlight &d = dynlights[j];
         if(d.curradius <= 0) continue;
         d.dist = camera1->o.dist(d.o) - d.curradius;
-        if(d.dist > dynlightdist || isvisiblesphere(d.curradius, d.o) >= VFC_FOGGED || pvsoccluded(d.o, 2*int(d.curradius+1))) 
+        if(d.dist > dynlightdist || isfoggedsphere(d.curradius, d.o) || pvsoccluded(d.o, 2*int(d.curradius+1))) 
             continue;
         if(reflecting || refracting > 0)
         {
@@ -129,7 +130,7 @@ int finddynlights()
         if(closedynlights.length() >= DYNLIGHTMASK) break;
     }
     if(renderpath==R_FIXEDFUNCTION && closedynlights.length() > ffdynlights)
-        closedynlights.setsizenodelete(ffdynlights);
+        closedynlights.setsize(ffdynlights);
     return closedynlights.length();
 }
 
@@ -195,15 +196,16 @@ void calcdynlightmask(vtxarray *va)
     va->dynlightmask = mask;
 }
 
-int setdynlights(vtxarray *va, const ivec &vaorigin)
+int setdynlights(vtxarray *va)
 {
     if(closedynlights.empty() || !va->dynlightmask) return 0;
 
-    static string vertexparams[MAXDYNLIGHTS] = { "" }, pixelparams[MAXDYNLIGHTS] = { "" };
-    if(!*vertexparams[0]) loopi(MAXDYNLIGHTS)
+    static string posparams[MAXDYNLIGHTS] = { "" }, colorparams[MAXDYNLIGHTS] = { "" }, offsetparams[MAXDYNLIGHTS] = { "" };
+    if(!*posparams[0]) loopi(MAXDYNLIGHTS)
     {
-        formatstring(vertexparams[i])("dynlight%dpos", i);
-        formatstring(pixelparams[i])("dynlight%dcolor", i);
+        formatstring(posparams[i])("dynlight%dpos", i);
+        formatstring(colorparams[i])("dynlight%dcolor", i);
+        formatstring(offsetparams[i])("dynlight%doffset", i);
     }
 
     int index = 0;
@@ -214,19 +216,20 @@ int setdynlights(vtxarray *va, const ivec &vaorigin)
         dynlight &d = *closedynlights[(mask&DYNLIGHTMASK)-1];
 
         float scale = 1.0f/d.curradius;
-        vec origin = vaorigin.tovec().sub(d.o).mul(scale);
-        setenvparamf(vertexparams[index], SHPARAM_VERTEX, 10+index, origin.x, origin.y, origin.z, scale/(1<<VVEC_FRAC));
+        vec origin = vec(d.o).mul(-scale);
+        setenvparamf(posparams[index], SHPARAM_VERTEX, 10+index, origin.x, origin.y, origin.z, scale);
 
         if(index<=0) { scale0 = scale; origin0 = origin; }
         else
         {
             scale /= scale0;
             origin.sub(vec(origin0).mul(scale));
-            setenvparamf(vertexparams[index], SHPARAM_PIXEL, index-1, origin.x, origin.y, origin.z, scale);
+            setenvparamf(offsetparams[index], SHPARAM_PIXEL, index-1, origin.x, origin.y, origin.z, scale);
         }
 
-        setenvparamf(pixelparams[index], SHPARAM_PIXEL, 10+index, d.curcolor.x, d.curcolor.y, d.curcolor.z);
+        setenvparamf(colorparams[index], SHPARAM_PIXEL, 10+index, d.curcolor.x, d.curcolor.y, d.curcolor.z);
     }
+
     return index;
 }
 
