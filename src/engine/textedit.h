@@ -139,7 +139,7 @@ struct editline
 struct editor 
 {
     int mode; //editor mode - 1= keep while focused, 2= keep while used in gui, 3= keep forever (i.e. until mode changes)
-    bool active;
+    bool active, rendered;
     const char *name;
     const char *filename;
 
@@ -158,7 +158,7 @@ struct editor
     bool password; // INTENSITY: If true, this is a password field - do not show the contents on the screen!
 
     editor(const char *name, int mode, const char *initval, bool _password=false) : // INTENSITY: password
-        mode(mode), active(true), name(newstring(name)), filename(NULL),
+        mode(mode), active(true), rendered(false), name(newstring(name)), filename(NULL),
         cx(0), cy(0), mx(-1), maxx(-1), maxy(-1), scrolly(0), linewrap(false), pixelwidth(-1), pixelheight(-1)
         , password(_password) // INTENSITY: password
     {
@@ -179,7 +179,7 @@ struct editor
         cx = cy = 0;
         mark(false);
         loopv(lines) lines[i].clear();
-        lines.setsize(0);
+        lines.shrink(0);
         if(init) lines.add().set(init);
     }
     
@@ -732,7 +732,17 @@ TEXTCOMMAND(textload, "s", (char *file), // loads into the topmost editor, retur
     }
     else if(top->filename) result(top->filename);
 );
-
+TEXTCOMMAND(textinit, "sss", (char *name, char *file, char *initval), // loads into named editor if no file assigned and editor has been rendered
+{
+    editor *e = NULL;
+    loopv(editors) if(!strcmp(editors[i]->name, name)) { e = editors[i]; break; }
+    if(e && e->rendered && !e->filename && *file && (e->lines.empty() || (e->lines.length() == 1 && !strcmp(e->lines[0].text, initval))))
+    {
+        e->setfile(path(file, true));
+        e->load();
+    }
+});
+ 
 #define PASTEBUFFER "#pastebuffer"
 
 TEXTCOMMAND(textcopy, "", (), editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false); top->copyselectionto(b););

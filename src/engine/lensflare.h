@@ -39,7 +39,7 @@ struct flarerenderer : partrenderer
     flare *flares;
 
     flarerenderer(const char *texname, int maxflares)
-        : partrenderer(texname, PT_FLARE), maxflares(maxflares), shinetime(0)
+        : partrenderer(texname, 3, PT_FLARE), maxflares(maxflares), shinetime(0)
     {
         flares = new flare[maxflares];
     }
@@ -137,7 +137,7 @@ struct flarerenderer : partrenderer
 
     void render()
     {
-        if(renderpath!=R_FIXEDFUNCTION || !fogging) glDisable(GL_FOG);
+        glDisable(GL_FOG);
         defaultshader->set();
         glDisable(GL_DEPTH_TEST);
         if(!tex) tex = textureload(texname);
@@ -177,11 +177,11 @@ struct flarerenderer : partrenderer
         }
         glEnd();
         glEnable(GL_DEPTH_TEST);
-        if(renderpath!=R_FIXEDFUNCTION || !fogging) glEnable(GL_FOG);
+        glEnable(GL_FOG);
     }
 
     //square per round hole - use addflare(..) instead
     particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity = 0) { return NULL; }
 };
-static flarerenderer flares("packages/particles/lensflares.png", 64);
+static flarerenderer flares("<grey>packages/particles/lensflares.png", 64);
 

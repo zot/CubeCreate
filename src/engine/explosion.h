@@ -328,9 +328,9 @@ static void drawexplosion(bool inside, uchar r, uchar g, uchar b, uchar a)
         {
             if(passes >= 2)
             {
-                glCullFace(GL_BACK);
-                drawexpverts(heminumverts, heminumindices, hemiindices);
                 glCullFace(GL_FRONT);
+                drawexpverts(heminumverts, heminumindices, hemiindices);
+                glCullFace(GL_BACK);
             }
             glScalef(1, 1, -1);
         }
@@ -364,8 +364,6 @@ static void cleanupexplosion()
     else
     {
         if(explosion2d) glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-        if(fogging) setfogplane(1, reflectz);
     }
 
     if(hasVBO)
@@ -394,8 +392,8 @@ static const float WOBBLE = 1.25f;
 
 struct fireballrenderer : listrenderer
 {
-    fireballrenderer(int type)
-        : listrenderer("packages/particles/explosion.jpg", type)
+    fireballrenderer(const char *texname)
+        : listrenderer(texname, 0, PT_FIREBALL|PT_GLARE)
     {}
 
     void startrender()
@@ -414,12 +412,17 @@ struct fireballrenderer : listrenderer
         deleteexplosions();
     }
 
-    int finddepthfxranges(void **owners, float *ranges, int maxranges, vec &bbmin, vec &bbmax)
+    int finddepthfxranges(void **owners, float *ranges, int numranges, int maxranges, vec &bbmin, vec &bbmax)
     {
-        physent e;
-        e.type = ENT_CAMERA;
+        static struct fireballent : physent
+        {
+            fireballent()
+            {
+                type = ENT_CAMERA;
+                collidetype = COLLIDE_AABB;
+            }
+        } e;
 
-        int numranges = 0;
         for(listparticle *p = list; p; p = p->next)
         {
             int ts = p->fade <= 5 ? 1 : lastmillis-p->millis;
@@ -428,10 +431,10 @@ struct fireballrenderer : listrenderer
                   psize = (p->size + pmax * size)*WOBBLE;
             if(2*(p->size + pmax)*WOBBLE < depthfxblend ||
                (!depthfxtex.highprecision() && !depthfxtex.emulatehighprecision() && psize > depthfxscale - depthfxbias) ||
-               isvisiblesphere(psize, p->o) >= VFC_FOGGED) continue;
+               isfoggedsphere(psize, p->o)) continue;
 
             e.o = p->o;
-            e.radius = e.eyeheight = e.aboveeye = psize;
+            e.radius = e.xradius = e.yradius = e.eyeheight = e.aboveeye = psize;
             if(::collide(&e, vec(0, 0, 0), 0, false)) continue;
 
             if(depthfxscissor==2 && !depthfxtex.addscissorbox(p->o, psize)) continue;
@@ -479,15 +482,10 @@ struct fireballrenderer : listrenderer
               size = p->fade ? float(ts)/p->fade : 1,
               psize = p->size + pmax * size;
 
-        if(isvisiblesphere(psize*WOBBLE, p->o) >= VFC_FOGGED) return;
+        if(isfoggedsphere(psize*WOBBLE, p->o)) return;
 
         glPushMatrix();
         glTranslatef(o.x, o.y, o.z);
-        if(fogging)
-        {
-            if(renderpath!=R_FIXEDFUNCTION) setfogplane(0, reflectz - o.z, true);
-            else blend = (uchar)(blend * max(0.0f, min(1.0f, 1.0f - (reflectz - o.z)/waterfog)));
-        }
 
         bool inside = o.dist(camera1->o) <= psize*WOBBLE;
         vec oc(o);
@@ -533,5 +531,5 @@ struct fireballrenderer : listrenderer
         glPopMatrix();
     }
 };
-static fireballrenderer fireballs(PT_FIREBALL|PT_GLARE), noglarefireballs(PT_FIREBALL);
+static fireballrenderer fireballs("packages/particles/explosion.jpg"), bluefireballs("<mix:2,1,0>packages/particles/explosion.jpg");
 

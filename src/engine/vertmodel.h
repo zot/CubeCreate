@@ -1,6 +1,6 @@
 struct vertmodel : animmodel
 {
-    struct vert { vec norm, pos; };
+    struct vert { vec pos, norm; };
     struct vvertff { vec pos; float u, v; };
     struct vvert : vvertff { vec norm; };
     struct vvertbump : vvert { vec tangent; float bitangent; };
@@ -39,6 +39,59 @@ struct vertmodel : animmodel
             DELETEA(tcverts);
             DELETEA(bumpverts);
             DELETEA(tris);
+        }
+
+        void smoothnorms(float limit = 0, bool areaweight = true)
+        {
+            if(((vertmeshgroup *)group)->numframes != 1)
+            {
+                buildnorms(areaweight);
+                return;
+            }
+            hashtable<vec, int> share;
+            int *next = new int[numverts];
+            memset(next, -1, numverts*sizeof(int));
+            loopi(numverts)
+            {
+                vert &v = verts[i];
+                v.norm = vec(0, 0, 0);
+                int idx = share.access(v.pos, i);
+                if(idx != i) { next[i] = next[idx]; next[idx] = i; }
+            }
+            loopi(numtris)
+            {
+                tri &t = tris[i];
+                vert &v1 = verts[t.vert[0]], &v2 = verts[t.vert[1]], &v3 = verts[t.vert[2]];
+                vec norm;
+                norm.cross(vec(v2.pos).sub(v1.pos), vec(v3.pos).sub(v1.pos));
+                if(!areaweight) norm.normalize();
+                v1.norm.add(norm);
+                v2.norm.add(norm);
+                v3.norm.add(norm);
+            }
+            vec *norms = new vec[numverts];
+            memset(norms, 0, numverts*sizeof(vec));
+            loopi(numverts)
+            {
+                vert &v = verts[i];
+                norms[i].add(v.norm);
+                if(next[i] >= 0)
+                {
+                    float vlimit = limit*v.norm.magnitude();
+                    for(int j = next[i]; j >= 0; j = next[j])
+                    {
+                        vert &o = verts[j];
+                        if(v.norm.dot(o.norm) >= vlimit*o.norm.magnitude())
+                        {
+                            norms[i].add(o.norm);
+                            norms[j].add(v.norm);
+                        }
+                    }
+                }
+            }
+            loopi(numverts) verts[i].norm = norms[i].normalize();
+            delete[] next;
+            delete[] norms;
         }
 
         void buildnorms(bool areaweight = true)
@@ -192,7 +245,7 @@ struct vertmodel : animmodel
         }
 
         template<class T>
-        int genvbo(vector<ushort> &idxs, int offset, vector<T> &vverts)
+        int genvbo(vector<ushort> &idxs, int offset, vector<T> &vverts, int *htdata, int htlen)
         {
             voffset = offset;
             eoffset = idxs.length();
@@ -205,13 +258,13 @@ struct vertmodel : animmodel
                     int index = t.vert[j];
                     tcvert &tc = tcverts[index];
                     vert &v = verts[index];
-                    loopvk(vverts)
+                    int htidx = hthash(v.pos)&(htlen-1);
+                    loopk(htlen)
                     {
-                        if(comparevert(vverts[k], index, tc, v)) { minvert = min(minvert, (ushort)k); idxs.add((ushort)k); goto found; }
+                        int &vidx = htdata[(htidx+k)&(htlen-1)];
+                        if(vidx < 0) { vidx = idxs.add(ushort(vverts.length())); assignvert(vverts.add(), index, tc, v); break; }
+                        else if(comparevert(vverts[vidx], index, tc, v)) { minvert = min(minvert, idxs.add(ushort(vidx))); break; }
                     }
-                    idxs.add(vverts.length());
-                    assignvert(vverts.add(), index, tc, v);
-                found:;
                 }
             }
             minvert = min(minvert, ushort(voffset));
@@ -298,8 +351,6 @@ struct vertmodel : animmodel
 
         void render(const animstate *as, skin &s, vbocacheentry &vc)
         {
-            s.bind(this, as);
-
             if(!(as->anim&ANIM_NOSKIN))
             {
                 if(s.multitextured())
@@ -498,7 +549,7 @@ struct vertmodel : animmodel
                     do \
                     { \
                         vector<type> vverts; \
-                        loopv(meshes) vlen += ((vertmesh *)meshes[i])->genvbo(idxs, vlen, vverts); \
+                        loopv(meshes) vlen += ((vertmesh *)meshes[i])->genvbo(idxs, vlen, vverts, htdata, htlen); \
                         if(hasVBO) glBufferData_(GL_ARRAY_BUFFER_ARB, vverts.length()*sizeof(type), vverts.getbuf(), GL_STATIC_DRAW_ARB); \
                         else \
                         { \
@@ -507,9 +558,17 @@ struct vertmodel : animmodel
                             memcpy(vc.vdata, vverts.getbuf(), vverts.length()*sizeof(type)); \
                         } \
                     } while(0)
+                int numverts = 0, htlen = 128;
+                loopv(meshes) numverts += ((vertmesh *)meshes[i])->numverts;
+                while(htlen < numverts) htlen *= 2;
+                if(numverts*4 > htlen*3) htlen *= 2; 
+                int *htdata = new int[htlen];
+                memset(htdata, -1, htlen*sizeof(int));
                 if(tangents) GENVBO(vvertbump);
                 else if(norms) GENVBO(vvert);
                 else GENVBO(vvertff);
+                delete[] htdata;
+                if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, 0);
             }
 
             if(hasVBO)
@@ -517,6 +576,7 @@ struct vertmodel : animmodel
                 glGenBuffers_(1, &ebuf);
                 glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, ebuf);
                 glBufferData_(GL_ELEMENT_ARRAY_BUFFER_ARB, idxs.length()*sizeof(ushort), idxs.getbuf(), GL_STATIC_DRAW_ARB);
+                glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
             }
             else
             {
@@ -540,8 +600,8 @@ struct vertmodel : animmodel
                 if(hasVBO) glBindBuffer_(GL_ARRAY_BUFFER_ARB, vc.vbuf);
                 if(!lastvbuf) glEnableClientState(GL_VERTEX_ARRAY);
                 glVertexPointer(3, GL_FLOAT, vertsize, &vverts->pos);
+                lastvbuf = hasVBO ? (void *)(size_t)vc.vbuf : vc.vdata;
             }
-            lastvbuf = hasVBO ? (void *)(size_t)vc.vbuf : vc.vdata;
             if(as->anim&ANIM_NOSKIN)
             {
                 if(enabletc) disabletc();
@@ -640,7 +700,12 @@ struct vertmodel : animmodel
             }
         
             bindvbo(as, *vc);
-            loopv(meshes) ((vertmesh *)meshes[i])->render(as, p->skins[i], *vc);
+            loopv(meshes)
+            {
+                vertmesh *m = (vertmesh *)meshes[i];
+                p->skins[i].bind(m, as);
+                m->render(as, p->skins[i], *vc);
+            }
             
             loopv(p->links) calctagmatrix(p, p->links[i].tag, *as, p->links[i].matrix);
         }

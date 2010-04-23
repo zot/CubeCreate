@@ -32,12 +32,101 @@ extern PFNGLATTACHOBJECTARBPROC         glAttachObject_;
 extern PFNGLGETINFOLOGARBPROC           glGetInfoLog_;
 extern PFNGLLINKPROGRAMARBPROC          glLinkProgram_;
 extern PFNGLGETUNIFORMLOCATIONARBPROC   glGetUniformLocation_;
+extern PFNGLUNIFORM1FARBPROC            glUniform1f_;
+extern PFNGLUNIFORM2FARBPROC            glUniform2f_;
+extern PFNGLUNIFORM3FARBPROC            glUniform3f_;
+extern PFNGLUNIFORM4FARBPROC            glUniform4f_;
+extern PFNGLUNIFORM1FVARBPROC           glUniform1fv_;
+extern PFNGLUNIFORM2FVARBPROC           glUniform2fv_;
+extern PFNGLUNIFORM3FVARBPROC           glUniform3fv_;
 extern PFNGLUNIFORM4FVARBPROC           glUniform4fv_;
 extern PFNGLUNIFORM1IARBPROC            glUniform1i_;
+extern PFNGLBINDATTRIBLOCATIONARBPROC   glBindAttribLocation_;
+extern PFNGLGETACTIVEUNIFORMARBPROC     glGetActiveUniform_;
+
+#ifndef GL_ARB_uniform_buffer_object
+#define GL_ARB_uniform_buffer_object 1
+#define GL_UNIFORM_BUFFER                 0x8A11
+#define GL_UNIFORM_BUFFER_BINDING         0x8A28
+#define GL_UNIFORM_BUFFER_START           0x8A29
+#define GL_UNIFORM_BUFFER_SIZE            0x8A2A
+#define GL_MAX_VERTEX_UNIFORM_BLOCKS      0x8A2B
+#define GL_MAX_GEOMETRY_UNIFORM_BLOCKS    0x8A2C
+#define GL_MAX_FRAGMENT_UNIFORM_BLOCKS    0x8A2D
+#define GL_MAX_COMBINED_UNIFORM_BLOCKS    0x8A2E
+#define GL_MAX_UNIFORM_BUFFER_BINDINGS    0x8A2F
+#define GL_MAX_UNIFORM_BLOCK_SIZE         0x8A30
+#define GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS 0x8A31
+#define GL_MAX_COMBINED_GEOMETRY_UNIFORM_COMPONENTS 0x8A32
+#define GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS 0x8A33
+#define GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT 0x8A34
+#define GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH 0x8A35
+#define GL_ACTIVE_UNIFORM_BLOCKS          0x8A36
+#define GL_UNIFORM_TYPE                   0x8A37
+#define GL_UNIFORM_SIZE                   0x8A38
+#define GL_UNIFORM_NAME_LENGTH            0x8A39
+#define GL_UNIFORM_BLOCK_INDEX            0x8A3A
+#define GL_UNIFORM_OFFSET                 0x8A3B
+#define GL_UNIFORM_ARRAY_STRIDE           0x8A3C
+#define GL_UNIFORM_MATRIX_STRIDE          0x8A3D
+#define GL_UNIFORM_IS_ROW_MAJOR           0x8A3E
+#define GL_UNIFORM_BLOCK_BINDING          0x8A3F
+#define GL_UNIFORM_BLOCK_DATA_SIZE        0x8A40
+#define GL_UNIFORM_BLOCK_NAME_LENGTH      0x8A41
+#define GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS  0x8A42
+#define GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES 0x8A43
+#define GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER 0x8A44
+#define GL_UNIFORM_BLOCK_REFERENCED_BY_GEOMETRY_SHADER 0x8A45
+#define GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER 0x8A46
+#define GL_INVALID_INDEX                  0xFFFFFFFFu
+
+typedef void (APIENTRYP PFNGLGETUNIFORMINDICESPROC) (GLuint program, GLsizei uniformCount, const GLchar* *uniformNames, GLuint *uniformIndices);
+typedef void (APIENTRYP PFNGLGETACTIVEUNIFORMSIVPROC) (GLuint program, GLsizei uniformCount, const GLuint *uniformIndices, GLenum pname, GLint *params);
+typedef GLuint (APIENTRYP PFNGLGETUNIFORMBLOCKINDEXPROC) (GLuint program, const GLchar *uniformBlockName);
+typedef void (APIENTRYP PFNGLGETACTIVEUNIFORMBLOCKIVPROC) (GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params);
+typedef void (APIENTRYP PFNGLUNIFORMBLOCKBINDINGPROC) (GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
+#endif
+
+#ifndef GL_VERSION_3_0
+#define GL_VERSION_3_0 1
+typedef void (APIENTRYP PFNGLBINDBUFFERRANGEPROC) (GLenum target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size);
+typedef void (APIENTRYP PFNGLBINDBUFFERBASEPROC) (GLenum target, GLuint index, GLuint buffer);
+#elif GL_GLEXT_VERSION < 43
+typedef void (APIENTRYP PFNGLBINDBUFFERRANGEPROC) (GLenum target, GLuint index, GLuint buffer, GLintptr offset, GLsizeiptr size);
+typedef void (APIENTRYP PFNGLBINDBUFFERBASEPROC) (GLenum target, GLuint index, GLuint buffer);
+#endif
+
+// GL_ARB_uniform_buffer_object
+extern PFNGLGETUNIFORMINDICESPROC       glGetUniformIndices_;
+extern PFNGLGETACTIVEUNIFORMSIVPROC     glGetActiveUniformsiv_;
+extern PFNGLGETUNIFORMBLOCKINDEXPROC    glGetUniformBlockIndex_;
+extern PFNGLGETACTIVEUNIFORMBLOCKIVPROC glGetActiveUniformBlockiv_;
+extern PFNGLUNIFORMBLOCKBINDINGPROC     glUniformBlockBinding_; 
+extern PFNGLBINDBUFFERBASEPROC          glBindBufferBase_;
+extern PFNGLBINDBUFFERRANGEPROC         glBindBufferRange_;
+
+#ifndef GL_EXT_bindable_uniform
+#define GL_EXT_bindable_uniform 1
+#define GL_MAX_VERTEX_BINDABLE_UNIFORMS_EXT 0x8DE2
+#define GL_MAX_FRAGMENT_BINDABLE_UNIFORMS_EXT 0x8DE3
+#define GL_MAX_GEOMETRY_BINDABLE_UNIFORMS_EXT 0x8DE4
+#define GL_MAX_BINDABLE_UNIFORM_SIZE_EXT  0x8DED
+#define GL_UNIFORM_BUFFER_EXT             0x8DEE
+#define GL_UNIFORM_BUFFER_BINDING_EXT     0x8DEF
+
+typedef void (APIENTRYP PFNGLUNIFORMBUFFEREXTPROC) (GLuint program, GLint location, GLuint buffer);
+typedef GLint (APIENTRYP PFNGLGETUNIFORMBUFFERSIZEEXTPROC) (GLuint program, GLint location);
+typedef GLintptr (APIENTRYP PFNGLGETUNIFORMOFFSETEXTPROC) (GLuint program, GLint location);
+#endif
+
+// GL_EXT_bindable_uniform
+extern PFNGLUNIFORMBUFFEREXTPROC        glUniformBuffer_;
+extern PFNGLGETUNIFORMBUFFERSIZEEXTPROC glGetUniformBufferSize_;
+extern PFNGLGETUNIFORMOFFSETEXTPROC     glGetUniformOffset_;
 
 extern int renderpath;
 
-enum { R_FIXEDFUNCTION = 0, R_ASMSHADER, R_GLSLANG };
+enum { R_FIXEDFUNCTION = 0, R_ASMSHADER, R_GLSLANG, R_ASMGLSLANG };
 
 enum { SHPARAM_LOOKUP = 0, SHPARAM_VERTEX, SHPARAM_PIXEL, SHPARAM_UNIFORM };
 
@@ -54,12 +143,13 @@ struct ShaderParam
 struct LocalShaderParamState : ShaderParam
 {
     float curval[4];
+    GLenum format;
 
-    LocalShaderParamState() 
+    LocalShaderParamState() : format(GL_FLOAT_VEC4_ARB) 
     { 
         memset(curval, -1, sizeof(curval)); 
     }
-    LocalShaderParamState(const ShaderParam &p) : ShaderParam(p)
+    LocalShaderParamState(const ShaderParam &p) : ShaderParam(p), format(GL_FLOAT_VEC4_ARB)
     {
         memset(curval, -1, sizeof(curval));
     }
@@ -103,6 +193,22 @@ enum
 extern int shaderdetail;
 
 struct Slot;
+struct VSlot;
+
+struct UniformLoc
+{
+    const char *name, *blockname;
+    int loc, version, binding, stride, offset, size;
+    void *data;
+    UniformLoc(const char *name = NULL, const char *blockname = NULL, int binding = -1, int stride = -1) : name(name), blockname(blockname), loc(-1), version(-1), binding(binding), stride(stride), offset(-1), size(-1), data(NULL) {}
+};
+
+struct AttribLoc
+{
+    const char *name;
+    int loc;
+    AttribLoc(const char *name = NULL, int loc = -1) : name(name), loc(loc) {}
+};
 
 struct Shader
 {
@@ -120,7 +226,8 @@ struct Shader
     int numextparams;
     LocalShaderParamState *extparams;
     uchar *extvertparams, *extpixparams;
-
+    vector<UniformLoc> uniformlocs;
+    vector<AttribLoc> attriblocs;
 
     Shader() : name(NULL), vsstr(NULL), psstr(NULL), defer(NULL), type(SHADER_DEFAULT), vs(0), ps(0), program(0), vsobj(0), psobj(0), detailshader(NULL), variantshader(NULL), altshader(NULL), standard(false), forced(false), used(false), native(true), reusevs(NULL), reuseps(NULL), numextparams(0), extparams(NULL), extvertparams(NULL), extpixparams(NULL)
     {
@@ -141,7 +248,7 @@ struct Shader
     void fixdetailshader(bool force = true, bool recurse = true);
     void allocenvparams(Slot *slot = NULL);
     void flushenvparams(Slot *slot = NULL);
-    void setslotparams(Slot &slot);
+    void setslotparams(Slot &slot, VSlot &vslot);
     void bindprograms();
 
     bool hasoption(int row)
@@ -150,33 +257,72 @@ struct Shader
         return (detailshader->variants[row][0]->type&SHADER_OPTION)!=0;
     }
 
-    void setvariant(int col, int row, Slot *slot, Shader *fallbackshader)
+    void setvariant_(int col, int row, Shader *fallbackshader)
     {
-        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
-        int len = detailshader->variants[row].length();
-        if(col >= len) col = len-1;
         Shader *s = fallbackshader;
-        while(col >= 0) if(!(detailshader->variants[row][col]->type&SHADER_INVALID)) { s = detailshader->variants[row][col]; break; }
+        for(col = min(col, detailshader->variants[row].length()-1); col >= 0; col--) 
+            if(!(detailshader->variants[row][col]->type&SHADER_INVALID)) 
+            { 
+                s = detailshader->variants[row][col]; 
+                break; 
+            }
         if(lastshader!=s) s->bindprograms();
-        lastshader->flushenvparams(slot);
-        if(slot) lastshader->setslotparams(*slot);
     }
 
-    void setvariant(int col, int row = 0, Slot *slot = NULL)
-    {
-        setvariant(col, row, slot, detailshader);
-    }
-
-    void set(Slot *slot = NULL)
+    void setvariant(int col, int row, Shader *fallbackshader)
     {
         if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        setvariant_(col, row, fallbackshader);
+        lastshader->flushenvparams();
+    }
+
+    void setvariant(int col, int row)
+    {
+        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        setvariant_(col, row, detailshader);
+        lastshader->flushenvparams();
+    }
+
+    void setvariant(int col, int row, Slot &slot, VSlot &vslot, Shader *fallbackshader)
+    {
+        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        setvariant_(col, row, fallbackshader);
+        lastshader->flushenvparams(&slot);
+        lastshader->setslotparams(slot, vslot);
+    }
+
+    void setvariant(int col, int row, Slot &slot, VSlot &vslot)
+    {
+        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        setvariant_(col, row, detailshader);
+        lastshader->flushenvparams(&slot);
+        lastshader->setslotparams(slot, vslot);
+    }
+
+    void set_()
+    {
         if(lastshader!=detailshader) detailshader->bindprograms();
-        lastshader->flushenvparams(slot);
-        if(slot) lastshader->setslotparams(*slot);
+    }
+ 
+    void set()
+    {
+        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        set_();
+        lastshader->flushenvparams();
+    }
+
+    void set(Slot &slot, VSlot &vslot)
+    {
+        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        set_();
+        lastshader->flushenvparams(&slot);
+        lastshader->setslotparams(slot, vslot);
     }
 
     bool compile();
     void cleanup(bool invalid = false);
+    
+    static int uniformlocversion();
 };
 
 #define SETSHADER(name) \
@@ -284,13 +430,14 @@ struct Texture
 {
     enum
     {
-        IMAGE     = 0,
-        CUBEMAP   = 1,
-        TYPE      = 0xFF,
+        IMAGE      = 0,
+        CUBEMAP    = 1,
+        TYPE       = 0xFF,
         
-        STUB      = 1<<8,
-        TRANSIENT = 1<<9,
-        FLAGS     = 0xF0
+        STUB       = 1<<8,
+        TRANSIENT  = 1<<9,
+        COMPRESSED = 1<<10, 
+        FLAGS      = 0xF0
     };
 
     char *name;
@@ -313,7 +460,60 @@ enum
     TEX_DEPTH,
     TEX_ENVMAP
 };
-    
+
+enum 
+{ 
+    VSLOT_SHPARAM = 0, 
+    VSLOT_SCALE, 
+    VSLOT_ROTATION, 
+    VSLOT_OFFSET, 
+    VSLOT_SCROLL, 
+    VSLOT_LAYER, 
+    VSLOT_NUM 
+};
+   
+struct VSlot
+{
+    Slot *slot;
+    VSlot *next;
+    int index, changed;
+    vector<ShaderParam> params;
+    bool linked;
+    float scale;
+    int rotation, xoffset, yoffset;
+    float scrollS, scrollT;
+    int layer;
+    vec glowcolor, pulseglowcolor;
+    float pulseglowspeed;
+    bool skippedglow;
+
+    VSlot(Slot *slot = NULL, int index = -1) : slot(slot), next(NULL), index(index), changed(0), skippedglow(false) 
+    { 
+        reset();
+        if(slot) addvariant(slot); 
+    }
+
+    void addvariant(Slot *slot);
+
+    void reset()
+    {
+        params.shrink(0);
+        linked = false;
+        scale = 1;
+        rotation = xoffset = yoffset = 0;
+        scrollS = scrollT = 0;
+        layer = 0;
+        glowcolor = vec(1, 1, 1);
+        pulseglowcolor = vec(0, 0, 0);
+        pulseglowspeed = 0;
+    }
+
+    void cleanup()
+    {
+        linked = false;
+    }
+};
+
 struct Slot
 {
     struct Tex
@@ -324,16 +524,12 @@ struct Slot
         int combined;
     };
 
+    int index;
     vector<Tex> sts;
     Shader *shader;
     vector<ShaderParam> params;
-    float scale;
-    int rotation, xoffset, yoffset;
-    float scrollS, scrollT;
-    int layer;
-    vec glowcolor, pulseglowcolor;
-    float pulseglowspeed;
-    bool mtglowed, loaded;
+    VSlot *variants;
+    bool loaded;
     uint texmask;
     char *autograss;
     Texture *grasstex, *thumbnail;
@@ -342,20 +538,13 @@ struct Slot
     float layermaskscale;
     ImageData *layermask;
 
-    Slot() : autograss(NULL), layermaskname(NULL), layermask(NULL) { reset(); }
+    Slot(int index = -1) : index(index), variants(NULL), autograss(NULL), layermaskname(NULL), layermask(NULL) { reset(); }
     
     void reset()
     {
-        sts.setsize(0);
+        sts.shrink(0);
         shader = NULL;
-        params.setsize(0);
-        scale = 1;
-        rotation = xoffset = yoffset = 0;
-        scrollS = scrollT = 0;
-        layer = 0;
-        glowcolor = vec(1, 1, 1);
-        pulseglowcolor = vec(0, 0, 0);
-        pulseglowspeed = 0;
+        params.shrink(0);
         loaded = false;
         texmask = 0;
         DELETEA(autograss);
@@ -381,6 +570,34 @@ struct Slot
     }
 };
 
+inline void VSlot::addvariant(Slot *slot)
+{
+    if(!slot->variants) slot->variants = this;
+    else
+    {
+        VSlot *prev = slot->variants;
+        while(prev->next) prev = prev->next;
+        prev->next = this;
+    }
+}
+
+struct MSlot : Slot, VSlot
+{
+    MSlot() : VSlot(this) {}
+
+    void reset()
+    {
+        Slot::reset();
+        VSlot::reset();
+    }
+
+    void cleanup()
+    {
+        Slot::cleanup();
+        VSlot::cleanup();
+    }
+};
+
 struct cubemapside
 {
     GLenum target;
@@ -390,8 +607,8 @@ struct cubemapside
 
 extern cubemapside cubemapsides[6];
 extern Texture *notexture;
-extern Shader *defaultshader, *rectshader, *notextureshader, *nocolorshader, *foggedshader, *foggednotextureshader, *stdworldshader;
-extern int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams;
+extern Shader *defaultshader, *rectshader, *cubemapshader, *notextureshader, *nocolorshader, *foggedshader, *foggednotextureshader, *stdworldshader, *lineshader, *foggedlineshader;
+extern int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams, maxvsuniforms, maxfsuniforms;
 
 extern Shader *lookupshaderbyname(const char *name);
 extern Shader *useshaderbyname(const char *name);
@@ -399,6 +616,7 @@ extern Texture *loadthumbnail(Slot &slot);
 extern void resetslotshader();
 extern void setslotshader(Slot &s);
 extern void linkslotshader(Slot &s, bool load = true);
+extern void linkvslotshader(VSlot &s, bool load = true);
 extern void linkslotshaders();
 extern void setenvparamf(const char *name, int type, int index, float x = 0, float y = 0, float z = 0, float w = 0);
 extern void setenvparamfv(const char *name, int type, int index, const float *v);
@@ -408,6 +626,8 @@ extern void setlocalparamf(const char *name, int type, int index, float x = 0, f
 extern void setlocalparamfv(const char *name, int type, int index, const float *v);
 extern void invalidateenvparams(int type, int start, int count);
 extern ShaderParam *findshaderparam(Slot &s, const char *name, int type, int index);
+extern ShaderParam *findshaderparam(VSlot &s, const char *name, int type, int index);
+extern const char *getshaderparamname(const char *name);
 
 extern int maxtmus, nolights, nowater, nomasks;
 
@@ -430,4 +650,14 @@ extern void savepng(const char *filename, ImageData &image, bool flip = false);
 extern void savetga(const char *filename, ImageData &image, bool flip = false);
 extern bool loaddds(const char *filename, ImageData &image);
 extern bool loadimage(const char *filename, ImageData &image);
+
+extern MSlot &lookupmaterialslot(int slot, bool load = true);
+extern Slot &lookupslot(int slot, bool load = true);
+extern VSlot &lookupvslot(int slot, bool load = true);
+extern VSlot *findvslot(Slot &slot, const VSlot &src, const VSlot &delta);
+extern VSlot *editvslot(const VSlot &src, const VSlot &delta);
+extern void mergevslot(VSlot &dst, const VSlot &src, const VSlot &delta);
+
+extern vector<Slot *> slots;
+extern vector<VSlot *> vslots;
 

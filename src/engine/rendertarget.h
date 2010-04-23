@@ -39,6 +39,8 @@ struct rendertarget
         return depthfmts;
     }
 
+    virtual bool depthtest() const { return true; }
+
     void cleanup(bool fullclean = false)
     {
         if(renderfb) { glDeleteFramebuffers_(1, &renderfb); renderfb = 0; }
@@ -69,13 +71,18 @@ struct rendertarget
         if(!blurfb) glGenFramebuffers_(1, &blurfb);
         glBindFramebuffer_(GL_FRAMEBUFFER_EXT, blurfb);
         glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, target, blurtex, 0);
-        if(!blurdb) glGenRenderbuffers_(1, &blurdb);
-        glGenRenderbuffers_(1, &blurdb);
-        glBindRenderbuffer_(GL_RENDERBUFFER_EXT, blurdb);
-        glRenderbufferStorage_(GL_RENDERBUFFER_EXT, depthfmt, texw, texh);
-        glFramebufferRenderbuffer_(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, blurdb);
+        if(depthtest())
+        {
+            if(!blurdb) glGenRenderbuffers_(1, &blurdb);
+            glGenRenderbuffers_(1, &blurdb);
+            glBindRenderbuffer_(GL_RENDERBUFFER_EXT, blurdb);
+            glRenderbufferStorage_(GL_RENDERBUFFER_EXT, depthfmt, texw, texh);
+            glFramebufferRenderbuffer_(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, blurdb);
+        }
         glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
     }
+
+    virtual bool shadowcompare() const { return false; }
 
     void setup(int w, int h)
     {
@@ -110,7 +117,22 @@ struct rendertarget
         while(!colorfmt && colorfmts[++find]);
         if(!colorfmt) colorfmt = colorfmts[find];
 
-        if(hasFBO && attach != GL_DEPTH_ATTACHMENT_EXT)
+        if(attach == GL_DEPTH_ATTACHMENT_EXT && shadowcompare())
+        {
+            if(hasDT && hasSH)
+            {
+                glTexParameteri(target, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE);
+                glTexParameteri(target, GL_TEXTURE_COMPARE_FUNC_ARB, GL_GEQUAL);
+                glTexParameteri(target, GL_DEPTH_TEXTURE_MODE_ARB, GL_LUMINANCE);
+            }
+            else
+            {
+                glTexParameteri(target, GL_TEXTURE_COMPARE_SGIX, GL_TRUE);
+                glTexParameteri(target, GL_TEXTURE_COMPARE_OPERATOR_SGIX, GL_TEXTURE_GEQUAL_R_SGIX);
+            }
+        } 
+
+        if(hasFBO && attach != GL_DEPTH_ATTACHMENT_EXT && depthtest())
         {
             if(!renderdb) { glGenRenderbuffers_(1, &renderdb); depthfmt = GL_FALSE; }
             if(!depthfmt) glBindRenderbuffer_(GL_RENDERBUFFER_EXT, renderdb);
@@ -124,9 +146,10 @@ struct rendertarget
             }
             while(!depthfmt && depthfmts[++find]);
             if(!depthfmt) depthfmt = depthfmts[find];
-        
-            glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
         }
+ 
+        if(hasFBO) glBindFramebuffer_(GL_FRAMEBUFFER_EXT, 0);
+
         texw = w;
         texh = h;
         initialized = false;
@@ -417,7 +440,11 @@ struct rendertarget
             sh = viewh;
         }
 
+        if(!depthtest()) glDisable(GL_DEPTH_TEST);
+
         bool succeeded = dorender();
+
+        if(!depthtest()) glEnable(GL_DEPTH_TEST);
 
         if(scissoring) glDisable(GL_SCISSOR_TEST);
 
@@ -455,7 +482,7 @@ struct rendertarget
             sw = int(0.5f*(scissorx2 - scissorx1)*w),
             sh = int(0.5f*(scissory2 - scissory1)*h);
         if(flipdebug()) { sy = h - sy; sh = -sh; }
-        glBegin(lines ? GL_LINE_LOOP : GL_QUADS);
+        glBegin(lines ? GL_LINE_LOOP : GL_TRIANGLE_FAN);
         glVertex2i(sx,      sy);
         glVertex2i(sx + sw, sy);
         glVertex2i(sx + sw, sy + sh);
@@ -488,7 +515,7 @@ struct rendertarget
                 loopi(lines ? 1 : 2)
                 {
                     if(!lines) glColor3f(1, 1, i ? 1.0f : 0.5f);
-                    glBegin(lines || i ? GL_LINE_LOOP : GL_QUADS);
+                    glBegin(lines || i ? GL_LINE_LOOP : GL_TRIANGLE_FAN);
                     glVertex2f(vx,    vy);
                     glVertex2f(vx+vw, vy);
                     glVertex2f(vx+vw, vy+vh);
@@ -514,7 +541,7 @@ struct rendertarget
             ty2 /= viewh;
         }
         if(flipdebug()) swap(ty1, ty2);
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_FAN);
         glTexCoord2f(tx1, ty1); glVertex2i(0, 0);
         glTexCoord2f(tx2, ty1); glVertex2i(w, 0);
         glTexCoord2f(tx2, ty2); glVertex2i(w, h);

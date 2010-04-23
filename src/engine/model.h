@@ -1,9 +1,9 @@
-enum { MDL_MD2 = 1, MDL_MD3, MDL_MD5, MDL_OBJ };
+enum { MDL_MD2 = 0, MDL_MD3, MDL_MD5, MDL_OBJ, MDL_SMD, MDL_IQM, NUMMODELTYPES };
 
 struct model
 {
     float spinyaw, spinpitch, offsetyaw, offsetpitch;
-    bool collide, ellipsecollide, shadow, alphadepth;
+    bool collide, ellipsecollide, shadow, alphadepth, depthoffset;
     float scale;
     vec translate;
     BIH *bih;
@@ -18,7 +18,7 @@ struct model
 
     bool perentitycollisionboxes; // INTENSITY: Get the collision box from the entiy, not the model type
 
-    model() : spinyaw(0), spinpitch(0), offsetyaw(0), offsetpitch(0), collide(true), ellipsecollide(false), shadow(true), alphadepth(true), scale(1.0f), translate(0, 0, 0), bih(0), bbcenter(0, 0, 0), bbradius(0, 0, 0), bbextend(0, 0, 0), eyeheight(0.9f), collideradius(0), collideheight(0), batch(-1)
+    model() : spinyaw(0), spinpitch(0), offsetyaw(0), offsetpitch(0), collide(true), ellipsecollide(false), shadow(true), alphadepth(true), depthoffset(false), scale(1.0f), translate(0, 0, 0), bih(0), bbcenter(0, 0, 0), bbradius(0, 0, 0), bbextend(0, 0, 0), eyeheight(0.9f), collideradius(0), collideheight(0), batch(-1)
           , collisionsonlyfortriggering(false), perentitycollisionboxes(false)
         {}
     virtual ~model() { DELETEP(bih); }

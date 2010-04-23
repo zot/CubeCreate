@@ -91,6 +91,11 @@ extern PFNGLCOMPRESSEDTEXSUBIMAGE2DARBPROC glCompressedTexSubImage2D_;
 extern PFNGLCOMPRESSEDTEXSUBIMAGE1DARBPROC glCompressedTexSubImage1D_;
 extern PFNGLGETCOMPRESSEDTEXIMAGEARBPROC   glGetCompressedTexImage_;
 
+// GL_EXT_fog_coord
+extern PFNGLFOGCOORDPOINTEREXTPROC glFogCoordPointer_;
+
+#include "varray.h"
+
 extern dynent *player;
 extern physent *camera1;                // special ent that acts as camera, same object as player1 in FPS mode
 
@@ -99,9 +104,8 @@ extern int mapversion;
 extern char *maptitle;
 extern vector<ushort> texmru;
 extern int xtraverts, xtravertsva;
-extern int curtexnum;
 extern const ivec cubecoords[8];
-extern const ushort fv[6][4];
+extern const uchar fv[6][4];
 extern const uchar fvmasks[64];
 extern const uchar faceedgesidx[6][4];
 extern bool inbetweenframes, renderedframe;
@@ -122,8 +126,8 @@ struct font
     char *name;
     Texture *tex;
     vector<charinfo> chars;
-    short defaultw, defaulth;
-    short offsetx, offsety, offsetw, offseth;
+    int charoffset, defaultw, defaulth;
+    int offsetx, offsety, offsetw, offseth;
 };
 
 #define FONTH (curfont->defaulth)
@@ -143,9 +147,8 @@ extern void loadalphamask(Texture *t);
 extern void loadlayermasks();
 extern Texture *cubemapload(const char *name, bool mipit = true, bool msg = true, bool transient = false);
 extern void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapside &side);
-extern Slot &lookupmaterialslot(int slot, bool load = true);
-extern Slot &lookuptexture(int slot, bool load = true);
 extern void loadshaders();
+extern void setuptexparameters(int tnum, void *pixels, int clamp, int filter, GLenum format = GL_RGB, GLenum target = GL_TEXTURE_2D);
 extern void createtexture(int tnum, int w, int h, void *pixels, int clamp, int filter, GLenum component = GL_RGB, GLenum target = GL_TEXTURE_2D, int pw = 0, int ph = 0, int pitch = 0, bool resize = true);
 extern void renderpostfx();
 extern void initenvmaps();
@@ -157,6 +160,11 @@ extern GLuint lookupenvmap(Slot &slot);
 extern bool reloadtexture(Texture &tex);
 extern bool reloadtexture(const char *name);
 extern void setuptexcompress();
+extern void clearslots();
+extern void compacteditvslots();
+extern void compactmruvslots();
+extern void compactvslots(cube *c, int n = 8);
+extern int compactvslots();
 
 // shadowmap
 
@@ -169,7 +177,6 @@ extern bool isshadowmapreceiver(vtxarray *va);
 extern void rendershadowmap();
 extern void pushshadowmap();
 extern void popshadowmap();
-extern void adjustshadowmatrix(const ivec &o, float scale);
 extern void rendershadowmapreceivers();
 extern void guessshadowdir();
 
@@ -188,11 +195,11 @@ static inline bool pvsoccluded(const ivec &bborigin, int size)
 }
 
 // rendergl
-extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasBC, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF, hasRN, hasPBO, hasFBB;
+extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasBC, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF, hasRN, hasPBO, hasFBB, hasUBO, hasBUE, hasFC;
 extern int hasstencil;
 
 extern bool envmapping, renderedgame;
-extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
+extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix, fogmatrix, invfogmatrix;
 extern bvec fogcolor;
 
 extern void gl_checkextensions();
@@ -207,8 +214,6 @@ extern void disablepolygonoffset(GLenum type);
 extern void calcspherescissor(const vec &center, float size, float &sx1, float &sy1, float &sx2, float &sy2);
 extern int pushscissor(float sx1, float sy1, float sx2, float sy2);
 extern void popscissor();
-extern void setfogplane(const plane &p, bool flush = false);
-extern void setfogplane(float scale = 0, float z = 0, bool flush = false, float fadescale = 0, float fadeoffset = 0);
 extern void recomputecamera();
 extern void findorientation();
 extern void writecrosshairs(stream *f);
@@ -220,7 +225,7 @@ extern void render3dbox(vec &o, float tofloor, float toceil, float xradius, floa
 extern cube *newcubes(uint face = F_EMPTY);
 extern cubeext *newcubeext(cube &c);
 extern void getcubevector(cube &c, int d, int x, int y, int z, ivec &p);
-extern void setcubevector(cube &c, int d, int x, int y, int z, ivec &p);
+extern void setcubevector(cube &c, int d, int x, int y, int z, const ivec &p);
 extern int familysize(cube &c);
 extern void freeocta(cube *c);
 extern void discardchildren(cube &c);
@@ -228,7 +233,9 @@ extern void optiface(uchar *p, cube &c);
 extern void validatec(cube *c, int size);
 extern bool isvalidcube(cube &c);
 extern cube &lookupcube(int tx, int ty, int tz, int tsize = 0);
-extern cube &neighbourcube(int x, int y, int z, int size, int rsize, int orient);
+extern cube *neighbourstack[32];
+extern int neighbourdepth;
+extern cube &neighbourcube(cube &c, int orient, int x, int y, int z, int size);
 extern void newclipplanes(cube &c);
 extern void freeclipplanes(cube &c);
 extern void forcemip(cube &c);
@@ -236,9 +243,8 @@ extern bool subdividecube(cube &c, bool fullcheck=true, bool brighten=true);
 extern void converttovectorworld();
 extern int faceverts(cube &c, int orient, int vert);
 extern int faceconvexity(cube &c, int orient);
-extern void calcvert(cube &c, int x, int y, int z, int size, vvec &vert, int i, bool solid = false);
+extern void calcvert(cube &c, int x, int y, int z, int size, ivec &vert, int i, bool solid = false);
 extern void calcvert(cube &c, int x, int y, int z, int size, vec &vert, int i, bool solid = false);
-extern int calcverts(cube &c, int x, int y, int z, int size, vvec *verts, bool *usefaces);
 extern uint faceedges(cube &c, int orient);
 extern bool collapsedface(uint cfe);
 extern bool touchingface(cube &c, int orient);
@@ -251,8 +257,8 @@ extern int visibleorient(cube &c, int orient);
 extern bool threeplaneintersect(plane &pl1, plane &pl2, plane &pl3, vec &dest);
 extern void genvectorvert(const ivec &p, cube &c, ivec &v);
 extern void freemergeinfo(cube &c);
-extern void genmergedverts(cube &cu, int orient, const ivec &co, int size, const mergeinfo &m, vvec *vv, plane *p = NULL);
-extern int calcmergedsize(int orient, const ivec &co, int size, const mergeinfo &m, const vvec *vv);
+extern void genmergedverts(cube &cu, int orient, const ivec &co, int size, const mergeinfo &m, vec *vv, plane *p = NULL);
+extern int calcmergedsize(int orient, const ivec &co, int size, const mergeinfo &m, const vec *vv);
 extern void invalidatemerges(cube &c, bool msg);
 extern void calcmerges();
 
@@ -313,12 +319,9 @@ extern void updatevabb(vtxarray *va, bool force = false);
 extern void updatevabbs(bool force = false);
 
 // renderva
-extern GLuint fogtex;
-
 extern void visiblecubes(float fov, float fovy);
 extern void reflectvfcP(float z, float minyaw = -M_PI, float maxyaw = M_PI, float minpitch = -M_PI, float maxpitch = M_PI);
 extern void restorevfcP();
-extern void createfogtex();
 extern void rendergeom(float causticspass = 0, bool fogpass = false);
 extern void rendermapmodels();
 extern void renderreflectedgeom(bool causticspass = false, bool fogpass = false);
@@ -326,13 +329,14 @@ extern void renderreflectedmapmodels();
 extern void renderoutline();
 extern bool rendersky(bool explicitonly = false);
 
+extern bool isfoggedsphere(float rad, const vec &cv);
 extern int isvisiblesphere(float rad, const vec &cv);
 extern bool bboccluded(const ivec &bo, const ivec &br);
 extern occludequery *newquery(void *owner);
 extern bool checkquery(occludequery *query, bool nowait = false);
 extern void resetqueries();
 extern int getnumqueries();
-extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->o, int scale = 0, const ivec &origin = ivec(0, 0, 0));
+extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->o);
 
 #define startquery(query) { glBeginQuery_(GL_SAMPLES_PASSED_ARB, ((occludequery *)(query))->id); }
 #define endquery(query) \
@@ -347,7 +351,7 @@ extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->
 extern void updatedynlights();
 extern int finddynlights();
 extern void calcdynlightmask(vtxarray *va);
-extern int setdynlights(vtxarray *va, const ivec &vaorigin);
+extern int setdynlights(vtxarray *va);
 extern bool getdynlight(int n, vec &o, float &radius, vec &color);
 
 // material
@@ -368,14 +372,14 @@ extern int visiblematerial(cube &c, int orient, int x, int y, int z, int size, u
 extern int refracting;
 extern bool reflecting, fading, fogging;
 extern float reflectz;
-extern int reflectdist, vertwater, refractfog, waterrefract, waterreflect, waterfade, caustics, waterfallrefract, waterfog, lavafog;
+extern int reflectdist, vertwater, waterrefract, waterreflect, waterfade, caustics, waterfallrefract, waterfog, lavafog;
 extern bvec watercolor, waterfallcolor, lavacolor;
 
 extern void cleanreflections();
 extern void queryreflections();
 extern void drawreflections();
 extern void renderwater();
-extern void renderlava(materialsurface &m, Texture *tex, float scale);
+extern void renderlava(const materialsurface &m, Texture *tex, float scale);
 extern void loadcaustics(bool force = false);
 extern void preloadwatershaders(bool force = false);
 
@@ -420,6 +424,7 @@ extern hashtable<const char *, ident> *idents;
 extern bool overrideidents, persistidents;
 
 extern void explodelist(const char *s, vector<char *> &elems);
+extern char *indexlist(const char *s, int pos);
 
 extern void clearoverrides();
 extern void writecfg();
@@ -479,24 +484,6 @@ extern void rotatebb(vec &center, vec &radius, int yaw);
 extern float shadowray(const vec &o, const vec &ray, float radius, int mode, extentity *t = NULL);
 
 // world
-enum
-{
-    TRIG_COLLIDE    = 1<<0,
-    TRIG_TOGGLE     = 1<<1,
-    TRIG_ONCE       = 0<<2,
-    TRIG_MANY       = 1<<2,
-    TRIG_DISAPPEAR  = 1<<3,
-    TRIG_AUTO_RESET = 1<<4,
-    TRIG_RUMBLE     = 1<<5,
-    TRIG_LOCKED     = 1<<6
-};
-
-#define NUMTRIGGERTYPES 16
-
-extern int triggertypes[NUMTRIGGERTYPES];
-
-#define checktriggertype(type, flag) (triggertypes[(type) & (NUMTRIGGERTYPES-1)] & (flag))
-
 extern vector<int> outsideents;
 
 extern void entitiesinoctanodes();
@@ -597,8 +584,9 @@ extern uchar shouldsaveblendmap();
 
 namespace recorder
 {
-    void stop();
-    void capture();
+    extern void stop();
+    extern void capture();
+    extern void cleanup();
 }
 
 #endif
