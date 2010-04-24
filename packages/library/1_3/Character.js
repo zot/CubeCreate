@@ -499,6 +499,9 @@ Character.plugins = {
     //!
     //! by default actionKey 17 is used. It's no prob to change it tho.
     //! 
+    //! You need a few things included in your map script
+    //!   Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
+    //!   Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
     flashlight: {
         started: 0,
         flcounter: 0,
