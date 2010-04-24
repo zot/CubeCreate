@@ -472,5 +472,204 @@ Character.plugins = {
             }
         }
     },
+
+    //! A nice flashlight for usage in your maps
+    //! by quaker66 <quaker66@gmail.com>
+    //! You initialize it in bakePlugins, like that:
+    //! bakePlugins(
+    //!     Player,
+    //!     [
+    //!         GameManager.playerPlugin,
+    //!         Character.plugins.flashlight,
+    //!         ....
+    //!
+    //! or if you want to edit its parameters, you use:
+    //! bakePlugins(
+    //!     Player,
+    //!     [
+    //!         GameManager.playerPlugin,
+    //!         Character.plugins.flashlight,
+    //!         {
+    //!             myvar: 1,
+    //!             myfunc: function() .....
+    //!         },
+    //!         ....
+    //!
+    //! you can change for example sound functions or HUD like that.
+    //!
+    //! by default actionKey 17 is used. It's no prob to change it tho.
+    //! 
+    flashlight: {
+        started: 0,
+        flcounter: 0,
+        flashlightKeyIndex: 17,
+        actionKeyLocked: 0,
+        lightTime: 30,
+        lightColor: 0xFFEECC,
+        minLightRadius: 3,
+        maxLightRadius: 50,
+        x1: 0.1,
+        y1: 0.8,
+        x2: 0.3,
+        y2: 0.82,
+        bgColor: 0x3D3D3D,
+        fgColor: 0xA2A2A2,
+        raceMode: 0,
+        raceModeMinLightRadius: 20,
+        raceModeMaxLightRadius: 40,
+        raceModeLightsDistance: 25,
+        
+        doHUD: function(count) {
+            if (CAPI.showHUDRect) {
+                CAPI.showHUDRect(this.x1, this.y1, this.x2, this.y2, this.bgColor);
+                CAPI.showHUDRect(this.x1, this.y1, this.x1 + (count / (this.lightTime / (this.x2 - this.x1))), this.y2, this.fgColor);
+            }
+        },
+        
+        clientActivate: function() {
+            if (!this.actionKeyLocked) {
+                ApplicationManager.instance.connect('actionKey', bind(this.actionKey, this));
+                this.actionKeyLocked = 1;
+            }
+        },
+        
+        clientAct: function() {
+            var count = 0;
+            if (!isPlayerEditing(this)) {
+                if (!this.raceMode) {
+                    count = this.lightTime - this.flcounter;
+                    this.doHUD(count);
+                }
+                else count = 1;
+                if (count > 0 && this.started) {
+                    var posCopy = this.position.copy();
+                    posCopy.z += this.upperHeight;
+                    var posCopyB = this.position.copy();
+                    posCopyB.z += this.eyeHeight;
+
+                    if (!this.raceMode) {
+                        var autoTargetDirection = posCopy.subNew(posCopyB).normalize();
+                        var currentOriginPosition = autoTargetDirection.copy();
+                        currentOriginPosition.add(this.position);
+                        currentOriginPosition.z += this.upperHeight;
+
+                        var targetData = Firing.findTarget(this, 
+                                                           currentOriginPosition,
+                                                           posCopyB,
+                                                           this.position.addNew(new Vector3().fromYawPitch(this.yaw, this.pitch)),
+                                                           Editing.getWorldSize());
+                        if (distance(this.position, targetData.target) > this.maxLightRadius)
+                          dist = this.maxLightRadius;
+                        else if (distance(this.position, targetData.target) < this.minLightRadius)
+                          dist = this.minLightRadius;
+                        else
+                          dist = distance(this.position, targetData.target);
+
+                        Effect.addDynamicLight(targetData.target, dist, this.lightColor, 0);
+                    }
+                    else {
+                        var posCopyC = posCopyB.copy();
+                        var posCopyD = posCopyB.copy();
+                        posCopyC.add(new Vector3().fromYawPitch(this.yaw - 90, 0).mul(this.raceModeLightsDistance * -1));
+                        posCopyD.add(new Vector3().fromYawPitch(this.yaw + 90, 0).mul(this.raceModeLightsDistance * -1));
+
+                        var autoTargetDirection = posCopy.subNew(posCopyB).normalize();
+                        var currentOriginPosition = autoTargetDirection.copy();
+                        currentOriginPosition.add(this.position);
+                        currentOriginPosition.z += this.upperHeight;
+
+                        var autoTargetDirectionB = posCopy.subNew(posCopyC).normalize();
+                        var currentOriginPositionB = autoTargetDirectionB.copy();
+                        currentOriginPositionB.add(this.position);
+                        currentOriginPositionB.z += this.upperHeight;
+
+                        var autoTargetDirectionC = posCopy.subNew(posCopyD).normalize();
+                        var currentOriginPositionC = autoTargetDirectionC.copy();
+                        currentOriginPositionC.add(this.position);
+                        currentOriginPositionC.z += this.upperHeight;
+                        
+                        var targetData = Firing.findTarget(this, 
+                                                           currentOriginPosition,
+                                                           posCopyB,
+                                                           this.position.addNew(new Vector3().fromYawPitch(this.yaw, 0)),
+                                                           Editing.getWorldSize());
+
+                        var targetDataB = Firing.findTarget(this, 
+                                                           currentOriginPositionB,
+                                                           posCopyC,
+                                                           this.position.addNew(new Vector3().fromYawPitch(this.yaw, 0)),
+                                                           Editing.getWorldSize());
+
+                        var targetDataC = Firing.findTarget(this, 
+                                                           currentOriginPositionC,
+                                                           posCopyD,
+                                                           this.position.addNew(new Vector3().fromYawPitch(this.yaw, 0)),
+                                                           Editing.getWorldSize());
+
+                        if (distance(this.position, targetData.target) > this.raceModeMaxLightRadius)
+                          dist = this.raceModeMaxLightRadius;
+                        else if (distance(this.position, targetData.target) < this.raceModeMinLightRadius)
+                          dist = this.raceModeMinLightRadius;
+                        else
+                          dist = distance(this.position, targetData.target);
+
+                        Effect.addDynamicLight(targetDataB.target, dist, this.lightColor, 0);
+                        Effect.addDynamicLight(targetDataC.target, dist, this.lightColor, 0);
+                    }
+                }
+            }
+        },
+    
+        actionKey: function(index, down) {
+           if (!down) return;
+           if (index == this.flashlightKeyIndex) {
+              var helpercounter = 0;
+              var count = 0;
+              if (this.started) {
+                  this.started = 0;
+                  this.flashlightOff();
+              } else {
+                  this.started = 1;
+                  this.flashlightOn();
+              }
+
+              if (!this.eventman) {
+                  this.eventman = GameManager.getSingleton().eventManager.add({
+                      secondsBefore: 0,
+                      secondsBetween: 1,
+                      func: bind(function() {
+                          if (!isPlayerEditing(this) && !this.raceMode) {
+                              if (this.started) {
+                                  if (this.flcounter) helpercounter = this.flcounter;
+                                  helpercounter += 1;
+                                  this.flcounter = helpercounter;
+                                  if (this.flcounter >= this.lightTime) { this.started = 0; this.flcounter = this.lightTime; this.flashlightOff(); }
+                              }
+                              else {
+                                  if (this.flcounter > 0) {
+                                      if (this.flcounter) helpercounter = this.flcounter;
+                                      helpercounter -= 1;
+                                      this.flcounter = helpercounter;
+                                      this.started = 0;
+                                  } else {
+                                      this.started = 0;
+                                  }
+                              }
+                          }
+                      }, entity),
+                      entity: entity,
+                  });
+              }
+           }
+        },
+
+        flashlightOff: function() {
+            Sound.play("olpc/AdamKeshen/BeatBoxCHIK.wav", this.position);
+        },
+
+        flashlightOn: function() {
+            Sound.play("olpc/AdamKeshen/BeatBoxCHIK.wav", this.position);
+        }
+    },
 };
 
