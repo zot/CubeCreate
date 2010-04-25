@@ -130,6 +130,12 @@ Map = {
     blurSkylight: CAPI.blurSkylight,
     ambient: CAPI.ambient,
 
+	tweakModelAmbient: CAPI.tweakModelAmbient,
+	tweakModelGlow: CAPI.tweakModelGlow,
+	tweakModelSpec: CAPI.tweakModelSpec,
+	tweakModelSpecGlare: CAPI.tweakModelSpecGlare,
+	tweakModelGlowGlare: CAPI.tweakModelGlowGlare,
+
 	causticScale: CAPI.causticScale,
 	causticMillis: CAPI.causticMillis,
 

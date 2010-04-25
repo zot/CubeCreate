@@ -1400,6 +1400,66 @@ V8_FUNC_i(__script__ambient, {
 });
 #endif
 
+#ifdef CLIENT
+V8_FUNC_d(__script__tweakModelAmbient, {
+    std::string command = "tweakmodelambient ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__tweakModelAmbient, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__tweakModelGlow, {
+    std::string command = "tweakmodelglow ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__tweakModelGlow, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__tweakModelSpec, {
+    std::string command = "tweakmodelspec ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__tweakModelSpec, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__tweakModelSpecGlare, {
+    std::string command = "tweakmodelspecglare ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__tweakModelSpecGlare, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__tweakModelGlowGlare, {
+    std::string command = "tweakmodelglowglare ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__tweakModelGlowGlare, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
 V8_FUNC_s(__script__preloadModel, { preloadmodel(arg1); });
 
 V8_FUNC_s(__script__reloadModel, {
