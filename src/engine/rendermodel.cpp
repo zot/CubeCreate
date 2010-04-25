@@ -559,7 +559,7 @@ void renderbatchedmodel(model *m, batchedmodel &b)
     }
 
 	if(modeltweaks) {
-		if(b.d!=player) m->setambient(tweakmodelambient);	// t7g; This is how we adjust ambient and related for all models at once.
+		if (!b.d) m->setambient(tweakmodelambient);	// t7g; This is how we adjust ambient and related for all models at once.
 		else m->setambient(tweakmodelambient / 10.0f);
 		m->setglow(tweakmodelglow);
 		m->setspec(tweakmodelspec);
