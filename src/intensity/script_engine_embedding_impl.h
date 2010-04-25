@@ -171,19 +171,75 @@ EMBED_CAPI_FUNC("setShaderParam", __script__setShaderParam, 4);
 
 EMBED_CAPI_FUNC("materialReset", __script__materialReset, 0);
 
+EMBED_CAPI_FUNC("loadStars", __script__loadStars, 1);
 EMBED_CAPI_FUNC("loadSky", __script__loadSky, 1);
+EMBED_CAPI_FUNC("loadSun", __script__loadSun, 1);
+EMBED_CAPI_FUNC("loadClouds", __script__loadClouds, 1);
+EMBED_CAPI_FUNC("loadCloudLayer", __script__loadCloudLayer, 1);
+EMBED_CAPI_FUNC("loadAltCloudLayer", __script__loadAltCloudLayer, 1);
 
 EMBED_CAPI_FUNC("fogColor", __script__fogColor, 1);
 EMBED_CAPI_FUNC("fog", __script__fog, 1);
+
+EMBED_CAPI_FUNC_STD(causticScale, 1);
+EMBED_CAPI_FUNC_STD(causticMillis, 1);
+
+EMBED_CAPI_FUNC_STD(waterSpecularity, 1);
 EMBED_CAPI_FUNC_STD(waterFog, 1);
 EMBED_CAPI_FUNC_STD(waterColor, 3);
+EMBED_CAPI_FUNC_STD(waterFallTint, 3);
+
+EMBED_CAPI_FUNC_STD(lavaFog, 1);
+EMBED_CAPI_FUNC_STD(lavaTint, 3);
+
+EMBED_CAPI_FUNC_STD(spinStars, 1);
 EMBED_CAPI_FUNC_STD(spinSky, 1);
+EMBED_CAPI_FUNC_STD(spinSun, 1);
+EMBED_CAPI_FUNC_STD(spinClouds, 1);
+EMBED_CAPI_FUNC_STD(spinCloudLayer, 1);
+EMBED_CAPI_FUNC_STD(spinAltCloudLayer, 1);
+
+EMBED_CAPI_FUNC_STD(yawStars, 1);
+EMBED_CAPI_FUNC_STD(yawSky, 1);
+EMBED_CAPI_FUNC_STD(yawSun, 1);
+EMBED_CAPI_FUNC_STD(yawClouds, 1);
+EMBED_CAPI_FUNC_STD(yawCloudLayer, 1);
+EMBED_CAPI_FUNC_STD(yawAltCloudLayer, 1);
+
+EMBED_CAPI_FUNC_STD(alphaSky, 1);
+EMBED_CAPI_FUNC_STD(alphaSun, 1);
+EMBED_CAPI_FUNC_STD(alphaClouds, 1);
+EMBED_CAPI_FUNC_STD(alphaCloudLayer, 1);
+EMBED_CAPI_FUNC_STD(alphaAltCloudLayer, 1);
+
+EMBED_CAPI_FUNC_STD(tintStars, 3);
+EMBED_CAPI_FUNC_STD(tintSky, 3);
+EMBED_CAPI_FUNC_STD(tintSun, 3);
+EMBED_CAPI_FUNC_STD(tintClouds, 3);
+EMBED_CAPI_FUNC_STD(tintCloudLayer, 3);
+EMBED_CAPI_FUNC_STD(tintAltCloudLayer, 3);
+EMBED_CAPI_FUNC_STD(tintAmbient, 3);
+EMBED_CAPI_FUNC_STD(tintFog, 3)
+
 EMBED_CAPI_FUNC_STD(cloudLayer, 1);
 EMBED_CAPI_FUNC_STD(cloudScrollX, 1);
 EMBED_CAPI_FUNC_STD(cloudScrollY, 1);
 EMBED_CAPI_FUNC_STD(cloudScale, 1);
+EMBED_CAPI_FUNC_STD(cloudHeight, 1);
+EMBED_CAPI_FUNC_STD(cloudFade, 1);
+EMBED_CAPI_FUNC_STD(cloudClip, 1);
+
+EMBED_CAPI_FUNC_STD(altCloudLayer, 1);
+EMBED_CAPI_FUNC_STD(altCloudScrollX, 1);
+EMBED_CAPI_FUNC_STD(altCloudScrollY, 1);
+EMBED_CAPI_FUNC_STD(altCloudScale, 1);
+EMBED_CAPI_FUNC_STD(altCloudHeight, 1);
+EMBED_CAPI_FUNC_STD(altCloudFade, 1);
+EMBED_CAPI_FUNC_STD(altCloudClip, 1);
+
 EMBED_CAPI_FUNC_STD(skyTexture, 1);
 EMBED_CAPI_FUNC_STD(texScroll, 2);
+
 EMBED_CAPI_FUNC("shadowmapAmbient", __script__shadowmapAmbient, 1);
 EMBED_CAPI_FUNC("shadowmapAngle", __script__shadowmapAngle, 1);
 EMBED_CAPI_FUNC("skylight", __script__skylight, 3);

@@ -115,7 +115,12 @@ Map = {
 
     materialReset: CAPI.materialReset,
 
+	loadStars: CAPI.loadStars,
     loadSky: CAPI.loadSky,
+	loadSun: CAPI.loadSun,
+	loadClouds: CAPI.loadClouds,
+	loadCloudLayer: CAPI.loadCloudLayer,
+	loadAltCloudLayer: CAPI.loadAltCloudLayer,
 
     fogColor: CAPI.fogColor,
     fog: CAPI.fog,
@@ -125,13 +130,62 @@ Map = {
     blurSkylight: CAPI.blurSkylight,
     ambient: CAPI.ambient,
 
+	causticScale: CAPI.causticScale,
+	causticMillis: CAPI.causticMillis,
+
+	waterSpecularity: CAPI.waterSpecularity,
     waterFog: CAPI.waterFog,
     waterColor: CAPI.waterColor,
+	waterFallTint: CAPI.waterFallTint,
+
+	lavaFog: CAPI.lavaFog,
+	lavaTint: CAPI.lavaTint,
+
+	spinStars: CAPI.spinStars,
     spinSky: CAPI.spinSky,
+	spinSun: CAPI.spinSun,
+	spinClouds: CAPI.spinClouds,
+	spinCloudLayer: CAPI.spinCloudLayer,
+	spinAltCloudLayer: CAPI.spinAltCloudLayer,
+
+	yawStars: CAPI.yawStars,
+	yawSky: CAPI.yawSky,
+	yawSun: CAPI.yawSun,
+	yawClouds: CAPI.yawClouds,
+	yawCloudLayer: CAPI.yawCloudLayer,
+	yawAltCloudLayer: CAPI.yawAltCloudLayer,
+
+	alphaSky: CAPI.alphaSky,
+	alphaSun: CAPI.alphaSun,
+	alphaClouds: CAPI.alphaClouds,
+	alphaCloudLayer: CAPI.alphaCloudLayer,
+	alphaAltCloudLayer: CAPI.alphaAltCloudLayer,
+
+	tintStars: CAPI.tintStars,
+	tintSky: CAPI.tintSky,
+	tintSun: CAPI.tintSun,
+	tintClouds: CAPI.tintClouds,
+	tintCloudLayer: CAPI.tintCloudLayer,
+	tintAltCloudLayer: CAPI.tintAltCloudLayer,
+	tintAmbient: CAPI.tintAmbient,
+	tintFog: CAPI.tintFog,
+
     cloudLayer: CAPI.cloudLayer,
     cloudScrollX: CAPI.cloudScrollX,
     cloudScrollY: CAPI.cloudScrollY,
     cloudScale: CAPI.cloudScale,
+	cloudHeight: CAPI.cloudHeight,
+	cloudFade: CAPI.cloudFade,
+	cloudClip: CAPI.cloudClip,
+
+    altCloudLayer: CAPI.altCloudLayer,
+    altCloudScrollX: CAPI.altCloudScrollX,
+    altCloudScrollY: CAPI.altCloudScrollY,
+    altCloudScale: CAPI.altCloudScale,
+	altCloudHeight: CAPI.altCloudHeight,
+	altCloudFade: CAPI.altCloudFade,
+	altCloudClip: CAPI.altCloudClip,
+
     skyTexture: CAPI.skyTexture,
     texScroll: CAPI.texScroll,
 

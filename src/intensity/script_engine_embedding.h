@@ -621,14 +621,79 @@ V8_FUNC_NOPARAM(__script__materialReset, {
 });
 
 #ifdef CLIENT
+V8_FUNC_s(__script__loadStars, {
+    std::string command = "starbox ";
+    command += arg1;
+    assert( Utility::validateAlphaNumeric(arg1, "/_<>:.,") );
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_s(__script__loadStars, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
 V8_FUNC_s(__script__loadSky, {
-    std::string command = "loadsky ";
+    std::string command = "skybox "; // Call skybox instead of loadsky, calling loadsky seems dirty.
     command += arg1;
     assert( Utility::validateAlphaNumeric(arg1, "/_<>:.,") );
     CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_s(__script__loadSky, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_s(__script__loadSun, {
+    std::string command = "sunbox ";
+    command += arg1;
+    assert( Utility::validateAlphaNumeric(arg1, "/_<>:.,") );
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_s(__script__loadSun, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_s(__script__loadClouds, {
+    std::string command = "cloudbox ";
+    command += arg1;
+    assert( Utility::validateAlphaNumeric(arg1, "/_<>:.,") );
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_s(__script__loadClouds, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_s(__script__loadCloudLayer, {
+    std::string command = "cloudlayer ";
+    command += arg1;
+    assert( Utility::validateAlphaNumeric(arg1, "/_<>:.,") );
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_s(__script__loadCloudLayer, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_s(__script__loadAltCloudLayer, {
+    std::string command = "altcloudlayer ";
+    command += arg1;
+    assert( Utility::validateAlphaNumeric(arg1, "/_<>:.,") );
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_s(__script__loadAltCloudLayer, {
     arg1 = arg1; // warning otherwise
 });
 #endif
@@ -654,6 +719,42 @@ V8_FUNC_i(__script__fog, {
 });
 #else
 V8_FUNC_i(__script__fog, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_i(__script__causticScale, {
+    std::string command = "causticscale ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_i(__script__causticScale, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_i(__script__causticMillis, {
+    std::string command = "causticmillis ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_i(__script__causticMillis, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_i(__script__waterSpecularity, {
+    std::string command = "waterspec ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_i(__script__waterSpecularity, {
     arg1 = arg1; // warning otherwise
 });
 #endif
@@ -685,6 +786,58 @@ V8_FUNC_iii(__script__waterColor, {
 #endif
 
 #ifdef CLIENT
+V8_FUNC_iii(__script__waterFallTint, {
+    std::string command = "waterfallcolour ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__waterFallTint, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_i(__script__lavaFog, {
+    std::string command = "lavafog ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_i(__script__lavaFog, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_iii(__script__lavaTint, {
+    std::string command = "lavacolour ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__lavaTint, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__spinStars, {
+    std::string command = "spinstars ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__spinStars, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
 V8_FUNC_d(__script__spinSky, {
     std::string command = "spinsky ";
     command += Utility::toString(arg1);
@@ -697,6 +850,270 @@ V8_FUNC_d(__script__spinSky, {
 #endif
 
 #ifdef CLIENT
+V8_FUNC_d(__script__spinSun, {
+    std::string command = "spinsun ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__spinSun, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__spinClouds, {
+    std::string command = "spinclouds ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__spinClouds, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__spinCloudLayer, {
+    std::string command = "spincloudlayer ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__spinCloudLayer, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__spinAltCloudLayer, {
+    std::string command = "spinaltcloudlayer ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__spinAltCloudLayer, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__yawStars, {
+    std::string command = "yawstars ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__yawStars, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__yawSky, {
+    std::string command = "yawsky ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__yawSky, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__yawSun, {
+    std::string command = "yawsun ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__yawSun, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__yawClouds, {
+    std::string command = "yawclouds ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__yawClouds, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__yawCloudLayer, {
+    std::string command = "yawcloudlayer ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__yawCloudLayer, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__yawAltCloudLayer, {
+    std::string command = "yawaltcloudlayer ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__yawAltCloudLayer, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__alphaSky, {
+    std::string command = "skyboxalpha ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__alphaSky, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__alphaSun, {
+    std::string command = "sunboxalpha ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__alphaSun, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__alphaClouds, {
+    std::string command = "cloudboxalpha ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__alphaClouds, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__alphaCloudLayer, {
+    std::string command = "cloudalpha ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__alphaCloudLayer, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__alphaAltCloudLayer, {
+    std::string command = "altcloudalpha ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__alphaAltCloudLayer, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_iii(__script__tintStars, {
+    std::string command = "starboxtint ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__tintStars, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_iii(__script__tintSky, {
+    std::string command = "skyboxtint ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__tintSky, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_iii(__script__tintSun, {
+    std::string command = "sunboxtint ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__tintSun, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_iii(__script__tintClouds, {
+    std::string command = "cloudboxtint ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__tintClouds, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_iii(__script__tintCloudLayer, {
+    std::string command = "cloudtint ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__tintCloudLayer, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_iii(__script__tintAltCloudLayer, {
+    std::string command = "altcloudtint ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__tintAltCloudLayer, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
 V8_FUNC_s(__script__cloudLayer, {
     std::string command = "cloudlayer ";
     assert(Utility::validateRelativePath(arg1));
@@ -705,6 +1122,19 @@ V8_FUNC_s(__script__cloudLayer, {
 });
 #else
 V8_FUNC_s(__script__cloudLayer, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_s(__script__altCloudLayer, {
+    std::string command = "altcloudlayer ";
+    assert(Utility::validateRelativePath(arg1));
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_s(__script__altCloudLayer, {
     arg1 = arg1; // warning otherwise
 });
 #endif
@@ -723,6 +1153,18 @@ V8_FUNC_d(__script__cloudScrollX, {
 #endif
 
 #ifdef CLIENT
+V8_FUNC_d(__script__altCloudScrollX, {
+    std::string command = "altcloudscrollx ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__altCloudScrollX, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
 V8_FUNC_d(__script__cloudScrollY, {
     std::string command = "cloudscrolly ";
     command += Utility::toString(arg1);
@@ -735,6 +1177,18 @@ V8_FUNC_d(__script__cloudScrollY, {
 #endif
 
 #ifdef CLIENT
+V8_FUNC_d(__script__altCloudScrollY, {
+    std::string command = "altcloudscrolly ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__altCloudScrollY, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
 V8_FUNC_d(__script__cloudScale, {
     std::string command = "cloudscale ";
     command += Utility::toString(arg1);
@@ -742,6 +1196,90 @@ V8_FUNC_d(__script__cloudScale, {
 });
 #else
 V8_FUNC_d(__script__cloudScale, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__altCloudScale, {
+    std::string command = "altcloudscale ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__altCloudScale, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__cloudHeight, {
+    std::string command = "cloudheight ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__cloudHeight, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__altCloudHeight, {
+    std::string command = "altcloudheight ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__altCloudHeight, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__cloudFade, {
+    std::string command = "cloudfade ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__cloudFade, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__altCloudFade, {
+    std::string command = "altcloudfade ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__altCloudFade, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__cloudClip, {
+    std::string command = "cloudclip ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__cloudClip, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__altCloudClip, {
+    std::string command = "altcloudclip ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__altCloudClip, {
     arg1 = arg1; // warning otherwise
 });
 #endif
@@ -819,6 +1357,34 @@ V8_FUNC_i(__script__blurSkylight, {
 #else
 V8_FUNC_i(__script__blurSkylight, {
     arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_iii(__script__tintAmbient, {
+    std::string command = "ambient ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__tintAmbient, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_iii(__script__tintFog, {
+    std::string command = "fogcolour ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__tintFog, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
 });
 #endif
 

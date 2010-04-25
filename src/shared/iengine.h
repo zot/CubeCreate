@@ -7,6 +7,7 @@ typedef class boost::shared_ptr<CLogicEntity> LogicEntityPtr;
 
 extern int curtime;                     // current frame time
 extern int lastmillis;                  // last time
+extern int skymillis;					// for skies, this needs to be reset for proper sync'ing.
 extern int totalmillis;                 // total elapsed time
 extern int gamespeed, paused;
 
