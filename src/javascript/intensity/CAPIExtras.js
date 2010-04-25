@@ -130,6 +130,7 @@ Map = {
     blurSkylight: CAPI.blurSkylight,
     ambient: CAPI.ambient,
 
+	modelTweaks: CAPI.modelTweaks,
 	tweakModelAmbient: CAPI.tweakModelAmbient,
 	tweakModelGlow: CAPI.tweakModelGlow,
 	tweakModelSpec: CAPI.tweakModelSpec,

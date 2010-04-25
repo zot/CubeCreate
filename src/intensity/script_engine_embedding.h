@@ -1401,6 +1401,18 @@ V8_FUNC_i(__script__ambient, {
 #endif
 
 #ifdef CLIENT
+V8_FUNC_d(__script__modelTweaks, {
+    std::string command = "modeltweaks ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__modelTweaks, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
 V8_FUNC_d(__script__tweakModelAmbient, {
     std::string command = "tweakmodelambient ";
     command += Utility::toString(arg1);

@@ -240,6 +240,7 @@ EMBED_CAPI_FUNC_STD(altCloudClip, 1);
 EMBED_CAPI_FUNC_STD(skyTexture, 1);
 EMBED_CAPI_FUNC_STD(texScroll, 2);
 
+EMBED_CAPI_FUNC_STD(modelTweaks, 1);
 EMBED_CAPI_FUNC_STD(tweakModelAmbient, 1);
 EMBED_CAPI_FUNC_STD(tweakModelGlow, 1);
 EMBED_CAPI_FUNC_STD(tweakModelSpec, 1);

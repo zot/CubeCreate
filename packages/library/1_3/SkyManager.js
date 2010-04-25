@@ -393,6 +393,7 @@ SkyManager = {
 				Map.yawSun(parseFloat(this.curYawSun));
 				Map.spinStars(this.rateSpin);
 				Map.spinSun(this.rateSpin);
+				Map.modelTweaks(1);
 				this.syncFade = false;
 			}
 		},

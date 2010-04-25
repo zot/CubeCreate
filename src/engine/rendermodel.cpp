@@ -534,6 +534,7 @@ modelbatch &addbatchedmodel(model *m)
     return *b;
 }
 
+VARR(modeltweaks, 0, 0, 1);
 FVARR(tweakmodelspec, 0, 1.0, 100.0);
 FVARR(tweakmodelambient, 0, 1.0, 100.0);
 FVARR(tweakmodelglow, 0, 1.0, 100.0);
@@ -557,11 +558,13 @@ void renderbatchedmodel(model *m, batchedmodel &b)
         if(b.flags&MDL_GHOST) anim |= ANIM_GHOST;
     }
 
-	if(b.d!=player) m->setambient(tweakmodelambient);	// t7g; This is how we adjust ambient and related for all models at once.
-	else m->setambient(tweakmodelambient / 10.0f);
-	m->setglow(tweakmodelglow);
-	m->setspec(tweakmodelspec);
-	m->setglare(tweakmodelspecglare, tweakmodelglowglare);
+	if(modeltweaks) {
+		if(b.d!=player) m->setambient(tweakmodelambient);	// t7g; This is how we adjust ambient and related for all models at once.
+		else m->setambient(tweakmodelambient / 10.0f);
+		m->setglow(tweakmodelglow);
+		m->setspec(tweakmodelspec);
+		m->setglare(tweakmodelspecglare, tweakmodelglowglare);
+	}
 
     m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir, b.transparent, b.rotation); // INTENSITY: roll, rotation
 }
