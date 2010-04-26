@@ -911,6 +911,7 @@ bool finish_load_world() // INTENSITY: Second half, after all entities received
         mapmodelinfo &mmi = getmminfo(mmindex);
         if(!&mmi) conoutf(CON_WARN, "could not find map model: %d", mmindex);
         else if(!loadmodel(NULL, mmindex, true)) conoutf(CON_WARN, "could not load model: %s", mmi.name);
+        else if(mmi.m && bih) mmi.m->preloadBIH();
     }
 #endif // INTENSITY
 
