@@ -541,6 +541,8 @@ FVARR(tweakmodelglow, 0, 1.0, 100.0);
 FVARR(tweakmodelspecglare, 0, 1.0, 100.0);
 FVARR(tweakmodelglowglare, 0, 1.0, 100.0);
 
+FVARR(tweakmodelscale, 0.001, 1.0, 100.0);
+
 void renderbatchedmodel(model *m, batchedmodel &b)
 {
     modelattach *a = NULL;
@@ -559,8 +561,14 @@ void renderbatchedmodel(model *m, batchedmodel &b)
     }
 
 	if(modeltweaks) {
-		if (!b.d) m->setambient(tweakmodelambient);	// t7g; This is how we adjust ambient and related for all models at once.
-		else m->setambient(tweakmodelambient / 10.0f);
+		if (!b.d) {
+			m->setambient(tweakmodelambient);	// t7g; This is how we adjust ambient and related for all models at once.
+			m->scale = tweakmodelscale * 4;
+		}
+		else {
+			m->setambient(tweakmodelambient / 10.0f);
+			m->scale = tweakmodelscale;
+		}
 		m->setglow(tweakmodelglow);
 		m->setspec(tweakmodelspec);
 		m->setglare(tweakmodelspecglare, tweakmodelglowglare);

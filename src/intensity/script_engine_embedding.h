@@ -1472,6 +1472,18 @@ V8_FUNC_d(__script__tweakModelGlowGlare, {
 });
 #endif
 
+#ifdef CLIENT
+V8_FUNC_d(__script__tweakModelScale, {
+    std::string command = "tweakmodelscale ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_d(__script__tweakModelScale, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
 V8_FUNC_s(__script__preloadModel, { preloadmodel(arg1); });
 
 V8_FUNC_s(__script__reloadModel, {

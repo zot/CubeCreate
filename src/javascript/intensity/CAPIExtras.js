@@ -136,6 +136,7 @@ Map = {
 	tweakModelSpec: CAPI.tweakModelSpec,
 	tweakModelSpecGlare: CAPI.tweakModelSpecGlare,
 	tweakModelGlowGlare: CAPI.tweakModelGlowGlare,
+	tweakModelScale: CAPI.tweakModelScale,
 
 	causticScale: CAPI.causticScale,
 	causticMillis: CAPI.causticMillis,

@@ -246,6 +246,7 @@ EMBED_CAPI_FUNC_STD(tweakModelGlow, 1);
 EMBED_CAPI_FUNC_STD(tweakModelSpec, 1);
 EMBED_CAPI_FUNC_STD(tweakModelSpecGlare, 1);
 EMBED_CAPI_FUNC_STD(tweakModelGlowGlare, 1);
+EMBED_CAPI_FUNC_STD(tweakModelScale, 1);
 
 EMBED_CAPI_FUNC("shadowmapAmbient", __script__shadowmapAmbient, 1);
 EMBED_CAPI_FUNC("shadowmapAngle", __script__shadowmapAngle, 1);
