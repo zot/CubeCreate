@@ -232,10 +232,12 @@ extern void discardchildren(cube &c);
 extern void optiface(uchar *p, cube &c);
 extern void validatec(cube *c, int size);
 extern bool isvalidcube(cube &c);
-extern cube &lookupcube(int tx, int ty, int tz, int tsize = 0);
+extern ivec lu;
+extern int lusize;
+extern cube &lookupcube(int tx, int ty, int tz, int tsize = 0, ivec &ro = lu, int &rsize = lusize);
 extern cube *neighbourstack[32];
 extern int neighbourdepth;
-extern cube &neighbourcube(cube &c, int orient, int x, int y, int z, int size);
+extern cube &neighbourcube(cube &c, int orient, int x, int y, int z, int size, ivec &ro = lu, int &rsize = lusize);
 extern void newclipplanes(cube &c);
 extern void freeclipplanes(cube &c);
 extern void forcemip(cube &c);
@@ -482,6 +484,11 @@ extern bool pointincube(const clipplanes &p, const vec &v);
 extern bool overlapsdynent(const vec &o, float radius);
 extern void rotatebb(vec &center, vec &radius, int yaw);
 extern float shadowray(const vec &o, const vec &ray, float radius, int mode, extentity *t = NULL);
+struct ShadowRayCache;
+extern ShadowRayCache *newshadowraycache();
+extern void freeshadowraycache(ShadowRayCache *&cache);
+extern void resetshadowraycache(ShadowRayCache *cache);
+extern float shadowray(ShadowRayCache *cache, const vec &o, const vec &ray, float radius, int mode, extentity *t = NULL);
 
 // world
 extern vector<int> outsideents;
@@ -566,9 +573,12 @@ extern void rendergrass();
 // blendmap
 extern int blendpaintmode;
 
-extern bool setblendmaporigin(const ivec &o, int size);
-extern bool hasblendmap();
-extern uchar lookupblendmap(const vec &pos);
+struct BlendMapCache;
+extern BlendMapCache *newblendmapcache();
+extern void freeblendmapcache(BlendMapCache *&cache);
+extern bool setblendmaporigin(BlendMapCache *cache, const ivec &o, int size);
+extern bool hasblendmap(BlendMapCache *cache);
+extern uchar lookupblendmap(BlendMapCache *cache, const vec &pos);
 extern void resetblendmap();
 extern void enlargeblendmap();
 extern void optimizeblendmap();

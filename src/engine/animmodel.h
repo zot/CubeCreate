@@ -217,6 +217,11 @@ struct animmodel : model
             else LOADMODELSHADER(nospecmodel);
         }
 
+        void preloadBIH()
+        {
+            if(tex && tex->bpp==4 && !tex->alphamask) loadalphamask(tex);
+        }
+ 
         void preloadshader()
         {
             bool shouldenvmap = envmapped();
@@ -398,7 +403,7 @@ struct animmodel : model
 
         void gentris(int frame, vector<skin> &skins, vector<BIH::tri> *tris, const matrix3x4 &m)
         {
-            loopv(meshes) meshes[i]->gentris(frame, skins[i].tex, tris, m);
+            loopv(meshes) meshes[i]->gentris(frame, skins[i].tex && skins[i].tex->bpp == 4 ? skins[i].tex : NULL, tris, m);
         }
 
         virtual int totalframes() const { return 1; }
@@ -533,6 +538,11 @@ struct animmodel : model
                 s.tex = tex;
                 s.masks = masks;
             }
+        }
+
+        void preloadBIH()
+        {
+            loopv(skins) skins[i].preloadBIH();
         }
 
         void preloadshaders()
@@ -1037,6 +1047,12 @@ struct animmodel : model
         matrix3x4 m;
         initmatrix(m);
         parts[0]->gentris(frame, tris, m);
+    }
+
+    void preloadBIH()
+    {
+        model::preloadBIH();
+        if(bih) loopv(parts) parts[i]->preloadBIH();
     }
 
     BIH *setBIH()
