@@ -398,6 +398,7 @@ double skyarea = 0;
 vector<LightMapTexture> lightmaptexs;
 vtxarray *visibleva = NULL;
 
+int lightmapping = 0;
 
 void g3d_addgui(g3d_callback *cb, vec &origin, int flags) { };
 Texture *loadthumbnail(Slot &slot) { return notexture; };
