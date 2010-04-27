@@ -141,6 +141,8 @@ SkyManager = {
 			this.isRaining = false;
 			this.syncSkyRequest = false;
 
+			this._persistent = false; // So we don't save a billion SkyManagers
+
 			this.nextStarbox = "t7g/nightsky";
 			this.nextSkybox = "t7g/haze";
 			this.nextSunbox = "t7g/sun";

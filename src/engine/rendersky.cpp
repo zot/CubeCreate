@@ -171,8 +171,8 @@ void draw_alt_env_overlay(int w, Texture *overlay = NULL, float tx = 0, float ty
     glBindTexture(GL_TEXTURE_2D, overlay ? overlay->id : notexture->id);
     float r = (altcloudtint>>16)/255.0f, g = ((altcloudtint>>8)&255)/255.0f, b = (altcloudtint&255)/255.0f;
     glColor4f(r, g, b, altcloudalpha);
-    glBegin(GL_POLYGON);
-    loopi(altcloudsubdiv)
+    glBegin(GL_TRIANGLE_FAN);
+    loopi(altcloudsubdiv+1)
     {
         vec p(1, 1, 0);
         p.rotate_around_z((-2.0f*M_PI*i)/altcloudsubdiv);
@@ -511,7 +511,7 @@ void drawskybox(int farplane, bool limited)
 
 	if(starbox[0] && skyboxalpha < 1.0f && cloudboxalpha < 1.0f)
 	{	
-		// Draw starbox
+	    // Draw starbox
 	    glColor3f((starboxtint>>16)/255.0f, ((starboxtint>>8)&255)/255.0f, (starboxtint&255)/255.0f);
 
 	    glPushMatrix();
@@ -521,14 +521,14 @@ void drawskybox(int farplane, bool limited)
 	    glRotatef(camera1->yaw+spinstars*lastmillis/1000.0f+yawstars, 0, 1, 0);
 	    glRotatef(90, 1, 0, 0);
 	    if(reflecting) glScalef(1, 1, -1);
-		draw_envbox(farplane/2, skyclip, topclip, yawskyfaces(renderedskyfaces, yawstars, spinstars), stars);
+	    draw_envbox(farplane/2, skyclip, topclip, yawskyfaces(renderedskyfaces, yawstars, spinstars), stars);
 	    glPopMatrix();
 
 		// Draw skybox, but able to be blended this time.
    	    glEnable(GL_BLEND);
    	    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		glColor4f((skyboxtint>>16)/255.0f, ((skyboxtint>>8)&255)/255.0f, (skyboxtint&255)/255.0f, skyboxalpha);
+	    glColor4f((skyboxtint>>16)/255.0f, ((skyboxtint>>8)&255)/255.0f, (skyboxtint&255)/255.0f, skyboxalpha);
 
    	    glPushMatrix();
    	    glLoadIdentity();
@@ -536,7 +536,7 @@ void drawskybox(int farplane, bool limited)
    	    glRotatef(camera1->pitch, -1, 0, 0);
    	    glRotatef(camera1->yaw+spinsky*lastmillis/1000.0f+yawsky, 0, 1, 0);
    	    glRotatef(90, 1, 0, 0);
-		if(reflecting) glScalef(1, 1, -1);
+	    if(reflecting) glScalef(1, 1, -1);
    	    draw_envbox(farplane/2, skyclip, topclip, yawskyfaces(renderedskyfaces, yawsky, spinsky), sky);
    	    glPopMatrix();
 
@@ -544,7 +544,7 @@ void drawskybox(int farplane, bool limited)
 	}
 	else if(cloudboxalpha < 1.0f && skyboxalpha > 0.0f)
 	{
-		glColor3f((skyboxtint>>16)/255.0f, ((skyboxtint>>8)&255)/255.0f, (skyboxtint&255)/255.0f);
+	    glColor3f((skyboxtint>>16)/255.0f, ((skyboxtint>>8)&255)/255.0f, (skyboxtint&255)/255.0f);
 
 	    glPushMatrix();
 	    glLoadIdentity();
@@ -562,7 +562,7 @@ void drawskybox(int farplane, bool limited)
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		glColor4f((sunboxtint>>16)/255.0f, ((sunboxtint>>8)&255)/255.0f, (sunboxtint&255)/255.0f, sunboxalpha);
+	glColor4f((sunboxtint>>16)/255.0f, ((sunboxtint>>8)&255)/255.0f, (sunboxtint&255)/255.0f, sunboxalpha);
 
         glPushMatrix();
         glLoadIdentity();
@@ -571,7 +571,7 @@ void drawskybox(int farplane, bool limited)
         glRotatef(camera1->yaw, 0, 1, 0);
         glRotatef(spinsun*skymillis/1000.0f+yawsun, 1, 0, 0);
         if(reflecting) glScalef(1, 1, -1);
-		draw_envbox(farplane/2, skyclip, topclip, yawskyfaces(renderedskyfaces, yawsun, spinsun), sun);
+	draw_envbox(farplane/2, skyclip, topclip, yawskyfaces(renderedskyfaces, yawsun, spinsun), sun);
         glPopMatrix();
 
         glDisable(GL_BLEND);
@@ -584,7 +584,7 @@ void drawskybox(int farplane, bool limited)
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		glColor4f((cloudboxtint>>16)/255.0f, ((cloudboxtint>>8)&255)/255.0f, (cloudboxtint&255)/255.0f, cloudboxalpha);
+	glColor4f((cloudboxtint>>16)/255.0f, ((cloudboxtint>>8)&255)/255.0f, (cloudboxtint&255)/255.0f, cloudboxalpha);
 
         glPushMatrix();
         glLoadIdentity();
@@ -593,7 +593,7 @@ void drawskybox(int farplane, bool limited)
         glRotatef(camera1->yaw+spinclouds*lastmillis/1000.0f+yawclouds, 0, 1, 0);
         glRotatef(90, 1, 0, 0);
         if(reflecting) glScalef(1, 1, -1);
-		draw_envbox(farplane/2, skyclip, topclip, yawskyfaces(renderedskyfaces, yawclouds, spinclouds), clouds);
+	draw_envbox(farplane/2, skyclip, topclip, yawskyfaces(renderedskyfaces, yawclouds, spinclouds), clouds);
         glPopMatrix();
 
         glDisable(GL_BLEND);
@@ -631,7 +631,7 @@ void drawskybox(int farplane, bool limited)
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		glPushMatrix();
+	glPushMatrix();
         glLoadIdentity();
         glRotatef(camera1->roll, 0, 0, 1);
         glRotatef(camera1->pitch, -1, 0, 0);
@@ -642,8 +642,8 @@ void drawskybox(int farplane, bool limited)
         glPopMatrix();
 
         glDisable(GL_BLEND);
-		glEnable(GL_CULL_FACE);
-	}
+	glEnable(GL_CULL_FACE);
+    }
 
 	if(!glaring && fogdomemax)
 	{
@@ -662,9 +662,9 @@ void drawskybox(int farplane, bool limited)
         glRotatef(camera1->yaw, 0, 1, 0);
         glRotatef(90, 1, 0, 0);
         if(reflecting) glScalef(1, 1, -1);
-		glTranslatef(0, 0, -farplane*fogdomeheight*0.5f);
-		glScalef(farplane/2, farplane/2, -farplane*(0.5f - fogdomeheight*0.5f));
-		drawdome();
+	glTranslatef(0, 0, -farplane*fogdomeheight*0.5f);
+	glScalef(farplane/2, farplane/2, -farplane*(0.5f - fogdomeheight*0.5f));
+	drawdome();
         glPopMatrix();
 
         glDisable(GL_BLEND);
