@@ -96,6 +96,7 @@ SkyManager = {
 		nextSpinCloudLayer: new StateFloat({ clientWrite: false }),
 
 		nextModelAmbient: new StateFloat({ clientWrite: false }),
+		nextModelSpec: new StateFloat({ clientWrite: false }), 
 		
 		nextFogDist: new StateInteger({ clientWrite: false }),
 	// The syncXXXXX state variables are used to sync new clients with the sky manager's state.
@@ -127,6 +128,7 @@ SkyManager = {
 		syncMidnight: new StateInteger({ clientWrite: false }, { hasHistory: false }),
 
 		syncModelAmbient: new StateFloat({ clientWrite: false }, { hasHistory: false }),
+		syncModelSpec: new StateFloat({ clientWrite: false }, { hasHistory: false }),
 
 		syncFogDist: new StateInteger({ clientWrite: false }, { hasHistory: false }),
 		////////////////////////////////////////////////////////////////////////////////////////////
@@ -173,6 +175,7 @@ SkyManager = {
 			this.nextSpinCloudLayer = 0.7;
 
 			this.nextModelAmbient = 1.0;
+			this.nextModelSpec = 1.0;
 
 			this.dayTime = 1; 			// The server's idea of what time of day it is.
 			this.secondsElapsed = 0;	// I use this to let midnightSync know when it's time.
@@ -218,6 +221,7 @@ SkyManager = {
 			this.curSpinCloudLayer = 0.7;
 
 			this.curModelAmbient = 1.0;
+			this.curModelSpec = 0.0;
 
 			this.rateSpin = parseFloat(360 / this.intsecDayLength); // 360 degrees that the stars will spin.			
 
@@ -322,6 +326,7 @@ SkyManager = {
 			this.curAlphaAltCloudLayer = this.syncAlphaAltCloudLayer;
 
 			this.curModelAmbient = this.syncModelAmbient;
+			this.curModelSpec = this.syncModelSpec;
 
 			this.curYawStars = this.syncYawStars;
 			this.curYawSun = this.syncYawSun;
@@ -384,6 +389,7 @@ SkyManager = {
 			this.runFadeFog();
 			this.runFadeAmbient();
 			this.runModelFade();
+			this.runModelSpec();
 
 			this.runCloudManagement();
 			this.changeBoxen();
@@ -436,6 +442,14 @@ SkyManager = {
 			if(this.curModelAmbient != this.nextModelAmbient) {
 				this.curModelAmbient = this.modelAmbientFade(this.curModelAmbient, this.nextModelAmbient, fArrModelAmbient);
 				Map.tweakModelAmbient(this.curModelAmbient);
+			}
+			if(this.syncFade) Map.tweakModelAmbient(this.curModelAmbient);
+		},
+
+		runModelSpec: function() { 
+			if(this.curModelSpec != this.nextModelSpec) {
+				this.curModelSpec = this.alphaFade(this.curModelSpec, this.nextModelSpec);
+				Map.tweakModelSpec(this.curModelSpec);
 			}
 			if(this.syncFade) Map.tweakModelAmbient(this.curModelAmbient);
 		},
@@ -578,6 +592,7 @@ SkyManager = {
 			this.curSpinCloudLayer = 0.7;
 
 			this.curModelAmbient = 1.0;
+			this.curModelSpec = 0.0;
 
 			this.nextStarbox = "t7g/nightsky";
 			this.nextSkybox = "t7g/haze";
@@ -688,7 +703,7 @@ SkyManager = {
 				case 26: this.nextAlphaSky = 1.0; this.nextAlphaClouds = 0.9; break; // 6:15am
 				case 27: this.nextTintSun = this.pickRandomTint(intArrYELLOW); break; // 6:30am
 				case 28: this.nextTintAmbient = this.pickRandomTint(intArrORANGE); break; // 6:45am
-				case 29: break; // 7am
+				case 29: this.nextModelSpec = 1.0; break; // 7am
 				case 30: this.nextTintAmbient = intAMBIENTFULL; break; // 7:15am
 				case 31: this.nextTintAltCloudLayer = intWHITE; this.nextTintClouds = intWHITE; this.nextTintCloudLayer = intWHITE; this.nextTintSky = this.pickRandomTint(intArrBLUE); break; // 7:30am
 				case 32: break; // 7:45am
@@ -744,7 +759,7 @@ SkyManager = {
 				case 70: this.nextTintClouds = this.pickRandomWarmTint(); this.nextTintSky = this.pickSunrisetTint(); break; // 5:45pm
 				case 71: this.nextTintAltCloudLayer = this.pickRandomWarmTint(); this.nextTintAmbient = this.pickRandomTint(intArrORANGE); break; // 6pm
 				case 72: this.nextTintCloudLayer = this.pickRandomWarmTint(); this.nextTintAmbient = intAMBIENT; this.nextTintClouds = this.pickRandomWarmTint(); break; // 6:15pm
-				case 73: break; // 6:30pm
+				case 73: this.nextModelSpec = 0.0; break; // 6:30pm
 				case 74: this.nextTintCloudLayer = intWHITE; this.nextTintAltCloudLayer = intWHITE; this.nextTintClouds = this.pickRandomWarmTint(); this.nextTintSky = this.pickRandomWarmTint(); this.nextTintSun = this.pickSunrisetTint(); this.nextAlphaSky = 0.0; this.nextAlphaClouds = 0.0; break; // 6:45pm
 				case 75: break; // 7pm
 				case 76: break; // 7:15pm
@@ -796,6 +811,7 @@ SkyManager = {
 			this.syncAlphaAltCloudLayer = this.curAlphaAltCloudLayer;
 
 			this.syncModelAmbient = this.curModelAmbient;
+			this.syncModelSpec = this.curModelSpec;
 
 			this.syncYawStars = parseFloat(this.curYawStars);
 			this.syncYawSun = parseFloat(this.curYawSun);
@@ -857,6 +873,7 @@ SkyManager = {
 			this.rollFadeFog();
 			this.rollFadeAmbient();
 			this.rollModelFade();
+			this.rollModelSpec();
 
 			this.trackBoxen();
 			this.gimpCloudSync();
@@ -917,6 +934,8 @@ SkyManager = {
 		rollFadeFog: function() { if(this.curTintFog != this.nextTintFog) this.curTintFog = this.tintFade(this.curTintFog, this.nextTintFog); },
 
 		rollModelFade: function() {	if(this.curModelAmbient != this.nextModelAmbient) this.curModelAmbient = this.modelAmbientFade(this.curModelAmbient, this.nextModelAmbient, fArrModelAmbient); },
+
+		rollModelSpec: function() {	if(this.curModelSpec != this.nextModelSpec) this.curModelSpec = this.alphaFade(this.curModelSpec, this.nextModelSpec); },
 
 		rollFadeAmbient: function() { if(this.curTintAmbient != this.nextTintAmbient) this.curTintAmbient = this.tintFade(this.curTintAmbient, this.nextTintAmbient); },
 		////////////////////////////////////////////////////////////////////////////////////////////
