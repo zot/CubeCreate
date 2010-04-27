@@ -4,7 +4,7 @@ Intensity Engine - Sauerbraten SVN based
 A most recent sauerbraten SVN based Syntensity branch,
 created by quaker66.
 
-Current revision: 2682
+Current revision: 2700
 
 
 Syntensity/Intensity information
@@ -18,4 +18,5 @@ FAQ
 =====
 
 Q: Will it work with syntensity.com masterserver?
-A. No, sorry. The network code quite changed, so no backwards compatibility.
+
+A: No, sorry. The network code quite changed, so no backwards compatibility.

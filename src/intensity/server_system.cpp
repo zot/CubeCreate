@@ -407,7 +407,7 @@ void previewblends(const ivec &bo, const ivec &bs) { };
 bool loadimage(const char *filename, ImageData &image) { return false; }; // or return true?
 void clearmapsounds() { };
 void cleanreflections() { };
-void resetlightmaps() { };
+void resetlightmaps(bool fullclean) { };
 void clearparticles() { };
 void cleardecals() { };
 void clearmainmenu() { };
