@@ -619,7 +619,6 @@ void drawskybox(int farplane, bool limited)
         glPopMatrix();
 
         glDisable(GL_BLEND);
-
         glEnable(GL_CULL_FACE);
     }
 
@@ -643,7 +642,7 @@ void drawskybox(int farplane, bool limited)
         glPopMatrix();
 
         glDisable(GL_BLEND);
-		glEnable(GL_TEXTURE_2D);
+		glEnable(GL_CULL_FACE);
 	}
 
 	if(!glaring && fogdomemax)
