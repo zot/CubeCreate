@@ -752,7 +752,6 @@ static bool generatelightmap(lightmapworker *w, float lpu, int y1, int y2, const
             } 
         }
     }
-
     return true;
 }
      
@@ -1411,7 +1410,7 @@ static lightmapinfo *setupsurfaces(lightmapworker *w, lightmaptask &task)
         int numplanes;
 
         VSlot &vslot = lookupvslot(c.texture[i], false),
-             *layer = vslot.layer ? &lookupvslot(vslot.layer, false) : NULL;
+             *layer = vslot.layer && !(c.ext && c.ext->material&MAT_ALPHA) ? &lookupvslot(vslot.layer, false) : NULL;
         Shader *shader = vslot.slot->shader;
         int shadertype = shader->type;
         if(layer) shadertype |= layer->slot->shader->type;
@@ -1687,7 +1686,7 @@ static void generatelightmaps(cube *c, int cx, int cy, int cz, int size)
 
 static bool previewblends(lightmapworker *w, cube &c, const ivec &co, int size)
 {
-    if(isempty(c)) return false;
+    if(isempty(c) || (c.ext && c.ext->material&MAT_ALPHA)) return false;
 
     int usefaces[6];
     int vertused = 0;

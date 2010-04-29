@@ -445,7 +445,7 @@ bool remip(cube &c, int x, int y, int z, int size)
     loopi(8)
     {
         mat = ch[i].ext ? ch[i].ext->material : MAT_AIR;
-        if((mat&MATF_CLIP) == MAT_NOCLIP)
+        if((mat&MATF_CLIP) == MAT_NOCLIP || mat&MAT_ALPHA)
         {
             if(i > 0) return false;
             while(++i < 8) if(!ch[i].ext || ch[i].ext->material != mat) return false;
@@ -456,7 +456,7 @@ bool remip(cube &c, int x, int y, int z, int size)
             while(++i < 8)
             {
                 uchar omat = ch[i].ext ? ch[i].ext->material : MAT_AIR;
-                if(isentirelysolid(ch[i]) ? (omat&MATF_CLIP) == MAT_NOCLIP : mat != omat) return false;
+                if(isentirelysolid(ch[i]) ? (omat&MATF_CLIP) == MAT_NOCLIP || omat&MAT_ALPHA : mat != omat) return false;
             }
             break;
         }
@@ -481,7 +481,7 @@ bool remip(cube &c, int x, int y, int z, int size)
 
         ivec o(i, x, y, z, size);
         loop(orient, 6)
-            if(visibleface(ch[i], orient, o.x, o.y, o.z, size))
+            if(visibleface(ch[i], orient, o.x, o.y, o.z, size, MAT_AIR, (mat&MAT_ALPHA)^MAT_ALPHA, MAT_ALPHA))
             {
                 if(ch[i].texture[orient] != n.texture[orient]) { freeocta(nh); return false; }
                 vis[orient] |= 1<<i;
@@ -990,6 +990,8 @@ int visibletris(cube &c, int orient, int x, int y, int z, int size)
     cube &o = neighbourcube(c, orient, x, y, z, size, no, nsize);
     if(&o==&c) return 0;
 
+    uchar nmat = c.ext && c.ext->material&MAT_ALPHA ? MAT_AIR : MAT_ALPHA, matmask = MAT_ALPHA;
+
     ivec vo(x, y, z);
     vo.mask(0xFFF);
     no.mask(0xFFF);
@@ -998,6 +1000,7 @@ int visibletris(cube &c, int orient, int x, int y, int z, int size)
     if(nsize > size || (nsize == size && !o.children))
     {
         if(isempty(o)) return 3;
+        if(nmat != MAT_AIR && o.ext && (o.ext->material&matmask) == nmat) return 3;
         if(!notouch && (isentirelysolid(o) || (touchingface(o, opp) && faceedges(o, opp) == F_SOLID))) return 0;
 
         genfacevecs(c, orient, vo, size, false, cf);
@@ -1008,7 +1011,7 @@ int visibletris(cube &c, int orient, int x, int y, int z, int size)
     else
     {
         genfacevecs(c, orient, vo, size, false, cf);
-        if(!notouch && occludesface(o, opp, no, nsize, vo, size, MAT_AIR, MAT_AIR, MATF_VOLUME, cf)) return 0;
+        if(!notouch && occludesface(o, opp, no, nsize, vo, size, MAT_AIR, nmat, matmask, cf)) return 0;
     }
 
     static const int trimasks[2][2] = { { 0x7, 0xD }, { 0xE, 0xB } };
@@ -1046,7 +1049,7 @@ int visibletris(cube &c, int orient, int x, int y, int z, int size)
             if(!numo)
             {
                 tf[3] = cf[v3];
-                if(!occludesface(o, opp, no, nsize, vo, size, MAT_AIR, MAT_AIR, MATF_VOLUME, tf)) continue;
+                if(!occludesface(o, opp, no, nsize, vo, size, MAT_AIR, nmat, matmask, tf)) continue;
             }
             else if(!insideface(tf, 3, of, numo)) continue;
             return vis & ~(1<<i);
@@ -1198,7 +1201,7 @@ int mergefaces(int orient, cubeface *m, int sz)
 
 struct cfkey
 {
-    uchar orient;
+    uchar orient, material;
     ushort tex;
     ivec n;
     int offset;
@@ -1206,12 +1209,12 @@ struct cfkey
 
 static inline bool htcmp(const cfkey &x, const cfkey &y)
 {
-    return x.orient == y.orient && x.tex == y.tex && x.n == y.n && x.offset == y.offset;
+    return x.orient == y.orient && x.tex == y.tex && x.n == y.n && x.offset == y.offset && x.material==y.material;
 }
 
 static inline uint hthash(const cfkey &k)
 {
-    return hthash(k.n)^k.offset^k.tex^k.orient;
+    return hthash(k.n)^k.offset^k.tex^k.orient^k.material;
 }
 
 struct cfval
@@ -1420,6 +1423,7 @@ void genmergeinfo(cube *c = worldroot, const ivec &o = ivec(0, 0, 0), int size =
                 }
                 k.orient = j;
                 k.tex = c[i].texture[j];
+                k.material = c[i].ext ? c[i].ext->material&MAT_ALPHA : 0;
                 cfaces[k].faces.add(cf);
             }
         }

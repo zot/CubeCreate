@@ -199,7 +199,7 @@ extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasBC, ha
 extern int hasstencil;
 
 extern bool envmapping, renderedgame;
-extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix, fogmatrix, invfogmatrix;
+extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix, fogmatrix, invfogmatrix, envmatrix;
 extern bvec fogcolor;
 
 extern void gl_checkextensions();
@@ -325,6 +325,7 @@ extern void visiblecubes(float fov, float fovy);
 extern void reflectvfcP(float z, float minyaw = -M_PI, float maxyaw = M_PI, float minpitch = -M_PI, float maxpitch = M_PI);
 extern void restorevfcP();
 extern void rendergeom(float causticspass = 0, bool fogpass = false);
+extern void renderalphageom(bool fogpass = false);
 extern void rendermapmodels();
 extern void renderreflectedgeom(bool causticspass = false, bool fogpass = false);
 extern void renderreflectedmapmodels();

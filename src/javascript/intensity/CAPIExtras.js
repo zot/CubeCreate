@@ -102,6 +102,8 @@ Map = {
     autograss: CAPI.autograss,
 
     texLayer: CAPI.texLayer,
+    texAlpha: CAPI.texAlpha,
+    texFFenv: CAPI.texFFenv,
 
     setShader: CAPI.setShader,
 

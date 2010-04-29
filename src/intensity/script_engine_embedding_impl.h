@@ -166,6 +166,9 @@ EMBED_CAPI_FUNC("autograss", __script__autograss, 1);
 
 EMBED_CAPI_FUNC("texLayer", __script__texLayer, 1);
 
+EMBED_CAPI_FUNC("texAlpha", __script__texAlpha, 2);
+EMBED_CAPI_FUNC("texFFenv", __script__texFFenv, 1);
+
 EMBED_CAPI_FUNC("setShader", __script__setShader, 1);
 EMBED_CAPI_FUNC("setShaderParam", __script__setShaderParam, 4);
 
