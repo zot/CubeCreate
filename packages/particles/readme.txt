@@ -8,7 +8,6 @@ T7g - do whatever you want, just not bother about it:
 
 base.png
 blob.png
-bullet.png
 lenflares.png
 lightning.jpg
 spark.png
@@ -31,3 +30,6 @@ RaZgRiZ - Sauerbraten - free to use:
 
 explosion.png
 
+OpenArena - GPL:
+
+bullet.png
