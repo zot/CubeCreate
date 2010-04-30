@@ -595,6 +595,20 @@ V8_FUNC_dd(__script__texAlpha, {
 #endif
 
 #ifdef CLIENT
+V8_FUNC_ddd(__script__texColor, {
+    std::string command = "texcolor ";
+    command += Utility::toString(arg1);
+    command += " " + Utility::toString(arg2);
+    command += " " + Utility::toString(arg3);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_dd(__script__texColor, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
 V8_FUNC_i(__script__texFFenv, {
     std::string command = "texffenv ";
     command += Utility::toString(arg1);

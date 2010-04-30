@@ -459,6 +459,8 @@ void loadalphamask(Texture *t) { };
 
 vector<VSlot *> vslots;
 vector<Slot *> slots;
+Slot dummyslot;
+VSlot dummyvslot(&dummyslot);
 
 Slot &lookupslot(int index, bool load)
     {

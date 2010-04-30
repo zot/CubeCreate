@@ -103,6 +103,7 @@ Map = {
 
     texLayer: CAPI.texLayer,
     texAlpha: CAPI.texAlpha,
+    texColor: CAPI.texColor,
     texFFenv: CAPI.texFFenv,
 
     setShader: CAPI.setShader,
