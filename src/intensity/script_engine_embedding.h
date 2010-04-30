@@ -582,19 +582,6 @@ V8_FUNC_i(__script__texLayer, {
 #endif
 
 #ifdef CLIENT
-V8_FUNC_dd(__script__texAlpha, {
-    std::string command = "texalpha ";
-    command += Utility::toString(arg1);
-    command += " " + Utility::toString(arg2);
-    CSSUDO(command.c_str());
-});
-#else
-V8_FUNC_dd(__script__texAlpha, {
-    arg1 = arg1; // warning otherwise
-});
-#endif
-
-#ifdef CLIENT
 V8_FUNC_i(__script__texFFenv, {
     std::string command = "texffenv ";
     command += Utility::toString(arg1);

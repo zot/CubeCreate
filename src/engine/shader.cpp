@@ -1717,12 +1717,12 @@ void linkslotshader(Slot &s, bool load)
 
     if(!sh) return;
 
-    if(!strcmp(sh->name, "colorworld"))
+    if(sh->type&SHADER_FFCOLOR)
     {
         ShaderParam *cparam = findshaderparam(s, "colorscale");
         if(cparam && (cparam->val[0]!=1 || cparam->val[1]!=1 || cparam->val[2]!=1) && s.sts.length()>=1 && !strstr(s.sts[0].name, "<ffcolor:"))
         {
-            defformatstring(colorname)("<ffcolor:%f/%f/%f>%s", cparam->val[0], cparam->val[1], cparam->val[2], s.sts[0].name);
+            defformatstring(colorname)("<ffcolor:%.2f/%.2f/%.2f>%s", cparam->val[0], cparam->val[1], cparam->val[2], s.sts[0].name);
             copystring(s.sts[0].name, colorname);
         }
     }
