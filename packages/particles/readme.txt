@@ -22,6 +22,7 @@ steam.png
 
 kripken - Syntensity - CC-BY-SA:
 
+blob.png
 circle.png
 flames.png
 scorch.png
