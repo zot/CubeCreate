@@ -4,10 +4,10 @@ Kubuntiac - licensed under CC 0:
 
 ball1.png
 
-T7g - do whatever you want, just not bother about it:
+T7g - Creative Commons 0/Public domain/noone should have to remake these simple images.
+You don't even need to credit me, I don't care at all.
 
 base.png
-blob.png
 lenflares.png
 lightning.jpg
 spark.png
