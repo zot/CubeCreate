@@ -1886,6 +1886,19 @@ V8_FUNC_iid(__script__##name, { \
     CSSUDO(command.c_str()); \
 });
 
+#define CUBESCRIPT_iisddd(name, cmd) \
+V8_FUNC_iisddd(__script__##name, { \
+    std::string command = #cmd; \
+    command += " "; \
+    ADD_CS_d(arg1); \
+    ADD_CS_d(arg2); \
+    ADD_CS_s(arg3); \
+    ADD_CS_d(arg4); \
+    ADD_CS_d(arg5); \
+    ADD_CS_d(arg6); \
+    CSSUDO(command.c_str()); \
+});
+
 #define CUBESCRIPT_ddd(name, cmd) \
 V8_FUNC_ddd(__script__##name, { \
     std::string command = #cmd; \
@@ -1896,11 +1909,31 @@ V8_FUNC_ddd(__script__##name, { \
     CSSUDO(command.c_str()); \
 });
 
+#define CUBESCRIPT_dddd(name, cmd) \
+V8_FUNC_dddd(__script__##name, { \
+    std::string command = #cmd; \
+    command += " "; \
+    ADD_CS_d(arg1); \
+    ADD_CS_d(arg2); \
+    ADD_CS_d(arg3); \
+    ADD_CS_d(arg4); \
+    CSSUDO(command.c_str()); \
+});
+
 #define CUBESCRIPT_s(name, cmd) \
 V8_FUNC_s(__script__##name, { \
     std::string command = #cmd; \
     command += " "; \
     ADD_CS_s(arg1); \
+    CSSUDO(command.c_str()); \
+});
+
+#define CUBESCRIPT_si(name, cmd) \
+V8_FUNC_si(__script__##name, { \
+    std::string command = #cmd; \
+    command += " "; \
+    ADD_CS_s(arg1); \
+    ADD_CS_d(arg2); \
     CSSUDO(command.c_str()); \
 });
 
@@ -1913,12 +1946,55 @@ V8_FUNC_sd(__script__##name, { \
     CSSUDO(command.c_str()); \
 });
 
+#define CUBESCRIPT_siidi(name, cmd) \
+V8_FUNC_siidi(__script__##name, { \
+    std::string command = #cmd; \
+    command += " "; \
+    ADD_CS_s(arg1); \
+    ADD_CS_d(arg2); \
+    ADD_CS_d(arg3); \
+    ADD_CS_d(arg4); \
+    ADD_CS_d(arg5); \
+    CSSUDO(command.c_str()); \
+});
+
+#define CUBESCRIPT_sdd(name, cmd) \
+V8_FUNC_sdd(__script__##name, { \
+    std::string command = #cmd; \
+    command += " "; \
+    ADD_CS_s(arg1); \
+    ADD_CS_d(arg2); \
+    ADD_CS_d(arg3); \
+    CSSUDO(command.c_str()); \
+});
+
 #define CUBESCRIPT_ss(name, cmd) \
 V8_FUNC_ss(__script__##name, { \
     std::string command = #cmd; \
     command += " "; \
     ADD_CS_s(arg1); \
     ADD_CS_s(arg2); \
+    CSSUDO(command.c_str()); \
+});
+
+#define CUBESCRIPT_sss(name, cmd) \
+V8_FUNC_sss(__script__##name, { \
+    std::string command = #cmd; \
+    command += " "; \
+    ADD_CS_s(arg1); \
+    ADD_CS_s(arg2); \
+    ADD_CS_s(arg3); \
+    CSSUDO(command.c_str()); \
+});
+
+#define CUBESCRIPT_ssdi(name, cmd) \
+V8_FUNC_ssdi(__script__##name, { \
+    std::string command = #cmd; \
+    command += " "; \
+    ADD_CS_s(arg1); \
+    ADD_CS_s(arg2); \
+    ADD_CS_d(arg3); \
+    ADD_CS_d(arg4); \
     CSSUDO(command.c_str()); \
 });
 
@@ -1957,6 +2033,20 @@ V8_FUNC_sdddd(__script__##name, { \
     CSSUDO(command.c_str()); \
 });
 
+#define CUBESCRIPT_sdddddd(name, cmd) \
+V8_FUNC_sdddddd(__script__##name, { \
+    std::string command = #cmd; \
+    command += " "; \
+    ADD_CS_s(arg1); \
+    ADD_CS_d(arg2); \
+    ADD_CS_d(arg3); \
+    ADD_CS_d(arg4); \
+    ADD_CS_d(arg5); \
+    ADD_CS_d(arg6); \
+    ADD_CS_d(arg7); \
+    CSSUDO(command.c_str()); \
+});
+
 #define CUBESCRIPT_iiddddd(name, cmd) \
 V8_FUNC_iiddddd(__script__##name, { \
     std::string command = #cmd; \
@@ -1981,23 +2071,67 @@ CUBESCRIPT_s(objLoad, objload);
 CUBESCRIPT_ss(objSkin, objskin);
 CUBESCRIPT_ss(objBumpmap, objbumpmap);
 CUBESCRIPT_ss(objEnvmap, objenvmap);
-CUBESCRIPT_ss(objSpec, objspec);
+CUBESCRIPT_si(objSpec, objspec);
+
+CUBESCRIPT_dddd(objPitch, objpitch);
+CUBESCRIPT_si(objAmbient, objambient);
+CUBESCRIPT_si(objGlow, objglow);
+CUBESCRIPT_sdd(objGlare, objglare);
+CUBESCRIPT_sd(objAlphatest, objalphatest);
+CUBESCRIPT_si(objAlphablend, objalphablend);
+CUBESCRIPT_si(objCullface, objcullface);
+CUBESCRIPT_sd(objFullbright, objfullbright);
+CUBESCRIPT_ss(objShader, objshader);
+CUBESCRIPT_sdd(objScroll, objscroll);
+CUBESCRIPT_si(objNoclip, objnoclip);
 
 CUBESCRIPT_d(mdlAlphatest, mdlalphatest);
+CUBESCRIPT_i(mdlAlphablend, mdlalphablend);
+CUBESCRIPT_i(mdlAlphadepth, mdlalphadepth);
 
-CUBESCRIPT_ii(mdlBb, mdlbb);
+CUBESCRIPT_ddd(mdlBb, mdlbb);
+CUBESCRIPT_ddd(mdlExtendbb, mdlextendbb);
 
 CUBESCRIPT_i(mdlScale, mdlscale);
 CUBESCRIPT_i(mdlSpec, mdlspec);
 CUBESCRIPT_i(mdlGlow, mdlglow);
 CUBESCRIPT_dd(mdlGlare, mdlglare);
 CUBESCRIPT_i(mdlAmbient, mdlambient);
+CUBESCRIPT_i(mdlCullface, mdlcullface);
+CUBESCRIPT_i(mdlDepthoffset, mdldepthoffset);
+CUBESCRIPT_d(mdlFullbright, mdlfullbright);
+CUBESCRIPT_dd(mdlSpin, mdlspin);
 
 CUBESCRIPT_s(mdlShader, mdlshader);
 
 CUBESCRIPT_i(mdlCollisionsOnlyForTriggering, mdlcollisionsonlyfortriggering);
 
 CUBESCRIPT_ddd(mdlTrans, mdltrans);
+
+CUBESCRIPT_d(modelYaw, mdlyaw);
+CUBESCRIPT_d(modelPitch, mdlpitch);
+
+CUBESCRIPT_dddd(md2Pitch, md2pitch);
+CUBESCRIPT_siidi(md2Anim, md2anim);
+
+CUBESCRIPT_s(md3Load, md3load);
+CUBESCRIPT_dddd(md3Pitch, md3pitch);
+CUBESCRIPT_sssdd(md3Skin, md3skin);
+CUBESCRIPT_si(md3Spec, md3spec);
+CUBESCRIPT_si(md3Ambient, md3ambient);
+CUBESCRIPT_si(md3Glow, md3glow);
+CUBESCRIPT_sdd(md3Glare, md3glare);
+CUBESCRIPT_sd(md3Alphatest, md3alphatest);
+CUBESCRIPT_si(md3Alphablend, md3alphablend);
+CUBESCRIPT_si(md3Cullface, md3cullface);
+CUBESCRIPT_ss(md3Envmap, md3envmap);
+CUBESCRIPT_sss(md3Bumpmap, md3bumpmap);
+CUBESCRIPT_sd(md3Fullbright, md3fullbright);
+CUBESCRIPT_ss(md3Shader, md3shader);
+CUBESCRIPT_sdd(md3Scroll, md3scroll);
+CUBESCRIPT_siidi(md3Anim, md3anim);
+CUBESCRIPT_iisddd(md3Link, md3link);
+CUBESCRIPT_si(md3Noclip, md3noclip);
 
 CUBESCRIPT_s(md5Dir, md5dir);
 CUBESCRIPT_ss(md5Load, md5load);
@@ -2006,17 +2140,74 @@ CUBESCRIPT_sssdd(md5Skin, md5skin);
 CUBESCRIPT_ss(md5Bumpmap, md5bumpmap);
 CUBESCRIPT_ss(md5Envmap, md5envmap);
 CUBESCRIPT_sd(md5Alphatest, md5alphatest);
+CUBESCRIPT_si(md5Alphablend, md5alphablend);
 
-CUBESCRIPT_d(modelYaw, mdlyaw);
-CUBESCRIPT_d(modelPitch, mdlpitch);
+CUBESCRIPT_sdddddd(md5Adjust, md5adjust);
+CUBESCRIPT_si(md5Spec, md5spec);
+CUBESCRIPT_si(md5Ambient, md5ambient);
+CUBESCRIPT_si(md5Glow, md5glow);
+CUBESCRIPT_sdd(md5Glare, md5glare);
+CUBESCRIPT_si(md5Cullface, md5cullface);
+CUBESCRIPT_sd(md5Fullbright, md5fullbright);
+CUBESCRIPT_ss(md5Shader, md5shader);
+CUBESCRIPT_sdd(md5Scroll, md5scroll);
+CUBESCRIPT_iisddd(md5Link, md5link);
+CUBESCRIPT_si(md5Noclip, md5noclip);
 
 CUBESCRIPT_ss(md5Tag, md5tag);
-CUBESCRIPT_ssdd(md5Anim, md5anim);
+CUBESCRIPT_ssdi(md5Anim, md5anim);
 
 CUBESCRIPT_s(md5Animpart, md5animpart);
 CUBESCRIPT_sdddd(md5Pitch, md5pitch);
 
+CUBESCRIPT_s(iqmDir, iqmdir);
+CUBESCRIPT_ss(iqmLoad, iqmload);
+CUBESCRIPT_ss(iqmTag, iqmtag);
+CUBESCRIPT_sdddd(iqmPitch, iqmpitch);
+CUBESCRIPT_sdddddd(iqmAdjust, iqmadjust);
+CUBESCRIPT_sssdd(iqmSkin, iqmskin);
+CUBESCRIPT_si(iqmSpec, iqmspec);
+CUBESCRIPT_si(iqmAmbient, iqmambient);
+CUBESCRIPT_si(iqmGlow, iqmglow);
+CUBESCRIPT_sdd(iqmGlare, iqmglare);
+CUBESCRIPT_sd(iqmAlphatest, iqmalphatest);
+CUBESCRIPT_si(iqmAlphablend, iqmalphablend);
+CUBESCRIPT_si(iqmCullface, iqmcullface);
+CUBESCRIPT_ss(iqmEnvmap, iqmenvmap);
+CUBESCRIPT_sss(iqmBumpmap, iqmbumpmap);
+CUBESCRIPT_sd(iqmFullbright, iqmfullbright);
+CUBESCRIPT_ss(iqmShader, iqmshader);
+CUBESCRIPT_sdd(iqmScroll, iqmscroll);
+CUBESCRIPT_s(iqmAnimpart, iqmanimpart);
+CUBESCRIPT_ssdi(iqmAnim, iqmanim);
+CUBESCRIPT_iisddd(iqmLink, iqmlink);
+CUBESCRIPT_si(iqmNoclip, iqmnoclip);
+
+CUBESCRIPT_s(smdDir, smddir);
+CUBESCRIPT_ss(smdLoad, smdload);
+CUBESCRIPT_ss(smdTag, smdtag);
+CUBESCRIPT_sdddd(smdPitch, smdpitch);
+CUBESCRIPT_sdddddd(smdAdjust, smdadjust);
+CUBESCRIPT_sssdd(smdSkin, smdskin);
+CUBESCRIPT_si(smdSpec, smdspec);
+CUBESCRIPT_si(smdAmbient, smdambient);
+CUBESCRIPT_si(smdGlow, smdglow);
+CUBESCRIPT_sdd(smdGlare, smdglare);
+CUBESCRIPT_sd(smdAlphatest, smdalphatest);
+CUBESCRIPT_si(smdAlphablend, smdalphablend);
+CUBESCRIPT_si(smdCullface, smdcullface);
+CUBESCRIPT_ss(smdEnvmap, smdenvmap);
+CUBESCRIPT_sss(smdBumpmap, smdbumpmap);
+CUBESCRIPT_sd(smdFullbright, smdfullbright);
+CUBESCRIPT_ss(smdShader, smdshader);
+CUBESCRIPT_sdd(smdScroll, smdscroll);
+CUBESCRIPT_s(smdAnimpart, smdanimpart);
+CUBESCRIPT_ssdi(smdAnim, smdanim);
+CUBESCRIPT_iisddd(smdLink, smdlink);
+CUBESCRIPT_si(smdNoclip, smdnoclip);
+
 CUBESCRIPT_ddd(rdVert, rdvert);
+CUBESCRIPT_i(rdEye, rdeye);
 CUBESCRIPT_iii(rdTri, rdtri);
 CUBESCRIPT_iiiii(rdJoint, rdjoint);
 CUBESCRIPT_iid(rdLimitDist, rdlimitdist);
