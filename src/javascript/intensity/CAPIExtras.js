@@ -385,7 +385,12 @@ Model = {
 
     md3Load: CAPI.md3Load,
     md3Pitch: CAPI.md3Pitch,
-    md3Skin: CAPI.md3Skin,
+    md3Skin: function(meshname, tex, masks, envmapmax, envmapmin) {
+        masks = defaultValue(masks, '');
+        envmapmax = defaultValue(envmapmax, 0);
+        envmapmin = defaultValue(envmapmin, 0);
+        CAPI.md3Skin(meshname, tex, masks, envmapmax, envmapmin);
+    },
     md3Spec: CAPI.md3Spec,
     md3Ambient: CAPI.md3Ambient,
     md3Glow: CAPI.md3Glow,
@@ -398,7 +403,11 @@ Model = {
     md3Fullbright: CAPI.md3Fullbright,
     md3Shader: CAPI.md3Shader,
     md3Scroll: CAPI.md3Scroll,
-    md3Anim: CAPI.md3Anim,
+    md3Anim: function(anim, frame, range, speed, priority) {
+        speed = defaultValue(speed, 0);
+        priority = defaultValue(priority, 0);
+        CAPI.md3Anim(anim, frame, range, speed, priority);
+    },
     md3Link: CAPI.md3Link,
     md3Noclip: CAPI.md3Noclip,
 
@@ -433,7 +442,12 @@ Model = {
     iqmTag: CAPI.iqmTag,
     iqmPitch: CAPI.iqmPitch,
     iqmAdjust: CAPI.iqmAdjust,
-    iqmSkin: CAPI.iqmSkin,
+    iqmSkin: function(meshname, tex, masks, envmapmax, envmapmin) {
+        masks = defaultValue(masks, '');
+        envmapmax = defaultValue(envmapmax, 0);
+        envmapmin = defaultValue(envmapmin, 0);
+        CAPI.iqmSkin(meshname, tex, masks, envmapmax, envmapmin);
+    },
     iqmSpec: CAPI.iqmSpec,
     iqmAmbient: CAPI.iqmAmbient,
     iqmGlow: CAPI.iqmGlow,
@@ -447,7 +461,11 @@ Model = {
     iqmShader: CAPI.iqmShader,
     iqmScroll: CAPI.iqmScroll,
     iqmAnimpart: CAPI.iqmAnimpart,
-    iqmAnim: CAPI.iqmAnim,
+    iqmAnim: function(anim, animfile, speed, priority) {
+        speed = defaultValue(speed, 0);
+        priority = defaultValue(priority, 0);
+        CAPI.iqmAnim(anim, animfile, speed, priority);
+    },
     iqmLink: CAPI.iqmLink,
     iqmNoclip: CAPI.iqmNoclip,
 
@@ -456,7 +474,12 @@ Model = {
     smdTag: CAPI.smdTag,
     smdPitch: CAPI.smdPitch,
     smdAdjust: CAPI.smdAdjust,
-    smdSkin: CAPI.smdSkin,
+    smdSkin: function(meshname, tex, masks, envmapmax, envmapmin) {
+        masks = defaultValue(masks, '');
+        envmapmax = defaultValue(envmapmax, 0);
+        envmapmin = defaultValue(envmapmin, 0);
+        CAPI.smdSkin(meshname, tex, masks, envmapmax, envmapmin);
+    },
     smdSpec: CAPI.smdSpec,
     smdAmbient: CAPI.smdAmbient,
     smdGlow: CAPI.smdGlow,
@@ -470,7 +493,11 @@ Model = {
     smdShader: CAPI.smdShader,
     smdScroll: CAPI.smdScroll,
     smdAnimpart: CAPI.smdAnimpart,
-    smdAnim: CAPI.smdAnim,
+    smdAnim: function(anim, animfile, speed, priority) {
+        speed = defaultValue(speed, 0);
+        priority = defaultValue(priority, 0);
+        CAPI.smdAnim(anim, animfile, speed, priority);
+    },
     smdLink: CAPI.smdLink,
     smdNoclip: CAPI.smdNoclip,
 
