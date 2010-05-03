@@ -746,7 +746,6 @@ void rotatebb(vec &center, vec &radius, int yaw)
         vec2(1.00000000, 0.00000000) // 360
     };
 
-    yaw += 180;
     if(yaw < 0) yaw = 360 + yaw%360;
     else if(yaw >= 360) yaw %= 360;
     const vec2 &rot = rots[(yaw + 7)/15];
@@ -804,12 +803,11 @@ bool mmcollide(physent *d, const vec &dir, octaentities &oc)               // co
         vec center, radius;
         m->collisionbox(0, center, radius, entity.get()); // INTENSITY: entity
 
-        float yaw = 180 + float((e.attr1+7)-(e.attr1+7)%15);
+        float yaw = float((e.attr1+7)-(e.attr1+7)%15);
         switch(d->collidetype)
         {
             case COLLIDE_ELLIPSE:
               {
-                float yaw = 180 + float((e.attr1+7)-(e.attr1+7)%15);
                 if(m->ellipsecollide)
                 {
                     /*if(!mmcollide<mpr::EntCylinder, mpr::ModelEllipse>(d, !WorldSystem::triggeringCollisions ? dir : vec(0,0,0), e, center, radius, yaw)) // INTENSITY: If just for triggering events (AreaTriggers), then we want all intersections regardless of direction
