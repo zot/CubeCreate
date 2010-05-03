@@ -700,13 +700,13 @@ SkyManager = {
 				case 21: break; // 5am
 				case 22: break; // 5:15am
 				case 23: break; // 5:30am
-				case 24: break; // 5:45am
+				case 24: this.nextTintFog = intRED; break; // 5:45am
 				case 25: this.nextModelAmbient = 57.0; this.nextTintAltCloudLayer = this.pickRandomWarmTint(); this.nextTintCloudLayer = this.pickRandomWarmTint(); break;	// 6am
 				case 26: this.nextAlphaSky = 1.0; this.nextAlphaClouds = 0.9; break; // 6:15am
 				case 27: this.nextTintSun = this.pickRandomTint(intArrYELLOW); break; // 6:30am
 				case 28: this.nextTintAmbient = this.pickRandomTint(intArrORANGE); break; // 6:45am
 				case 29: this.nextModelSpec = 1.0; break; // 7am
-				case 30: this.nextTintAmbient = intAMBIENTFULL; break; // 7:15am
+				case 30: this.nextTintAmbient = intAMBIENTFULL; this.nextTintFog = intWHITE; // 7:15am
 				case 31: this.nextTintAltCloudLayer = intWHITE; this.nextTintClouds = intWHITE; this.nextTintCloudLayer = intWHITE; this.nextTintSky = this.pickRandomTint(intArrBLUE); break; // 7:30am
 				case 32: break; // 7:45am
 				case 33: break;	// 8am
@@ -758,10 +758,10 @@ SkyManager = {
 				case 67: break; // 5pm
 				case 68: this.nextTintCloudLayer = this.pickRandomWarmTint(); break; // 5:15pm
 				case 69: this.nextModelAmbient = 1.0; this.nextTintSun = this.pickSunrisetTint(); break; // 5:30pm
-				case 70: this.nextTintClouds = this.pickRandomWarmTint(); this.nextTintSky = this.pickSunrisetTint(); break; // 5:45pm
+				case 70: this.nextTintClouds = this.pickRandomWarmTint(); this.nextTintFog = this.nextTintClouds; this.nextTintSky = this.pickSunrisetTint(); break; // 5:45pm
 				case 71: this.nextTintAltCloudLayer = this.pickRandomWarmTint(); this.nextTintAmbient = this.pickRandomTint(intArrORANGE); break; // 6pm
 				case 72: this.nextTintCloudLayer = this.pickRandomWarmTint(); this.nextTintAmbient = intAMBIENT; this.nextTintClouds = this.pickRandomWarmTint(); break; // 6:15pm
-				case 73: this.nextModelSpec = 0.0; break; // 6:30pm
+				case 73: this.nextTintFog = intAMBIENT; this.nextModelSpec = 0.0; break; // 6:30pm
 				case 74: this.nextTintCloudLayer = intWHITE; this.nextTintAltCloudLayer = intWHITE; this.nextTintClouds = this.pickRandomWarmTint(); this.nextTintSky = this.pickRandomWarmTint(); this.nextTintSun = this.pickSunrisetTint(); this.nextAlphaSky = 0.0; this.nextAlphaClouds = 0.0; break; // 6:45pm
 				case 75: break; // 7pm
 				case 76: break; // 7:15pm
