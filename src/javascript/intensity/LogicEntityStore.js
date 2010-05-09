@@ -415,6 +415,7 @@ if (Global.SERVER) {
                     case "Light":
                     case "FlickeringLight":
                     case "ParticleEffect":
+                    case "Envmap":
                         break;
                     default:
                         stateData.attr1 = (parseInt(stateData.attr1)+180)%360;
