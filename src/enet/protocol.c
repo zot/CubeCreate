@@ -289,6 +289,10 @@ enet_protocol_handle_connect (ENetHost * host, ENetProtocolHeader * header, ENet
     if (currentPeer >= & host -> peers [host -> peerCount])
       return NULL;
 
+    currentPeer -> channels = (ENetChannel *) enet_malloc (channelCount * sizeof (ENetChannel));
+    if (currentPeer -> channels == NULL)
+      return NULL;
+    currentPeer -> channelCount = channelCount;
     currentPeer -> state = ENET_PEER_STATE_ACKNOWLEDGING_CONNECT;
     currentPeer -> sessionID = command -> connect.sessionID;
     currentPeer -> address = host -> receivedAddress;
@@ -298,8 +302,6 @@ enet_protocol_handle_connect (ENetHost * host, ENetProtocolHeader * header, ENet
     currentPeer -> packetThrottleInterval = ENET_NET_TO_HOST_32 (command -> connect.packetThrottleInterval);
     currentPeer -> packetThrottleAcceleration = ENET_NET_TO_HOST_32 (command -> connect.packetThrottleAcceleration);
     currentPeer -> packetThrottleDeceleration = ENET_NET_TO_HOST_32 (command -> connect.packetThrottleDeceleration);
-    currentPeer -> channels = (ENetChannel *) enet_malloc (channelCount * sizeof (ENetChannel));
-    currentPeer -> channelCount = channelCount;
 
     for (channel = currentPeer -> channels;
          channel < & currentPeer -> channels [channelCount];
@@ -396,10 +398,10 @@ enet_protocol_handle_send_reliable (ENetHost * host, ENetPeer * peer, const ENet
     packet = enet_packet_create ((const enet_uint8 *) command + sizeof (ENetProtocolSendReliable),
                                  dataLength,
                                  ENET_PACKET_FLAG_RELIABLE);
-    if (packet == NULL)
+    if (packet == NULL ||
+        enet_peer_queue_incoming_command (peer, command, packet, 0) == NULL)
       return -1;
 
-    enet_peer_queue_incoming_command (peer, command, packet, 0);
     return 0;
 }
 
@@ -440,16 +442,15 @@ enet_protocol_handle_send_unsequenced (ENetHost * host, ENetPeer * peer, const E
     if (peer -> unsequencedWindow [index / 32] & (1 << (index % 32)))
       return 0;
       
-    peer -> unsequencedWindow [index / 32] |= 1 << (index % 32);
-    
-                        
     packet = enet_packet_create ((const enet_uint8 *) command + sizeof (ENetProtocolSendUnsequenced),
                                  dataLength,
                                  ENET_PACKET_FLAG_UNSEQUENCED);
-    if (packet == NULL)
+    if (packet == NULL ||
+        enet_peer_queue_incoming_command (peer, command, packet, 0) == NULL)
       return -1;
-    
-    enet_peer_queue_incoming_command (peer, command, packet, 0);
+   
+    peer -> unsequencedWindow [index / 32] |= 1 << (index % 32);
+ 
     return 0;
 }
 
@@ -471,10 +472,10 @@ enet_protocol_handle_send_unreliable (ENetHost * host, ENetPeer * peer, const EN
     packet = enet_packet_create ((const enet_uint8 *) command + sizeof (ENetProtocolSendUnreliable),
                                  dataLength,
                                  0);
-    if (packet == NULL)
+    if (packet == NULL ||
+        enet_peer_queue_incoming_command (peer, command, packet, 0) == NULL)
       return -1;
 
-    enet_peer_queue_incoming_command (peer, command, packet, 0);
     return 0;
 }
 

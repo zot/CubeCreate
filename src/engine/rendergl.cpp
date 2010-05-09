@@ -333,7 +333,6 @@ void gl_checkextensions()
     if(!hasOQ)
     {
         conoutf(CON_WARN, "WARNING: No occlusion query support! (large maps may be SLOW)");
-        zpass = 0;
         extern int vacubesize;
         vacubesize = 64;
         waterreflect = 0;
@@ -752,15 +751,12 @@ void findorientation()
 
 void transplayer()
 {
-    glLoadIdentity();
-
-    glRotatef(camera1->roll, 0, 0, 1);
-    glRotatef(camera1->pitch, -1, 0, 0);
-    glRotatef(camera1->yaw, 0, 1, 0);
-
     // move from RH to Z-up LH quake style worldspace
-    glRotatef(-90, 1, 0, 0);
-    glScalef(1, -1, 1);
+    glLoadMatrixf(viewmatrix.v);
+
+    glRotatef(camera1->roll, 0, 1, 0);
+    glRotatef(camera1->pitch, -1, 0, 0);
+    glRotatef(camera1->yaw, 0, 0, -1);
 
     glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);   
 }
@@ -933,6 +929,7 @@ void recomputecamera()
     setviewcell(camera1->o);
 }
 
+extern const glmatrixf viewmatrix(vec4(-1, 0, 0, 0), vec4(0, 0, 1, 0), vec4(0, -1, 0, 0));
 glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix;
 
 void readmatrices()
@@ -969,11 +966,7 @@ vec calcavatarpos(const vec &pos, float dist)
     scrpos.z = (eyepos.z*(farplane + nearplane) - 2*nearplane*farplane) / (farplane - nearplane);
     scrpos.w = -eyepos.z;
 
-    vec worldpos;
-    worldpos.x = invmvpmatrix.v[0]*scrpos.x + invmvpmatrix.v[4]*scrpos.y + invmvpmatrix.v[8]*scrpos.z + invmvpmatrix.v[12]*scrpos.w;
-    worldpos.y = invmvpmatrix.v[1]*scrpos.x + invmvpmatrix.v[5]*scrpos.y + invmvpmatrix.v[9]*scrpos.z + invmvpmatrix.v[13]*scrpos.w;
-    worldpos.z = invmvpmatrix.v[2]*scrpos.x + invmvpmatrix.v[6]*scrpos.y + invmvpmatrix.v[10]*scrpos.z + invmvpmatrix.v[14]*scrpos.w;
-    worldpos.div(invmvpmatrix.v[3]*scrpos.x + invmvpmatrix.v[7]*scrpos.y + invmvpmatrix.v[11]*scrpos.z + invmvpmatrix.v[15]*scrpos.w);
+    vec worldpos = invmvpmatrix.perspectivetransform(scrpos);
     vec dir = vec(worldpos).sub(camera1->o).rescale(dist);
     return dir.add(camera1->o);
 }
@@ -1270,11 +1263,11 @@ void drawfogoverlay(int fogmat, float fogblend, int abovemat)
     glLoadIdentity();
 
     glColor3fv(overlay);
-    glBegin(GL_TRIANGLE_FAN);
+    glBegin(GL_TRIANGLE_STRIP);
     glVertex2f(-1, -1);
     glVertex2f(1, -1);
-    glVertex2f(1, 1);
     glVertex2f(-1, 1);
+    glVertex2f(1, 1);
     glEnd();
     glDisable(GL_BLEND);
 
@@ -1546,7 +1539,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
     xtravertsva = xtraverts = glde = gbatches = 0;
 
-    visiblecubes(90, 90);
+    visiblecubes();
 
     if(limitsky()) drawskybox(farplane, true);
 
@@ -1621,11 +1614,11 @@ void addmotionblur()
     rectshader->set();
 
     glColor4f(1, 1, 1, lastmotion ? pow(motionblurscale, max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)) : 0);
-    glBegin(GL_TRIANGLE_FAN);
+    glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(      0,       0); glVertex2f(-1, -1);
     glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
-    glTexCoord2f(motionw, motionh); glVertex2f( 1,  1);
     glTexCoord2f(      0, motionh); glVertex2f(-1,  1);
+    glTexCoord2f(motionw, motionh); glVertex2f( 1,  1);
     glEnd();
 
     glDisable(GL_TEXTURE_RECTANGLE_ARB);
@@ -1712,7 +1705,7 @@ void gl_drawframe(int w, int h)
         else dopostfx = true;
     }
 
-    visiblecubes(curfov, fovy);
+    visiblecubes();
     
     if(shadowmap && !hasFBO) rendershadowmap();
 
@@ -1897,11 +1890,11 @@ void drawdamagescreen(int w, int h)
         fade *= float(damageblendmillis - lastmillis)/damagescreenfade;
     glColor4f(fade, fade, fade, fade);
 
-    glBegin(GL_TRIANGLE_FAN);
+    glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(0, 0); glVertex2f(0, 0);
     glTexCoord2f(1, 0); glVertex2f(w, 0);
-    glTexCoord2f(1, 1); glVertex2f(w, h);
     glTexCoord2f(0, 1); glVertex2f(0, h);
+    glTexCoord2f(1, 1); glVertex2f(w, h);
     glEnd();
 
     glDisable(GL_TEXTURE_2D);
@@ -1990,11 +1983,11 @@ void drawcrosshair(int w, int h)
     float x = cx*w - (windowhit ? 0 : chsize/2.0f);
     float y = cy*h - (windowhit ? 0 : chsize/2.0f);
     glBindTexture(GL_TEXTURE_2D, crosshair->id);
-    glBegin(GL_TRIANGLE_FAN);
+    glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(0, 0); glVertex2f(x,          y);
     glTexCoord2f(1, 0); glVertex2f(x + chsize, y);
-    glTexCoord2f(1, 1); glVertex2f(x + chsize, y + chsize);
     glTexCoord2f(0, 1); glVertex2f(x,          y + chsize);
+    glTexCoord2f(1, 1); glVertex2f(x + chsize, y + chsize);
     glEnd();
 }
 

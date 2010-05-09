@@ -410,6 +410,18 @@ if (Global.SERVER) {
             var stateData = entity[2];
             log(DEBUG, format("loadEntities: {0},{1},{2}", uniqueId, _class, stateData));
 
+            if (CAPI.getMapversion() <= 30 && stateData.attr1) {
+                switch (_class) {
+                    case "Light":
+                    case "FlickeringLight":
+                    case "ParticleEffect":
+                        break;
+                    default:
+                        stateData.attr1 = (parseInt(stateData.attr1)+180)%360;
+                        break;
+                }
+            }
+
             addEntity(_class, uniqueId, { 'stateData': serializeJSON(stateData) }); // TODO: See comment below on parsing speed
         });
 

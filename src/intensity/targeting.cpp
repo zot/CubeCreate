@@ -32,8 +32,8 @@ void TargetingControl::setupOrientation()
     float factor = tanf(RAD*curfov/2.0f); // Size of edge opposite the angle of fov/2, in the triangle for (half of) viewport,
                                           // having unknown radius but known angle of fov/2 and close edge of 1.0
 
-    camdir.x = 0.0f; camdir.y = -1.0f; camdir.z = 0.0f; // Looking straight forward
-    camdir.x += 2.0f * (cx - 0.5f) * factor;            // adjust for mouse position
+    camdir.x = 0.0f; camdir.y = 1.0f; camdir.z = 0.0f; // Looking straight forward
+    camdir.x -= 2.0f * (cx - 0.5f) * factor;            // adjust for mouse position
     camdir.z -= 2.0f * (cy - 0.5f) * factor / aspect;   // adjust for mouse position
 
     camdir.normalize();

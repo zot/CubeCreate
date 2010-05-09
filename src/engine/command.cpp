@@ -807,8 +807,8 @@ const char *intstr(int v)
     return retbuf[retidx];
 }
 
-void intret(int v) 
-{ 
+void intret(int v)
+{
     commandret = newstring(intstr(v));
 }
 
@@ -908,7 +908,7 @@ void explodelist(const char *s, vector<char *> &elems)
 char *indexlist(const char *s, int pos)
 {
     whitespaceskip;
-    loopi(pos) 
+    loopi(pos)
     {
         elementskip;
         whitespaceskip;
@@ -937,10 +937,10 @@ void at(char *s, int *pos)
     commandret = indexlist(s, *pos);
 }
 
-void substr(char *s, int *start, int *count)
+void substr(char *s, int *start, char *count)
 {
     int len = strlen(s), offset = clamp(*start, 0, len);
-    commandret = newstring(&s[offset], *count <= 0 ? len - offset : min(*count, len - offset));
+    commandret = newstring(&s[offset], count[0] ? clamp(parseint(count), 0, len - offset) : len - offset);
 }
 
 void getalias_(char *s)
@@ -954,7 +954,7 @@ COMMAND(result, "s");
 COMMAND(concatword, "V");
 COMMAND(format, "V");
 COMMAND(at, "si");
-COMMAND(substr, "sii");
+COMMAND(substr, "sis");
 ICOMMAND(listlen, "s", (char *s), intret(listlen(s)));
 COMMANDN(getalias, getalias_, "s");
 
@@ -1054,7 +1054,7 @@ ICOMMAND(&~, "ii", (int *a, int *b), intret(*a & ~*b));
 ICOMMAND(|~, "ii", (int *a, int *b), intret(*a | ~*b));
 ICOMMAND(<<, "ii", (int *a, int *b), intret(*a << *b));
 ICOMMAND(>>, "ii", (int *a, int *b), intret(*a >> *b));
-ICOMMAND(&&, "V", (char **args, int *numargs), 
+ICOMMAND(&&, "V", (char **args, int *numargs),
 {
     int val = 1;
     loopi(*numargs) { val = execute(args[i]); if(!val) break; }
@@ -1063,7 +1063,7 @@ ICOMMAND(&&, "V", (char **args, int *numargs),
 ICOMMAND(||, "V", (char **args, int *numargs),
 {
     int val = 0;
-    loopi(*numargs) { val = execute(args[i]); if(val) break; } 
+    loopi(*numargs) { val = execute(args[i]); if(val) break; }
     intret(val);
 });
 
@@ -1134,6 +1134,7 @@ char *strreplace(const char *s, const char *oldval, const char *newval)
 }
 
 ICOMMAND(strreplace, "sss", (char *s, char *o, char *n), commandret = strreplace(s, o, n));
+ICOMMAND(getmillis, "i", (int *total), intret(*total ? totalmillis : lastmillis));
 
 #ifndef STANDALONE
 struct sleepcmd

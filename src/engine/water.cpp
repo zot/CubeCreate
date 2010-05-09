@@ -315,10 +315,10 @@ struct Reflection
     GLuint tex, refracttex;
     int height, depth, lastupdate, lastused;
     glmatrixf projmat;
-    occludequery *query;
+    occludequery *query, *prevquery;
     vector<materialsurface *> matsurfs;
 
-    Reflection() : tex(0), refracttex(0), height(-1), depth(0), lastused(0), query(NULL)
+    Reflection() : tex(0), refracttex(0), height(-1), depth(0), lastused(0), query(NULL), prevquery(NULL)
     {}
 };
 Reflection *findreflection(int height);
@@ -412,7 +412,7 @@ GLuint reflectionfb = 0, reflectiondb = 0;
 
 GLuint getwaterfalltex() { return waterfallrefraction.refracttex ? waterfallrefraction.refracttex : notexture->id; }
 
-VAR(oqwater, 0, 1, 1);
+VAR(oqwater, 0, 2, 2);
 
 extern int oqfrags;
 
@@ -451,7 +451,14 @@ void renderwaterff()
         bool below = camera1->o.z < ref.height + offset;
         if(!nowater && (waterrefract || waterreflect || (waterenvmap && hasCM)) && !envmapping)
         {
-            if(hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref && checkquery(ref.query)) continue;
+            if(hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref)
+            {
+                if(!ref.prevquery || ref.prevquery->owner!=&ref || checkquery(ref.prevquery))
+                {
+                    if(checkquery(ref.query)) continue;
+                }
+            }
+
             bool projtex = false;
             if(waterreflect || (waterenvmap && hasCM))
             {
@@ -656,7 +663,13 @@ void renderwater()
     {
         Reflection &ref = reflections[i];
         if(ref.height<0 || ref.lastused<totalmillis || ref.matsurfs.empty()) continue;
-        if(!glaring && hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref && checkquery(ref.query)) continue;
+        if(!glaring && hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref)
+        {
+            if(!ref.prevquery || ref.prevquery->owner!=&ref || checkquery(ref.prevquery))
+            {
+                if(checkquery(ref.query)) continue;
+            }
+        }
 
         bool below = camera1->o.z < ref.height+offset;
         if(below) 
@@ -783,7 +796,7 @@ void cleanreflection(Reflection &ref)
 {
     ref.height = -1;
     ref.lastupdate = 0;
-    ref.query = NULL;
+    ref.query = ref.prevquery = NULL;
     if(ref.tex)
     {
         glDeleteTextures(1, &ref.tex);
@@ -929,7 +942,11 @@ void addreflection(materialsurface &m)
         if(!oldest || oldest->lastused==totalmillis) return;
         ref = oldest;
     }
-    if(ref->height!=height) ref->height = height;
+    if(ref->height!=height) 
+    {
+        ref->height = height;
+        ref->prevquery = NULL;
+    }
     rplanes++;
     ref->lastused = totalmillis;
     ref->matsurfs.setsize(0);
@@ -1027,12 +1044,14 @@ void queryreflections()
     if(waterreflect || waterrefract) loopi(MAXREFLECTIONS)
     {
         Reflection &ref = reflections[i];
+        ref.prevquery = oqwater > 1 ? ref.query : NULL;
         ref.query = ref.height>=0 && ref.lastused>=totalmillis && ref.matsurfs.length() ? newquery(&ref) : NULL;
         if(ref.query) queryreflection(ref, !refs++);
     }
     if(renderpath!=R_FIXEDFUNCTION && waterfallrefract)
     {
         Reflection &ref = waterfallrefraction;
+        ref.prevquery = oqwater > 1 ? ref.query : NULL;
         ref.query = ref.height>=0 && ref.lastused>=totalmillis && ref.matsurfs.length() ? newquery(&ref) : NULL;
         if(ref.query) queryreflection(ref, !refs++);
     }
@@ -1112,7 +1131,7 @@ void maskreflection(Reflection &ref, float offset, bool reflect, bool clear = fa
 VAR(reflectscissor, 0, 1, 1);
 VAR(reflectvfc, 0, 1, 1);
 
-static bool calcscissorbox(Reflection &ref, int size, float &minyaw, float &maxyaw, float &minpitch, float &maxpitch, int &sx, int &sy, int &sw, int &sh)
+static bool calcscissorbox(Reflection &ref, int size, vec &clipmin, vec &clipmax, int &sx, int &sy, int &sw, int &sh)
 {
     materialsurface &m0 = *ref.matsurfs[0];
     int dim = dimension(m0.orient), r = R[dim], c = C[dim];
@@ -1164,16 +1183,17 @@ static bool calcscissorbox(Reflection &ref, int size, float &minyaw, float &maxy
             sy2 = max(sy2, y);
         }
     }
+    if(sx1 <= 1 && sy1 <= -1 && sx2 >= 1 && sy2 >= 1) return false;
     sx1 = max(sx1, -1.0f);
     sy1 = max(sy1, -1.0f);
     sx2 = min(sx2, 1.0f);
     sy2 = min(sy2, 1.0f);
     if(reflectvfc)
     {
-        minyaw = atan2(sx1, projmatrix[0]);
-        maxyaw = atan2(sx2, projmatrix[0]);
-        minpitch = atan2(sy1, projmatrix[5]);
-        maxpitch = atan2(sy2, projmatrix[5]);
+        clipmin.x = clamp(clipmin.x, sx1, sx2);
+        clipmin.y = clamp(clipmin.y, sy1, sy2);
+        clipmax.x = clamp(clipmax.x, sx1, sx2);
+        clipmax.y = clamp(clipmax.y, sy1, sy2);
     }
     sx = int(floor((hasFBO ? 0 : screen->w-size) + (sx1+1)*0.5f*size));
     sy = int(floor((hasFBO ? 0 : screen->h-size) + (sy1+1)*0.5f*size));
@@ -1201,7 +1221,13 @@ void drawreflections()
     {
         Reflection &ref = reflections[++n%MAXREFLECTIONS];
         if(ref.height<0 || ref.lastused<lastquery || ref.matsurfs.empty()) continue;
-        if(hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref && checkquery(ref.query)) continue;
+        if(hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref)
+        { 
+            if(!ref.prevquery || ref.prevquery->owner!=&ref || checkquery(ref.prevquery))
+            {
+                if(checkquery(ref.query)) continue;
+            }
+        }
 
         if(!refs) 
         {
@@ -1212,9 +1238,9 @@ void drawreflections()
         ref.lastupdate = totalmillis;
         lastdrawn = n;
 
-        float minyaw = -M_PI, maxyaw = M_PI, minpitch = -M_PI, maxpitch = M_PI;
+        vec clipmin(-1, -1, -1), clipmax(1, 1, 1);
         int sx, sy, sw, sh;
-        bool scissor = reflectscissor && calcscissorbox(ref, size, minyaw, maxyaw, minpitch, maxpitch, sx, sy, sw, sh);
+        bool scissor = reflectscissor && calcscissorbox(ref, size, clipmin, clipmax, sx, sy, sw, sh);
         if(scissor) glScissor(sx, sy, sw, sh);
         else
         {
@@ -1229,7 +1255,8 @@ void drawreflections()
             if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
             maskreflection(ref, offset, true);
             if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
-            reflectvfcP(ref.height+offset, minyaw, maxyaw, minpitch, maxpitch);
+            savevfcP();
+            setvfcP(ref.height+offset, clipmin, clipmax); 
             drawreflection(ref.height+offset, false);
             restorevfcP();
             if(scissor) glDisable(GL_SCISSOR_TEST);
@@ -1248,7 +1275,8 @@ void drawreflections()
             if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
             if(waterfog || (renderpath!=R_FIXEDFUNCTION && waterfade && hasFBO))
             {
-                reflectvfcP(-1, minyaw, maxyaw, minpitch, maxpitch);
+                savevfcP();
+                setvfcP(-1, clipmin, clipmax);
                 drawreflection(ref.height+offset, true);
                 restorevfcP();
             }
@@ -1268,7 +1296,13 @@ void drawreflections()
         Reflection &ref = waterfallrefraction;
 
         if(ref.height<0 || ref.lastused<lastquery || ref.matsurfs.empty()) goto nowaterfall;
-        if(hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref && checkquery(ref.query)) goto nowaterfall;
+        if(hasOQ && oqfrags && oqwater && ref.query && ref.query->owner==&ref)
+        {
+            if(!ref.prevquery || ref.prevquery->owner!=&ref || checkquery(ref.prevquery))
+            {
+                if(checkquery(ref.query)) goto nowaterfall;
+            }
+        }
 
         if(!refs)
         {
@@ -1278,9 +1312,9 @@ void drawreflections()
         refs++;
         ref.lastupdate = totalmillis;
 
-        float minyaw = -M_PI, maxyaw = M_PI, minpitch = -M_PI, maxpitch = M_PI;
+        vec clipmin(-1, -1, -1), clipmax(1, 1, 1);
         int sx, sy, sw, sh;
-        bool scissor = reflectscissor && calcscissorbox(ref, size, minyaw, maxyaw, minpitch, maxpitch, sx, sy, sw, sh);
+        bool scissor = reflectscissor && calcscissorbox(ref, size, clipmin, clipmax, sx, sy, sw, sh);
         if(scissor) glScissor(sx, sy, sw, sh);
         else
         {
@@ -1295,7 +1329,8 @@ void drawreflections()
         if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
         if(waterfog)
         {
-            reflectvfcP(-1, minyaw, maxyaw, minpitch, maxpitch);
+            savevfcP();
+            setvfcP(-1, clipmin, clipmax);
             drawreflection(-1, true); 
             restorevfcP();
         }

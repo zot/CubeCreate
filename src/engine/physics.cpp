@@ -1690,8 +1690,8 @@ void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m)
 {
     if(move)
     {
-        m.x = move*sinf(RAD*yaw);
-        m.y = move*-cosf(RAD*yaw);
+        m.x = move*-sinf(RAD*yaw);
+        m.y = move*cosf(RAD*yaw);
     }
     else m.x = m.y = 0;
 
@@ -1705,14 +1705,14 @@ void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m)
 
     if(strafe)
     {
-        m.x += strafe*-cosf(RAD*yaw);
-        m.y += strafe*-sinf(RAD*yaw);
+        m.x += strafe*cosf(RAD*yaw);
+        m.y += strafe*sinf(RAD*yaw);
     }
 }
 
 void vectoyawpitch(const vec &v, float &yaw, float &pitch)
 {
-    yaw = -(float)atan2(v.x, v.y)/RAD + 180;
+    yaw = -atan2(v.x, v.y)/RAD;
     pitch = asin(v.z/v.magnitude())/RAD;
 }
 

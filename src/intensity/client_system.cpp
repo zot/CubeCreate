@@ -325,11 +325,11 @@ void ClientSystem::drawHUD(int w, int h)
 
         glDisable(GL_TEXTURE_2D);
         notextureshader->set();
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_STRIP);
         glVertex2f(q.x1, q.y1);
         glVertex2f(q.x2, q.y1);
-        glVertex2f(q.x2, q.y2);
         glVertex2f(q.x1, q.y2);
+        glVertex2f(q.x2, q.y2);
         glEnd();
         glEnable(GL_TEXTURE_2D);
         defaultshader->set();	
@@ -352,11 +352,11 @@ void ClientSystem::drawHUD(int w, int h)
         float y2 = q.centerY + (hFactor*q.height/2);
         glColor3f(1, 1, 1);
         settexture(q.tex.c_str(), 3);
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_STRIP);
             glTexCoord2f(0.0f, 0.0f); glVertex2f(x1, y1);
             glTexCoord2f(1.0f, 0.0f); glVertex2f(x2, y1);
-            glTexCoord2f(1.0f, 1.0f); glVertex2f(x2, y2);
             glTexCoord2f(0.0f, 1.0f); glVertex2f(x1, y2);
+            glTexCoord2f(1.0f, 1.0f); glVertex2f(x2, y2);
         glEnd();
     }
 

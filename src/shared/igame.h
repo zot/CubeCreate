@@ -21,8 +21,6 @@ namespace entities
     extern void clearents();
     extern vector<extentity *> &getents();
     extern const char *entmodel(const entity &e);
-    extern void resettriggers();
-    extern void checktriggers();
     extern void animatemapmodel(const extentity &e, int &anim, int &basetime);
 }
 
