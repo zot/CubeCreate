@@ -2445,3 +2445,6 @@ V8_FUNC_ds(__script__renderProgress, {
     renderprogress(arg1, arg2);
 });
 
+V8_FUNC_NOPARAM(__script__getMapversion, {
+    V8_RETURN_INT( mapversion );
+});

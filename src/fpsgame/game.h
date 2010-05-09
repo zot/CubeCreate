@@ -323,6 +323,8 @@ namespace entities
 
     extern void preloadentities();
     extern void renderentities();
+    extern void resettriggers();
+    extern void checktriggers();
     extern void checkitems(fpsent *d);
     extern void checkquad(int time, fpsent *d);
     extern void resetspawns();

@@ -613,9 +613,9 @@ GameManager.setup([
                 [
                     new (CutScenes.SmoothAction.extend({
                         markers: [
-                            { position: new Vector3(1379.26,  577.65,  505.52), yaw: 31.09, pitch: -10.90 },
-                            { position: new Vector3(1852.22,  545.97,  568.96), yaw: 307.90, pitch: -15.18 },
-                            { position: new Vector3(1840.70,  34.74,  527.08), yaw: 230.81, pitch: -12.54 },
+                            { position: new Vector3(1379.26,  577.65,  505.52), yaw: 211.09, pitch: -10.90 },
+                            { position: new Vector3(1852.22,  545.97,  568.96), yaw: 127.90, pitch: -15.18 },
+                            { position: new Vector3(1840.70,  34.74,  527.08), yaw: 50.81, pitch: -12.54 },
                         ],
                         delayAfter: 1.0,
                     }))(),
@@ -623,16 +623,16 @@ GameManager.setup([
                         {
                             delayBefore: 1.0,
                             markers: [
-                                { position: new Vector3(1021.78,  1305.85,  594.17), yaw: 157.08, pitch: 4.63 },
-                                { position: new Vector3(858.32,  1516.53,  676.01), yaw: 143.36, pitch: 18.00 },
-                                { position: new Vector3(988.48,  1874.73,  601.13), yaw: 60.72, pitch: 1.54 },
+                                { position: new Vector3(1021.78,  1305.85,  594.17), yaw: 337.08, pitch: 4.63 },
+                                { position: new Vector3(858.32,  1516.53,  676.01), yaw: 323.36, pitch: 18.00 },
+                                { position: new Vector3(988.48,  1874.73,  601.13), yaw: 240.72, pitch: 1.54 },
                             ],
                             delayAfter: 1.0,
                         },
                         RenderingCaptureActionPlugin,
                         {
                             renderDynamic: function() {
-                                renderBug(new Vector3(1074.87,  1819.10,  572.01), 120, 0, 0, 50);
+                                renderBug(new Vector3(1074.87,  1819.10,  572.01), 300, 0, 0, 50);
                             }
                         }
                     )))(),
@@ -640,20 +640,20 @@ GameManager.setup([
                         {
                             delayBefore: 1.0,
                             markers: [
-                                { position: new Vector3(522.99,  717.87,  577.47), yaw: 30, pitch: 1.90 },
-                                { position: new Vector3(520.65,  706.02,  586.36), yaw: -90.90, pitch: -20.45 },
-                                { position: new Vector3(491.87,  917.46,  576.36), yaw: 125.72, pitch: 1.09 },
-                                { position: new Vector3(525.50,  918.42,  554), yaw: 117.81, pitch: -21.27 },
+                                { position: new Vector3(522.99,  717.87,  577.47), yaw: 210, pitch: 1.90 },
+                                { position: new Vector3(520.65,  706.02,  586.36), yaw: 90.90, pitch: -20.45 },
+                                { position: new Vector3(491.87,  917.46,  576.36), yaw: 305.72, pitch: 1.09 },
+                                { position: new Vector3(525.50,  918.42,  554), yaw: 297.81, pitch: -21.27 },
                             ],
                         },
                         RenderingCaptureActionPlugin,
                         {
                             renderDynamic: function() {
-                                renderBug(new Vector3(570.11,  1005.64,  544.08), 166, 0, 0, 0);
-                                renderBug(new Vector3(618.83,  988.90,  557.63), 267, -30, 0, 25);
-                                renderBug(new Vector3(474.58,  898.20,  566.14), 269, 0, -45, 50);
-                                renderBug(new Vector3(548.00,  630.06,  544.09), 175, 0, 0, 75);
-                                renderBug(new Vector3(536.99,  926.66,  544.08), 223, 0, 0, 100);
+                                renderBug(new Vector3(570.11,  1005.64,  544.08), 346, 0, 0, 0);
+                                renderBug(new Vector3(618.83,  988.90,  557.63), 87, -30, 0, 25);
+                                renderBug(new Vector3(474.58,  898.20,  566.14), 89, 0, -45, 50);
+                                renderBug(new Vector3(548.00,  630.06,  544.09), 355, 0, 0, 75);
+                                renderBug(new Vector3(536.99,  926.66,  544.08), 43, 0, 0, 100);
                             }
                         }
                     )))(),

@@ -515,3 +515,4 @@ EMBED_CAPI_FUNC_STD(editing_getSelectedEntity, 0);
 
 EMBED_CAPI_FUNC_STD(renderProgress, 2);
 
+EMBED_CAPI_FUNC_STD(getMapversion, 0);

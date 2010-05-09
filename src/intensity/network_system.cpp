@@ -131,7 +131,7 @@ void QuantizedInfo::generateFrom(fpsent *d)
     position.z = (int)(d->o.z*DMF);
 
     d->normalize_yaw(180.0f); // Kripken: Normalize to 0-360
-    yaw = (unsigned char)(256.0f * d->yaw / 360.0f); // Kripken: Send quantized to 256 values, 1 byte
+    yaw = (unsigned char)(256.0f * (d->yaw + 180.0f) / 360.0f); // Kripken: Send quantized to 256 values, 1 byte
 
     d->normalize_pitch(0.0f); // Kripken: Normalize to -180-180
     pitch = (unsigned char)(256.0f * (d->pitch + 180.0f) / 360.0f); // Kripken: Send quantized to 256 values, 1 byte
@@ -256,7 +256,7 @@ void QuantizedInfo::applyToEntity(fpsent *d)
 
     if (hasYaw)
     {
-        d->yaw = 360.0f * float(yaw) / 256.0f; // Kripken: Unquantize from 256 values
+        d->yaw = (360.0f * float(yaw) / 256.0f) - 180.0f; // Kripken: Unquantize from 256 values
         d->normalize_yaw(180.0f); // Kripken: Normalize to 0-360
     }
 

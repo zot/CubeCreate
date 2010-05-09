@@ -228,6 +228,25 @@ Light = StaticEntity.extend({
     }
 });
 
+//! An environment map
+//! Sets geometry around it as environment map, good for glass reflections and stuff
+//! requires calclight if not previously done or recalc
+Envmap = StaticEntity.extend({
+    _class: "Envmap",
+
+    _sauerTypeIndex: 4,
+
+    //! see Light
+    attr1: new WrappedCInteger({ cGetter: 'CAPI.getAttr1', cSetter: 'CAPI.setAttr1', guiName: "radius", altName: "radius" }),
+
+    //! The radius of envmap, i.e. how far it should create envmap from geometry
+    radius: new VariableAlias("attr1"),
+
+    init: function(uniqueId, kwargs) {
+        this._super(uniqueId, kwargs);
+        this.radius = 128;
+    }
+});
 
 //! A particle effect. Until this is better documented, see the Sauer documentation for
 //! the meanings of particle_type and value1-3 (editref.html in docs/).
@@ -611,6 +630,7 @@ WorldMarker = StaticEntity.extend({
 
 registerEntityClass(StaticEntity, "mapmodel");
 registerEntityClass(Light, "light");
+registerEntityClass(Envmap, "envmap");
 registerEntityClass(ParticleEffect, "particles");
 registerEntityClass(Mapmodel, "mapmodel");
 registerEntityClass(AreaTrigger, "mapmodel");

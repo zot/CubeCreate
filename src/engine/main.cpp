@@ -213,22 +213,22 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
         glColor3f(1, 1, 1);
         settexture("data/background.png", 0);
         float bu = w*0.67f/256.0f + backgroundu, bv = h*0.67f/256.0f + backgroundv;
-        glBegin(GL_TRIANGLE_FAN);
+        glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(0,  0);  glVertex2f(0, 0);
         glTexCoord2f(bu, 0);  glVertex2f(w, 0);
-        glTexCoord2f(bu, bv); glVertex2f(w, h);
         glTexCoord2f(0,  bv); glVertex2f(0, h);
+        glTexCoord2f(bu, bv); glVertex2f(w, h);
         glEnd();
 #if 0 // INTENSITY: No background detail
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
         settexture("data/background_detail.png", 0);
         float du = w*0.8f/512.0f + detailu, dv = h*0.8f/512.0f + detailv;
-        glBegin(GL_TRIANGLE_FAN);
+        glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(0,  0);  glVertex2f(0, 0);
         glTexCoord2f(du, 0);  glVertex2f(w, 0);
-        glTexCoord2f(du, dv); glVertex2f(w, h);
         glTexCoord2f(0,  dv); glVertex2f(0, h);
+        glTexCoord2f(du, dv); glVertex2f(w, h);
         glEnd();
 #endif
         settexture("data/background_decal.png", 3);
@@ -245,11 +245,11 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
         float lh = 0.5f*min(w, h), lw = lh*2,
               lx = 0.5f*(w - lw), ly = 0.5f*(h*0.5f - lh);
         settexture((maxtexsize ? min(maxtexsize, hwtexsize) : hwtexsize) >= 1024 && (screen->w > 1280 || screen->h > 800) ? "data/logo.png" : "data/logo.png", 3); // INTENSITY: First was suffixed '_1024', but we use a single hi-res one
-        glBegin(GL_TRIANGLE_FAN);
+        glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(0, 0); glVertex2f(lx,    ly);
         glTexCoord2f(1, 0); glVertex2f(lx+lw, ly);
-        glTexCoord2f(1, 1); glVertex2f(lx+lw, ly+lh);
         glTexCoord2f(0, 1); glVertex2f(lx,    ly+lh);
+        glTexCoord2f(1, 1); glVertex2f(lx+lw, ly+lh);
         glEnd();
 
         if(caption)
@@ -276,11 +276,11 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
             if(mapshot && mapshot!=notexture)
             {
                 glBindTexture(GL_TEXTURE_2D, mapshot->id);
-                glBegin(GL_TRIANGLE_FAN);
+                glBegin(GL_TRIANGLE_STRIP);
                 glTexCoord2f(0, 0); glVertex2f(x,    y);
                 glTexCoord2f(1, 0); glVertex2f(x+sz, y);
-                glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
                 glTexCoord2f(0, 1); glVertex2f(x,    y+sz);
+                glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
                 glEnd();
                 glEnable(GL_BLEND); // INTENSITY
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // INTENSITY
@@ -298,11 +298,11 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             }        
             settexture("data/mapshot_frame.png", 3);
-            glBegin(GL_TRIANGLE_FAN);
+            glBegin(GL_TRIANGLE_STRIP);
             glTexCoord2f(0, 0); glVertex2f(x,    y);
             glTexCoord2f(1, 0); glVertex2f(x+sz, y);
-            glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
             glTexCoord2f(0, 1); glVertex2f(x,    y+sz);
+            glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
             glEnd();
             if(mapname)
             {
@@ -387,11 +387,11 @@ void renderprogress(float bar, const char *text, GLuint tex, bool background)   
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // INTENSITY: ditto
 
     settexture("data/loading_frame.png", 3);
-    glBegin(GL_TRIANGLE_FAN);
+    glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(fu1, fv1); glVertex2f(fx,    fy);
     glTexCoord2f(fu2, fv1); glVertex2f(fx+fw, fy);
-    glTexCoord2f(fu2, fv2); glVertex2f(fx+fw, fy+fh);
     glTexCoord2f(fu1, fv2); glVertex2f(fx,    fy+fh);
+    glTexCoord2f(fu2, fv2); glVertex2f(fx+fw, fy+fh);
     glEnd();
 
     float bw = fw*(511 - 2*17)/511.0f, bh = fh*20/52.0f,
@@ -478,21 +478,21 @@ void renderprogress(float bar, const char *text, GLuint tex, bool background)   
     {
         glBindTexture(GL_TEXTURE_2D, tex);
         float sz = 0.35f*min(w, h), x = 0.5f*(w-sz), y = 0.5f*min(w, h) - sz/15;
-        glBegin(GL_TRIANGLE_FAN);
+        glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(0, 0); glVertex2f(x,    y);
         glTexCoord2f(1, 0); glVertex2f(x+sz, y);
-        glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
         glTexCoord2f(0, 1); glVertex2f(x,    y+sz);
+        glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
         glEnd();
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         settexture("data/mapshot_frame.png", 3);
-        glBegin(GL_TRIANGLE_FAN);
+        glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(0, 0); glVertex2f(x,    y);
         glTexCoord2f(1, 0); glVertex2f(x+sz, y);
-        glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
         glTexCoord2f(0, 1); glVertex2f(x,    y+sz);
+        glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
         glEnd();
         glDisable(GL_BLEND);
     }
