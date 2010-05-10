@@ -32,7 +32,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
 
 // These values are "leashes" that the cloud manager will keep on certain variables. Lower/upper limit.
 fArrCloudLayerAlpha = [ 0.0, 1.0 ];			fArrAltCloudLayerAlpha = [ 0.0, 1.0 ];
-fArrCloudLayerHeight = [ 0.03, 0.47 ];		fArrAltCloudLayerHeight = [ 0.01, 0.37 ];
+fArrCloudLayerHeight = [ 0.03, 0.37 ];		fArrAltCloudLayerHeight = [ 0.01, 0.23 ];
 fArrCloudLayerScale = [ 0.37, 3.0 ];		fArrAltCloudLayerScale = [ 0.3, 7.0 ];
 fArrCloudLayerScroll = [ -0.001 , -0.007 ];	fArrAltCloudLayerScroll = [ 0.001, 0.007 ];
 fArrCloudLayerSpin = [ -0.001, -1.0 ];		fArrAltCloudLayerSpin = [ 0.001, 1.0 ];
@@ -183,7 +183,7 @@ SkyManager = {
 			this.secondsElapsed = 0;	// I use this to let midnightSync know when it's time.
 
 			this.defYawStars = 0; // Default star yaw, I can't see why you'd need to change this.
-			this.defYawSun = 250; // Default sun yaw, 0/360 = horizon, 270/90 = Midnight/Noon (sort-of)
+			this.defYawSun = 160; // Default sun yaw, 180 = Midnight
         },
 		////////////////////////////////////////////////////////////////////////////////////////////
 		// These are the routines and variables the client uses to track and control sky transitions.
@@ -197,12 +197,12 @@ SkyManager = {
 			this.curAltCloudLayer = "t7g/clouds5";
 
 			this.curTintStars = intWHITE;			// Really, these can be anything, the values you
-			this.curTintSky = intRED;				// see here are nothing more than the ones I used
-			this.curTintSun = intRED;				// before I wrote the later code that made their
+			this.curTintSky = intRED;			// see here are nothing more than the ones I used
+			this.curTintSun = intRED;			// before I wrote the later code that made their
 			this.curTintClouds = intORANGE;			// use this early unnecessary, that being said.
 			this.curTintCloudLayer = intWHITE;		// Leave them alone if you don't know what you're
-			this.curTintAltCloudLayer = intWHITE;   // doing. They need to be the same everywhere or
-			this.curTintFog	= intRED;				// you'll see strange colors or other strangeness.
+			this.curTintAltCloudLayer = intWHITE;   	// doing. They need to be the same everywhere or
+			this.curTintFog	= intRED;			// you'll see strange colors or other strangeness.
 			this.curTintAmbient = intAMBIENT;
 
 			this.curAlphaSky = 0.0;
@@ -271,7 +271,7 @@ SkyManager = {
 			// I'm only doing this at night as well, the player would obviously notice it during the day.
 			// Keep in mind this relies on rendersky.cpp using skymillis as it's sun spin ref point, not lastmillis.
 			// (It also has to have my code that resets skymillis upon yawing the sun to function properly)
-			Map.yawSun(250);
+			Map.yawSun(160);
 			this.lastMidnight = this.syncMidnight;
 		},
 
@@ -615,28 +615,26 @@ SkyManager = {
                 secondsBefore: 0,
                 secondsBetween: this.managerDelay,
                 func: bind(function() {
-					if(this.inTransition) {
-						this.manageDayEvents();
+                        if(this.inTransition) {
+                                this.manageDayEvents();
+                                //log(ERROR, format('The game thinks it is currently ("{0}")', this.dayTime));						
+                                //log(ERROR, parseFloat(this.curYawSun));
 
-						//log(ERROR, format('The game thinks it is currently ("{0}")', this.dayTime));						
-						//log(ERROR, parseFloat(this.curYawSun));
+                                if(this.dayTime > 73 && this.dayTime < 79) {
+                                        log(ERROR, format('The game thinks it is currently ("{0}")', this.dayTime));						
+                                        log(ERROR, parseFloat(this.curYawSun));
+                                }
 
-						if(this.dayTime > 73 && this.dayTime < 79) {
-							log(ERROR, format('The game thinks it is currently ("{0}")', this.dayTime));						
-							log(ERROR, parseFloat(this.curYawSun));
-						}
-
-						this.dayTime++;
-						if(this.dayTime >= 95) { 
-							this.dayTime = 1; 
-							log(ERROR, format('This day finished after ("{0}") seconds.', parseFloat(this.secondsElapsed))); 
-							this.syncMidnight = this.secondsElapsed;
-						} // That was fun, again!
-					}
-
-                }, this),
-                entity: this,
-            });
+                                this.dayTime++;
+                                if(this.dayTime >= 95) { 
+                                        this.dayTime = 1; 
+                                        log(ERROR, format('This day finished after ("{0}") seconds.', parseFloat(this.secondsElapsed))); 
+                                        this.syncMidnight = this.secondsElapsed;
+                                } // That was fun, again!
+                        }
+                }, this), 
+                entity: this, 
+                });
 			// This is for keeping a rough idea of where the sun and stars are at in their rotations.
 			GameManager.getSingleton().eventManager.add({
 				secondsBefore: 0,
@@ -700,9 +698,9 @@ SkyManager = {
 				case 21: break; // 5am
 				case 22: break; // 5:15am
 				case 23: break; // 5:30am
-				case 24: this.nextTintFog = intRED; break; // 5:45am
+				case 24: break; // 5:45am
 				case 25: this.nextModelAmbient = 57.0; this.nextTintAltCloudLayer = this.pickRandomWarmTint(); this.nextTintCloudLayer = this.pickRandomWarmTint(); break;	// 6am
-				case 26: this.nextAlphaSky = 1.0; this.nextAlphaClouds = 0.9; break; // 6:15am
+				case 26: this.nextTintFog = this.pickSunrisetTint(); this.nextAlphaSky = 1.0; this.nextAlphaClouds = 0.9; break; // 6:15am
 				case 27: this.nextTintSun = this.pickRandomTint(intArrYELLOW); break; // 6:30am
 				case 28: this.nextTintAmbient = this.pickRandomTint(intArrORANGE); break; // 6:45am
 				case 29: this.nextModelSpec = 1.0; break; // 7am
@@ -906,7 +904,7 @@ SkyManager = {
 			this.curYawSun = parseFloat(parseFloat(this.curYawSun) + parseFloat(this.rateSpin));
 		},
 
-		rollFadeStars: function() {	if(this.nextTintStars != this.curTintStars) this.curTintStars = this.tintFade(this.curTintStars, this.nextTintStars); },
+		rollFadeStars: function() { if(this.nextTintStars != this.curTintStars) this.curTintStars = this.tintFade(this.curTintStars, this.nextTintStars); },
 
 		rollFadeSky: function() {
 			if(this.nextTintSky != this.curTintSky) this.curTintSky = this.tintFade(this.curTintSky, this.nextTintSky);
@@ -960,7 +958,7 @@ SkyManager = {
 		},
 
 		doRandomStuff: function(pickedLayer) {
-			switch (integer(Math.random()*6)) {
+			/*switch (integer(Math.random()*6)) {
 				case 0: return(this.cloudLAlpha(pickedLayer));
 				case 1: return(this.cloudLHeight(pickedLayer));
 				case 2: return(this.cloudLScale(pickedLayer));
@@ -968,7 +966,8 @@ SkyManager = {
 				case 4: return(this.cloudLSpin(pickedLayer));
 				case 5: return(this.cloudLPickNew(pickedLayer));
 				case 6: return(this.rainDance());
-			}
+			}*/
+                        return(this.cloudLScale(pickedLayer));
 		},
 
 		cloudLAlpha: function(pL) {
@@ -1021,21 +1020,30 @@ SkyManager = {
 		// Weather related functions //
 		////////////////////////////////////////////////////////////////////////////////////////////
 		rainDance: function() {
-			if(this.curCloudLayer == rainCloudLayer || this.curAltCloudLayer == rainCloudLayer) {
-				if(this.curAlphaCloudLayer == 1.0 || this.curAlphaAltCloudLayer == 1.0) {
+			if(this.curCloudLayer == rainCloudLayer) {
+				if(this.curAlphaCloudLayer == 1.0) {
 					if(!this.isRaining) this.isRaining = true;
 					return;
-				} else if(this.curAlphaCloudLayer > 0.0) {
-					this.nextAlphaCloudLayer = 1.0;
+                                }
+			}
+                        if(this.curAltCloudLayer == rainCloudLayer) {
+                                if(this.curAlphaAltCloudLayer == 1.0) {
+					if(!this.isRaining) this.isRaining = true;
 					return;
-				} else if(this.curAlphaAltCloudLayer > 0.0) {
-					this.nextAlphaAltCloudLayer = 1.0;
-					return;
-				}
-			} 
+                                }
+                        }
+
+                        if(this.curAlphaCloudLayer > 0.0) {
+        			this.nextAlphaCloudLayer = 1.0;
+				return;
+			}
+                        if(this.curAlphaAltCloudLayer > 0.0) {
+				this.nextAlphaAltCloudLayer = 1.0;
+				return;
+			}
 		},
 
-		weatherManager: function() {
+        weatherManager: function() {
             frequency = 0.2;
             spawnAtOnce = 137;
             maxAmount = 777;
@@ -1190,11 +1198,10 @@ SkyManager = {
 		},
 
 		pickRandomWarmTint: function() {
-			switch (integer(Math.random()*3)) {
+			switch (integer(Math.random()*2)) {
 				case 0: return(this.pickRandomTint(intArrRED));
 				case 1: return(this.pickRandomTint(intArrORANGE));
-				case 2: return(this.pickCrazyRandomTint());
-				case 3: return(this.pickRandomTint(intArrPURPLE));
+				case 2: return(this.pickRandomTint(intArrPURPLE));
 			}
 		},
 
