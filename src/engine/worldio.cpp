@@ -799,23 +799,34 @@ bool load_world(const char *mname, const char *cname)        // still supports a
             if(e.attr4) conoutf(CON_WARN, "warning: mapmodel ent (index %d) uses texture slot %d", i, e.attr4);
             e.attr3 = e.attr4 = 0;
         }
-
         // INTENSITY: Print ent out, useful for copy-paste importing sauer maps
-        static int uniqueId = 0;
+        // we usually begin with 3 on emptymap
+        static int uniqueId = 3;
         printf("[%d, \"", uniqueId);
         if (e.type == ET_LIGHT) printf("Light");
         else if (e.type == ET_MAPMODEL) printf("Mapmodel");
         else if (e.type == ET_PLAYERSTART) printf("WorldMarker");
-        else if (e.type == ET_ENVMAP) printf("EnvironmentMap***");
+        else if (e.type == ET_ENVMAP) printf("Envmap");
         else if (e.type == ET_PARTICLES) printf("ParticleEffect");
         else if (e.type == ET_SOUND) printf("SoundEffect***");
         else if (e.type == ET_SPOTLIGHT) printf("SpotLight***");
         printf("\", {");
-            printf("\"position\":\"[%f|%f|%f]\", ", e.o.x, e.o.y, e.o.z);
             printf("\"attr1\":\"%d\", ", e.attr1);
             printf("\"attr2\":\"%d\", ", e.attr2);
             printf("\"attr3\":\"%d\", ", e.attr3);
             printf("\"attr4\":\"%d\", ", e.attr4);
+            printf("\"position\":\"[%f|%f|%f]\", ", e.o.x, e.o.y, e.o.z);
+            printf("\"animation\":\"130\", ");
+            printf("\"startTime\":\"@REPLACE_STARTTIME@\", ");
+            if (e.type == ET_MAPMODEL)
+              printf("\"modelName\":\"@REPLACE_MODEL_PATH@\", ");
+            else
+              printf("\"modelName\":\"\", ");
+            printf("\"attachments\":\"[]\", ");
+            if (e.type == ET_PLAYERSTART)
+              printf("\"tags\":\"[start_@REPLACE_TEAM@]\", ");
+            else
+              printf("\"tags\":\"[]\", ");
             printf("\"_persistent\":\"true\"");
         printf("}], \r\n");
         uniqueId++;
@@ -829,8 +840,10 @@ bool load_world(const char *mname, const char *cname)        // still supports a
         f->seek((hdr.numents-MAXENTS)*(samegame ? sizeof(entity) + einfosize : eif), SEEK_CUR);
     }
 
+#ifdef CLIENT // INTENSITY: hey, dont crash! lets not load vslots on server
     renderprogress(0, "loading slots...");
     loadvslots(f, hdr.numvslots);
+#endif
 
     renderprogress(0, "loading octree...");
     worldroot = loadchildren(f);
