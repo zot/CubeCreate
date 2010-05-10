@@ -840,10 +840,8 @@ bool load_world(const char *mname, const char *cname)        // still supports a
         f->seek((hdr.numents-MAXENTS)*(samegame ? sizeof(entity) + einfosize : eif), SEEK_CUR);
     }
 
-#ifdef CLIENT // INTENSITY: hey, dont crash! lets not load vslots on server
     renderprogress(0, "loading slots...");
     loadvslots(f, hdr.numvslots);
-#endif
 
     renderprogress(0, "loading octree...");
     worldroot = loadchildren(f);
