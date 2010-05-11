@@ -214,6 +214,28 @@ Light = StaticEntity.extend({
     }
 });
 
+//! A spotlight with the given "radius" (in degrees, 0 to 90). 
+//! A 90 degree spotlight will be a full hemisphere, whereas 0 degrees is simply a line
+//! These will attach to the nearest "light" entity within 100 units of the spotlight
+//! The spotlight will shine in the direction of the spotlight, relative to the "light" entity it is attached to
+//! It inherits the sphere of influence (length of the spotlight) and color values from the attached light as well
+Spotlight = StaticEntity.extend({
+    _class: "Spotlight",
+
+    _sauerTypeIndex: 7,
+
+    //! see Light
+    attr1: new WrappedCInteger({ cGetter: 'CAPI.getAttr1', cSetter: 'CAPI.setAttr1', guiName: "radius", altName: "radius" }),
+
+    //! The radius of spotlight
+    radius: new VariableAlias("attr1"),
+
+    init: function(uniqueId, kwargs) {
+        this._super(uniqueId, kwargs);
+        this.radius = 90;
+    }
+});
+
 //! An environment map
 //! Sets geometry around it as environment map, good for glass reflections and stuff
 //! requires calclight if not previously done or recalc
@@ -613,6 +635,7 @@ PlayerStart = StaticEntity.extend({
 
 registerEntityClass(StaticEntity, "mapmodel");
 registerEntityClass(Light, "light");
+registerEntityClass(Spotlight, "spotlight");
 registerEntityClass(Envmap, "envmap");
 registerEntityClass(ParticleEffect, "particles");
 registerEntityClass(Mapmodel, "mapmodel");

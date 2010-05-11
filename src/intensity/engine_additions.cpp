@@ -556,6 +556,7 @@ void LogicSystem::setupExtent(ScriptValuePtr scriptEntity, int type, float x, fl
     {
         extern void addentity(extentity* entity);
         addentity(&e);
+        attachentity(e);
     }
 
     LogicSystem::setUniqueId(&e, uniqueId);

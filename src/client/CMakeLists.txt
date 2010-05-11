@@ -57,7 +57,6 @@ set(CLIENT_SOURCES
     ../engine/water
     ../engine/shader
     ../engine/rendersky
-    ../engine/cubeloader
     ../engine/renderparticles
     ../engine/octarender
     ../engine/server

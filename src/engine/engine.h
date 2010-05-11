@@ -498,6 +498,7 @@ extern vector<int> outsideents;
 
 extern void entitiesinoctanodes();
 extern void attachentities();
+extern void attachentity(extentity &e);
 extern void freeoctaentities(cube &c);
 extern bool pointinsel(selinfo &sel, vec &o);
 

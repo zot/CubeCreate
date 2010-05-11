@@ -808,8 +808,8 @@ bool load_world(const char *mname, const char *cname)        // still supports a
         else if (e.type == ET_PLAYERSTART) printf("WorldMarker");
         else if (e.type == ET_ENVMAP) printf("Envmap");
         else if (e.type == ET_PARTICLES) printf("ParticleEffect");
+        else if (e.type == ET_SPOTLIGHT) printf("Spotlight");
         else if (e.type == ET_SOUND) printf("SoundEffect***");
-        else if (e.type == ET_SPOTLIGHT) printf("SpotLight***");
         printf("\", {");
             printf("\"attr1\":\"%d\", ", e.attr1);
             printf("\"attr2\":\"%d\", ", e.attr2);
