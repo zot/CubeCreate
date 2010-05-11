@@ -14,6 +14,7 @@ map.cfg is the file that defines the mapmodels, using the mmodel command
 '''
 
 import sys
+import re
 
 mapmodel_filename = sys.argv[2]
 mapmodel_file = open(mapmodel_filename, 'r')
@@ -35,10 +36,12 @@ outfile.write('[\n')
 for line in open(filename, 'r'):
     line = line.strip()
     if len(line)>2:
-        line = eval(line)[0]
-        if 'Mapmodel' in line:
-            line[2]['modelName'] = convert_mapmodel(line[2]['attr2'])
-        outfile.write('  ' + str(line) + ',\n')
+        line_sep = eval(line)[0]
+        if re.search('^.*@REPLACE_MODEL_PATH@.*$', line):
+            separated = convert_mapmodel(line_sep[2]['attr2'])
+            outfile.write('  ' + re.sub('@REPLACE_MODEL_PATH@', separated, line) + '\n')
+        else:
+            outfile.write('  ' + str(line) + '\n')
 outfile.write(']\n')
 outfile.close()
 
