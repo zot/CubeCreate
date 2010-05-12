@@ -454,11 +454,11 @@ struct smd : skelmodel
     {
         if(loaded) return true;
         formatstring(smddir)("packages/models/%s", loadname);
-        defformatstring(cfgname)("packages/models/%s/smd.cfg", loadname);
+        defformatstring(cfgname)("packages/models/%s/smd.js", loadname); // INTENSITY
 
         loadingsmd = this;
         persistidents = false;
-        if(execfile(cfgname, false) && parts.length()) // configured smd, will call the smd* commands below
+        if(ScriptEngineManager::runFile(path(cfgname), false) && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured smd, will call the smd* commands below
         {
             persistidents = true;
             loadingsmd = NULL;
