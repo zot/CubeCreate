@@ -845,7 +845,7 @@ MochiKit.Base.update(MochiKit.Base, {
     /** @id MochiKit.Base.evalJSON */
     evalJSON: function (jsonText) {
 if (Global.SERVER) log(ERROR, "going to parse:" + jsonText);
-var ret = JSON.parse('(' + jsonText + ')');
+var ret = JSON.parse(jsonText);
 if (Global.SERVER) log(ERROR, "parsed ok");
 return ret;
 //        return JSON.parse("(" + jsonText + ")"); // INTENSITY: Had MochiKit.Base._filterJSON(jsonText)... XXX

@@ -817,7 +817,6 @@ bool load_world(const char *mname, const char *cname)        // still supports a
             printf("\"attr4\":\"%d\", ", e.attr4);
             printf("\"position\":\"[%f|%f|%f]\", ", e.o.x, e.o.y, e.o.z);
             printf("\"animation\":\"130\", ");
-            printf("\"startTime\":\"@REPLACE_STARTTIME@\", ");
             if (e.type == ET_MAPMODEL)
               printf("\"modelName\":\"@REPLACE_MODEL_PATH@\", ");
             else

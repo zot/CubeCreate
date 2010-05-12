@@ -1196,7 +1196,11 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     persistidents = true;
     
     initing = INIT_LOAD;
-    if(!execfile(game::savedconfig(), false)) execfile(game::defaultconfig());
+    if(!execfile(game::savedconfig(), false)) 
+    {
+        execfile(game::defaultconfig());
+        writecfg(game::restoreconfig());
+    }
     execfile(game::autoexec(), false);
     initing = NOT_INITING;
 
