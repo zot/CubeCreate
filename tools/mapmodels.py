@@ -39,6 +39,7 @@ for line in open(filename, 'r'):
         line_sep = eval(line)[0]
         if re.search('^.*@REPLACE_MODEL_PATH@.*$', line):
             separated = convert_mapmodel(line_sep[2]['attr2'])
+            line = re.sub("\"attr2\":\"" + line_sep[2]['attr2'] + "\"", "\"attr2\":\"-1\"", line)
             outfile.write('  ' + re.sub('@REPLACE_MODEL_PATH@', separated, line) + '\n')
         else:
             outfile.write('  ' + str(line) + '\n')
