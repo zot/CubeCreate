@@ -281,6 +281,15 @@ void clearmapsounds()
     mapsounds.setsize(0);
 }
 
+// INTENSITY: playmapsound, to play file directly but still adding it into mapsounds and assigning entity to channel, prototype inside iengine.h in shared.
+int playmapsound(const char *s, extentity *ent, int vol, int loops)
+{ 
+    if(!vol) vol = 100;
+    int id = findsound(s, vol, mapsounds);
+    if(id < 0) id = addsound(s, vol, 0, mapsounds);
+    return playsound(id, NULL, ent, loops);
+}
+
 void stopmapsound(extentity *e)
 {
     loopv(channels)
@@ -303,7 +312,8 @@ void checkmapsounds()
         if(e.type!=ET_SOUND) continue;
         if(camera1->o.dist(e.o) < e.attr2)
         {
-            if(!e.visible) playsound(e.attr1, NULL, &e, -1);
+            // INTENSITY: use LogicEntity system to get the sound file; don't register sounds in mapscript.
+            if(!e.visible) playmapsound(LogicSystem::getLogicEntity(e).get()->getSound(), &e, 0, -1);
         }
         else if(e.visible) stopmapsound(&e);
     }

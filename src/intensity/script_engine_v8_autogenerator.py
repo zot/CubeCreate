@@ -12,7 +12,7 @@ strings = [
     'ii', 'is', 'ss', 'sd', 'si', 'oi', 'ob', 'os', 'od', 'dd', 'ds', 'do',
     'iis', 'iii', 'iid', 'ddd', 'sdd', 'sss',
     'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdi', 'ssdd', 'iiii',
-    'sdddi', 'sssdd', 'ddddi', 'sdd', 'sdddd', 'siidi', 'iiiss', 'iiisi', 'iiiii', 'idddd',
+    'sdddi', 'sdddii', 'sssdd', 'ddddi', 'sdd', 'sdddd', 'siidi', 'iiiss', 'iiisi', 'iiiii', 'idddd',
     'dddddd', 'iidddi', 'iisddd', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'sdddddd', 'ddddddd', 'iiiiddd', 'iiddddd', 'iiiiii',
     'ddddddii', 'ddddiiid', 'ssiiidi', 'iidddddd', 'iiiiiii',
     'ddddddiii', 'oidddiiii', 'idddidddi', 'dddsiiidi',

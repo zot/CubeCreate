@@ -270,6 +270,34 @@ Envmap = StaticEntity.extend({
     }
 });
 
+//! A sound effect entity (ambient sound)
+//! Plays sound you set to infinite. Properties are radius and size. Radius defaults to 100.
+//! The sound is played as long as you're in radius.
+//! With default size property (0) the sound is a point source.
+SoundEffect = StaticEntity.extend({
+    _class: "SoundEffect",
+
+    _sauerTypeIndex: 6,
+
+    attr2: new WrappedCInteger({ cGetter: 'CAPI.getAttr2', cSetter: 'CAPI.setAttr2', guiName: "radius", altName: "radius" }),
+    attr3: new WrappedCInteger({ cGetter: 'CAPI.getAttr3', cSetter: 'CAPI.setAttr3', guiName: "size", altName: "size" }),
+
+    // our soundname has only a setter.
+    soundName: new WrappedCString({ cSetter: 'CAPI.setSoundName' }),
+
+    radius: new VariableAlias("attr2"),
+    size: new VariableAlias("attr3"),
+
+    init: function(uniqueId, kwargs) {
+        this._super(uniqueId, kwargs);
+        // attr1 is the sound slot index, we replaced it
+        this.attr1 = -1;
+        this.radius = 100; // default radius is set to 100.
+        this.size = 0;
+        this.soundName = "";
+    }
+});
+
 //! A particle effect. Until this is better documented, see the Sauer documentation for
 //! the meanings of particle_type and value1-3 (editref.html in docs/).
 ParticleEffect = StaticEntity.extend({
@@ -654,6 +682,7 @@ registerEntityClass(StaticEntity, "mapmodel");
 registerEntityClass(Light, "light");
 registerEntityClass(Spotlight, "spotlight");
 registerEntityClass(Envmap, "envmap");
+registerEntityClass(SoundEffect, "sound");
 registerEntityClass(ParticleEffect, "particles");
 registerEntityClass(Mapmodel, "mapmodel");
 registerEntityClass(AreaTrigger, "mapmodel");

@@ -105,6 +105,19 @@ V8_FUNC_T(__script__setModelName, s, {
     Logging::log(Logging::DEBUG, "__script__setModelName(%s)\r\n", arg2);
     self.get()->setModel(arg2);
 } );
+V8_FUNC_T(__script__setSoundName, s, {
+    Logging::log(Logging::DEBUG, "__script__setSoundName(%s)\r\n", arg2);
+    self.get()->setSound(arg2);
+#ifdef CLIENT
+    extentity *e = self.get()->staticEntity;
+    stopmapsound(e);
+    if(camera1->o.dist(e->o) < e->attr2)
+      {
+        if(!e->visible) playmapsound(arg2, e, 0, -1);
+        else if(e->visible) stopmapsound(e);
+      }
+#endif
+} );
 V8_FUNC_T(__script__setAttachments_raw, s, { self.get()->setAttachments(arg2); } );
 V8_FUNC_T(__script__getAttachmentPosition, s, {
     vec& vposition = self->getAttachmentPosition(arg2);

@@ -301,6 +301,28 @@ void CLogicEntity::setAnimation(int _animation)
                             // leading to a negative number and segfaults in finding frame data
 }
 
+void CLogicEntity::setSound(std::string _sound)
+{
+    Logging::log(Logging::DEBUG, "setSound: %s\r\n", _sound.c_str());
+
+    // This is important as this is called before setupExtent.
+    if ((!this) || (!staticEntity && !dynamicEntity))
+        return;
+
+    Logging::log(Logging::DEBUG, "(2) setSound: %s\r\n", _sound.c_str());
+
+    soundName = _sound;
+}
+
+const char *CLogicEntity::getSound()
+{
+    // This is important as this is called before setupExtent.
+    if ((!this) || (!staticEntity && !dynamicEntity))
+        return NULL;
+
+    return soundName.c_str();
+}
+
 vec& CLogicEntity::getAttachmentPosition(std::string tag)
 {
     // If last actual render - which actually calculated the attachment positions - was recent
@@ -638,7 +660,9 @@ void LogicSystem::dismantleExtent(ScriptValuePtr scriptEntity)
     Logging::log(Logging::DEBUG, "Dismantle extent: %d\r\n", uniqueId);
 
     extentity* extent = getLogicEntity(uniqueId)->staticEntity;
-
+#ifdef CLIENT
+    if (extent->type == ET_SOUND) stopmapsound(extent);
+#endif
     removeentity(extent);
     extent->type = ET_EMPTY;
 

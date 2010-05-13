@@ -268,6 +268,18 @@
         , wrapped_code);
 
 
+// sdddii
+#define V8_FUNC_sdddii(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        std::string _arg1 = *(v8::String::Utf8Value(args[0])); const char* arg1 = _arg1.c_str(); \
+        double arg2 = args[1]->NumberValue(); if (ISNAN(arg2)) RAISE_SCRIPT_ERROR(isNAN failed on argument 1 in #new_func); \
+        double arg3 = args[2]->NumberValue(); if (ISNAN(arg3)) RAISE_SCRIPT_ERROR(isNAN failed on argument 2 in #new_func); \
+        double arg4 = args[3]->NumberValue(); if (ISNAN(arg4)) RAISE_SCRIPT_ERROR(isNAN failed on argument 3 in #new_func); \
+        int arg5 = args[4]->IntegerValue(); \
+        int arg6 = args[5]->IntegerValue(); \
+        , wrapped_code);
+
+
 // sssdd
 #define V8_FUNC_sssdd(new_func, wrapped_code) \
     V8_FUNC_GEN(new_func, \

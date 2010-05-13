@@ -264,6 +264,10 @@ extern void findplayerspawn(dynent *d, int forceent = -1, int tag = 0);
 // sound
 extern int playsound(int n, const vec *loc = NULL, extentity *ent = NULL, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);
 extern int playsoundname(const char *s, const vec *loc = NULL, int vol = 0, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);
+// INTENSITY: playmapsound, to play file directly but still adding it into mapsounds and assigning entity to channel
+extern int playmapsound(const char *s, extentity *ent = NULL, int vol = 0, int loops = 0);
+// INTENSITY: export stopmapsound, so it is useable from V8 script embedding
+extern void stopmapsound(extentity *e);
 extern bool stopsound(int n, int chanid, int fade = 0);
 extern void stopsounds();
 extern void initsound();

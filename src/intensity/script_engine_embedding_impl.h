@@ -36,6 +36,7 @@ EMBED_CAPI_FUNC("currTime", __script__currTime, 0);
 EMBED_CAPI_FUNC("setAnimation", __script__setAnimation, 2);
 EMBED_CAPI_FUNC("getStartTime", __script__getStartTime, 1);
 EMBED_CAPI_FUNC("setModelName", __script__setModelName, 2);
+EMBED_CAPI_FUNC("setSoundName", __script__setSoundName, 2);
 EMBED_CAPI_FUNC("setAttachments_raw", __script__setAttachments_raw, 2);
 EMBED_CAPI_FUNC("getAttachmentPosition", __script__getAttachmentPosition, 2);
 EMBED_CAPI_FUNC("setCanMove", __script__setCanMove, 2);
