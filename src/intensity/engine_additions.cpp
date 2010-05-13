@@ -312,6 +312,15 @@ void CLogicEntity::setSound(std::string _sound)
     Logging::log(Logging::DEBUG, "(2) setSound: %s\r\n", _sound.c_str());
 
     soundName = _sound;
+
+#ifdef CLIENT
+    stopmapsound(staticEntity);
+    if(camera1->o.dist(staticEntity->o) < staticEntity->attr2)
+      {
+        if(!staticEntity->visible) playmapsound(soundName.c_str(), staticEntity, 0, -1);
+        else if(staticEntity->visible) stopmapsound(staticEntity);
+      }
+#endif
 }
 
 const char *CLogicEntity::getSound()
