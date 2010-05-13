@@ -821,6 +821,8 @@ bool load_world(const char *mname, const char *cname)        // still supports a
               printf("\"modelName\":\"@REPLACE_MODEL_PATH@\", ");
             else
               printf("\"modelName\":\"\", ");
+            if (e.type == ET_SOUND)
+              printf("\"soundName\":\"@REPLACE_SOUND_PATH@\", ");
             printf("\"attachments\":\"[]\", ");
             if (e.type == ET_PLAYERSTART)
               printf("\"tags\":\"[start_@REPLACE_TEAM@]\", ");
