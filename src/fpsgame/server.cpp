@@ -934,6 +934,7 @@ if (i == 0) {
     void processmasterinput(const char *cmd, int cmdlen, const char *args) { assert(0); };
 
     int masterport() { assert(0); return -1; };
+    int numchannels() { return 3; };
 
     const char *defaultmaster() { return "nada/nullo/"; } ;
 //    const char *getdefaultmaster() { return "sauerbraten.org/masterserver/"; } 

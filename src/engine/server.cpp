@@ -818,6 +818,7 @@ bool setuplistenserver(bool dedicated)
         Logging::log(Logging::ERROR, "***!!! could not create server host (awaiting manual restart) !!!***");
         return false;
     }
+    enet_host_channel_limit(serverhost, server::numchannels());
     loopi(maxclients) serverhost->peers[i].data = NULL;
     address.port = server::serverinfoport(serverport > 0 ? serverport : -1);
 #if 0 // INTENSITY: no need for pongsock

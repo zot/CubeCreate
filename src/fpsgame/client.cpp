@@ -34,8 +34,6 @@ namespace game
 
     void parsemessages(int cn, fpsent *d, ucharbuf &p);
 
-    int numchannels() { return 3; }
-
     void initclientnet()
     {
     }
