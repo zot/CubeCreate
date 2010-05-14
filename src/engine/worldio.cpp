@@ -822,6 +822,8 @@ bool load_world(const char *mname, const char *cname)        // still supports a
             case ET_SOUND:
             case ET_PLAYERSTART:
             case JUMPPAD:
+            case TELEPORT:
+            case TELEDEST:
                 writeEntity = true;
                 break;
             default:
@@ -878,7 +880,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
                 }
                 case ET_PLAYERSTART:
                 {
-                    printf("SoundEffect\", {");
+                    printf("WorldMarker\", {");
                     PRINT_STD(e)
                     printf("\"modelName\":\"\", ");
                     printf("\"attachments\":\"[]\", ");
@@ -904,6 +906,39 @@ bool load_world(const char *mname, const char *cname)        // still supports a
                     printf("\"modelName\":\"areatrigger\", ");
                     printf("\"attachments\":\"[]\", ");
                     printf("\"tags\":\"[]\", ");
+                    printf("\"_persistent\":\"true\"");
+                    break;
+                }
+                case TELEPORT:
+                {
+                    printf("Teleporter\", {");
+                    printf("\"target\":\"[0|0|0]\", ");
+                    printf("\"targetYaw\":\"0\", ");
+                    printf("\"teledest\":\"%d\", ", e.attr1);
+                    printf("\"attr1\":\"0\", ");
+                    printf("\"position\":\"[%f|%f|%f]\", ", e.o.x, e.o.y, e.o.z);
+                    printf("\"attr2\":\"%d\", ", e.attr2);
+                    printf("\"attr3\":\"%d\", ", e.attr3);
+                    printf("\"attr4\":\"%d\", ", e.attr4);
+                    printf("\"animation\":\"130\", ");
+                    printf("\"modelName\":\"%s\", ", (e.attr2 < 0) ? "" : "@REPLACE_MODEL_PATH@");
+                    printf("\"attachments\":\"[]\", ");
+                    printf("\"tags\":\"[]\", ");
+                    printf("\"_persistent\":\"true\"");
+                    break;
+                }
+                case TELEDEST:
+                {
+                    printf("WorldMarker\", {");
+                    printf("\"attr1\":\"%d\", ", e.attr1);
+                    printf("\"attr2\":\"0\", ");
+                    printf("\"attr3\":\"%d\", ", e.attr3);
+                    printf("\"attr4\":\"%d\", ", e.attr4);
+                    printf("\"position\":\"[%f|%f|%f]\", ", e.o.x, e.o.y, e.o.z);
+                    printf("\"animation\":\"130\", ");
+                    printf("\"modelName\":\"\", ");
+                    printf("\"attachments\":\"[]\", ");
+                    printf("\"tags\":\"[teledest_%i]\", ", e.attr2);
                     printf("\"_persistent\":\"true\"");
                     break;
                 }
