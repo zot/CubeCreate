@@ -1186,7 +1186,7 @@ enet_protocol_check_timeouts (ENetHost * host, ENetPeer * peer, ENetEvent * even
           
        ++ peer -> packetsLost;
 
-       outgoingCommand -> roundTripTimeout *= 2;
+//     outgoingCommand -> roundTripTimeout *= 2; // INTENSITY: Removed this, no need for exponential backoff
 
        enet_list_insert (insertPosition, enet_list_remove (& outgoingCommand -> outgoingCommandList));
 
