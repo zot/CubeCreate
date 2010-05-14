@@ -801,36 +801,125 @@ bool load_world(const char *mname, const char *cname)        // still supports a
         }
         // INTENSITY: Print ent out, useful for copy-paste importing sauer maps
         // we usually begin with 3 on emptymap
+
+#define PRINT_STD(e) \
+    printf("\"attr1\":\"%d\", ", e.attr1); \
+    printf("\"attr2\":\"%d\", ", e.attr2); \
+    printf("\"attr3\":\"%d\", ", e.attr3); \
+    printf("\"attr4\":\"%d\", ", e.attr4); \
+    printf("\"position\":\"[%f|%f|%f]\", ", e.o.x, e.o.y, e.o.z); \
+    printf("\"animation\":\"130\", ");
+
+        static bool writeEntity = false;
+
+        switch (e.type) // check if to write the entity
+        {
+            case ET_LIGHT:
+            case ET_SPOTLIGHT:
+            case ET_ENVMAP:
+            case ET_PARTICLES:
+            case ET_MAPMODEL:
+            case ET_SOUND:
+            case ET_PLAYERSTART:
+            case JUMPPAD:
+                writeEntity = true;
+                break;
+            default:
+                writeEntity = false;
+                break;
+        }
+
         static int uniqueId = 3;
-        printf("[%d, \"", uniqueId);
-        if (e.type == ET_LIGHT) printf("Light");
-        else if (e.type == ET_MAPMODEL) printf("Mapmodel");
-        else if (e.type == ET_PLAYERSTART) printf("WorldMarker");
-        else if (e.type == ET_ENVMAP) printf("Envmap");
-        else if (e.type == ET_PARTICLES) printf("ParticleEffect");
-        else if (e.type == ET_SPOTLIGHT) printf("Spotlight");
-        else if (e.type == ET_SOUND) printf("SoundEffect");
-        printf("\", {");
-            printf("\"attr1\":\"%d\", ", e.attr1);
-            printf("\"attr2\":\"%d\", ", e.attr2);
-            printf("\"attr3\":\"%d\", ", e.attr3);
-            printf("\"attr4\":\"%d\", ", e.attr4);
-            printf("\"position\":\"[%f|%f|%f]\", ", e.o.x, e.o.y, e.o.z);
-            printf("\"animation\":\"130\", ");
-            if (e.type == ET_MAPMODEL)
-              printf("\"modelName\":\"@REPLACE_MODEL_PATH@\", ");
-            else
-              printf("\"modelName\":\"\", ");
-            if (e.type == ET_SOUND)
-              printf("\"soundName\":\"@REPLACE_SOUND_PATH@\", ");
-            printf("\"attachments\":\"[]\", ");
-            if (e.type == ET_PLAYERSTART)
-              printf("\"tags\":\"[start_@REPLACE_TEAM@]\", ");
-            else
-              printf("\"tags\":\"[]\", ");
-            printf("\"_persistent\":\"true\"");
-        printf("}], \r\n");
-        uniqueId++;
+        if (writeEntity)
+        {
+            printf("[%d, \"", uniqueId);
+            switch (e.type)
+            {
+                case ET_LIGHT:
+                {
+                    printf("Light\", {");
+                    goto standardEntity;
+                }
+                case ET_SPOTLIGHT:
+                {
+                    printf("Spotlight\", {");
+                    goto standardEntity;
+                }
+                case ET_ENVMAP:
+                {
+                    printf("Envmap\", {");
+                    goto standardEntity;
+                }
+                case ET_PARTICLES:
+                {
+                    printf("ParticleEffect\", {");
+                    goto standardEntity;
+                }
+                case ET_MAPMODEL:
+                {
+                    printf("Mapmodel\", {");
+                    PRINT_STD(e)
+                    printf("\"modelName\":\"@REPLACE_MODEL_PATH@\", ");
+                    printf("\"attachments\":\"[]\", ");
+                    printf("\"tags\":\"[]\", ");
+                    printf("\"_persistent\":\"true\"");
+                    break;
+                }
+                case ET_SOUND:
+                {
+                    printf("SoundEffect\", {");
+                    PRINT_STD(e)
+                    printf("\"modelName\":\"\", ");
+                    printf("\"soundName\":\"@REPLACE_SOUND_PATH@\", ");
+                    printf("\"attachments\":\"[]\", ");
+                    printf("\"tags\":\"[]\", ");
+                    printf("\"_persistent\":\"true\"");
+                    break;
+                }
+                case ET_PLAYERSTART:
+                {
+                    printf("SoundEffect\", {");
+                    PRINT_STD(e)
+                    printf("\"modelName\":\"\", ");
+                    printf("\"attachments\":\"[]\", ");
+                    printf("\"tags\":\"[start_@REPLACE_TEAM@]\", ");
+                    printf("\"_persistent\":\"true\"");
+                    break;
+                }
+                case JUMPPAD:
+                {
+                    printf("JumpPad\", {");
+                    printf("\"jumpVelocity\":\"[%f|%f|%f]\", ", (int)(char)e.attr3*10.0f, (int)(char)e.attr2*10.0f, e.attr1*12.5f);
+                    printf("\"padModel\":\"\", ");
+                    printf("\"padRotate\":\"false\", ");
+                    printf("\"padPitch\":\"0\", ");
+                    printf("\"attr1\":\"0\", ");
+                    printf("\"collisionRadiusWidth\":\"5\", ");
+                    printf("\"collisionRadiusHeight\":\"1\", ");
+                    printf("\"position\":\"[%f|%f|%f]\", ", e.o.x, e.o.y, e.o.z);
+                    printf("\"attr2\":\"-1\", ");
+                    printf("\"attr3\":\"0\", ");
+                    printf("\"attr4\":\"0\", ");
+                    printf("\"animation\":\"130\", ");
+                    printf("\"modelName\":\"areatrigger\", ");
+                    printf("\"attachments\":\"[]\", ");
+                    printf("\"tags\":\"[]\", ");
+                    printf("\"_persistent\":\"true\"");
+                    break;
+                }
+                default: standardEntity:
+                {
+                    PRINT_STD(e)
+                    printf("\"modelName\":\"\", ");
+                    printf("\"attachments\":\"[]\", ");
+                    printf("\"tags\":\"[]\", ");
+                    printf("\"_persistent\":\"true\"");
+                    break;
+                }
+            }
+            printf("}],\r\n");
+            uniqueId++;
+        }
         // INTENSITY: end Print ent out
     }
     if(ebuf) delete[] ebuf;

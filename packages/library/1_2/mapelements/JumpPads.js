@@ -9,11 +9,17 @@ JumpPadPlugin = {
     _class: "JumpPad",
 
     jumpVelocity: new StateArrayFloat(),
+    padModel: new StateString(),
+    padRotate: new StateBoolean(),
+    padPitch: new StateInteger(),
 
     shouldAct: true,
 
     init: function() {
         this.jumpVelocity = [0, 0, 500]; // Default
+        this.padModel = "jumppad";
+        this.padRotate = true;
+        this.padPitch = 90;
     },
 
     clientActivate: function() {
@@ -38,9 +44,11 @@ JumpPadPlugin = {
     renderDynamic: function() {
         var o = this.position;
         var flags = MODEL.LIGHT | MODEL.CULL_VFC | MODEL.CULL_OCCLUDED | MODEL.CULL_QUERY | MODEL.FULLBRIGHT | MODEL.CULL_DIST | MODEL.DYNSHADOW;
-        var yaw = -(Global.time*120) % 360;
-//log(ERROR, "yaw:" + yaw + ',' + Global.time + ":" + Global.time % 360);
-        var args = [this, 'jumppad', ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, yaw, 90, flags, 0];
+        if (this.padRotate) {
+            var yaw = -(Global.time*120) % 360;
+            //log(ERROR, "yaw:" + yaw + ',' + Global.time + ":" + Global.time % 360);
+        }
+        var args = [this, this.padModel, ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, this.padRotate ? yaw : this.yaw, this.padPitch, flags, 0];
         CAPI.renderModel.apply(this, args);
     },
 };
