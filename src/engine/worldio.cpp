@@ -916,12 +916,15 @@ bool load_world(const char *mname, const char *cname)        // still supports a
                     printf("\"targetYaw\":\"0\", ");
                     printf("\"teledest\":\"%d\", ", e.attr1);
                     printf("\"attr1\":\"0\", ");
+                    printf("\"collisionRadiusWidth\":\"5\", ");
+                    printf("\"collisionRadiusHeight\":\"5\", ");
                     printf("\"position\":\"[%f|%f|%f]\", ", e.o.x, e.o.y, e.o.z);
                     printf("\"attr2\":\"%d\", ", e.attr2);
                     printf("\"attr3\":\"%d\", ", e.attr3);
                     printf("\"attr4\":\"%d\", ", e.attr4);
                     printf("\"animation\":\"130\", ");
-                    printf("\"modelName\":\"%s\", ", (e.attr2 < 0) ? "" : "@REPLACE_MODEL_PATH@");
+                    printf("\"modelName\":\"%s\", ", (e.attr2 < 0) ? "areatrigger" : "@REPLACE_MODEL_PATH@");
+                    printf("\"soundName\":\"0ad/alarmcreatemiltaryfoot_1.ogg\", ");
                     printf("\"attachments\":\"[]\", ");
                     printf("\"tags\":\"[]\", ");
                     printf("\"_persistent\":\"true\"");
