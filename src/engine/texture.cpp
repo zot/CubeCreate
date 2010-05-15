@@ -2736,7 +2736,7 @@ void mergenormalmaps(char *heightfile, char *normalfile) // jpg/png/tga + tga ->
 }
 
 COMMAND(flipnormalmapy, "ss");
-COMMAND(mergenormalmaps, "sss");
+COMMAND(mergenormalmaps, "ss");
 
 #include "intensity_texture.cpp" // INTENSITY
 
