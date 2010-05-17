@@ -112,20 +112,22 @@ CustomEffect = {
                     this.drops = filter(function(drop) {
                         var bottom = drop.position.copy();
                         bottom.z -= size;
-                        Effect.flare(PARTICLE.STREAK, drop.position, bottom, 0, dropColor, 0.3);
+                        bottom.x -= xDirectionDiff;
+                        bottom.y -= yDirectionDiff;
+                        Effect.flare(PARTICLE.STREAK, drop.position, bottom, 0, dropColor, rainThickness);
                         drop.position.z -= speed*delta;
                         if (drop.position.z > drop.finalZ) {
                             /* // Experimental water splash code
                             if (World.getMaterial(drop.position) === MATERIAL.WATER) {
 								drop.position.z = drop.position.z + 5;
-                                Effect.addDecal(DECAL.BLOOD, drop.position, new Vector3(0,0,1), 7, 0x0000ff);
+                                Effect.splash(PARTICLE.SPARK, 15, 0.1, drop.position, splashColor, 1.0, 70, -1);
                                 return false;
                             }
                             */
                             return true;
                         } else {
-                            drop.position.z = drop.finalZ - 5;
-                            Effect.splash(PARTICLE.SPARK, 15, 0.1, drop.position, splashColor, 1.0, 70, -1);
+                            drop.position.z = drop.finalZ - 2;
+                            Effect.splash(PARTICLE.SPARK, 15, 0.1, drop.position, splashColor, 0.2, 70, -1);
                             return false;
                         }
                     }, this.drops);

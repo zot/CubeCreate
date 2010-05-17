@@ -482,14 +482,17 @@ Map.preloadModel('stromar');
 if (Global.CLIENT) {
     Global.queuedActions.push(function() {
         CustomEffect.Rain.start({
-            frequency: 0.05,
-            spawnAtOnce: 190,
-            maxAmount: 1000,
-            speed: 1000,
-            size: 30,
+            frequency: 0.1,
+            spawnAtOnce: 400,
+            maxAmount: 2000,
+            speed: 1300,
+            size: 15,
             radius: 200,
-            dropColor: 0x1233A0,
+            dropColor: 0xbdbdbd,
             splashColor: 0xCCDDFF,
+            rainThickness: 0.05,
+            xDirectionDiff: 0,
+            yDirectionDiff: 0, 
         });
     });
 }

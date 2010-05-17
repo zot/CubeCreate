@@ -491,6 +491,7 @@ VSlot *findvslot(Slot &slot, const VSlot &src, const VSlot &delta)
 void clearslots() { };
 void compactvslots(cube *c, int n) { };
 int compactvslots() { return 0; };
+void compactvslot(int &index) { };
 void mergevslot(VSlot &dst, const VSlot &src, const VSlot &delta) { };
 
 const char *getshaderparamname(const char *name) { return ""; };
