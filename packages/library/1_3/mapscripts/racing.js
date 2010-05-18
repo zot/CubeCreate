@@ -55,6 +55,9 @@ GamePlayer = registerEntityClass(
             Vehicles.extraPlugins.floorOrientation,
 //            Vehicles.extraPlugins.limitYawing,
             Health.plugin,
+            {
+                visualPainEffect: function() { },
+            },
             GameManager.playerPlugin,
             Chat.playerPlugin,
             WorldSequences.plugins.player,
@@ -124,8 +127,8 @@ GamePlayer = registerEntityClass(
                         }
 
                         CAPI.renderModel.apply(this, this.renderingArgs);
-                        // disable looking up and down
-                        CAPI.forcePitch(0);
+                        // disable looking up and down when not in editmode
+                        if (!isPlayerEditing(this)) CAPI.forcePitch(0);
                     };
                 },
 

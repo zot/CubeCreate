@@ -319,6 +319,7 @@ EMBED_CAPI_FUNC("getMaterial", __script__getMaterial, 3);
     EMBED_CAPI_FUNC("forcePitch", __script__forcePitch__, 1);
     EMBED_CAPI_FUNC("forceRoll", __script__forceRoll__, 1);
     EMBED_CAPI_FUNC("forceFov", __script__forceFov__, 1);
+    EMBED_CAPI_FUNC("resetCamera", __script__resetCamera__, 0);
     EMBED_CAPI_FUNC("getCamera", __script__getCamera__, 0);
 #endif
 

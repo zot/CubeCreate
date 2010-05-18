@@ -1790,6 +1790,10 @@ V8_FUNC_ddd(__script__getMaterial, {
         CameraControl::forceFov(arg1);
     });
 
+    V8_FUNC_NOPARAM(__script__resetCamera__, {
+        CameraControl::positionCamera(CameraControl::getCamera());
+    });
+
     V8_FUNC_NOPARAM(__script__getCamera__, {
         physent *camera = CameraControl::getCamera();
 
