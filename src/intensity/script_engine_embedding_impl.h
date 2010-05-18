@@ -314,6 +314,11 @@ EMBED_CAPI_FUNC("getMaterial", __script__getMaterial, 3);
 
 #ifdef CLIENT
     EMBED_CAPI_FUNC("forceCamera", __script__forceCamera__, 7);
+    EMBED_CAPI_FUNC("forcePosition", __script__forcePosition__, 3);
+    EMBED_CAPI_FUNC("forceYaw", __script__forceYaw__, 1);
+    EMBED_CAPI_FUNC("forcePitch", __script__forcePitch__, 1);
+    EMBED_CAPI_FUNC("forceRoll", __script__forceRoll__, 1);
+    EMBED_CAPI_FUNC("forceFov", __script__forceFov__, 1);
     EMBED_CAPI_FUNC("getCamera", __script__getCamera__, 0);
 #endif
 

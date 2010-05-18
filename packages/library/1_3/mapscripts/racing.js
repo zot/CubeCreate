@@ -124,6 +124,8 @@ GamePlayer = registerEntityClass(
                         }
 
                         CAPI.renderModel.apply(this, this.renderingArgs);
+                        // disable looking up and down
+                        CAPI.forcePitch(0);
                     };
                 },
 

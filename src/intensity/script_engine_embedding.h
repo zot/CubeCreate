@@ -1769,6 +1769,27 @@ V8_FUNC_ddd(__script__getMaterial, {
         CameraControl::forceCamera(position, arg4, arg5, arg6, arg7);
     });
 
+    V8_FUNC_ddd(__script__forcePosition__, {
+        vec position(arg1, arg2, arg3);
+        CameraControl::forcePosition(position);
+    });
+
+    V8_FUNC_d(__script__forceYaw__, {
+        CameraControl::forceYaw(arg1);
+    });
+
+    V8_FUNC_d(__script__forcePitch__, {
+        CameraControl::forcePitch(arg1);
+    });
+
+    V8_FUNC_d(__script__forceRoll__, {
+        CameraControl::forceRoll(arg1);
+    });
+
+    V8_FUNC_d(__script__forceFov__, {
+        CameraControl::forceFov(arg1);
+    });
+
     V8_FUNC_NOPARAM(__script__getCamera__, {
         physent *camera = CameraControl::getCamera();
 
