@@ -8,7 +8,6 @@ T7g - Creative Commons 0/Public domain/noone should have to remake these simple 
 You don't even need to credit me, I don't care at all.
 
 base.png
-lenflares.png
 lightning.jpg
 spark.png
 
@@ -24,8 +23,6 @@ kripken - Syntensity - CC-BY-SA:
 
 blob.png
 circle.png
-flames.png
-scorch.png
 
 RaZgRiZ - Sauerbraten - free to use:
 
@@ -34,3 +31,12 @@ explosion.png
 OpenArena - GPL:
 
 bullet.png
+
+baby-rabbit - public domain:
+
+lensflares.png
+flames.png
+
+makke - CC-BY-NC-SA:
+
+scorch.png

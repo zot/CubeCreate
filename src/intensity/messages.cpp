@@ -1,4 +1,5 @@
 
+
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
@@ -1956,35 +1957,13 @@ namespace MessageSystem
 #endif
 
 
-// RequestPrivateEditMode
+// ParticleSplashDToClients
 
-    void send_RequestPrivateEditMode()
-    {
-        Logging::log(Logging::DEBUG, "Sending a message of type RequestPrivateEditMode (1034)\r\n");
-        INDENT_LOG(Logging::DEBUG);
-
-        game::addmsg(1034, "r");
-    }
-
-#ifdef SERVER
-    void RequestPrivateEditMode::receive(int receiver, int sender, ucharbuf &p)
-    {
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type RequestPrivateEditMode (1034)\r\n");
-
-
-        if (!ServerSystem::isRunningMap()) return;
-        REFLECT_PYTHON( request_private_edit );
-        request_private_edit(sender);
-    }
-#endif
-
-// NotifyPrivateEditMode
-
-    void send_NotifyPrivateEditMode(int clientNumber)
+    void send_ParticleSplashDToClients(int clientNumber, int _type, int num, int fade, float x, float y, float z)
     {
         int exclude = -1; // Set this to clientNumber to not send to
 
-        Logging::log(Logging::DEBUG, "Sending a message of type NotifyPrivateEditMode (1035)\r\n");
+        Logging::log(Logging::DEBUG, "Sending a message of type ParticleSplashDToClients (1034)\r\n");
         INDENT_LOG(Logging::DEBUG);
 
          
@@ -2019,7 +1998,163 @@ namespace MessageSystem
                 #ifdef SERVER
                     Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
                 #endif
-                sendf(clientNumber, MAIN_CHANNEL, "ri", 1035);
+                sendf(clientNumber, MAIN_CHANNEL, "iiiiiii", 1034, _type, num, fade, int(x*DMF), int(y*DMF), int(z*DMF));
+
+            }
+        }
+    }
+
+#ifdef CLIENT
+    void ParticleSplashDToClients::receive(int receiver, int sender, ucharbuf &p)
+    {
+        bool is_npc;
+        is_npc = false;
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type ParticleSplashDToClients (1034)\r\n");
+
+        int _type = getint(p);
+        int num = getint(p);
+        int fade = getint(p);
+        float x = float(getint(p))/DMF;
+        float y = float(getint(p))/DMF;
+        float z = float(getint(p))/DMF;
+
+        vec pos(x,y,z);
+        particle_splash_d(_type, num, fade, pos);
+    }
+#endif
+
+
+// ParticleSplashEToClients
+
+    void send_ParticleSplashEToClients(int clientNumber, int _type, int num, int fade, float x, float y, float z)
+    {
+        int exclude = -1; // Set this to clientNumber to not send to
+
+        Logging::log(Logging::DEBUG, "Sending a message of type ParticleSplashEToClients (1035)\r\n");
+        INDENT_LOG(Logging::DEBUG);
+
+         
+
+        int start, finish;
+        if (clientNumber == -1)
+        {
+            // Send to all clients
+            start  = 0;
+            finish = getnumclients() - 1;
+        } else {
+            start  = clientNumber;
+            finish = clientNumber;
+        }
+
+#ifdef SERVER
+        int testUniqueId;
+#endif
+        for (clientNumber = start; clientNumber <= finish; clientNumber++)
+        {
+            if (clientNumber == exclude) continue;
+#ifdef SERVER
+            fpsent* fpsEntity = dynamic_cast<fpsent*>( FPSClientInterface::getPlayerByNumber(clientNumber) );
+            bool serverControlled = fpsEntity ? fpsEntity->serverControlled : false;
+
+            testUniqueId = FPSServerInterface::getUniqueId(clientNumber);
+            if ( (!serverControlled && testUniqueId != DUMMY_SINGLETON_CLIENT_UNIQUE_ID) || // If a remote client, send even if negative (during login process)
+                 (false && testUniqueId == DUMMY_SINGLETON_CLIENT_UNIQUE_ID) || // If need to send to dummy server, send there
+                 (false && testUniqueId != DUMMY_SINGLETON_CLIENT_UNIQUE_ID && serverControlled) )  // If need to send to npcs, send there
+#endif
+            {
+                #ifdef SERVER
+                    Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
+                #endif
+                sendf(clientNumber, MAIN_CHANNEL, "iiiiiii", 1035, _type, num, fade, int(x*DMF), int(y*DMF), int(z*DMF));
+
+            }
+        }
+    }
+
+#ifdef CLIENT
+    void ParticleSplashEToClients::receive(int receiver, int sender, ucharbuf &p)
+    {
+        bool is_npc;
+        is_npc = false;
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type ParticleSplashEToClients (1035)\r\n");
+
+        int _type = getint(p);
+        int num = getint(p);
+        int fade = getint(p);
+        float x = float(getint(p))/DMF;
+        float y = float(getint(p))/DMF;
+        float z = float(getint(p))/DMF;
+
+        vec pos(x,y,z);
+        particle_splash_e(_type, num, fade, pos);
+    }
+#endif
+
+
+// RequestPrivateEditMode
+
+    void send_RequestPrivateEditMode()
+    {
+        Logging::log(Logging::DEBUG, "Sending a message of type RequestPrivateEditMode (1036)\r\n");
+        INDENT_LOG(Logging::DEBUG);
+
+        game::addmsg(1036, "r");
+    }
+
+#ifdef SERVER
+    void RequestPrivateEditMode::receive(int receiver, int sender, ucharbuf &p)
+    {
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type RequestPrivateEditMode (1036)\r\n");
+
+
+        if (!ServerSystem::isRunningMap()) return;
+        REFLECT_PYTHON( request_private_edit );
+        request_private_edit(sender);
+    }
+#endif
+
+// NotifyPrivateEditMode
+
+    void send_NotifyPrivateEditMode(int clientNumber)
+    {
+        int exclude = -1; // Set this to clientNumber to not send to
+
+        Logging::log(Logging::DEBUG, "Sending a message of type NotifyPrivateEditMode (1037)\r\n");
+        INDENT_LOG(Logging::DEBUG);
+
+         
+
+        int start, finish;
+        if (clientNumber == -1)
+        {
+            // Send to all clients
+            start  = 0;
+            finish = getnumclients() - 1;
+        } else {
+            start  = clientNumber;
+            finish = clientNumber;
+        }
+
+#ifdef SERVER
+        int testUniqueId;
+#endif
+        for (clientNumber = start; clientNumber <= finish; clientNumber++)
+        {
+            if (clientNumber == exclude) continue;
+#ifdef SERVER
+            fpsent* fpsEntity = dynamic_cast<fpsent*>( FPSClientInterface::getPlayerByNumber(clientNumber) );
+            bool serverControlled = fpsEntity ? fpsEntity->serverControlled : false;
+
+            testUniqueId = FPSServerInterface::getUniqueId(clientNumber);
+            if ( (!serverControlled && testUniqueId != DUMMY_SINGLETON_CLIENT_UNIQUE_ID) || // If a remote client, send even if negative (during login process)
+                 (false && testUniqueId == DUMMY_SINGLETON_CLIENT_UNIQUE_ID) || // If need to send to dummy server, send there
+                 (false && testUniqueId != DUMMY_SINGLETON_CLIENT_UNIQUE_ID && serverControlled) )  // If need to send to npcs, send there
+#endif
+            {
+                #ifdef SERVER
+                    Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
+                #endif
+                sendf(clientNumber, MAIN_CHANNEL, "ri", 1037);
 
             }
         }
@@ -2030,7 +2165,7 @@ namespace MessageSystem
     {
         bool is_npc;
         is_npc = false;
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type NotifyPrivateEditMode (1035)\r\n");
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type NotifyPrivateEditMode (1037)\r\n");
 
 
         IntensityGUI::showMessage("", "Server: You are now in private edit mode");
@@ -2076,6 +2211,8 @@ void MessageManager::registerAll()
     registerMessageType( new DoClick() );
     registerMessageType( new MapUpdated() );
     registerMessageType( new ParticleSplashToClients() );
+    registerMessageType( new ParticleSplashDToClients() );
+    registerMessageType( new ParticleSplashEToClients() );
     registerMessageType( new RequestPrivateEditMode() );
     registerMessageType( new NotifyPrivateEditMode() );
 }

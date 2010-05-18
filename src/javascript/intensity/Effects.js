@@ -17,24 +17,33 @@ PARTICLE = {
     BLOOD: 0,
     WATER: 1,
     SMOKE: 2,
-    STEAM: 3,
-    FLAME: 4,
-    FIREBALL1: 5,
-    FIREBALL2: 6,
-    FIREBALL3: 7,
-    STREAK: 8,
-    LIGHTNING: 9,
-    EXPLOSION: 10,
-    EXPLOSION_NO_GLARE: 11,
-    SPARK: 12,
-    EDIT: 13,
-    MUZZLE_FLASH1: 14,
-    MUZZLE_FLASH2: 15,
-    MUZZLE_FLASH3: 16,
-    TEXT: 17,
-    METER: 18,
-    METER_VS: 19,
-    LENS_FLARE: 20
+    SOFTSMOKE: 3,
+    STEAM: 4,
+    FLAME: 5,
+    FIREBALL1: 6,
+    FIREBALL2: 7,
+    FIREBALL3: 8,
+    STREAK: 9,
+    LIGHTNING: 10,
+    EXPLOSION: 11,
+    EXPLOSION_NO_GLARE: 12,
+    SPARK: 13,
+    EDIT: 14,
+    MUZZLE_FLASH1: 15,
+    MUZZLE_FLASH2: 16,
+    MUZZLE_FLASH3: 17,
+    MUZZLE_FLASH4: 18,
+    MUZZLE_FLASH5: 19,
+    TEXT: 20,
+    METER: 21,
+    METER_VS: 22,
+    LENS_FLARE: 23,
+    FLAME1: 24,
+    FLAME2: 25,
+    FLAME3: 26,
+    FLAME4: 27,
+    SNOW: 28,
+    RAIN: 29
 };
 
 BOUNCER = {
@@ -105,6 +114,32 @@ Effect = {
         } else {
             // On server, send message to clients
             MessageSystem.send(MessageSystem.ALL_CLIENTS, CAPI.ParticleSplashToClients, _type, num, integer(fade*1000), position.x, position.y, position.z); // TODO: last 4 parameters
+        }
+    },
+
+    splashD: function (_type, num, fade, position, color, size, radius, gravity) {
+        if (Global.CLIENT) {
+            color = defaultValue(color, 0xFFFFFF);
+            size = defaultValue(size, 1.0);
+            radius = defaultValue(radius, 150);
+            gravity = defaultValue(gravity, 2);
+            CAPI.particleSplashD(_type, num, integer(fade*1000), position.x, position.y, position.z, color, size, radius, gravity);
+        } else {
+            // On server, send message to clients
+            MessageSystem.send(MessageSystem.ALL_CLIENTS, CAPI.ParticleSplashDToClients, _type, num, integer(fade*1000), position.x, position.y, position.z); // TODO: last 4 parameters
+        }
+    },
+
+    splashE: function (_type, num, fade, position, color, size, radius, gravity) {
+        if (Global.CLIENT) {
+            color = defaultValue(color, 0xFFFFFF);
+            size = defaultValue(size, 1.0);
+            radius = defaultValue(radius, 150);
+            gravity = defaultValue(gravity, 2);
+            CAPI.particleSplashE(_type, num, integer(fade*1000), position.x, position.y, position.z, color, size, radius, gravity);
+        } else {
+            // On server, send message to clients
+            MessageSystem.send(MessageSystem.ALL_CLIENTS, CAPI.ParticleSplashEToClients, _type, num, integer(fade*1000), position.x, position.y, position.z); // TODO: last 4 parameters
         }
     },
 

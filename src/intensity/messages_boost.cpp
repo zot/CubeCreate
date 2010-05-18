@@ -1,4 +1,5 @@
 
+
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
@@ -139,6 +140,12 @@
 
     // ParticleSplashToClients
     exposeToPython("ParticleSplashToClients", &MessageSystem::send_ParticleSplashToClients);
+
+    // ParticleSplashDToClients
+    exposeToPython("ParticleSplashDToClients", &MessageSystem::send_ParticleSplashDToClients);
+
+    // ParticleSplashEToClients
+    exposeToPython("ParticleSplashEToClients", &MessageSystem::send_ParticleSplashEToClients);
 
 #ifdef CLIENT
     // RequestPrivateEditMode

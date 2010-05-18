@@ -9,7 +9,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Events');
 
 Rocket = Projectiles.Projectile.extend({
     radius: 2,
-    visualRadius: 4,
+    visualRadius: 20,
     color: 0xDCBBAA,
     explosionPower: 100.0,
     speed: 160.0,
@@ -47,7 +47,7 @@ Rocket = Projectiles.Projectile.extend({
     render: function() {
         Effect.splash(PARTICLE.SMOKE, 2, 0.3, this.position, 0xF0F0F0, 1.2, 50, -20);
         Effect.flame(PARTICLE.FLAME, this.position, 0.5, 0.5, 0xBB8877, 2, 3.0, 100, 0.4, -6);
-        Effect.addDynamicLight(this.position, this.visualRadius*9, this.color);
+        Effect.addDynamicLight(this.position, this.visualRadius*1.8, this.color);
     },
 });
 
@@ -83,7 +83,7 @@ RocketGun = Projectiles.Gun.extend({
                 var targetData = Firing.findTarget(shooter, currentOriginPosition, targetingOrigin, targetPosition, 2048);
                 var currentTargetPosition = targetData.target;
 
-                Effect.fireball(PARTICLE.EXPLOSION_NO_GLARE, currentOriginPosition, 3, 0.5, 0xFF775F, 3);
+                Effect.fireball(PARTICLE.EXPLOSION, currentOriginPosition, 3, 0.5, 0xFF775F, 3);
                 Effect.addDynamicLight(currentOriginPosition, 20, 0xFF775F, 0.8, 0.1, 0, 10);
 
                 Sound.play('yo_frankie/DeathFlash.wav', currentOriginPosition);

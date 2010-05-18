@@ -121,6 +121,8 @@ EMBED_CAPI_FUNC("rayFloor", __script__rayFloor, 4);
 #ifdef CLIENT
     EMBED_CAPI_FUNC("addDecal", __script__addDecal, 12);
     EMBED_CAPI_FUNC("particleSplash", __script__particleSplash, 6);
+    EMBED_CAPI_FUNC("particleSplashD", __script__particleSplashD, 6);
+    EMBED_CAPI_FUNC("particleSplashE", __script__particleSplashE, 6);
     EMBED_CAPI_FUNC("particleFireball", __script__particleFireball, 8);
     EMBED_CAPI_FUNC("particleFlare", __script__particleFlare, 10);
     EMBED_CAPI_FUNC("particleTrail", __script__particleTrail, 11);
@@ -140,6 +142,8 @@ EMBED_CAPI_FUNC("rayFloor", __script__rayFloor, 4);
 
 EMBED_CAPI_FUNC("PersonalServerMessage", __script__PersonalServerMessage, 4);
 EMBED_CAPI_FUNC("ParticleSplashToClients", __script__ParticleSplashToClients, 7);
+EMBED_CAPI_FUNC("ParticleSplashDToClients", __script__ParticleSplashDToClients, 7);
+EMBED_CAPI_FUNC("ParticleSplashEToClients", __script__ParticleSplashEToClients, 7);
 EMBED_CAPI_FUNC("SoundToClientsByName", __script__SoundToClientsByName, 6);
 EMBED_CAPI_FUNC("DoClick", __script__DoClick, 6);
 EMBED_CAPI_FUNC("StateDataChangeRequest", __script__StateDataChangeRequest, 3);

@@ -836,6 +836,34 @@ ParticleSplashToClients(server->client)
         particle_splash(_type, num, fade, pos);
 end
 
+ParticleSplashDToClients(server->client)
+    unreliable
+    implicit clientNumber
+    int _type
+    int num
+    int fade
+    float x
+    float y
+    float z
+    receive:
+        vec pos(x,y,z);
+        particle_splash_d(_type, num, fade, pos);
+end
+
+ParticleSplashEToClients(server->client)
+    unreliable
+    implicit clientNumber
+    int _type
+    int num
+    int fade
+    float x
+    float y
+    float z
+    receive:
+        vec pos(x,y,z);
+        particle_splash_e(_type, num, fade, pos);
+end
+
 // Request to enter the server into private edit mode
 RequestPrivateEditMode(client->server)
     receive:

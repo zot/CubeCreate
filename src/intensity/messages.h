@@ -1,4 +1,5 @@
 
+
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
@@ -459,11 +460,39 @@ struct ParticleSplashToClients : MessageType
 void send_ParticleSplashToClients(int clientNumber, int _type, int num, int fade, float x, float y, float z);
 
 
+// ParticleSplashDToClients
+
+struct ParticleSplashDToClients : MessageType
+{
+    ParticleSplashDToClients() : MessageType(1034, "ParticleSplashDToClients") { };
+
+#ifdef CLIENT
+    void receive(int receiver, int sender, ucharbuf &p);
+#endif
+};
+
+void send_ParticleSplashDToClients(int clientNumber, int _type, int num, int fade, float x, float y, float z);
+
+
+// ParticleSplashEToClients
+
+struct ParticleSplashEToClients : MessageType
+{
+    ParticleSplashEToClients() : MessageType(1035, "ParticleSplashEToClients") { };
+
+#ifdef CLIENT
+    void receive(int receiver, int sender, ucharbuf &p);
+#endif
+};
+
+void send_ParticleSplashEToClients(int clientNumber, int _type, int num, int fade, float x, float y, float z);
+
+
 // RequestPrivateEditMode
 
 struct RequestPrivateEditMode : MessageType
 {
-    RequestPrivateEditMode() : MessageType(1034, "RequestPrivateEditMode") { };
+    RequestPrivateEditMode() : MessageType(1036, "RequestPrivateEditMode") { };
 
 #ifdef SERVER
     void receive(int receiver, int sender, ucharbuf &p);
@@ -477,7 +506,7 @@ void send_RequestPrivateEditMode();
 
 struct NotifyPrivateEditMode : MessageType
 {
-    NotifyPrivateEditMode() : MessageType(1035, "NotifyPrivateEditMode") { };
+    NotifyPrivateEditMode() : MessageType(1037, "NotifyPrivateEditMode") { };
 
 #ifdef CLIENT
     void receive(int receiver, int sender, ucharbuf &p);

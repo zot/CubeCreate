@@ -404,6 +404,18 @@ V8_FUNC_dddd(__script__rayFloor, {
         particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10);
     });
 
+    V8_FUNC_iiidddidii(__script__particleSplashD, {
+        if (arg1 == PART_BLOOD && !blood) V8_RETURN_NULL;
+        vec p(arg4, arg5, arg6);
+        particle_splash_d(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10);
+    });
+
+    V8_FUNC_iiidddidii(__script__particleSplashE, {
+        if (arg1 == PART_BLOOD && !blood) V8_RETURN_NULL;
+        vec p(arg4, arg5, arg6);
+        particle_splash_e(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10);
+    });
+
     V8_FUNC_ddddiiid(__script__particleFireball, {
         vec dest(arg1, arg2, arg3);
         particle_fireball(dest, arg4, arg5, arg6, arg7, arg8);
@@ -475,6 +487,8 @@ V8_FUNC_dddd(__script__rayFloor, {
 using namespace MessageSystem;
 V8_FUNC_iiss(__script__PersonalServerMessage, { send_PersonalServerMessage(arg1, arg2, arg3, arg4); });
 V8_FUNC_iiiiddd(__script__ParticleSplashToClients, { send_ParticleSplashToClients(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
+V8_FUNC_iiiiddd(__script__ParticleSplashDToClients, { send_ParticleSplashDToClients(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
+V8_FUNC_iiiiddd(__script__ParticleSplashEToClients, { send_ParticleSplashEToClients(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
 V8_FUNC_idddsi(__script__SoundToClientsByName, { send_SoundToClientsByName(arg1, arg2, arg3, arg4, arg5, arg6); });
 V8_FUNC_iis(__script__StateDataChangeRequest, { send_StateDataChangeRequest(arg1, arg2, arg3); });
 V8_FUNC_iis(__script__UnreliableStateDataChangeRequest, { send_UnreliableStateDataChangeRequest(arg1, arg2, arg3); });

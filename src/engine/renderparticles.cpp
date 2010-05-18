@@ -812,6 +812,7 @@ static partrenderer *parts[] =
     new quadrenderer("<grey>packages/particles/blood.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4, DECAL_BLOOD), // blood spats (note: rgb is inverted) 
     new trailrenderer("packages/particles/base.png", PT_TRAIL|PT_LERP),                            // water, entity
     new quadrenderer("<grey>packages/particles/smoke.png", PT_PART|PT_FLIP|PT_LERP),                     // smoke
+    new softquadrenderer("packages/particles/smoke.png", PT_PART|PT_FLIP|PT_LERP),                     // smoke
     new quadrenderer("<grey>packages/particles/steam.png", PT_PART|PT_FLIP),                             // steam
     new quadrenderer("<grey>packages/particles/flames.png", PT_PART|PT_HFLIP|PT_RND4|PT_GLARE),          // flame on - no flipping please, they have orientation
     new quadrenderer("packages/particles/ball1.png", PT_PART|PT_FEW|PT_GLARE),                     // fireball1
@@ -826,10 +827,18 @@ static partrenderer *parts[] =
     new quadrenderer("packages/particles/muzzleflash1.jpg", PT_PART|PT_FEW|PT_FLIP|PT_GLARE|PT_TRACK), // muzzle flash
     new quadrenderer("packages/particles/muzzleflash2.jpg", PT_PART|PT_FEW|PT_FLIP|PT_GLARE|PT_TRACK), // muzzle flash
     new quadrenderer("packages/particles/muzzleflash3.jpg", PT_PART|PT_FEW|PT_FLIP|PT_GLARE|PT_TRACK), // muzzle flash
+    new quadrenderer("packages/particles/muzzleflash4.jpg", PT_PART|PT_FEW|PT_GLARE|PT_TRACK), // muzzle flash
+    new quadrenderer("packages/particles/beam.png", PT_PART|PT_FEW|PT_GLARE|PT_TRACK), // muzzle flash
     &texts,                                                                                        // text
     &meters,                                                                                       // meter
     &metervs,                                                                                      // meter vs.
-    &flares                                                                                        // lens flares - must be done last
+    &flares,                                                                                       // lens flares
+    new quadrenderer("packages/particles/flame1.png", PT_PART|PT_FLIP|PT_GLARE),
+    new quadrenderer("packages/particles/flame2.png", PT_PART|PT_FLIP|PT_GLARE),
+    new quadrenderer("packages/particles/flame3.png", PT_PART|PT_FLIP|PT_GLARE),
+    new quadrenderer("packages/particles/flame4.png", PT_PART|PT_FLIP|PT_GLARE),
+    new quadrenderer("packages/particles/snow.png", PT_PART|PT_GLARE|PT_FLIP), // snow
+    new quadrenderer("packages/particles/rain.png", PT_PART|PT_GLARE) // rain - must be done last
 };
 
 void finddepthfxranges()
@@ -1073,7 +1082,53 @@ static void splash(int type, int color, int radius, int num, int fade, const vec
     }
 }
 
-static void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity, int delay = 0) 
+static void splash_e(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity)
+{
+    if(camera1->o.dist(p) > maxparticledistance && !seedemitter) return;
+    float collidez = parts[type]->collide ? p.z - raycube(p, vec(0, 0, -1), COLLIDERADIUS, RAY_CLIPMAT) + COLLIDEERROR : -1;
+    int fmin = 1;
+    int fmax = fade*3;
+    loopi(num)
+    {
+        float x, y, z;
+        do
+        {
+			x = (rnd(radius*2)-radius)/4;
+			y = (rnd(radius*2)-radius)/4;
+			z = 40-(rnd(10));
+
+        }
+        while(x*x+y*y+z*z>radius*radius);
+    	vec tmp = vec((float)x, (float)y, (float)z);
+        int f = (num < 10) ? (fmin + rnd(fmax)) : (fmax - (i*(fmax-fmin))/(num-1)); //help deallocater by using fade distribution rather than random
+        newparticle(p, tmp, f, type, color, size, gravity)->val = collidez;
+    }
+}
+
+static void splash_d(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity)
+{
+    if(camera1->o.dist(p) > maxparticledistance && !seedemitter) return;
+    float collidez = parts[type]->collide ? p.z - raycube(p, vec(0, 0, -1), COLLIDERADIUS, RAY_CLIPMAT) + COLLIDEERROR : -1;
+    int fmin = 1;
+    int fmax = fade*3;
+    loopi(num)
+    {
+        float x, y, z;
+        do
+        {
+			x = (rnd(radius*2)-radius)/4;
+			y = (rnd(radius*2)-radius)/4;
+			z = 20-(rnd(5));
+
+        }
+        while(x*x+y*y+z*z>radius*radius);
+    	vec tmp = vec((float)x, (float)y, (float)z);
+        int f = (num < 10) ? (fmin + rnd(fmax)) : (fmax - (i*(fmax-fmin))/(num-1)); //help deallocater by using fade distribution rather than random
+        newparticle(p, tmp, f, type, color, size, gravity)->val = collidez;
+    }
+}
+
+static void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity, int delay = 0)
 {
     if(!emit_particles() || (delay > 0 && rnd(delay) != 0)) return;
     splash(type, color, radius, num, fade, p, size, gravity);
@@ -1094,6 +1149,18 @@ void particle_splash(int type, int num, int fade, const vec &p, int color, float
 {
     if(!canaddparticles()) return;
     splash(type, color, radius, num, fade, p, size, gravity);
+}
+
+void particle_splash_e(int type, int num, int fade, const vec &p, int color, float size, int radius, int gravity)
+{
+    if(!canaddparticles()) return;
+    splash_e(type, color, radius, num, fade, p, size, gravity);
+}
+
+void particle_splash_d(int type, int num, int fade, const vec &p, int color, float size, int radius, int gravity)
+{
+    if(!canaddparticles()) return;
+    splash_d(type, color, radius, num, fade, p, size, gravity);
 }
 
 VARP(maxtrail, 1, 500, 10000);
@@ -1271,6 +1338,97 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
     }
 }
 
+void regularshape2(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, float vel, int gravity)
+{
+    if(!emit_particles()) return;
+
+    int basetype = parts[type]->type&0xFF;
+    bool flare = (basetype == PT_TAPE) || (basetype == PT_LIGHTNING),
+         inv = (dir&0x20)!=0, taper = (dir&0x40)!=0 && !seedemitter;
+    dir &= 0x1F;
+    loopi(num)
+    {
+        vec to, from;
+        if(dir < 12)
+        {
+            float a = PI2*float(rnd(1000))/1000.0;
+            to[dir%3] = sinf(a)*radius;
+            to[(dir+1)%3] = cosf(a)*radius;
+            to[(dir+2)%3] = 0.0;
+            to.add(p);
+            if(dir < 3) //circle
+                from = p;
+            else if(dir < 6) //cylinder
+            {
+                from = to;
+                to[(dir+2)%3] += radius;
+                from[(dir+2)%3] -= radius;
+            }
+            else //cone
+            {
+                from = p;
+                to[(dir+2)%3] += (dir < 9)?radius:(-radius);
+            }
+        }
+        else if(dir < 15) //plane
+        {
+            to[dir%3] = float(rnd(radius<<4)-(radius<<3))/8.0;
+            to[(dir+1)%3] = float(rnd(radius<<4)-(radius<<3))/8.0;
+            to[(dir+2)%3] = radius;
+            to.add(p);
+            from = to;
+            from[(dir+2)%3] -= 2*radius;
+        }
+        else if(dir < 21) //line
+        {
+            if(dir < 18)
+            {
+                to[dir%3] = float(rnd(radius<<4)-(radius<<3))/8.0;
+                to[(dir+1)%3] = 0.0;
+            }
+            else
+            {
+                to[dir%3] = 0.0;
+                to[(dir+1)%3] = float(rnd(radius<<4)-(radius<<3))/8.0;
+            }
+            to[(dir+2)%3] = 0.0;
+            to.add(p);
+            from = to;
+            to[(dir+2)%3] += radius;
+        }
+        else //sphere
+        {
+            to = vec(PI2*float(rnd(1000))/1000.0, PI*float(rnd(1000)-500)/1000.0).mul(radius);
+            to.add(p);
+            from = p;
+        }
+
+        if(taper)
+        {
+            vec o = inv ? to : from;
+            o.sub(camera1->o);
+            float dist = clamp(sqrtf(o.x*o.x + o.y*o.y)/maxparticledistance, 0.0f, 1.0f);
+            if(dist > 0.2f)
+            {
+                dist = 1 - (dist - 0.2f)/0.8f;
+                if(rnd(0x10000) > dist*dist*0xFFFF) continue;
+            }
+        }
+
+        if(flare)
+            newparticle(inv?to:from, inv?from:to, rnd(fade*3)+1, type, color, size, gravity);
+        else
+        {
+            vec d(to);
+            d.sub(from);
+            d.normalize().mul(inv ? -vel : vel); //velocity
+            particle *np = newparticle(inv?to:from, d, 99999, type, color, size, gravity);
+            np->val = (inv ? to.z : from.z) - raycube(inv ? to : from, vec(0, 0, -1), COLLIDERADIUS, RAY_CLIPMAT) + COLLIDEERROR;
+            if(np->o.z < np->val+COLLIDEERROR) particle_splash_d(PART_SMOKE, 3, 500, vec(np->o.x, np->o.y, (inv ? to.z : from.z)), 0x222222, 1.4f, 50, 1000);
+    }
+    }
+}
+
 void regularflame(int type, const vec &p, float radius, float height, int color, int density = 3, float scale = 2.0f, float speed = 200.0f, float fade = 600.0f, int gravity = -15) // INTENSITY: Removed 'static', to make accessible elsewhere
 {
     if(!emit_particles()) return;
@@ -1320,6 +1478,10 @@ static void makeparticles(entity &e)
             newparticle(e.o, vec(0, 0, 1), 1, PART_EXPLOSION, colorfromattr(e.attr3), 4.0f)->val = 1+e.attr2;
             break;
         case 4:  //tape - <dir> <length> <rgb>
+        {
+            if(e.attr2 >= 256) regularshape2(PART_RAIN, max(1+e.attr3, 1), 0xFFFFFF, 44, 5, e.attr5 != 0 ? e.attr5 : 200, e.o, 1, 1000, 200);
+            break;
+        }
         case 7:  //lightning 
         case 9:  //steam
         case 10: //water
@@ -1356,6 +1518,14 @@ static void makeparticles(entity &e)
         case 34:
         case 35:
             flares.addflare(e.o, e.attr2, e.attr3, e.attr4, (e.attr1&0x02)!=0, (e.attr1&0x01)!=0);
+            break;
+        case 77:
+        case 78:
+            //const int typemap[]   = { PART_STREAK, -1, -1, PART_LIGHTNING, PART_FIREBALL1, PART_STEAM, PART_WATER, -1, PART_SNOW };
+            //const float sizemap[] = { 0.28, 0.0, 0.0, 0.28, 4.8, 2.4, 0.60, 0.0, 0.5 };
+            //const float velmap[]  = {  200,   0,   0,  200, 200, 200,  200,   0,  40 };
+            //const int gravmap[] =   {    0,   0,   0,    0,  20, -20,    2,   0, 200 };
+            regularshape2(e.attr1==77?PART_SNOW:PART_RAIN, max(1+e.attr2, 1), e.attr4 & 0xFFFFFF, 44, 5, 0, e.o, 1, e.attr1==77?40:1000, 200);
             break;
         default:
             if(!editmode)
