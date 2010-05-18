@@ -90,6 +90,7 @@ set(CLIENT_SOURCES
 set(CLIENT_LIBRARIES
     enet
     v8
+    rt
     ${PYTHON_LIBRARIES}
     ${Boost_Python_Library}
     ${SDL_LIBRARY}
