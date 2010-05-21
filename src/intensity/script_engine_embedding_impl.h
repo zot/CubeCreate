@@ -37,6 +37,7 @@ EMBED_CAPI_FUNC("setAnimation", __script__setAnimation, 2);
 EMBED_CAPI_FUNC("getStartTime", __script__getStartTime, 1);
 EMBED_CAPI_FUNC("setModelName", __script__setModelName, 2);
 EMBED_CAPI_FUNC("setSoundName", __script__setSoundName, 2);
+EMBED_CAPI_FUNC("setSoundVolume", __script__setSoundVolume, 2);
 EMBED_CAPI_FUNC("setAttachments_raw", __script__setAttachments_raw, 2);
 EMBED_CAPI_FUNC("getAttachmentPosition", __script__getAttachmentPosition, 2);
 EMBED_CAPI_FUNC("setCanMove", __script__setCanMove, 2);
@@ -59,9 +60,11 @@ EMBED_CAPI_FUNC("dismantleCharacter", __script__dismantleCharacter, 1);
 
 #ifdef CLIENT
     EMBED_CAPI_FUNC("playSoundByName", __script_playSoundByName, 5);
+    EMBED_CAPI_FUNC("stopSoundByName", __script_stopSoundByName, 2);
 #endif
 
 EMBED_CAPI_FUNC("music", __script__music, 1);
+EMBED_CAPI_FUNC("underwaterAmbient", __script__underwaterAmbient, 1);
 
 EMBED_CAPI_FUNC("preloadSound", __script__preloadSound, 2);
 EMBED_CAPI_FUNC("playSound", __script__playSound, 1);
@@ -120,12 +123,13 @@ EMBED_CAPI_FUNC("rayFloor", __script__rayFloor, 4);
 
 #ifdef CLIENT
     EMBED_CAPI_FUNC("addDecal", __script__addDecal, 12);
-    EMBED_CAPI_FUNC("particleSplash", __script__particleSplash, 6);
-    EMBED_CAPI_FUNC("particleSplashD", __script__particleSplashD, 6);
-    EMBED_CAPI_FUNC("particleSplashE", __script__particleSplashE, 6);
+    EMBED_CAPI_FUNC("particleSplash", __script__particleSplash, 14);
+    EMBED_CAPI_FUNC("particleSplashRegular", __script__particleSplashRegular, 13);
+    EMBED_CAPI_FUNC("particleExplodeSplash", __script__particleExplodeSplash, 9);
     EMBED_CAPI_FUNC("particleFireball", __script__particleFireball, 8);
-    EMBED_CAPI_FUNC("particleFlare", __script__particleFlare, 10);
-    EMBED_CAPI_FUNC("particleTrail", __script__particleTrail, 11);
+    EMBED_CAPI_FUNC("particleFlare", __script__particleFlare, 12);
+    EMBED_CAPI_FUNC("particleFlyingFlare", __script__particleFlyingFlare, 11);
+    EMBED_CAPI_FUNC("particleTrail", __script__particleTrail, 12);
     EMBED_CAPI_FUNC("particleFlame", __script__particleFlame, 12);
     EMBED_CAPI_FUNC("addDynlight", __script__addDynlight, 14);
     EMBED_CAPI_FUNC("spawnDebris", __script__spawnDebris, 9);
@@ -142,8 +146,7 @@ EMBED_CAPI_FUNC("rayFloor", __script__rayFloor, 4);
 
 EMBED_CAPI_FUNC("PersonalServerMessage", __script__PersonalServerMessage, 4);
 EMBED_CAPI_FUNC("ParticleSplashToClients", __script__ParticleSplashToClients, 7);
-EMBED_CAPI_FUNC("ParticleSplashDToClients", __script__ParticleSplashDToClients, 7);
-EMBED_CAPI_FUNC("ParticleSplashEToClients", __script__ParticleSplashEToClients, 7);
+EMBED_CAPI_FUNC("ParticleSplashRegularToClients", __script__ParticleSplashRegularToClients, 7);
 EMBED_CAPI_FUNC("SoundToClientsByName", __script__SoundToClientsByName, 6);
 EMBED_CAPI_FUNC("DoClick", __script__DoClick, 6);
 EMBED_CAPI_FUNC("StateDataChangeRequest", __script__StateDataChangeRequest, 3);

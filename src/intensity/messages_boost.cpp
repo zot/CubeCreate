@@ -112,8 +112,14 @@
     // SoundToClients
     exposeToPython("SoundToClients", &MessageSystem::send_SoundToClients);
 
+    // MapSoundToClients
+    exposeToPython("MapSoundToClients", &MessageSystem::send_MapSoundToClients);
+
     // SoundToClientsByName
     exposeToPython("SoundToClientsByName", &MessageSystem::send_SoundToClientsByName);
+
+    // SoundStopToClientsByName
+    exposeToPython("SoundStopToClientsByName", &MessageSystem::send_SoundStopToClientsByName);
 
 #ifdef CLIENT
     // EditModeC2S
@@ -141,11 +147,8 @@
     // ParticleSplashToClients
     exposeToPython("ParticleSplashToClients", &MessageSystem::send_ParticleSplashToClients);
 
-    // ParticleSplashDToClients
-    exposeToPython("ParticleSplashDToClients", &MessageSystem::send_ParticleSplashDToClients);
-
-    // ParticleSplashEToClients
-    exposeToPython("ParticleSplashEToClients", &MessageSystem::send_ParticleSplashEToClients);
+    // ParticleSplashRegularToClients
+    exposeToPython("ParticleSplashRegularToClients", &MessageSystem::send_ParticleSplashRegularToClients);
 
 #ifdef CLIENT
     // RequestPrivateEditMode

@@ -60,7 +60,10 @@ CustomEffect = {
 
     explosion: function(center, position, radius, color, debrises, entity) {
         Effect.fireball(PARTICLE.EXPLOSION_NO_GLARE, center, radius, 1.0, color, 5);
-        Sound.play("yo_frankie/DeathFlash.wav", center);
+        if (World.getMaterial(center) === MATERIAL.WATER)
+            Sound.play("Q009/uw/en.ogg", center);
+        else
+            Sound.play("Q009/ren.ogg", center);
         Effect.addDecal(DECAL.SCORCH, position, new Vector3(0,0,1), 7, 0x000000);
 
         var num = debrises/2 + Math.ceil(Math.random()*debrises*2);

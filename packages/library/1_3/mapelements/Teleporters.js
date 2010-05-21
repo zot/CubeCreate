@@ -18,7 +18,7 @@ TeleporterPlugin = {
     },
 
     clientOnCollision: function(collider) {
-        if (this.teledest >= 0) {
+        if (this.teledest && this.teledest >= 0) {
             var teleDests = getEntitiesByTag('teledest_' + this.teledest);
             if (teleDests.length == 1) {
                 collider.position = teleDests[0].position.copy();
@@ -30,7 +30,7 @@ TeleporterPlugin = {
         }
         else {
             collider.position = this.target; // Simply place the collider at the target
-            collider.yaw = this.targetYaw; // adjust yaw, too.
+            collider.yaw = (this.targetYaw) ? this.targetYaw : collider.yaw; // adjust yaw, too.
             collider.velocity = [0, 0, 0];
             Sound.play(this.soundName); // play teleport sound
         }

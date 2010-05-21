@@ -45,8 +45,12 @@ Rocket = Projectiles.Projectile.extend({
     },
 
     render: function() {
-        Effect.splash(PARTICLE.SMOKE, 2, 0.3, this.position, 0xF0F0F0, 1.2, 50, -20);
-        Effect.flame(PARTICLE.FLAME, this.position, 0.5, 0.5, 0xBB8877, 2, 3.0, 100, 0.4, -6);
+        if (World.getMaterial(this.position) === MATERIAL.WATER)
+            Effect.splashRegular(PARTICLE.BUBBLE, 4, 0.5, this.position, 0xFFFFFF, 0.5, 25, 500);
+        else {
+            Effect.splash(PARTICLE.SMOKE, 2, 0.3, this.position, 0xF0F0F0, 1.2, 50, -20);
+            Effect.flame(PARTICLE.FLAME, this.position, 0.5, 0.5, 0xBB8877, 2, 3.0, 100, 0.4, -6);
+        }
         Effect.addDynamicLight(this.position, this.visualRadius*1.8, this.color);
     },
 });
@@ -86,7 +90,11 @@ RocketGun = Projectiles.Gun.extend({
                 Effect.fireball(PARTICLE.EXPLOSION, currentOriginPosition, 3, 0.5, 0xFF775F, 3);
                 Effect.addDynamicLight(currentOriginPosition, 20, 0xFF775F, 0.8, 0.1, 0, 10);
 
-                Sound.play('yo_frankie/DeathFlash.wav', currentOriginPosition);
+                if (CAPI.getMaterial(shooter.position.x, shooter.position.y, shooter.position.z + 15) === MATERIAL.WATER)
+                    Sound.play("Q009/uw/en.ogg", currentOriginPosition);
+                else {
+                    Sound.play('Q009/rl.ogg', currentOriginPosition);
+                }
 
                 // Ensure we shoot from without our xy radius, so if we are adjacent to a wall, the rocket won't immediately explode
                 if (shooter.radius > 0) {
@@ -101,7 +109,6 @@ RocketGun = Projectiles.Gun.extend({
                 }
 
                 that.shootProjectile(shooter, currentOriginPosition, currentTargetPosition, targetEntity, that.projectileClass);
-
                 that.doRecoil(shooter, 40);
                 },
                 { secondsLeft: 0.2 } // Fire rocket a little into the shoot animation
@@ -238,5 +245,5 @@ BotTargetLockingPlugin = {
 // Preloads
 
 Map.preloadModel('guns/rocket');
-Map.preloadSound('yo_frankie/DeathFlash.wav');
-
+Map.preloadSound('Q009/uw/en.ogg');
+Map.preloadSound('Q009/rl.ogg');

@@ -147,15 +147,18 @@ Projectiles = {
         onExplode: function() {
             if (Global.CLIENT) {
                 var radius = this.visualRadius !== undefined ? this.visualRadius : this.radius;
-                Effect.splashE(PARTICLE.SOFTSMOKE, 10, 2.5, this.position, 0x222222, 6.0, 50, 500);
-                Effect.splashE(PARTICLE.SOFTSMOKE, 10, 2.0, this.position, 0x222222, 12.0, 75, 500);
-                Effect.splashE(PARTICLE.SOFTSMOKE, 10, 1.5, this.position, 0x222222, 30.0, 100, 500);
-                Effect.splash(PARTICLE.SPARK, 160, 0.3, this.position, 0xFF5020, 1.4, 300, 1000);
-                Effect.splash(PARTICLE.SPARK, 15, 0.3, this.position, 0xFF5020, 3.2, 300, 1000);
-                Effect.splash(PARTICLE.SPARK, 15, 0.3, this.position, 0xFF5020, 3.2, 300, 1000);
-                Effect.splash(PARTICLE.SPARK, 15, 0.3, this.position, 0xFF5020, 3.2, 300, 1000);
-                Effect.fireball(PARTICLE.EXPLOSION, this.position, radius, 0.333, this.color, radius / 5);
-                Sound.play("yo_frankie/DeathFlash.wav", this.position);
+                Effect.splash(PARTICLE.SMOKE, 5, 2.5, this.position, 0x222222, 12.0, 50, 500, null, 1, false, 3);
+                Effect.splash(PARTICLE.SMOKE, 5, 0.2, this.position, 0x222222, 12.0, 50, 500, null, 1, false, 4);
+                Effect.splash(PARTICLE.SPARK, 160, 0.03, this.position, 0xFFC864, 1.4, 300, null, null, null, true);
+                Effect.splash(PARTICLE.FLAME1, 15, 0.03, this.position, 0xFFFFFF, 3.2, 300, null, null, null, true);
+                Effect.splash(PARTICLE.FLAME2, 15, 0.03, this.position, 0xFFFFFF, 3.2, 300, null, null, null, true);
+                Effect.splash(PARTICLE.FLAME2, 15, 0.03, this.position, 0xFFFFFF, 3.2, 300, null, null, null, true);
+                Effect.splash(PARTICLE.EXPLODE, 1, 0.1, this.position, 0xFFFFFF, 10.0, 300, 500, true, null, null, 4);
+                Effect.fireball(PARTICLE.EXPLOSION, this.position, radius, 0.1, this.color, radius / 5);
+                if (World.getMaterial(this.position) === MATERIAL.WATER)
+                    Sound.play("Q009/uw/en.ogg", this.position);
+                else
+                    Sound.play("Q009/ren.ogg", this.position);
                 Effect.addDecal(DECAL.SCORCH, this.position, this.velocity.copy().normalize().mul(-1), radius);
                 Effect.addDynamicLight(this.position, radius*14, this.color, 0.2666, 0.0333, 0, radius*9);
             }
@@ -245,8 +248,8 @@ Projectiles = {
     }),
 };
 
-Map.preloadSound('yo_frankie/DeathFlash.wav');
-
+Map.preloadSound('Q009/uw/en.ogg');
+Map.preloadSound('Q009/ren.ogg');
 
 // Examples
 

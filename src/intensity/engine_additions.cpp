@@ -317,9 +317,11 @@ void CLogicEntity::setSound(std::string _sound)
     stopmapsound(staticEntity);
     if(camera1->o.dist(staticEntity->o) < staticEntity->attr2)
       {
-        if(!staticEntity->visible) playmapsound(soundName.c_str(), staticEntity, 0, -1);
+        if(!staticEntity->visible) playmapsound(soundName.c_str(), staticEntity, staticEntity->attr4, -1);
         else if(staticEntity->visible) stopmapsound(staticEntity);
       }
+#else
+    MessageSystem::send_MapSoundToClients(-1, soundName, LogicSystem::getUniqueId(staticEntity));
 #endif
 }
 

@@ -48,7 +48,7 @@ JumpPadPlugin = {
             var yaw = -(Global.time*120) % 360;
             //log(ERROR, "yaw:" + yaw + ',' + Global.time + ":" + Global.time % 360);
         }
-        var args = [this, this.padModel ? this.padModel : "jumppad", ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, this.padRotate ? yaw : this.yaw, this.padPitch ? this.padPitch : 90, flags, 0];
+        var args = [this, (this.padModel == "") ? "" : this.padModel, ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, this.padRotate ? yaw : this.yaw, this.padPitch ? this.padPitch : 90, flags, 0];
         CAPI.renderModel.apply(this, args);
     },
 };

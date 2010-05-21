@@ -327,7 +327,10 @@ Model = {
 
     objLoad: CAPI.objLoad,
     objSkin: CAPI.objSkin,
-    objBumpmap: CAPI.objBumpmap,
+    objBumpmap: function(meshname, normalmap, skin) {
+        skin = defaultValue(skin, '');
+        CAPI.objBumpmap(meshname, normalmap, skin);
+    },
     objEnvmap: CAPI.objEnvmap,
     objSpec: CAPI.objSpec,
     objPitch: CAPI.objPitch,
@@ -399,7 +402,10 @@ Model = {
     md3Alphablend: CAPI.md3Alphablend,
     md3Cullface: CAPI.md3Cullface,
     md3Envmap: CAPI.md3Envmap,
-    md3Bumpmap: CAPI.md3Bumpmap,
+    md3Bumpmap: function(meshname, normalmap, skin) {
+        skin = defaultValue(skin, '');
+        CAPI.md3Bumpmap(meshname, normalmap, skin);
+    },
     md3Fullbright: CAPI.md3Fullbright,
     md3Shader: CAPI.md3Shader,
     md3Scroll: CAPI.md3Scroll,
@@ -411,7 +417,10 @@ Model = {
     md3Link: CAPI.md3Link,
     md3Noclip: CAPI.md3Noclip,
 
-    md5Bumpmap: CAPI.md5Bumpmap,
+    md5Bumpmap: function(meshname, normalmap, skin) {
+        skin = defaultValue(skin, '');
+        CAPI.md5Bumpmap(meshname, normalmap, skin);
+    },
     md5Envmap: CAPI.md5Envmap,
     md5Alphatest: CAPI.md5Alphatest,
     md5Alphablend: CAPI.md5Alphablend,
@@ -456,7 +465,10 @@ Model = {
     iqmAlphablend: CAPI.iqmAlphablend,
     iqmCullface: CAPI.iqmCullface,
     iqmEnvmap: CAPI.iqmEnvmap,
-    iqmBumpmap: CAPI.iqmBumpmap,
+    iqmBumpmap: function(meshname, normalmap, skin) {
+        skin = defaultValue(skin, '');
+        CAPI.iqmBumpmap(meshname, normalmap, skin);
+    },
     iqmFullbright: CAPI.iqmFullbright,
     iqmShader: CAPI.iqmShader,
     iqmScroll: CAPI.iqmScroll,
@@ -488,7 +500,10 @@ Model = {
     smdAlphablend: CAPI.smdAlphablend,
     smdCullface: CAPI.smdCullface,
     smdEnvmap: CAPI.smdEnvmap,
-    smdBumpmap: CAPI.smdBumpmap,
+    smdBumpmap: function(meshname, normalmap, skin) {
+        skin = defaultValue(skin, '');
+        CAPI.smdBumpmap(meshname, normalmap, skin);
+    },
     smdFullbright: CAPI.smdFullbright,
     smdShader: CAPI.smdShader,
     smdScroll: CAPI.smdScroll,

@@ -8,16 +8,6 @@ T7g - Creative Commons 0/Public domain/noone should have to remake these simple 
 You don't even need to credit me, I don't care at all.
 
 base.png
-lightning.jpg
-spark.png
-
-q009 - Sauerbraten Enhanced - CC-BY-NC:
-
-blood.png
-flare.png
-muzzleflash1,2,3.jpg
-smoke.png
-steam.png
 
 kripken - Syntensity - CC-BY-SA:
 
@@ -40,3 +30,7 @@ flames.png
 makke - CC-BY-NC-SA:
 
 scorch.png
+
+q009 - Sauerbraten Enhanced - CC-BY-NC:
+
+all others

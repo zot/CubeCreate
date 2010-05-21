@@ -677,6 +677,26 @@ SoundToClients(server->client)
         }
 end
 
+// Server notifies clients of changed volume / sound on mapsound entity
+MapSoundToClients(server->client)
+    unreliable
+    implicit clientNumber
+    std::string soundName
+    int entityUniqueId
+    receive:
+        LogicEntityPtr entity = LogicSystem::getLogicEntity(entityUniqueId);
+        if (entity.get() != NULL)
+        {
+            extentity *e = entity.get()->staticEntity;
+            stopmapsound(e);
+            if(camera1->o.dist(e->o) < e->attr2)
+            {
+                if(!e->visible) playmapsound(soundName.c_str(), e, e->attr4, -1);
+                else if(e->visible) stopmapsound(e);
+            }
+        }
+end
+
 // Server notifies clients of a sound
 SoundToClientsByName(server->client)
     unreliable
@@ -696,6 +716,20 @@ SoundToClientsByName(server->client)
             playsoundname(soundName.c_str(), &pos);
         else
             playsoundname(soundName.c_str());
+end
+
+// Server notifies clients of that sound stops
+SoundStopToClientsByName(server->client)
+    unreliable
+    implicit clientNumber
+    int volume
+    std::string soundName
+    int originalClientNumber
+    send:
+        exclude = originalClientNumber; // This is how to ensure we do not send back to the client who originally sent it
+    receive:
+        assert(ClientSystem::playerNumber != originalClientNumber);
+        stopsoundbyid(getsoundid(soundName.c_str(), volume));
 end
 
 // Ask server to switch edit mode status
@@ -836,7 +870,7 @@ ParticleSplashToClients(server->client)
         particle_splash(_type, num, fade, pos);
 end
 
-ParticleSplashDToClients(server->client)
+ParticleSplashRegularToClients(server->client)
     unreliable
     implicit clientNumber
     int _type
@@ -847,21 +881,7 @@ ParticleSplashDToClients(server->client)
     float z
     receive:
         vec pos(x,y,z);
-        particle_splash_d(_type, num, fade, pos);
-end
-
-ParticleSplashEToClients(server->client)
-    unreliable
-    implicit clientNumber
-    int _type
-    int num
-    int fade
-    float x
-    float y
-    float z
-    receive:
-        vec pos(x,y,z);
-        particle_splash_e(_type, num, fade, pos);
+        regular_particle_splash(_type, num, fade, pos);
 end
 
 // Request to enter the server into private edit mode

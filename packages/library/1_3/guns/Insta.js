@@ -52,8 +52,12 @@ InstaGun = Gun.extend({
     },
 
     handleClientEffect: function(shooter, originPosition, targetPosition, targetEntity) {
+        Effect.flare(PARTICLE.STREAK, targetPosition, originPosition, 0.175, 0xFFC864, 0.28);
+        Effect.splash(PARTICLE.SMOKE, 3, 0.5, originPosition, 0x222222, 1.4, 50, 501, null, 2, null, 2);
         Effect.addDynamicLight(originPosition, 20, 0xFFFFFF, 0.8, 0.1, 0, 10);
         Effect.splash(PARTICLE.SPARK, 15, 0.1, originPosition, 0xB49B4B, 1.0, 70, 1);
+        Effect.splash(PARTICLE.SPARK, 20, 0.1, targetPosition, 0xFFFFFF, 0.1);
+        Effect.explodeSplash(PARTICLE.BULLET, targetPosition, 0.05, 0xFFFFFF, 2, 500, 8);
 
         Effect.flare(
             PARTICLE.STREAK,
@@ -67,9 +71,14 @@ InstaGun = Gun.extend({
         } else {
             Effect.splash(PARTICLE.SPARK, 15, 0.2, targetPosition, 0xB49B4B, 1.0, 70, 1);
             Effect.addDecal(DECAL.BULLET, targetPosition, originPosition.subNew(targetPosition).normalize(), 3.0);
+            Effect.splash(PARTICLE.SMOKE, 3, 0.5, targetPosition, 0x444444, 1.4, 50, 504, null, 2, null, 1);
         }
-        Effect.trail(PARTICLE.SMOKE, 0.5, originPosition, targetPosition, 0xC0C0C0, 0.6, 20);
-        Sound.play('olpc/MichaelBierylo/sfx_DoorSlam.wav', originPosition);
+        Effect.trail(PARTICLE.SMOKE, 0.5, originPosition, targetPosition, 0xC0C0C0, 0.6, 200);
+        Effect.trail(0, 0, originPosition, targetPosition, 0, 0, 0, true);
+        if (CAPI.getMaterial(shooter.position.x, shooter.position.y, shooter.position.z + 13) === MATERIAL.WATER)
+            Sound.play('Q009/uw/st1.ogg', originPosition);
+        else
+            Sound.play('Q009/re.ogg', originPosition);
         shooter.queueAction(new ShootAction2({ secondsLeft: 1.0 }));
     },
 });
@@ -82,5 +91,5 @@ InstaGunPlugin = {
 };
 */
 
-Map.preloadSound('olpc/MichaelBierylo/sfx_DoorSlam.wav');
-
+Map.preloadSound('Q009/uw/st1.ogg');
+Map.preloadSound('Q009/re.ogg');

@@ -281,12 +281,14 @@ SoundEffect = StaticEntity.extend({
 
     attr2: new WrappedCInteger({ cGetter: 'CAPI.getAttr2', cSetter: 'CAPI.setAttr2', guiName: "radius", altName: "radius" }),
     attr3: new WrappedCInteger({ cGetter: 'CAPI.getAttr3', cSetter: 'CAPI.setAttr3', guiName: "size", altName: "size" }),
+    attr4: new WrappedCInteger({ cGetter: 'CAPI.getAttr4', cSetter: 'CAPI.setSoundVolume', guiName: "volume", altName: "volume" }),
 
     // our soundname has only a setter.
     soundName: new WrappedCString({ cSetter: 'CAPI.setSoundName' }),
 
     radius: new VariableAlias("attr2"),
     size: new VariableAlias("attr3"),
+    volume: new VariableAlias("attr4"),
 
     init: function(uniqueId, kwargs) {
         this._super(uniqueId, kwargs);
@@ -294,6 +296,7 @@ SoundEffect = StaticEntity.extend({
         this.attr1 = -1;
         this.radius = 100; // default radius is set to 100.
         this.size = 0;
+        if (!this.volume) this.volume = 100;
         this.soundName = "";
     }
 });

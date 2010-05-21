@@ -117,6 +117,9 @@ void ClientSystem::onDisconnect()
     _scenarioStarted  = false;
     _mapCompletelyReceived = false;
 
+    // it's also useful to stop all mapsounds and gamesounds (but only for client that disconnects!)
+    stopsounds();
+
     LogicSystem::clear();
 }
 

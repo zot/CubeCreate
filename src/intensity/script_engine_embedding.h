@@ -109,6 +109,16 @@ V8_FUNC_T(__script__setSoundName, s, {
     Logging::log(Logging::DEBUG, "__script__setSoundName(%s)\r\n", arg2);
     self.get()->setSound(arg2);
 } );
+V8_FUNC_T(__script__setSoundVolume, i, {
+    Logging::log(Logging::DEBUG, "__script__setSoundVolume(%i)\r\n", arg2);
+    extentity* e = self.get()->staticEntity;
+    assert(e);
+    if (!WorldSystem::loadingWorld) removeentity(e);
+    e->attr4 = arg2;
+    if (!WorldSystem::loadingWorld) addentity(e);
+    // finally reload sound, so everything gets applied
+    self.get()->setSound(self.get()->soundName.c_str());
+} );
 V8_FUNC_T(__script__setAttachments_raw, s, { self.get()->setAttachments(arg2); } );
 V8_FUNC_T(__script__getAttachmentPosition, s, {
     vec& vposition = self->getAttachmentPosition(arg2);
@@ -144,6 +154,12 @@ V8_FUNC_Z(__script__dismantleCharacter, , { LogicSystem::dismantleCharacter(self
 #endif
 
 #ifdef CLIENT
+    V8_FUNC_si(__script_stopSoundByName, {
+        stopsoundbyid(getsoundid(arg1, arg2));
+    });
+#endif
+
+#ifdef CLIENT
 V8_FUNC_s(__script__music, {
     assert( Utility::validateAlphaNumeric(arg1, "._/") );
     std::string command = "music \"";
@@ -153,6 +169,18 @@ V8_FUNC_s(__script__music, {
 });
 #else
 V8_FUNC_s(__script__music, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_i(__script__underwaterAmbient, {
+    std::string command = "uwambient ";
+    command += Utility::toString(arg1);
+    CSSUDO(command.c_str());
+});
+#else
+V8_FUNC_i(__script__underwaterAmbient, {
     arg1 = arg1; // warning otherwise
 });
 #endif
@@ -398,22 +426,16 @@ V8_FUNC_dddd(__script__rayFloor, {
 
     VARP(blood, 0, 1, 1);
 
-    V8_FUNC_iiidddidii(__script__particleSplash, {
+    V8_FUNC_iiidddidiibibi(__script__particleSplash, {
         if (arg1 == PART_BLOOD && !blood) V8_RETURN_NULL;
         vec p(arg4, arg5, arg6);
-        particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10);
+        particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
     });
 
-    V8_FUNC_iiidddidii(__script__particleSplashD, {
+    V8_FUNC_iiidddidiiibi(__script__particleSplashRegular, {
         if (arg1 == PART_BLOOD && !blood) V8_RETURN_NULL;
         vec p(arg4, arg5, arg6);
-        particle_splash_d(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10);
-    });
-
-    V8_FUNC_iiidddidii(__script__particleSplashE, {
-        if (arg1 == PART_BLOOD && !blood) V8_RETURN_NULL;
-        vec p(arg4, arg5, arg6);
-        particle_splash_e(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10);
+        regular_particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
     });
 
     V8_FUNC_ddddiiid(__script__particleFireball, {
@@ -421,21 +443,38 @@ V8_FUNC_dddd(__script__rayFloor, {
         particle_fireball(dest, arg4, arg5, arg6, arg7, arg8);
     });
 
-    V8_FUNC_ddddddiiid(__script__particleFlare, {
+    V8_FUNC_dddiiiiii(__script__particleExplodeSplash, {
+        vec o(arg1, arg2, arg3);
+        particle_explodesplash(o, arg4, arg5, arg6, arg7, arg8, arg9);
+    });
+
+    V8_FUNC_ddddddiiidii(__script__particleFlare, {
         vec p(arg1, arg2, arg3);
         vec dest(arg4, arg5, arg6);
-        particle_flare(p, dest, arg7, arg8, arg9, arg10);
+        if (arg12 < 0)
+            particle_flare(p, dest, arg7, arg8, arg9, arg10, NULL, arg11);
+        else
+        {
+            LogicEntityPtr owner = LogicSystem::getLogicEntity(arg12);
+            assert(owner.get()->dynamicEntity);
+            particle_flare(p, dest, arg7, arg8, arg9, arg10, (fpsent*)(owner.get()->dynamicEntity), arg11);
+        }
     });
 
-    V8_FUNC_iiddddddidi(__script__particleTrail, {
+    V8_FUNC_ddddddiiidi(__script__particleFlyingFlare, {
+        vec p(arg1, arg2, arg3);
+        vec dest(arg4, arg5, arg6);
+        particle_flying_flare(p, dest, arg7, arg8, arg9, arg10, arg11);
+    });
+
+    V8_FUNC_iiddddddidib(__script__particleTrail, {
         vec from(arg3, arg4, arg5);
         vec to(arg6, arg7, arg8);
-        particle_trail(arg1, arg2, from, to, arg9, arg10, arg11);
+        particle_trail(arg1, arg2, from, to, arg9, arg10, arg11, arg12);
     });
 
-    extern void regularflame(int type, const vec &p, float radius, float height, int color, int density = 3, float scale = 2.0f, float speed = 200.0f, float fade = 600.0f, int gravity = -15);
     V8_FUNC_idddddiidddi(__script__particleFlame, {
-        regularflame(arg1, vec(arg2, arg3, arg4), arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+        regular_particle_flame(arg1, vec(arg2, arg3, arg4), arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
     });
 
     V8_FUNC_dddddddiiidddd(__script__addDynlight, {
@@ -487,8 +526,7 @@ V8_FUNC_dddd(__script__rayFloor, {
 using namespace MessageSystem;
 V8_FUNC_iiss(__script__PersonalServerMessage, { send_PersonalServerMessage(arg1, arg2, arg3, arg4); });
 V8_FUNC_iiiiddd(__script__ParticleSplashToClients, { send_ParticleSplashToClients(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
-V8_FUNC_iiiiddd(__script__ParticleSplashDToClients, { send_ParticleSplashDToClients(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
-V8_FUNC_iiiiddd(__script__ParticleSplashEToClients, { send_ParticleSplashEToClients(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
+V8_FUNC_iiiiddd(__script__ParticleSplashRegularToClients, { send_ParticleSplashRegularToClients(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
 V8_FUNC_idddsi(__script__SoundToClientsByName, { send_SoundToClientsByName(arg1, arg2, arg3, arg4, arg5, arg6); });
 V8_FUNC_iis(__script__StateDataChangeRequest, { send_StateDataChangeRequest(arg1, arg2, arg3); });
 V8_FUNC_iis(__script__UnreliableStateDataChangeRequest, { send_UnreliableStateDataChangeRequest(arg1, arg2, arg3); });

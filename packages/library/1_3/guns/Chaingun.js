@@ -61,8 +61,10 @@ Chaingun = Gun.extend({
 //        if (Math.random() < Chaingun.firingRate*10) { // 10/sec
 //            Effect.fireball(PARTICLE.EXPLOSION_NO_GLARE, origin, 1, 0.1, 0xFF775F, 1);
 //        }
-
-        Sound.play('gk/jump.ogg', visualOrigin);
+        if (CAPI.getMaterial(shooter.position.x, shooter.position.y, shooter.position.z + 13) === MATERIAL.WATER)
+            Sound.play('Q009/uw/st2.ogg', visualOrigin);
+        else
+            Sound.play('gk/jump.ogg', visualOrigin);
     },
 /*
         // Shoot pellets
@@ -268,5 +270,5 @@ Chaingun.plugin = {
     },
 };
 
-Map.preloadSound('olpc/MichaelBierylo/sfx_DoorSlam.wav');
-
+Map.preloadSound('Q009/uw/st2.ogg');
+Map.preloadSound('gk/jump.ogg');
