@@ -26,7 +26,7 @@ The Syntensity Contributors, who all agree to release their code under
 the above license, are:
 
   * Alon 'kripken' Zakai
-
+  * quaker66
 
 ------------------------------------------------------------------------------
 
