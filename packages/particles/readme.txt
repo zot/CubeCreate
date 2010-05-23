@@ -76,10 +76,6 @@ baby-rabbit:
 lensflares.png
 flames.png
 
-***********************************
-* Free to use with proper credits *
-***********************************
-
 RaZgRiZ - Sauerbraten:
 ------------------------------------
 
