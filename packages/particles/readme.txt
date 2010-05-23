@@ -31,6 +31,6 @@ makke - CC-BY-NC-SA:
 
 scorch.png
 
-q009 - Sauerbraten Enhanced - CC-BY-NC:
+q009 - Sauerbraten Enhanced - CC-BY-SA:
 
 all others
