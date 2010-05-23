@@ -1,36 +1,86 @@
 Authors:
 
-Kubuntiac - licensed under CC 0:
+**********************
+* Creative Commons 0 *
+**********************
+
+Kubuntiac:
+----------
 
 ball1.png
 
-T7g - Creative Commons 0/Public domain/noone should have to remake these simple images.
-You don't even need to credit me, I don't care at all.
+T7g:
+----
 
 base.png
 
-kripken - Syntensity - CC-BY-SA:
+quaker66:
+---------
+
+scorch.png
+
+***********************************
+* Creative Commons BY Share-Alike *
+***********************************
+
+kripken - Syntensity:
+---------------------
 
 blob.png
 circle.png
 
-RaZgRiZ - Sauerbraten - free to use:
+q009 - Sauerbraten Enhanced:
+----------------------------
 
-explosion.png
+beam.png
+blood.png
+bubble.jpg
+decal.png
+explode.png
+flame1.png
+flame2.png
+flame3.png
+flame4.png
+flare.png
+glow.png
+lightflare.png
+lightning.jpg
+muzzleflash1.jpg
+muzzleflash2.jpg
+muzzleflash3.jpg
+muzzleflash4a.jpg
+muzzleflash4b.jpg
+muzzleflash4.jpg
+rain.png
+smoke.png
+snow.png
+spark.png
+steam.png
 
-OpenArena - GPL:
+******************************
+* GNU General Public License *
+******************************
+
+OpenArena:
+----------
 
 bullet.png
 
-baby-rabbit - public domain:
+*****************
+* Public domain *
+*****************
+
+baby-rabbit:
+------------
 
 lensflares.png
 flames.png
 
-makke - CC-BY-NC-SA:
+***********************************
+* Free to use with proper credits *
+***********************************
 
-scorch.png
+RaZgRiZ - Sauerbraten:
+------------------------------------
 
-q009 - Sauerbraten Enhanced - CC-BY-SA:
-
-all others
+explosion.png

@@ -24,7 +24,7 @@ TeleporterPlugin = {
                 collider.position = teleDests[0].position.copy();
                 collider.yaw = teleDests[0].yaw;
                 collider.velocity = [0, 0, 0]; // reset velocity ..
-                Sound.play(this.soundName); // play teleport sound
+                if (this.soundname) Sound.play(this.soundName); // play teleport sound
             }
             else log(ERROR, "Wrong number of teledests (0 or > 1): " + teleDests.length);
         }
@@ -32,7 +32,7 @@ TeleporterPlugin = {
             collider.position = this.target; // Simply place the collider at the target
             collider.yaw = (this.targetYaw) ? this.targetYaw : collider.yaw; // adjust yaw, too.
             collider.velocity = [0, 0, 0];
-            Sound.play(this.soundName); // play teleport sound
+            if (this.soundname) Sound.play(this.soundName); // play teleport sound
         }
     }
 };
