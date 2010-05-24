@@ -206,12 +206,13 @@ Health = {
             this.oldHealth = health;
         },
 
-        //! Visual pain effect - made to be modified. By default, we add some blood here
+        //! Visual pain effect - made to be modified. By default, we add some blood here + bloody screen if player is damaged
         visualPainEffect: function(health) {
             var pos = this.position.copy();
             pos.z += this.eyeHeight - 4;
             Effect.splash(PARTICLE.BLOOD, parseInt((this.oldHealth - health) / 3), 1000, pos, 0x60FFFF, 2.96);
             Effect.addDecal(DECAL.BLOOD, this.position, new Vector3(0,0,1), 7, 0x60FFFF);
+            if (this == getPlayerEntity()) Effect.clientDamage(0, this.oldHealth - health);
         },
 
         sufferDamage: function(_source) {
