@@ -97,12 +97,12 @@ struct ClientSystem
     //! Check if this user has admin privileges, which allows entering edit mode and using the Sauer console (/slash)
     static bool isAdmin();
 
-    static void addHUDImage(std::string tex, float centerX, float centerY, float widthInUniform, float heightInUniform);
+    static void addHUDImage(std::string tex, float centerX, float centerY, float widthInUniform, float heightInUniform, int color = 0xFFFFFF, float alpha = 1.0f);
 
     static void addHUDText(std::string text, float x, float y, float scale, int color);
 
     // x2 < 0 means it is a uniform width; ditto y2 for height
-    static void addHUDRect(float x1, float y1, float x2, float y2, int color);
+    static void addHUDRect(float x1, float y1, float x2, float y2, int color, float alpha = 1.0f);
 
     //! Show the current HUD. Called once per frame
     static void drawHUD(int w, int h);

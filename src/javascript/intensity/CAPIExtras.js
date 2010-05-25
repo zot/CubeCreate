@@ -580,3 +580,22 @@ if (!CAPI.renderModelFixed) {
     CAPI.renderModelFixed = true;
 }
 
+// HUD
+
+var oldShowHUDRect = CAPI.showHUDRect;
+var oldShowHUDImage = CAPI.showHUDImage;
+
+CAPI.showHUDRect = function(x1, y1, x2, y2, color, alpha) {
+    alpha = defaultValue(alpha, 1.0);
+    oldShowHUDRect(x1, y1, x2, y2, color, alpha);
+};
+
+CAPI.showHUDImage = function(tex, centerx, centery, width, height, color, alpha) {
+    color = defaultValue(color, 0xFFFFFF);
+    alpha = defaultValue(alpha, 1.0);
+    oldShowHUDImage(tex, centerx, centery, width, height, color, alpha);
+};
+
+// disable underwater stuff by default ..
+
+CAPI.underwaterAmbient(0);

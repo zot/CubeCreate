@@ -136,8 +136,8 @@ EMBED_CAPI_FUNC("rayFloor", __script__rayFloor, 4);
     EMBED_CAPI_FUNC("particleMeter", __script__particleMeter, 6);
     EMBED_CAPI_FUNC("particleText", __script__particleText, 9);
     EMBED_CAPI_FUNC("clientDamageEffect", __script__clientDamageEffect, 2);
-    EMBED_CAPI_FUNC("showHUDRect", __script__showHUDRect, 5);
-    EMBED_CAPI_FUNC("showHUDImage", __script__showHUDImage, 5);
+    EMBED_CAPI_FUNC("showHUDRect", __script__showHUDRect, 6);
+    EMBED_CAPI_FUNC("showHUDImage", __script__showHUDImage, 7);
     EMBED_CAPI_FUNC("showHUDText", __script__showHUDText, 5);
 
 #endif

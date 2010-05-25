@@ -510,9 +510,9 @@ V8_FUNC_dddd(__script__rayFloor, {
         damageblend(arg2);
     });
 
-    V8_FUNC_ddddi(__script__showHUDRect, { ClientSystem::addHUDRect(arg1, arg2, arg3, arg4, arg5); });
+    V8_FUNC_ddddid(__script__showHUDRect, { ClientSystem::addHUDRect(arg1, arg2, arg3, arg4, arg5, arg6); });
 
-    V8_FUNC_sdddd(__script__showHUDImage, { ClientSystem::addHUDImage(arg1, arg2, arg3, arg4, arg5); });
+    V8_FUNC_sddddid(__script__showHUDImage, { ClientSystem::addHUDImage(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
 
     V8_FUNC_sdddi(__script__showHUDText, {
         // text, x, y, scale, color

@@ -452,6 +452,18 @@
         , wrapped_code);
 
 
+// ddddid
+#define V8_FUNC_ddddid(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        double arg1 = args[0]->NumberValue(); if (ISNAN(arg1)) RAISE_SCRIPT_ERROR(isNAN failed on argument 0 in #new_func); \
+        double arg2 = args[1]->NumberValue(); if (ISNAN(arg2)) RAISE_SCRIPT_ERROR(isNAN failed on argument 1 in #new_func); \
+        double arg3 = args[2]->NumberValue(); if (ISNAN(arg3)) RAISE_SCRIPT_ERROR(isNAN failed on argument 2 in #new_func); \
+        double arg4 = args[3]->NumberValue(); if (ISNAN(arg4)) RAISE_SCRIPT_ERROR(isNAN failed on argument 3 in #new_func); \
+        int arg5 = args[4]->IntegerValue(); \
+        double arg6 = args[5]->NumberValue(); if (ISNAN(arg6)) RAISE_SCRIPT_ERROR(isNAN failed on argument 5 in #new_func); \
+        , wrapped_code);
+
+
 // iiiiii
 #define V8_FUNC_iiiiii(new_func, wrapped_code) \
     V8_FUNC_GEN(new_func, \
@@ -539,6 +551,19 @@
         int arg5 = args[4]->IntegerValue(); \
         int arg6 = args[5]->IntegerValue(); \
         int arg7 = args[6]->IntegerValue(); \
+        , wrapped_code);
+
+
+// sddddid
+#define V8_FUNC_sddddid(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        std::string _arg1 = *(v8::String::Utf8Value(args[0])); const char* arg1 = _arg1.c_str(); \
+        double arg2 = args[1]->NumberValue(); if (ISNAN(arg2)) RAISE_SCRIPT_ERROR(isNAN failed on argument 1 in #new_func); \
+        double arg3 = args[2]->NumberValue(); if (ISNAN(arg3)) RAISE_SCRIPT_ERROR(isNAN failed on argument 2 in #new_func); \
+        double arg4 = args[3]->NumberValue(); if (ISNAN(arg4)) RAISE_SCRIPT_ERROR(isNAN failed on argument 3 in #new_func); \
+        double arg5 = args[4]->NumberValue(); if (ISNAN(arg5)) RAISE_SCRIPT_ERROR(isNAN failed on argument 4 in #new_func); \
+        int arg6 = args[5]->IntegerValue(); \
+        double arg7 = args[6]->NumberValue(); if (ISNAN(arg7)) RAISE_SCRIPT_ERROR(isNAN failed on argument 6 in #new_func); \
         , wrapped_code);
 
 

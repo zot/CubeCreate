@@ -233,11 +233,12 @@ struct queuedHUDRect
 {
     float x1, y1, x2, y2;
     int color;
+    float alpha;
 };
 
 std::vector<queuedHUDRect> queuedHUDRects;
 
-void ClientSystem::addHUDRect(float x1, float y1, float x2, float y2, int color)
+void ClientSystem::addHUDRect(float x1, float y1, float x2, float y2, int color, float alpha)
 {
     queuedHUDRect q;
     q.x1 = x1;
@@ -245,6 +246,7 @@ void ClientSystem::addHUDRect(float x1, float y1, float x2, float y2, int color)
     q.x2 = x2;
     q.y2 = y2;
     q.color = color;
+    q.alpha = alpha;
     queuedHUDRects.push_back(q);
 }
 
@@ -255,6 +257,8 @@ struct queuedHUDImage
 //    float widthInX, heightInY; //!< In axis-relative coordinates, how big the HUD should be.
 //                               //!< E.g. widthInX 0.5 means its width is half of the X dimension
     float width, height;
+    int color;
+    float alpha;
 
     queuedHUDImage()
     {
@@ -262,12 +266,13 @@ struct queuedHUDImage
         centerX = 0.5; centerY = 0.5;
 //        widthInX = 0; heightInY = 0;
         width = 0.61803399; height = 0.61803399;
+        color = 0xFFFFFF, alpha = 1.0;
     }
 };
 
 std::vector<queuedHUDImage> queuedHUDImages;
 
-void ClientSystem::addHUDImage(std::string tex, float centerX, float centerY, float width, float height)
+void ClientSystem::addHUDImage(std::string tex, float centerX, float centerY, float width, float height, int color, float alpha)
 {
     queuedHUDImage q;
     q.tex = tex;
@@ -275,6 +280,8 @@ void ClientSystem::addHUDImage(std::string tex, float centerX, float centerY, fl
     q.centerY = centerY;
     q.width = width;
     q.height = height;
+    q.color = color;
+    q.alpha = alpha;
     queuedHUDImages.push_back(q);
 }
 
@@ -324,7 +331,8 @@ void ClientSystem::drawHUD(int w, int h)
 
         vec rgb(q.color>>16, (q.color>>8)&0xFF, q.color&0xFF);
         rgb.mul(1.0/256.0);
-        glColor3f(rgb[0], rgb[1], rgb[2]);
+
+        glColor4f(rgb[0], rgb[1], rgb[2], q.alpha);
 
         glDisable(GL_TEXTURE_2D);
         notextureshader->set();
@@ -353,7 +361,10 @@ void ClientSystem::drawHUD(int w, int h)
         float y1 = q.centerY - (hFactor*q.height/2);
         float x2 = q.centerX + (wFactor*q.width/2);
         float y2 = q.centerY + (hFactor*q.height/2);
-        glColor3f(1, 1, 1);
+        vec rgb(q.color>>16, (q.color>>8)&0xFF, q.color&0xFF);
+        rgb.mul(1.0/256.0);
+
+        glColor4f(rgb[0], rgb[1], rgb[2], q.alpha);
         settexture(q.tex.c_str(), 3);
         glBegin(GL_TRIANGLE_STRIP);
             glTexCoord2f(0.0f, 0.0f); glVertex2f(x1, y1);
