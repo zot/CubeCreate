@@ -2293,6 +2293,7 @@ CUBESCRIPT_iii(rdTri, rdtri);
 CUBESCRIPT_iiiii(rdJoint, rdjoint);
 CUBESCRIPT_iid(rdLimitDist, rdlimitdist);
 CUBESCRIPT_iiddddd(rdLimitRot, rdlimitrot);
+CUBESCRIPT_i(rdAnimJoints, rdanimjoints);
 
 CUBESCRIPT_dd(mdlEnvmap, mdlenvmap);
 

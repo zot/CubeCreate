@@ -485,6 +485,7 @@ EMBED_CAPI_FUNC_STD(rdTri, 3);
 EMBED_CAPI_FUNC_STD(rdJoint, 5);
 EMBED_CAPI_FUNC_STD(rdLimitDist, 3);
 EMBED_CAPI_FUNC_STD(rdLimitRot, 7);
+EMBED_CAPI_FUNC_STD(rdAnimJoints, 1);
 
 EMBED_CAPI_FUNC_STD(mdlEnvmap, 2);
 

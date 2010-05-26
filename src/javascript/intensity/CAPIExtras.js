@@ -522,6 +522,7 @@ Model = {
     rdJoint: CAPI.rdJoint,
     rdLimitDist: CAPI.rdLimitDist,
     rdLimitRot: CAPI.rdLimitRot,
+    rdAnimJoints: CAPI.rdAnimJoints,
 
     envmap: CAPI.mdlEnvmap,
 };

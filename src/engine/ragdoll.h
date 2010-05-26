@@ -48,7 +48,7 @@ struct ragdollskel
         int bone, parent;
     };
 
-    bool loaded;
+    bool loaded, animjoints;
     int eye;
     vector<vert> verts;
     vector<tri> tris;
@@ -58,7 +58,7 @@ struct ragdollskel
     vector<joint> joints;
     vector<reljoint> reljoints;
 
-    ragdollskel() : loaded(false), eye(-1) {}
+    ragdollskel() : loaded(false), animjoints(false), eye(-1) {}
 
     void setupjoints()
     {
@@ -68,7 +68,7 @@ struct ragdollskel
             joint &j = joints[i];
             j.weight = 0;
             vec pos(0, 0, 0);
-            loopk(3) if(j.vert[k]>=0) 
+            loopk(3) if(j.vert[k]>=0)
             {
                 pos.add(verts[j.vert[k]].pos);
                 j.weight++;
@@ -86,7 +86,7 @@ struct ragdollskel
             m.c.cross(m.a, vec(v3).sub(v1)).normalize();
             m.b.cross(m.c, m.a);
 
-            j.orient = matrix3x4(m, m.transform(pos).neg());        
+            j.orient = matrix3x4(m, m.transform(pos).neg());
         }
         loopv(verts) if(verts[i].weight) verts[i].weight = 1/verts[i].weight;
         reljoints.shrink(0);
@@ -136,7 +136,7 @@ struct ragdolldata
     float radius, timestep, scale;
     vert *verts;
     matrix3x3 *tris;
-    matrix3x4 *reljoints;
+    matrix3x4 *animjoints, *reljoints;
 
     ragdolldata(ragdollskel *skel, float scale = 1)
         : skel(skel),
@@ -149,6 +149,7 @@ struct ragdolldata
           scale(scale),
           verts(new vert[skel->verts.length()]), 
           tris(new matrix3x3[skel->tris.length()]),
+          animjoints(!skel->animjoints || skel->joints.empty() ? NULL : new matrix3x4[skel->joints.length()]),
           reljoints(skel->reljoints.empty() ? NULL : new matrix3x4[skel->reljoints.length()])
     {
     }
@@ -157,7 +158,27 @@ struct ragdolldata
     {
         delete[] verts;
         delete[] tris;
+        if(animjoints) delete[] animjoints;
         if(reljoints) delete[] reljoints;
+    }
+
+    void calcanimjoint(int i, const matrix3x4 &anim)
+    {
+        if(!animjoints) return;
+        ragdollskel::joint &j = skel->joints[i];
+        vec pos(0, 0, 0);
+        loopk(3) if(j.vert[k]>=0) pos.add(verts[j.vert[k]].pos);
+        pos.mul(j.weight);
+
+        ragdollskel::tri &t = skel->tris[j.tri];
+        matrix3x3 m;
+        const vec &v1 = verts[t.vert[0]].pos,
+                  &v2 = verts[t.vert[1]].pos,
+                  &v3 = verts[t.vert[2]].pos;
+        m.a = vec(v2).sub(v1).normalize();
+        m.c.cross(m.a, vec(v3).sub(v1)).normalize();
+        m.b.cross(m.c, m.a);
+        animjoints[i].mul(m, m.transform(pos).neg(), anim);
     }
 
     void calctris()
@@ -254,44 +275,33 @@ void ragdolldata::constraindist()
 
 inline void ragdolldata::applyrotlimit(ragdollskel::tri &t1, ragdollskel::tri &t2, float angle, const vec &axis)
 {
-    vec v1[3], v2[3], c1(0, 0, 0), c2(0, 0, 0);
-    loopk(3)
-    {
-        c1.add(v1[k] = verts[t1.vert[k]].pos);
-        c2.add(v2[k] = verts[t2.vert[k]].pos);
-    }
-    c1.div(3);
-    c2.div(3);
-    matrix3x3 wrot, crot1, crot2;
-    static const float wrotc = cosf(0.5f*RAD), wrots = sinf(0.5f*RAD);
-    wrot.rotate(wrotc, wrots, axis);
-    float w1 = 0, w2 = 0;
-    loopk(3)
-    {
-        v1[k].sub(c1);
-        v2[k].sub(c2);
-        w1 += wrot.transform(v1[k]).dist(v1[k]);
-        w2 += wrot.transform(v2[k]).dist(v2[k]);
-    }
-    crot1.rotate(angle*w2/(w1+w2), axis);
-    crot2.rotate(-angle*w1/(w1+w2), axis);
-    vec r1[3], r2[3], diff1(0, 0, 0), diff2(0, 0, 0);
-    loopk(3)
-    {
-        r1[k] = crot1.transform(v1[k]);
-        r2[k] = crot2.transform(v2[k]);
-        diff1.add(r1[k]).sub(v1[k]);
-        diff2.add(r2[k]).sub(v2[k]);
-    }
-    diff1.div(3).add(c1);
-    diff2.div(3).add(c2);
-    loopk(3)
-    {
-        verts[t1.vert[k]].newpos.add(r1[k]).add(diff1);
-        verts[t2.vert[k]].newpos.add(r2[k]).add(diff2);
-        verts[t1.vert[k]].weight++;
-        verts[t2.vert[k]].weight++;
-    }
+    vert &v1a = verts[t1.vert[0]], &v1b = verts[t1.vert[1]], &v1c = verts[t1.vert[2]],
+         &v2a = verts[t2.vert[0]], &v2b = verts[t2.vert[1]], &v2c = verts[t2.vert[2]];
+    vec m1 = vec(v1a.pos).add(v1b.pos).add(v1c.pos).div(3),
+        m2 = vec(v2a.pos).add(v2b.pos).add(v2c.pos).div(3),
+        q1a, q1b, q1c, q2a, q2b, q2c;
+    float w1 = q1a.cross(axis, vec(v1a.pos).sub(m1)).magnitude() +
+               q1b.cross(axis, vec(v1b.pos).sub(m1)).magnitude() +
+               q1c.cross(axis, vec(v1c.pos).sub(m1)).magnitude(),
+          w2 = q2a.cross(axis, vec(v2a.pos).sub(m2)).magnitude() +
+               q2b.cross(axis, vec(v2b.pos).sub(m2)).magnitude() +
+               q2c.cross(axis, vec(v2c.pos).sub(m2)).magnitude(); 
+    angle /= w1 + w2 + 1e-9f;
+    float a1 = angle*w2, a2 = -angle*w1, 
+          s1 = sinf(a1), s2 = sinf(a2);
+    vec c1 = vec(axis).mul(1 - cosf(a1)), c2 = vec(axis).mul(1 - cosf(a2));
+    v1a.newpos.add(vec().cross(c1, q1a).add(vec(q1a).mul(s1)).add(v1a.pos));
+    v1a.weight++;
+    v1b.newpos.add(vec().cross(c1, q1b).add(vec(q1b).mul(s1)).add(v1b.pos));
+    v1b.weight++;
+    v1c.newpos.add(vec().cross(c1, q1c).add(vec(q1c).mul(s1)).add(v1c.pos));
+    v1c.weight++;
+    v2a.newpos.add(vec().cross(c2, q2a).add(vec(q2a).mul(s2)).add(v2a.pos));
+    v2a.weight++;
+    v2b.newpos.add(vec().cross(c2, q2b).add(vec(q2b).mul(s2)).add(v2b.pos));
+    v2b.weight++;
+    v2c.newpos.add(vec().cross(c2, q2c).add(vec(q2c).mul(s2)).add(v2c.pos));
+    v2c.weight++;
 }
     
 void ragdolldata::constrainrot()
