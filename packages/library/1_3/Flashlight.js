@@ -1,6 +1,38 @@
 // Copyright 2010 quaker66. All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
+//! This is a flashlight plugin for Syntensity. It's quite heavily based on Firing.js, but a lot modified.
+//! Needs Firing and Editing included. Also GameManager, but that's included in every map.
+//! It consists of two plugins meant to be activated from your mapscript - protocol and player. Protocol plugin handles server-side stuff,
+//! player plugin handles properties, charging and stuff..
+//!
+//! Besides those two, there are a few functions outside plugins. handleClient effect does visual stuff. doServerRequest sends network message.
+//! Keyboard is handled by player plugin and you don't need to care about it.
+//! If you want to use it, just make beginning of your player registerEntityClass look like this:
+//!
+//!  GamePlayer = registerEntityClass(
+//!      bakePlugins(
+//!          Player,
+//!          [
+//!              Flashlight.plugins.protocol,
+//!              Flashlight.plugins.player,
+//!
+//! If you want to modify some properties or functions, you use:
+//!
+//!              Flashlight.plugins.player,
+//!              {
+//!                  propertyName: 256,
+//!                  functionName: function(bleh) {
+//!                      do_something();
+//!                  },
+//!              },
+//!
+//! Plugin supports two lights, for cars for example. To disable looking up/down with lights,
+//! don't forget to force pitch for your car camera.
+//! The distance between them has its own variable.
+//!
+//! If you need full list of modifeable properties, scroll down, it's documented in player plugin.
+
 //! these are required libraries to include, since we use functions from them.
 Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
@@ -65,25 +97,27 @@ Flashlight = {
         //! Player plugin. Takes care of HUD and flashlight battery control.
         player: {
             // counter used to take care of battery charge
-            lightCounter: 10,
+            lightCounter: 0,
             // actionKey index used to turn flashlight on/off
             flashlightKeyIndex: 17,
+            // is actionkey locked for current player? needed so it's not activating key multiple times for current player.
+            actionKeyLocked: 0,
             // the total battery capacity
-            lightTime: 10,
+            lightTime: 30,
             // color of flashlight beam
             lightColor: 0xFFEECC,
             // minimal radius. (light gets smaller as we get closer to wall)
             minLightRadius: 3,
             // maximal radius.
             maxLightRadius: 50,
-            // X position of HUD
-            hudX: 0.1,
-            // Y position of HUD
-            hudY: 0.9,
-            // width of HUD
-            hudW: 0.166,
-            // height of HUD
-            hudH: 0.041,
+            // X-left position of HUD
+            hudX1: 0.05,
+            // Y-bottom position of HUD
+            hudY1: 0.9,
+            // X-right position of HUD
+            hudX2: 0.266,
+            // Y-top position of HUD
+            hudY2: 0.925,
 
             // Car lights:
             // distance between lights
@@ -91,35 +125,18 @@ Flashlight = {
             // enable them?
             carLightsEnabled: 0,
 
-            // function to do HUD, meant to be replaced.
+            // function to do HUD, meant to be replaced. By default, show a progressbar changing color =)
+            // not really meant for big lightTimes. Present just as example, you'll have your own implementation propably.
             doHUD: function(count) {
-               if (CAPI.showHUDImage) {
-                   if (count >= this.lightTime)
-                      var image = "data/battery-11r.png";
-                   else if (count >= ((this.lightTime / 11.0) * 10))
-                      var image = "data/battery-10r.png";
-                   else if (count >= ((this.lightTime / 11.0) * 9))
-                      var image = "data/battery-9r.png";
-                   else if (count >= ((this.lightTime / 11.0) * 8))
-                      var image = "data/battery-8r.png";
-                   else if (count >= ((this.lightTime / 11.0) * 7))
-                      var image = "data/battery-7r.png";
-                   else if (count >= ((this.lightTime / 11.0) * 6))
-                      var image = "data/battery-6r.png";
-                   else if (count >= ((this.lightTime / 11.0) * 5))
-                      var image = "data/battery-5r.png";
-                   else if (count >= ((this.lightTime / 11.0) * 4))
-                      var image = "data/battery-4r.png";
-                   else if (count >= ((this.lightTime / 11.0) * 3))
-                      var image = "data/battery-3r.png";
-                   else if (count >= ((this.lightTime / 11.0) * 2))
-                      var image = "data/battery-2r.png";
-                   else if (count >= ((this.lightTime / 11.0) * 1))
-                      var image = "data/battery-1r.png";
-                   else
-                      var image = "data/battery-0r.png";
-
-                   CAPI.showHUDImage(image, this.hudX, this.hudY, this.hudW, this.hudH); // it's wrong for now. FIXME
+               if (CAPI.showHUDRect) {
+                var backcolor = (256 * 256 * (parseInt(count * (255 / this.lightTime)) - 255) * (-1)) + 256 * parseInt(count * (255 / this.lightTime));
+                CAPI.showHUDRect(this.hudX1 - 0.003, this.hudY1 - 0.005, this.hudX2 + 0.003, this.hudY2 + 0.005, 0xFFFFFF, 0.1);
+                CAPI.showHUDRect(this.hudX1, this.hudY1, this.hudX2, this.hudY2, backcolor, 0.4);
+                if ((this.hudX1 + (count / (this.lightTime / (this.hudX2 - this.hudX1)))) <= (this.hudX1 + 0.003))
+                    var x2 = this.hudX1 + (count / (this.lightTime / (this.hudX2 - this.hudX1))) + 0.003;
+                else
+                    var x2 = this.hudX1 + (count / (this.lightTime / (this.hudX2 - this.hudX1))) - 0.003;
+                CAPI.showHUDRect(this.hudX1 + 0.003, this.hudY1 + 0.005, x2, this.hudY2 - 0.005, 0xFFFFFF, 0.3);
                }
             },
 
@@ -131,8 +148,12 @@ Flashlight = {
                 if (!this.carLightsEnabled) Sound.play("olpc/AdamKeshen/BeatBoxCHIK.wav", this.position);
             },
 
-            // in clientActivate, we begin stuff .. by default, make flashlight off and add charging / discharging mechanism which does something every second.
+            // in clientActivate, we begin stuff .. by default, enable the action key (if not locked), make flashlight off and add charging / discharging mechanism which does something every second.
             clientActivate: function() {
+                if (!this.actionKeyLocked) {
+                    ApplicationManager.instance.connect('actionKey', bind(this.actionKey, this));
+                    this.actionKeyLocked = 1;
+                }
                 this.flashlightActivated = false;
                 if (!this.eventman) {
                    this.eventman = GameManager.getSingleton().eventManager.add({
@@ -141,9 +162,9 @@ Flashlight = {
                         func: bind(function() {
                             if (!isPlayerEditing(this) && !this.carLightsEnabled) { // in edit mode, disallow all modifications of counter.
                                 if (this.flashlightActivated) {
-                                    this.lightCounter -= 1;
-                                    if (this.lightCounter <= 0) { this.lightCounter = 0; this.flashlightDeactivate(); }
-                                } else if (this.lightCounter < this.lightTime) this.lightCounter += 1;
+                                    this.lightCounter += 1;
+                                    if (this.lightCounter >= this.lightTime) { this.lightCounter = this.lightTime; this.flashlightDeactivate(); }
+                                } else if (this.lightCounter > 0) this.lightCounter -= 1;
                             }
                         }, this),
                         entity: this,
@@ -156,8 +177,7 @@ Flashlight = {
                 if (this !== getPlayerEntity()) return;
 
                 if (this.flashlightActivated) {
-                    if (this.carLightsEnabled) this.lightCounter = 1; // make it proceed if counter is normally disabled in car lights mode
-                    if (this.lightCounter > 0) {
+                    if (this.lightCounter <= this.lightTime) {
                         var posCopy = this.position.copy();
                         posCopy.z += this.upperHeight;
                         var posCopyB = this.position.copy();
@@ -221,7 +241,7 @@ Flashlight = {
                 }
 
                 // do HUD stuff here
-                if (!this.carLightsEnabled) this.doHUD(this.lightCounter);
+                if (!this.carLightsEnabled) this.doHUD(this.lightTime - this.lightCounter);
             },
 
             // we start flashlight. If already started, then stop it.
@@ -240,15 +260,14 @@ Flashlight = {
                 this.flashlightActivated = false;
                 this.flashlightOff();
             },
-        },
-    },
 
-    //! this is our action key. Needed to be activated.
-    actionKey: function(index, down) {
-       if (!down) return;
-       if (index == 17) {
-           log(ERROR, "Start doing sth..");
-           getPlayerEntity().flashlightActivate();
-       }
+            // this is our action key. Just starts flashlight if right key is pressed, nothing more.
+            actionKey: function(index, down) {
+                if (!down) return;
+                if (index == this.flashlightKeyIndex) {
+                    getPlayerEntity().flashlightActivate();
+                }
+            },
+        },
     },
 };
