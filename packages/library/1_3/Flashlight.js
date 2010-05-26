@@ -40,7 +40,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
 Flashlight = {
     plugins: {
         //! Client effect handler, in our case it shows some light.
-        handleClientEffect: function(flashlightPlayer, targetPosition, minLightRadius, maxLightRadius, lightColor, carLightsDistance, targetPositionB, targetPositionC) {
+        handleClientEffect: function(flashlightPlayer, targetPosition, minLightRadius, maxLightRadius, lightColor, carLightsDistance, targetPositionB, targetPositionC, maxDistance, fullLightDistance) {
             // check distances .. based on that, scale light as needed. Don't scale it below minLightRadius or above maxLightRadius
             if (distance(flashlightPlayer.position, targetPosition) > maxLightRadius)
               var dist = maxLightRadius;
@@ -48,19 +48,43 @@ Flashlight = {
               var dist = minLightRadius;
             else
               var dist = distance(flashlightPlayer.position, targetPosition);
+            // we want to adjust how much light we want with distance .. we need to get V value of HSV value of color.
+            if (fullLightDistance >= 0) { // don't do the conversions to save performance when fullLightDistance is lower than 0, because that means we want to allways light fully.
+                var rgb = Color.hexToRgb(lightColor);
+                var hsv = Color.rgbToHsv(rgb.r, rgb.g, rgb.b);
+            } else var hsv = {h:0, s:0, v:0}; // hey bro, don't crash
+            // now we do some range
+            if (fullLightDistance < 0) {
+                hsv.v = hsv.v; // dont do anything if fullLightDistance is lower than 0, because that means we want full light always.
+            } else if (fullLightDistance > 0) { // and if the fullLightDistance is bigger than 0, it means that we want to block fade on some distance .. if it's 0, it means we want to fade out always.
+                if (distance(flashlightPlayer.position, targetPosition) <= fullLightDistance)
+                    hsv.v = hsv.v; // if the distance is lower or fullLightDistance, don't do anything .. just continue.
+                else if (distance(flashlightPlayer.position, targetPosition) <= maxDistance) // but if we get out of that distance, we need to start fading from that distance
+                    hsv.v = -(((hsv.v / (maxDistance - fullLightDistance)) * (distance(flashlightPlayer.position, targetPosition) - fullLightDistance)) - hsv.v);
+            } else if (distance(flashlightPlayer.position, targetPosition) <= maxDistance) { // this is normal, always-fading state.
+                hsv.v = -(((hsv.v / maxDistance) * distance(flashlightPlayer.position, targetPosition)) - hsv.v);
+            } else { // this is out of maxDistance.
+                hsv.v = 0;
+            }
+
+            // we convert stuff back to rgb and then hex
+            if (fullLightDistance >= 0) { // don't do the conversions to save performance when fullLightDistance is lower than 0, because that means we want to allways light fully.
+                var rgb = Color.hsvToRgb(hsv.h, hsv.s, hsv.v); // we convert the number back to insane =)
+                var hex = Color.rgbToHex(rgb.r, rgb.g, rgb.b);
+            }
             // add our light, finally. Don't show if we're in edit mode.
-            if (!isPlayerEditing(flashlightPlayer)) 
-              if (carLightsDistance < 0) Effect.addDynamicLight(targetPosition, dist, lightColor, 0);
+            if (!isPlayerEditing(flashlightPlayer) && (fullLightDistance < 0 || hsv.v > 0)) // performance - check for hsv.v if it's bigger than 0, because we don't want to spawn invisible light. also when fullLightDistance is lower than 0, spawn light(s).
+              if (carLightsDistance < 0) Effect.addDynamicLight(targetPosition, dist, hex ? hex : lightColor, 0);
               else { // car lights - special occasion
-                  Effect.addDynamicLight(targetPositionB, dist, lightColor, 0);
-                  Effect.addDynamicLight(targetPositionC, dist, lightColor, 0);
+                  Effect.addDynamicLight(targetPositionB, dist, hex ? hex : lightColor, 0);
+                  Effect.addDynamicLight(targetPositionC, dist, hex ? hex : lightColor, 0);
               }
         },
 
         //! this is called every frame, so actions can be in sync every frame
-        doServerRequest: function(flashlightPlayer, targetPosition, minLightRadius, maxLightRadius, lightColor, carLightsDistance, targetPositionB, targetPositionC) {
+        doServerRequest: function(flashlightPlayer, targetPosition, minLightRadius, maxLightRadius, lightColor, carLightsDistance, targetPositionB, targetPositionC, maxDistance, fullLightDistance) {
             // Send network protocol message
-            flashlightPlayer.lightingInfo = [targetPosition.x, targetPosition.y, targetPosition.z, minLightRadius, maxLightRadius, lightColor, carLightsDistance, targetPositionB.x, targetPositionB.y, targetPositionB.z, targetPositionC.x, targetPositionC.y, targetPositionC.z];
+            flashlightPlayer.lightingInfo = [targetPosition.x, targetPosition.y, targetPosition.z, minLightRadius, maxLightRadius, lightColor, carLightsDistance, targetPositionB.x, targetPositionB.y, targetPositionB.z, targetPositionC.x, targetPositionC.y, targetPositionC.z, maxDistance, fullLightDistance];
         },
 
         //! Network protocol so it can be all sync between clients
@@ -80,7 +104,7 @@ Flashlight = {
 
             // finally function doing something visually (calls client effect)
             onLightingInfo: function(info) {
-                if (info.length !== 13) return;
+                if (info.length !== 15) return;
                 var targetPosition = new Vector3(info.slice(0,3));
                 var minLightRadius = info[3];
                 var maxLightRadius = info[4];
@@ -88,8 +112,10 @@ Flashlight = {
                 var carLightsDistance = info[6];
                 var targetPositionB = new Vector3(info.slice(7,10));
                 var targetPositionC = new Vector3(info.slice(10,13));
+                var maxDistance = info[13];
+                var fullLightDistance = info[14];
                 if (Global.CLIENT) { // under every client, onLightingInfo gets called and visual effect is shown.
-                    Flashlight.plugins.handleClientEffect(this, targetPosition, minLightRadius, maxLightRadius, lightColor, carLightsDistance, targetPositionB, targetPositionC); // targetPosition is different under every client.
+                    Flashlight.plugins.handleClientEffect(this, targetPosition, minLightRadius, maxLightRadius, lightColor, carLightsDistance, targetPositionB, targetPositionC, maxDistance, fullLightDistance); // targetPosition is different under every client.
                 }
             },
         },
@@ -105,11 +131,15 @@ Flashlight = {
             // the total battery capacity
             lightTime: 30,
             // color of flashlight beam
-            lightColor: 0xFFEECC,
+            lightColor: 0x7b7465,
             // minimal radius. (light gets smaller as we get closer to wall)
             minLightRadius: 3,
             // maximal radius.
             maxLightRadius: 50,
+            // maximal distance from player where light still lights (almost invisible, but lights)
+            maxDistance: 400,
+            // maximal distance where light intensity is kept unchanged. set to 0 if you want to disable it, and -1 if you want to light fully always.
+            fullLightDistance: 150,
             // X-left position of HUD
             hudX1: 0.05,
             // Y-bottom position of HUD
@@ -195,7 +225,7 @@ Flashlight = {
                                                                this.position.addNew(new Vector3().fromYawPitch(this.yaw, this.pitch)),
                                                                Editing.getWorldSize());
                             // include some more info in request, like colors or radiuses.
-                            Flashlight.plugins.doServerRequest(this, targetData.target, this.minLightRadius, this.maxLightRadius, this.lightColor, -1, new Vector3(0, 0, 0), new Vector3(0, 0, 0));
+                            Flashlight.plugins.doServerRequest(this, targetData.target, this.minLightRadius, this.maxLightRadius, this.lightColor, -1, new Vector3(0, 0, 0), new Vector3(0, 0, 0), this.maxDistance, this.fullLightDistance);
                         } else {
                             var posCopyC = posCopyB.copy();
                             var posCopyD = posCopyB.copy();
@@ -235,7 +265,7 @@ Flashlight = {
                                                                this.position.addNew(new Vector3().fromYawPitch(this.yaw, 0)),
                                                                Editing.getWorldSize());
 
-                            Flashlight.plugins.doServerRequest(this, targetData.target, this.minLightRadius, this.maxLightRadius, this.lightColor, this.carLightsDistance, targetDataB.target, targetDataC.target);
+                            Flashlight.plugins.doServerRequest(this, targetData.target, this.minLightRadius, this.maxLightRadius, this.lightColor, this.carLightsDistance, targetDataB.target, targetDataC.target, this.maxDistance, this.fullLightDistance);
                         }
                     }
                 }
