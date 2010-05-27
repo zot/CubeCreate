@@ -59,10 +59,14 @@ Flashlight = {
             } else if (fullLightDistance > 0) { // and if the fullLightDistance is bigger than 0, it means that we want to block fade on some distance .. if it's 0, it means we want to fade out always.
                 if (distance(flashlightPlayer.position, targetPosition) <= fullLightDistance)
                     hsv.v = hsv.v; // if the distance is lower or fullLightDistance, don't do anything .. just continue.
-                else if (distance(flashlightPlayer.position, targetPosition) <= maxDistance) // but if we get out of that distance, we need to start fading from that distance
+                else if (distance(flashlightPlayer.position, targetPosition) <= maxDistance) { // but if we get out of that distance, we need to start fading from that distance
                     hsv.v = -(((hsv.v / (maxDistance - fullLightDistance)) * (distance(flashlightPlayer.position, targetPosition) - fullLightDistance)) - hsv.v);
+                    if (hsv.v < 0.005) hsv.v = 0; // a little hack .. because if the value is lower than this, it lights fully for no reason .. the little range between 0 and 0.005 is not noticeable at all.
+                } else
+                    hsv.v = 0;
             } else if (distance(flashlightPlayer.position, targetPosition) <= maxDistance) { // this is normal, always-fading state.
                 hsv.v = -(((hsv.v / maxDistance) * distance(flashlightPlayer.position, targetPosition)) - hsv.v);
+                if (hsv.v < 0.005) hsv.v = 0;
             } else { // this is out of maxDistance.
                 hsv.v = 0;
             }

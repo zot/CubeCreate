@@ -239,7 +239,7 @@ Effect = {
     //! and will flicker otherwise.
     //! @param end Where the lightning ends. This can be a movable position, the animation will not flicker even if so.
     lightning: function (start, end, fade, color, size) {
-        Effect.flare(PARTICLE.LIGHTNING, end, start, fade, color, size);
+        Effect.flare(PARTICLE.LIGHTNING, start, end, fade, color, size);
     },
 
     //== Other effects
