@@ -44,7 +44,6 @@ flame4.png
 flare.png
 glow.png
 lightflare.png
-lightning.jpg
 muzzleflash1.jpg
 muzzleflash2.jpg
 muzzleflash3.jpg
@@ -77,6 +76,11 @@ lensflares.png
 flames.png
 
 RaZgRiZ - Sauerbraten:
-------------------------------------
+----------------------
 
 explosion.png
+
+quin - Sauerbraten:
+-------------------
+
+lightning.jpg
