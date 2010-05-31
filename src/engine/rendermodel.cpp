@@ -542,14 +542,14 @@ modelbatch &addbatchedmodel(model *m)
     return *b;
 }
 
-VARR(modeltweaks, 0, 0, 1);
-FVARR(tweakmodelspec, 0, 1.0, 100.0);
-FVARR(tweakmodelambient, 0, 1.0, 100.0);
-FVARR(tweakmodelglow, 0, 1.0, 100.0);
-FVARR(tweakmodelspecglare, 0, 1.0, 100.0);
-FVARR(tweakmodelglowglare, 0, 1.0, 100.0);
+VAR(modeltweaks, 0, 0, 1); // INTENSITY: SkyManager: tweaks for models (like ambience, glow, so we can sync it with ambientlight
+FVAR(tweakmodelspec, 0, 1.0, 100.0);
+FVAR(tweakmodelambient, 0, 1.0, 100.0);
+FVAR(tweakmodelglow, 0, 1.0, 100.0);
+FVAR(tweakmodelspecglare, 0, 1.0, 100.0);
+FVAR(tweakmodelglowglare, 0, 1.0, 100.0);
 
-FVARR(tweakmodelscale, 0.001, 1.0, 100.0);
+FVARR(tweakmodelscale, 0.001, 1.0, 100.0); // end INTENSITY
 
 void renderbatchedmodel(model *m, batchedmodel &b)
 {
@@ -568,12 +568,12 @@ void renderbatchedmodel(model *m, batchedmodel &b)
         if(b.flags&MDL_GHOST) anim |= ANIM_GHOST;
     }
 
-    if(modeltweaks) {
+    if(modeltweaks) { // INTENSITY: SkyManager: do modeltweaks
         if (!b.d) m->setambient(tweakmodelambient);	// t7g; This is how we adjust ambient and related for all models at once.
         else m->setambient(tweakmodelambient / 10.0f);
         m->setglow(tweakmodelglow);
-	m->setspec(tweakmodelspec);
-	m->setglare(tweakmodelspecglare, tweakmodelglowglare);
+	    m->setspec(tweakmodelspec);
+	    m->setglare(tweakmodelspecglare, tweakmodelglowglare);
     }
 
     m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir, b.transparent, b.rotation); // INTENSITY: roll, rotation
@@ -853,7 +853,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
                     pos.z += radius/2;
                 }
                 else pos.z += 0.75f*(d->eyeheight + d->aboveeye);
-                lightreaching(pos, light->color, light->dir);
+                lightreaching(pos, light->color, light->dir, (flags&MDL_LIGHT_FAST)!=0);
                 dynlightreaching(pos, light->color, light->dir);
                 game::lighteffects(d, light->color, light->dir);
                 light->millis = lastmillis;
@@ -863,12 +863,12 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
         {
             if(!light) 
             {
-                lightreaching(pos, lightcolor, lightdir);
+                lightreaching(pos, lightcolor, lightdir, (flags&MDL_LIGHT_FAST)!=0);
                 dynlightreaching(pos, lightcolor, lightdir);
             }
             else if(light->millis!=lastmillis)
             {
-                lightreaching(pos, light->color, light->dir);
+                lightreaching(pos, light->color, light->dir, (flags&MDL_LIGHT_FAST)!=0);
                 dynlightreaching(pos, light->color, light->dir);
                 light->millis = lastmillis;
             }
@@ -922,7 +922,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
         if((flags&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
     }
 
-	//m->setambient(mdlambienttweak);
+	//m->setambient(mdlambienttweak); // INTENSITY: SkyManager
 
     m->startrender();
 

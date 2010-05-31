@@ -726,12 +726,21 @@ void cleanupgl()
 
     extern void cleanupmotionblur();
     cleanupmotionblur();
+
+    extern void clearminimap();
+    clearminimap();
 }
 
 #define VARRAY_INTERNAL
 #include "varray.h"
 
 VAR(wireframe, 0, 0, 1);
+
+ICOMMAND(getcampos, "", (), 
+{
+    defformatstring(pos)("%s %s %s", floatstr(camera1->o.x), floatstr(camera1->o.y), floatstr(camera1->o.z));
+    result(pos);
+});
 
 vec worldpos, camdir, camright, camup;
 
@@ -1566,6 +1575,162 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
     envmapping = false;
 }
 
+bool minimapping = false;
+
+GLuint minimaptex = 0;
+vec minimapcenter(0, 0, 0), minimapradius(0, 0, 0), minimapscale(0, 0, 0);
+
+void clearminimap()
+{
+    if(minimaptex) { glDeleteTextures(1, &minimaptex); minimaptex = 0; }
+}
+
+VARR(minimapheight, 0, 0, 2<<16);
+bvec minimapcolor(0, 0, 0);
+HVARFR(minimapcolour, 0, 0, 0xFFFFFF,
+{
+    minimapcolor = bvec((minimapcolour>>16)&0xFF, (minimapcolour>>8)&0xFF, minimapcolour&0xFF);
+});
+VARR(minimapclip, 0, 0, 1);
+VARFP(minimapsize, 7, 8, 10, { if(minimaptex) drawminimap(); });
+
+void bindminimap()
+{
+    glBindTexture(GL_TEXTURE_2D, minimaptex);
+}
+
+void clipminimap(ivec &bbmin, ivec &bbmax, cube *c = worldroot, int x = 0, int y = 0, int z = 0, int size = worldsize>>1)
+{
+    loopi(8)
+    {
+        ivec o(i, x, y, z, size);
+        if(c[i].children) clipminimap(bbmin, bbmax, c[i].children, o.x, o.y, o.z, size>>1);
+        else if(!isentirelysolid(c[i]) && (!c[i].ext || (c[i].ext->material&MATF_CLIP)!=MAT_CLIP)) 
+        {
+            loopk(3) bbmin[k] = min(bbmin[k], o[k]);
+            loopk(3) bbmax[k] = max(bbmax[k], o[k] + size);
+        }
+    }
+}
+
+void drawminimap()
+{
+    if(!game::needminimap()) { clearminimap(); return; }
+
+    renderprogress(0, "generating mini-map...", 0, !renderedframe);
+
+    int size = 1<<minimapsize, sizelimit = min(hwtexsize, min(screen->w, screen->h));
+    while(size > sizelimit) size /= 2;
+    if(!minimaptex) glGenTextures(1, &minimaptex);
+
+    extern vector<vtxarray *> valist;
+    ivec bbmin(worldsize, worldsize, worldsize), bbmax(0, 0, 0);
+    loopv(valist)
+    {
+        vtxarray *va = valist[i];
+        loopk(3)
+        {
+            if(va->geommin[k]>va->geommax[k]) continue;
+            bbmin[k] = min(bbmin[k], va->geommin[k]);
+            bbmax[k] = max(bbmax[k], va->geommax[k]);
+        }
+    }
+    if(minimapclip)
+    {
+        ivec clipmin(worldsize, worldsize, worldsize), clipmax(0, 0, 0);
+        clipminimap(clipmin, clipmax);
+        loopk(2) bbmin[k] = max(bbmin[k], clipmin[k]);
+        loopk(2) bbmax[k] = min(bbmax[k], clipmax[k]); 
+    }
+ 
+    minimapradius = bbmax.tovec().sub(bbmin.tovec()).mul(0.5f); 
+    minimapcenter = bbmin.tovec().add(minimapradius);
+    minimapradius.x = minimapradius.y = max(minimapradius.x, minimapradius.y);
+    minimapscale = vec((0.5f - 1.0f/size)/minimapradius.x, (0.5f - 1.0f/size)/minimapradius.y, 1.0f);
+
+    envmapping = minimapping = true;
+
+    physent *oldcamera = camera1;
+    static physent cmcamera;
+    cmcamera = *player;
+    cmcamera.reset();
+    cmcamera.type = ENT_CAMERA;
+    cmcamera.o = vec(minimapcenter.x, minimapcenter.y, max(minimapcenter.z + minimapradius.z + 1, float(minimapheight)));
+    cmcamera.yaw = 0;
+    cmcamera.pitch = -90;
+    cmcamera.roll = 0;
+    camera1 = &cmcamera;
+    setviewcell(vec(-1, -1, -1));
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-minimapradius.x, minimapradius.x, -minimapradius.y, minimapradius.y, 0, camera1->o.z + 1);
+    glScalef(-1, 1, 1);
+    glMatrixMode(GL_MODELVIEW);
+
+    transplayer();
+
+    defaultshader->set();
+
+    GLfloat fogc[4] = { minimapcolor.x/255.0f, minimapcolor.y/255.0f, minimapcolor.z/255.0f, 1.0f };
+    glFogf(GL_FOG_START, 0);
+    glFogf(GL_FOG_END, 1000000);
+    glFogfv(GL_FOG_COLOR, fogc);
+
+    glClearColor(fogc[0], fogc[1], fogc[2], fogc[3]);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+    glViewport(1, 1, size-2, size-2);
+    glScissor(1, 1, size-2, size-2);
+    glEnable(GL_SCISSOR_TEST);
+
+    glDisable(GL_FOG);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_TEXTURE_2D);
+
+    glFrontFace(GL_CCW);
+
+    xtravertsva = xtraverts = glde = gbatches = 0;
+
+    visiblecubes(false);
+    queryreflections();
+    drawreflections();
+
+    loopi(minimapheight > 0 && minimapheight < minimapcenter.z + minimapradius.z ? 2 : 1)
+    {
+        if(i)
+        {
+            glClear(GL_DEPTH_BUFFER_BIT);
+            camera1->o.z = minimapheight;
+            transplayer();
+        }
+        rendergeom();
+        rendermapmodels();
+        renderwater();
+        rendermaterials();
+        renderalphageom();
+    }
+
+    glFrontFace(GL_CW);
+
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_FOG);
+
+    glDisable(GL_SCISSOR_TEST);
+    glViewport(0, 0, screen->w, screen->h);
+
+    camera1 = oldcamera;
+    envmapping = minimapping = false;
+
+    glBindTexture(GL_TEXTURE_2D, minimaptex);
+    glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB5, 0, 0, size, size, 0);
+    setuptexparameters(minimaptex, NULL, 3, 1, GL_RGB5, GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 GLuint motiontex = 0;
 int motionw = 0, motionh = 0, lastmotion = 0;
 
@@ -1817,7 +1982,8 @@ void damagecompass(int n, const vec &loc)
     if(delta.magnitude()<4) yaw = camera1->yaw;
     else vectoyawpitch(delta, yaw, pitch);
     yaw -= camera1->yaw;
-    if(yaw<0) yaw += 360;
+    if(yaw >= 360) yaw = fmod(yaw, 360);
+    else if(yaw < 0) yaw = 360 - fmod(-yaw, 360);
     int dir = (int(yaw+22.5f)%360)/45;
     dcompass[dir] += max(n, damagecompassmin)/float(damagecompassmax);
     if(dcompass[dir]>1) dcompass[dir] = 1;

@@ -81,7 +81,7 @@ void fatal(const char *s, ...)    // failure exit
 
 SDL_Surface *screen = NULL;
 
-int curtime = 0, totalmillis = 1, lastmillis = 1, skymillis = 1;
+int curtime = 0, totalmillis = 1, lastmillis = 1, skymillis = 1; // INTENSITY: SkyManager: add skymillis, for syncing
 
 dynent *player = NULL;
 
@@ -1266,7 +1266,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
             if(paused || game::ispaused()) curtime = 0;
         }
 
-		skymillis += curtime;
+        skymillis += curtime; // INTENSITY: SkyManager
         lastmillis += curtime;
         totalmillis = millis;
 

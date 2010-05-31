@@ -27,6 +27,13 @@
         , wrapped_code);
 
 
+// b
+#define V8_FUNC_b(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        bool arg1 = args[0]->BooleanValue(); \
+        , wrapped_code);
+
+
 // ii
 #define V8_FUNC_ii(new_func, wrapped_code) \
     V8_FUNC_GEN(new_func, \

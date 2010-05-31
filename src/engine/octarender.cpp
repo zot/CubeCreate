@@ -1,4 +1,3 @@
-// INTENSITY: Version: rev 1759 in sauerbraten SVN, June 3 2009. Fix issue with deleting vs, following our report
 // octarender.cpp: fill vertex arrays with different cube surfaces.
 
 #include "engine.h"
@@ -1780,6 +1779,7 @@ void allchanged(bool load)
     {
         seedparticles();
         genenvmaps();
+        drawminimap();
     }
 
     PhysicsManager::finalizeWorldGeometry(); // INTENSITY

@@ -794,6 +794,7 @@ Global.gameHUD = {
             centerY: factors.y*(w/2)/Global.screenHeight,
             radius: factors.y*(w/2)/Global.screenHeight,
             image: 'packages/gamehud/gk/swarm/gk_pc_rada_bg_image_1.png',
+            useMinimap: 0,
         };
     },
 

@@ -107,6 +107,9 @@ struct ClientSystem
     //! Show the current HUD. Called once per frame
     static void drawHUD(int w, int h);
 
+    //! Show the minimap. Called once per frame
+    static void drawMinimap(int w, int h, float minmapzoom, float maxmapzoom, float forceminmapzoom, float forcemaxmapzoom, float minimapsize, float minimapxpos, float minimapypos, float minimaprot, int minimapsides, int minimaprightalign);
+
     //! Called once/frame, after drawing the HUD. Cleans up temporary structures.
     //! It is important to call this even if the HUD is not drawn (e.g. in edit
     //! mode).

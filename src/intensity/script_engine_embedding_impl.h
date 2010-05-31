@@ -183,30 +183,30 @@ EMBED_CAPI_FUNC("setShaderParam", __script__setShaderParam, 4);
 
 EMBED_CAPI_FUNC("materialReset", __script__materialReset, 0);
 
-EMBED_CAPI_FUNC("loadStars", __script__loadStars, 1);
+EMBED_CAPI_FUNC("loadStars", __script__loadStars, 1); // SkyManager
 EMBED_CAPI_FUNC("loadSky", __script__loadSky, 1);
-EMBED_CAPI_FUNC("loadSun", __script__loadSun, 1);
-EMBED_CAPI_FUNC("loadClouds", __script__loadClouds, 1);
-EMBED_CAPI_FUNC("loadCloudLayer", __script__loadCloudLayer, 1);
-EMBED_CAPI_FUNC("loadAltCloudLayer", __script__loadAltCloudLayer, 1);
+EMBED_CAPI_FUNC("loadSun", __script__loadSun, 1); // SkyManager
+EMBED_CAPI_FUNC("loadClouds", __script__loadClouds, 1); // SkyManager
+EMBED_CAPI_FUNC("loadCloudLayer", __script__loadCloudLayer, 1); // SkyManager
+EMBED_CAPI_FUNC("loadAltCloudLayer", __script__loadAltCloudLayer, 1); // SkyManager
 
 EMBED_CAPI_FUNC("fogColor", __script__fogColor, 1);
 EMBED_CAPI_FUNC("fog", __script__fog, 1);
 
-EMBED_CAPI_FUNC_STD(causticScale, 1);
-EMBED_CAPI_FUNC_STD(causticMillis, 1);
+EMBED_CAPI_FUNC_STD(causticScale, 1); // SkyManager
+EMBED_CAPI_FUNC_STD(causticMillis, 1); // SkyManager
 
-EMBED_CAPI_FUNC_STD(waterSpecularity, 1);
+EMBED_CAPI_FUNC_STD(waterSpecularity, 1); // SkyManager
 EMBED_CAPI_FUNC_STD(waterFog, 1);
 EMBED_CAPI_FUNC_STD(waterColor, 3);
-EMBED_CAPI_FUNC_STD(waterFallTint, 3);
+EMBED_CAPI_FUNC_STD(waterFallTint, 3); // SkyManager
 
-EMBED_CAPI_FUNC_STD(lavaFog, 1);
-EMBED_CAPI_FUNC_STD(lavaTint, 3);
+EMBED_CAPI_FUNC_STD(lavaFog, 1); // SkyManager
+EMBED_CAPI_FUNC_STD(lavaTint, 3); // SkyManager
 
-EMBED_CAPI_FUNC_STD(spinStars, 1);
+EMBED_CAPI_FUNC_STD(spinStars, 1); // SkyManager
 EMBED_CAPI_FUNC_STD(spinSky, 1);
-EMBED_CAPI_FUNC_STD(spinSun, 1);
+EMBED_CAPI_FUNC_STD(spinSun, 1); // SkyManager begin
 EMBED_CAPI_FUNC_STD(spinClouds, 1);
 EMBED_CAPI_FUNC_STD(spinCloudLayer, 1);
 EMBED_CAPI_FUNC_STD(spinAltCloudLayer, 1);
@@ -231,13 +231,13 @@ EMBED_CAPI_FUNC_STD(tintClouds, 3);
 EMBED_CAPI_FUNC_STD(tintCloudLayer, 3);
 EMBED_CAPI_FUNC_STD(tintAltCloudLayer, 3);
 EMBED_CAPI_FUNC_STD(tintAmbient, 3);
-EMBED_CAPI_FUNC_STD(tintFog, 3)
+EMBED_CAPI_FUNC_STD(tintFog, 3)  // SkyManager end
 
 EMBED_CAPI_FUNC_STD(cloudLayer, 1);
 EMBED_CAPI_FUNC_STD(cloudScrollX, 1);
 EMBED_CAPI_FUNC_STD(cloudScrollY, 1);
 EMBED_CAPI_FUNC_STD(cloudScale, 1);
-EMBED_CAPI_FUNC_STD(cloudHeight, 1);
+EMBED_CAPI_FUNC_STD(cloudHeight, 1); // SkyManager begin
 EMBED_CAPI_FUNC_STD(cloudFade, 1);
 EMBED_CAPI_FUNC_STD(cloudClip, 1);
 
@@ -247,18 +247,18 @@ EMBED_CAPI_FUNC_STD(altCloudScrollY, 1);
 EMBED_CAPI_FUNC_STD(altCloudScale, 1);
 EMBED_CAPI_FUNC_STD(altCloudHeight, 1);
 EMBED_CAPI_FUNC_STD(altCloudFade, 1);
-EMBED_CAPI_FUNC_STD(altCloudClip, 1);
+EMBED_CAPI_FUNC_STD(altCloudClip, 1); // SkyManager end
 
 EMBED_CAPI_FUNC_STD(skyTexture, 1);
 EMBED_CAPI_FUNC_STD(texScroll, 2);
 
-EMBED_CAPI_FUNC_STD(modelTweaks, 1);
-EMBED_CAPI_FUNC_STD(tweakModelAmbient, 1);
-EMBED_CAPI_FUNC_STD(tweakModelGlow, 1);
-EMBED_CAPI_FUNC_STD(tweakModelSpec, 1);
-EMBED_CAPI_FUNC_STD(tweakModelSpecGlare, 1);
-EMBED_CAPI_FUNC_STD(tweakModelGlowGlare, 1);
-EMBED_CAPI_FUNC_STD(tweakModelScale, 1);
+EMBED_CAPI_FUNC_STD(modelTweaks, 1); // SkyManager
+EMBED_CAPI_FUNC_STD(tweakModelAmbient, 1); // SkyManager
+EMBED_CAPI_FUNC_STD(tweakModelGlow, 1); // SkyManager
+EMBED_CAPI_FUNC_STD(tweakModelSpec, 1); // SkyManager
+EMBED_CAPI_FUNC_STD(tweakModelSpecGlare, 1); // SkyManager
+EMBED_CAPI_FUNC_STD(tweakModelGlowGlare, 1); // SkyManager
+EMBED_CAPI_FUNC_STD(tweakModelScale, 1); // SkyManager
 
 EMBED_CAPI_FUNC("shadowmapAmbient", __script__shadowmapAmbient, 1);
 EMBED_CAPI_FUNC("shadowmapAngle", __script__shadowmapAngle, 1);
@@ -280,7 +280,15 @@ EMBED_CAPI_FUNC("combineImages", __script__combineImages, 3);
 #ifdef CLIENT
     EMBED_CAPI_FUNC("getTargetPosition", __script__getTargetPosition, 0);
     EMBED_CAPI_FUNC("getTargetEntity", __script__getTargetEntity, 0);
-
+    EMBED_CAPI_FUNC("useMinimap", __script__useMinimap, 1);
+    EMBED_CAPI_FUNC("minimapMinZoom", __script__minimapMinZoom, 1);
+    EMBED_CAPI_FUNC("minimapMaxZoom", __script__minimapMaxZoom, 1);
+    EMBED_CAPI_FUNC("minimapRadius", __script__minimapRadius, 1);
+    EMBED_CAPI_FUNC("minimapPositionX", __script__minimapPositionX, 1);
+    EMBED_CAPI_FUNC("minimapPositionY", __script__minimapPositionY, 1);
+    EMBED_CAPI_FUNC("minimapRotation", __script__minimapRotation, 1);
+    EMBED_CAPI_FUNC("minimapSidesNum", __script__minimapSidesNum, 1);
+    EMBED_CAPI_FUNC("minimapAlignRight", __script__minimapAlignRight, 1);
 #endif
 
 // World
@@ -328,6 +336,7 @@ EMBED_CAPI_FUNC("getMaterial", __script__getMaterial, 3);
     EMBED_CAPI_FUNC("forceFov", __script__forceFov__, 1);
     EMBED_CAPI_FUNC("resetCamera", __script__resetCamera__, 0);
     EMBED_CAPI_FUNC("getCamera", __script__getCamera__, 0);
+    EMBED_CAPI_FUNC("getCameraPosition", __script__getCameraPosition__, 0);
 #endif
 
 // Code

@@ -400,6 +400,7 @@ vtxarray *visibleva = NULL;
 
 int lightmapping = 0;
 
+void drawminimap() { };
 void g3d_addgui(g3d_callback *cb, vec &origin, int flags) { };
 Texture *loadthumbnail(Slot &slot) { return notexture; };
 void renderblendbrush(GLuint tex, float x, float y, float w, float h) { };
@@ -437,7 +438,7 @@ bool isfoggedsphere(float rad, const vec &cv) { return false; };
 bool isshadowmapcaster(const vec &o, float rad) { return false; };
 bool checkquery(occludequery *query, bool nowait) { return true; };
 bool addshadowmapcaster(const vec &o, float xyrad, float zrad) { return false; };
-void lightreaching(const vec &target, vec &color, vec &dir, extentity *t, float ambient) { };
+void lightreaching(const vec &target, vec &color, vec &dir, bool fast, extentity *t, float ambient) { };
 void dynlightreaching(const vec &target, vec &color, vec &dir) { };
 Shader *lookupshaderbyname(const char *name) { return NULL; };
 Texture *cubemapload(const char *name, bool mipit, bool msg, bool transient) { return notexture; };

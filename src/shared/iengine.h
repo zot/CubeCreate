@@ -7,7 +7,7 @@ typedef class boost::shared_ptr<CLogicEntity> LogicEntityPtr;
 
 extern int curtime;                     // current frame time
 extern int lastmillis;                  // last time
-extern int skymillis;					// for skies, this needs to be reset for proper sync'ing.
+extern int skymillis;					// INTENSITY: SkyManager: for skies, this needs to be reset for proper sync'ing.
 extern int totalmillis;                 // total elapsed time
 extern int gamespeed, paused;
 
@@ -38,7 +38,7 @@ enum // cube empty-space materials
 };
 
 extern void lightent(extentity &e, float height = 8.0f);
-extern void lightreaching(const vec &target, vec &color, vec &dir, extentity *e = 0, float ambient = 0.4f);
+extern void lightreaching(const vec &target, vec &color, vec &dir, bool fast = false, extentity *e = 0, float ambient = 0.4f);
 extern entity *brightestlight(const vec &target, const vec &dir);
 
 enum { RAY_BB = 1, RAY_POLY = 3, RAY_ALPHAPOLY = 7, RAY_ENTS = 9, RAY_CLIPMAT = 16, RAY_SKIPFIRST = 32, RAY_EDITMAT = 64, RAY_SHADOW = 128, RAY_PASS = 256, RAY_SKIPSKY = 512 };
@@ -193,6 +193,9 @@ extern vec calcavatarpos(const vec &pos, float dist);
 extern void damageblend(int n);
 extern void damagecompass(int n, const vec &loc);
 
+extern vec minimapcenter, minimapradius, minimapscale;
+extern void bindminimap();
+
 // renderparticles
 enum
 {
@@ -289,7 +292,7 @@ extern void stopsounds();
 extern void initsound();
 
 // rendermodel
-enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_LIGHT = 1<<6, MDL_DYNLIGHT = 1<<7, MDL_FULLBRIGHT = 1<<8, MDL_NORENDER = 1<<9, MDL_GHOST = 1<<10 };
+enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_LIGHT = 1<<6, MDL_DYNLIGHT = 1<<7, MDL_FULLBRIGHT = 1<<8, MDL_NORENDER = 1<<9, MDL_LIGHT_FAST = 1<<10, MDL_GHOST = 1<<11 };
 
 struct model;
 struct modelattach

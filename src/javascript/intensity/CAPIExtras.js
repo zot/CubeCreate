@@ -118,12 +118,12 @@ Map = {
 
     materialReset: CAPI.materialReset,
 
-	loadStars: CAPI.loadStars,
+    loadStars: CAPI.loadStars, // SkyManager
     loadSky: CAPI.loadSky,
-	loadSun: CAPI.loadSun,
-	loadClouds: CAPI.loadClouds,
-	loadCloudLayer: CAPI.loadCloudLayer,
-	loadAltCloudLayer: CAPI.loadAltCloudLayer,
+    loadSun: CAPI.loadSun, // SkyManager
+    loadClouds: CAPI.loadClouds, // SkyManager
+    loadCloudLayer: CAPI.loadCloudLayer, // SkyManager
+    loadAltCloudLayer: CAPI.loadAltCloudLayer, // SkyManager
 
     fogColor: CAPI.fogColor,
     fog: CAPI.fog,
@@ -133,69 +133,69 @@ Map = {
     blurSkylight: CAPI.blurSkylight,
     ambient: CAPI.ambient,
 
-	modelTweaks: CAPI.modelTweaks,
-	tweakModelAmbient: CAPI.tweakModelAmbient,
-	tweakModelGlow: CAPI.tweakModelGlow,
-	tweakModelSpec: CAPI.tweakModelSpec,
-	tweakModelSpecGlare: CAPI.tweakModelSpecGlare,
-	tweakModelGlowGlare: CAPI.tweakModelGlowGlare,
-	tweakModelScale: CAPI.tweakModelScale,
+    modelTweaks: CAPI.modelTweaks, // SkyManager
+    tweakModelAmbient: CAPI.tweakModelAmbient, // SkyManager
+    tweakModelGlow: CAPI.tweakModelGlow, // SkyManager
+    tweakModelSpec: CAPI.tweakModelSpec, // SkyManager
+    tweakModelSpecGlare: CAPI.tweakModelSpecGlare, // SkyManager
+    tweakModelGlowGlare: CAPI.tweakModelGlowGlare, // SkyManager
+    tweakModelScale: CAPI.tweakModelScale, // SkyManager
 
-	causticScale: CAPI.causticScale,
-	causticMillis: CAPI.causticMillis,
+    causticScale: CAPI.causticScale, // SkyManager
+    causticMillis: CAPI.causticMillis, // SkyManager
 
-	waterSpecularity: CAPI.waterSpecularity,
+    waterSpecularity: CAPI.waterSpecularity, // SkyManager
     waterFog: CAPI.waterFog,
     waterColor: CAPI.waterColor,
-	waterFallTint: CAPI.waterFallTint,
+    waterFallTint: CAPI.waterFallTint, // SkyManager
 
-	lavaFog: CAPI.lavaFog,
-	lavaTint: CAPI.lavaTint,
+    lavaFog: CAPI.lavaFog, // SkyManager
+    lavaTint: CAPI.lavaTint, // SkyManager
 
-	spinStars: CAPI.spinStars,
+    spinStars: CAPI.spinStars, // SkyManager
     spinSky: CAPI.spinSky,
-	spinSun: CAPI.spinSun,
-	spinClouds: CAPI.spinClouds,
-	spinCloudLayer: CAPI.spinCloudLayer,
-	spinAltCloudLayer: CAPI.spinAltCloudLayer,
+    spinSun: CAPI.spinSun, // SkyManager begin
+    spinClouds: CAPI.spinClouds,
+    spinCloudLayer: CAPI.spinCloudLayer,
+    spinAltCloudLayer: CAPI.spinAltCloudLayer,
 
-	yawStars: CAPI.yawStars,
-	yawSky: CAPI.yawSky,
-	yawSun: CAPI.yawSun,
-	yawClouds: CAPI.yawClouds,
-	yawCloudLayer: CAPI.yawCloudLayer,
-	yawAltCloudLayer: CAPI.yawAltCloudLayer,
+    yawStars: CAPI.yawStars,
+    yawSky: CAPI.yawSky,
+    yawSun: CAPI.yawSun,
+    yawClouds: CAPI.yawClouds,
+    yawCloudLayer: CAPI.yawCloudLayer,
+    yawAltCloudLayer: CAPI.yawAltCloudLayer,
 
-	alphaSky: CAPI.alphaSky,
-	alphaSun: CAPI.alphaSun,
-	alphaClouds: CAPI.alphaClouds,
-	alphaCloudLayer: CAPI.alphaCloudLayer,
-	alphaAltCloudLayer: CAPI.alphaAltCloudLayer,
+    alphaSky: CAPI.alphaSky,
+    alphaSun: CAPI.alphaSun,
+    alphaClouds: CAPI.alphaClouds,
+    alphaCloudLayer: CAPI.alphaCloudLayer,
+    alphaAltCloudLayer: CAPI.alphaAltCloudLayer,
 
-	tintStars: CAPI.tintStars,
-	tintSky: CAPI.tintSky,
-	tintSun: CAPI.tintSun,
-	tintClouds: CAPI.tintClouds,
-	tintCloudLayer: CAPI.tintCloudLayer,
-	tintAltCloudLayer: CAPI.tintAltCloudLayer,
-	tintAmbient: CAPI.tintAmbient,
-	tintFog: CAPI.tintFog,
+    tintStars: CAPI.tintStars,
+    tintSky: CAPI.tintSky,
+    tintSun: CAPI.tintSun,
+    tintClouds: CAPI.tintClouds,
+    tintCloudLayer: CAPI.tintCloudLayer,
+    tintAltCloudLayer: CAPI.tintAltCloudLayer,
+    tintAmbient: CAPI.tintAmbient,
+    tintFog: CAPI.tintFog, // SkyManager end
 
     cloudLayer: CAPI.cloudLayer,
     cloudScrollX: CAPI.cloudScrollX,
     cloudScrollY: CAPI.cloudScrollY,
     cloudScale: CAPI.cloudScale,
-	cloudHeight: CAPI.cloudHeight,
-	cloudFade: CAPI.cloudFade,
-	cloudClip: CAPI.cloudClip,
+    cloudHeight: CAPI.cloudHeight, // SkyManager begin
+    cloudFade: CAPI.cloudFade,
+    cloudClip: CAPI.cloudClip,
 
     altCloudLayer: CAPI.altCloudLayer,
     altCloudScrollX: CAPI.altCloudScrollX,
     altCloudScrollY: CAPI.altCloudScrollY,
     altCloudScale: CAPI.altCloudScale,
-	altCloudHeight: CAPI.altCloudHeight,
-	altCloudFade: CAPI.altCloudFade,
-	altCloudClip: CAPI.altCloudClip,
+    altCloudHeight: CAPI.altCloudHeight,
+    altCloudFade: CAPI.altCloudFade,
+    altCloudClip: CAPI.altCloudClip, // SkyManager end
 
     skyTexture: CAPI.skyTexture,
     texScroll: CAPI.texScroll,
@@ -739,7 +739,3 @@ CAPI.showHUDImage = function(tex, centerx, centery, width, height, color, alpha)
     alpha = defaultValue(alpha, 1.0);
     oldShowHUDImage(tex, centerx, centery, width, height, color, alpha);
 };
-
-// disable underwater stuff by default ..
-
-CAPI.underwaterAmbient(0);

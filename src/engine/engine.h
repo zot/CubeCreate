@@ -199,7 +199,7 @@ static inline bool pvsoccluded(const ivec &bborigin, int size)
 extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasBC, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB, hasSGIDT, hasSGISH, hasDT, hasSH, hasNVPCF, hasRN, hasPBO, hasFBB, hasUBO, hasBUE, hasFC, hasTEX;
 extern int hasstencil;
 
-extern bool envmapping, renderedgame;
+extern bool envmapping, minimapping, renderedgame;
 extern const glmatrixf viewmatrix;
 extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix, invmvpmatrix, fogmatrix, invfogmatrix, envmatrix;
 extern bvec fogcolor;
@@ -211,6 +211,7 @@ extern void rendergame(bool mainpass = false);
 extern void invalidatepostfx();
 extern void gl_drawframe(int w, int h);
 extern void gl_drawmainmenu(int w, int h);
+extern void drawminimap();
 extern void enablepolygonoffset(GLenum type);
 extern void disablepolygonoffset(GLenum type);
 extern void calcspherescissor(const vec &center, float size, float &sx1, float &sy1, float &sx2, float &sy2);

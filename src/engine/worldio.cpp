@@ -358,7 +358,7 @@ void savevslots(stream *f, int numvslots)
         lastroot = i+1;
     }
     if(lastroot < numvslots) f->putlil<int>(-(numvslots - lastroot));
-    if (numvslots > 0) delete[] prev;
+    if (numvslots > 0) delete[] prev; // INTENSITY - check for numvslots, for server
 }
             
 void loadvslot(stream *f, VSlot &vs, int changed)
@@ -426,7 +426,7 @@ void loadvslots(stream *f, int numvslots)
         }
     }
     loopv(vslots) if(vslots.inrange(prev[i])) vslots[prev[i]]->next = vslots[i];
-    if (numvslots > 0) delete[] prev;
+    if (numvslots > 0) delete[] prev; // INTENSITY - check for numvslots, for server
 }
 
 bool save_world(const char *mname, bool nolms)

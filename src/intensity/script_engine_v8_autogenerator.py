@@ -8,7 +8,7 @@ old_dir = os.getcwd()
 os.chdir(os.path.dirname(__file__))
 
 strings = [
-    'i', 's', 'd', 'o',
+    'i', 's', 'd', 'o', 'b',
     'ii', 'is', 'ss', 'sd', 'si', 'oi', 'ob', 'os', 'od', 'dd', 'ds', 'do',
     'iis', 'iii', 'iid', 'ddd', 'sdd', 'sss',
     'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdi', 'ssdd', 'iiii',

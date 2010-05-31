@@ -715,7 +715,7 @@ V8_FUNC_NOPARAM(__script__materialReset, {
     materialreset();
 });
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_s(__script__loadStars, {
     std::string command = "starbox ";
     command += arg1;
@@ -730,7 +730,7 @@ V8_FUNC_s(__script__loadStars, {
 
 #ifdef CLIENT
 V8_FUNC_s(__script__loadSky, {
-    std::string command = "skybox "; // Call skybox instead of loadsky, calling loadsky seems dirty.
+    std::string command = "skybox ";
     command += arg1;
     assert( Utility::validateAlphaNumeric(arg1, "/_<>:.,") );
     CSSUDO(command.c_str());
@@ -741,7 +741,7 @@ V8_FUNC_s(__script__loadSky, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_s(__script__loadSun, {
     std::string command = "sunbox ";
     command += arg1;
@@ -754,7 +754,7 @@ V8_FUNC_s(__script__loadSun, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_s(__script__loadClouds, {
     std::string command = "cloudbox ";
     command += arg1;
@@ -767,7 +767,7 @@ V8_FUNC_s(__script__loadClouds, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_s(__script__loadCloudLayer, {
     std::string command = "cloudlayer ";
     command += arg1;
@@ -780,7 +780,7 @@ V8_FUNC_s(__script__loadCloudLayer, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_s(__script__loadAltCloudLayer, {
     std::string command = "altcloudlayer ";
     command += arg1;
@@ -818,7 +818,7 @@ V8_FUNC_i(__script__fog, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_i(__script__causticScale, {
     std::string command = "causticscale ";
     command += Utility::toString(arg1);
@@ -830,7 +830,7 @@ V8_FUNC_i(__script__causticScale, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_i(__script__causticMillis, {
     std::string command = "causticmillis ";
     command += Utility::toString(arg1);
@@ -842,7 +842,7 @@ V8_FUNC_i(__script__causticMillis, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_i(__script__waterSpecularity, {
     std::string command = "waterspec ";
     command += Utility::toString(arg1);
@@ -880,7 +880,7 @@ V8_FUNC_iii(__script__waterColor, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_iii(__script__waterFallTint, {
     std::string command = "waterfallcolour ";
     command += Utility::toString(arg1) + " ";
@@ -894,7 +894,7 @@ V8_FUNC_iii(__script__waterFallTint, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_i(__script__lavaFog, {
     std::string command = "lavafog ";
     command += Utility::toString(arg1);
@@ -906,7 +906,7 @@ V8_FUNC_i(__script__lavaFog, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_iii(__script__lavaTint, {
     std::string command = "lavacolour ";
     command += Utility::toString(arg1) + " ";
@@ -920,7 +920,7 @@ V8_FUNC_iii(__script__lavaTint, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__spinStars, {
     std::string command = "spinstars ";
     command += Utility::toString(arg1);
@@ -944,7 +944,7 @@ V8_FUNC_d(__script__spinSky, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__spinSun, {
     std::string command = "spinsun ";
     command += Utility::toString(arg1);
@@ -956,7 +956,7 @@ V8_FUNC_d(__script__spinSun, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__spinClouds, {
     std::string command = "spinclouds ";
     command += Utility::toString(arg1);
@@ -968,7 +968,7 @@ V8_FUNC_d(__script__spinClouds, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__spinCloudLayer, {
     std::string command = "spincloudlayer ";
     command += Utility::toString(arg1);
@@ -980,7 +980,7 @@ V8_FUNC_d(__script__spinCloudLayer, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__spinAltCloudLayer, {
     std::string command = "spinaltcloudlayer ";
     command += Utility::toString(arg1);
@@ -992,7 +992,7 @@ V8_FUNC_d(__script__spinAltCloudLayer, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__yawStars, {
     std::string command = "yawstars ";
     command += Utility::toString(arg1);
@@ -1004,7 +1004,7 @@ V8_FUNC_d(__script__yawStars, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__yawSky, {
     std::string command = "yawsky ";
     command += Utility::toString(arg1);
@@ -1016,7 +1016,7 @@ V8_FUNC_d(__script__yawSky, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__yawSun, {
     std::string command = "yawsun ";
     command += Utility::toString(arg1);
@@ -1028,7 +1028,7 @@ V8_FUNC_d(__script__yawSun, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__yawClouds, {
     std::string command = "yawclouds ";
     command += Utility::toString(arg1);
@@ -1040,7 +1040,7 @@ V8_FUNC_d(__script__yawClouds, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__yawCloudLayer, {
     std::string command = "yawcloudlayer ";
     command += Utility::toString(arg1);
@@ -1052,7 +1052,7 @@ V8_FUNC_d(__script__yawCloudLayer, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__yawAltCloudLayer, {
     std::string command = "yawaltcloudlayer ";
     command += Utility::toString(arg1);
@@ -1064,7 +1064,7 @@ V8_FUNC_d(__script__yawAltCloudLayer, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__alphaSky, {
     std::string command = "skyboxalpha ";
     command += Utility::toString(arg1);
@@ -1076,7 +1076,7 @@ V8_FUNC_d(__script__alphaSky, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__alphaSun, {
     std::string command = "sunboxalpha ";
     command += Utility::toString(arg1);
@@ -1088,7 +1088,7 @@ V8_FUNC_d(__script__alphaSun, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__alphaClouds, {
     std::string command = "cloudboxalpha ";
     command += Utility::toString(arg1);
@@ -1100,7 +1100,7 @@ V8_FUNC_d(__script__alphaClouds, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__alphaCloudLayer, {
     std::string command = "cloudalpha ";
     command += Utility::toString(arg1);
@@ -1112,7 +1112,7 @@ V8_FUNC_d(__script__alphaCloudLayer, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__alphaAltCloudLayer, {
     std::string command = "altcloudalpha ";
     command += Utility::toString(arg1);
@@ -1124,7 +1124,7 @@ V8_FUNC_d(__script__alphaAltCloudLayer, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_iii(__script__tintStars, {
     std::string command = "starboxtint ";
     command += Utility::toString(arg1) + " ";
@@ -1138,7 +1138,7 @@ V8_FUNC_iii(__script__tintStars, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_iii(__script__tintSky, {
     std::string command = "skyboxtint ";
     command += Utility::toString(arg1) + " ";
@@ -1152,7 +1152,7 @@ V8_FUNC_iii(__script__tintSky, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_iii(__script__tintSun, {
     std::string command = "sunboxtint ";
     command += Utility::toString(arg1) + " ";
@@ -1166,7 +1166,7 @@ V8_FUNC_iii(__script__tintSun, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_iii(__script__tintClouds, {
     std::string command = "cloudboxtint ";
     command += Utility::toString(arg1) + " ";
@@ -1180,7 +1180,7 @@ V8_FUNC_iii(__script__tintClouds, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_iii(__script__tintCloudLayer, {
     std::string command = "cloudtint ";
     command += Utility::toString(arg1) + " ";
@@ -1194,7 +1194,7 @@ V8_FUNC_iii(__script__tintCloudLayer, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_iii(__script__tintAltCloudLayer, {
     std::string command = "altcloudtint ";
     command += Utility::toString(arg1) + " ";
@@ -1221,7 +1221,7 @@ V8_FUNC_s(__script__cloudLayer, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_s(__script__altCloudLayer, {
     std::string command = "altcloudlayer ";
     assert(Utility::validateRelativePath(arg1));
@@ -1247,7 +1247,7 @@ V8_FUNC_d(__script__cloudScrollX, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__altCloudScrollX, {
     std::string command = "altcloudscrollx ";
     command += Utility::toString(arg1);
@@ -1271,7 +1271,7 @@ V8_FUNC_d(__script__cloudScrollY, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__altCloudScrollY, {
     std::string command = "altcloudscrolly ";
     command += Utility::toString(arg1);
@@ -1295,7 +1295,7 @@ V8_FUNC_d(__script__cloudScale, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__altCloudScale, {
     std::string command = "altcloudscale ";
     command += Utility::toString(arg1);
@@ -1307,7 +1307,7 @@ V8_FUNC_d(__script__altCloudScale, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__cloudHeight, {
     std::string command = "cloudheight ";
     command += Utility::toString(arg1);
@@ -1319,7 +1319,7 @@ V8_FUNC_d(__script__cloudHeight, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__altCloudHeight, {
     std::string command = "altcloudheight ";
     command += Utility::toString(arg1);
@@ -1331,7 +1331,7 @@ V8_FUNC_d(__script__altCloudHeight, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__cloudFade, {
     std::string command = "cloudfade ";
     command += Utility::toString(arg1);
@@ -1343,7 +1343,7 @@ V8_FUNC_d(__script__cloudFade, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__altCloudFade, {
     std::string command = "altcloudfade ";
     command += Utility::toString(arg1);
@@ -1355,7 +1355,7 @@ V8_FUNC_d(__script__altCloudFade, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__cloudClip, {
     std::string command = "cloudclip ";
     command += Utility::toString(arg1);
@@ -1367,7 +1367,7 @@ V8_FUNC_d(__script__cloudClip, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__altCloudClip, {
     std::string command = "altcloudclip ";
     command += Utility::toString(arg1);
@@ -1455,7 +1455,7 @@ V8_FUNC_i(__script__blurSkylight, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_iii(__script__tintAmbient, {
     std::string command = "ambient ";
     command += Utility::toString(arg1) + " ";
@@ -1469,7 +1469,7 @@ V8_FUNC_iii(__script__tintAmbient, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_iii(__script__tintFog, {
     std::string command = "fogcolour ";
     command += Utility::toString(arg1) + " ";
@@ -1495,7 +1495,7 @@ V8_FUNC_i(__script__ambient, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__modelTweaks, {
     std::string command = "modeltweaks ";
     command += Utility::toString(arg1);
@@ -1507,7 +1507,7 @@ V8_FUNC_d(__script__modelTweaks, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__tweakModelAmbient, {
     std::string command = "tweakmodelambient ";
     command += Utility::toString(arg1);
@@ -1519,7 +1519,7 @@ V8_FUNC_d(__script__tweakModelAmbient, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__tweakModelGlow, {
     std::string command = "tweakmodelglow ";
     command += Utility::toString(arg1);
@@ -1531,7 +1531,7 @@ V8_FUNC_d(__script__tweakModelGlow, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__tweakModelSpec, {
     std::string command = "tweakmodelspec ";
     command += Utility::toString(arg1);
@@ -1543,7 +1543,7 @@ V8_FUNC_d(__script__tweakModelSpec, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__tweakModelSpecGlare, {
     std::string command = "tweakmodelspecglare ";
     command += Utility::toString(arg1);
@@ -1555,7 +1555,7 @@ V8_FUNC_d(__script__tweakModelSpecGlare, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__tweakModelGlowGlare, {
     std::string command = "tweakmodelglowglare ";
     command += Utility::toString(arg1);
@@ -1567,7 +1567,7 @@ V8_FUNC_d(__script__tweakModelGlowGlare, {
 });
 #endif
 
-#ifdef CLIENT
+#ifdef CLIENT // SkyManager
 V8_FUNC_d(__script__tweakModelScale, {
     std::string command = "tweakmodelscale ";
     command += Utility::toString(arg1);
@@ -1652,6 +1652,60 @@ V8_FUNC_sss(__script__combineImages, {
         } else {
             V8_RETURN_NULL;
         }
+    });
+
+    V8_FUNC_i(__script__useMinimap, {
+        std::string command = "useminimap ";
+        command += Utility::toString(arg1);
+        CSSUDO(command.c_str());
+    });
+
+    V8_FUNC_i(__script__minimapMinZoom, {
+        std::string command = "forceminminimapzoom ";
+        command += Utility::toString(arg1);
+        CSSUDO(command.c_str());
+    });
+
+    V8_FUNC_i(__script__minimapMaxZoom, {
+        std::string command = "forcemaxminimapzoom ";
+        command += Utility::toString(arg1);
+        CSSUDO(command.c_str());
+    });
+
+    V8_FUNC_d(__script__minimapRadius, {
+        std::string command = "minimapradius ";
+        command += Utility::toString(arg1);
+        CSSUDO(command.c_str());
+    });
+
+    V8_FUNC_d(__script__minimapPositionX, {
+        std::string command = "minimapxpos ";
+        command += Utility::toString(arg1);
+        CSSUDO(command.c_str());
+    });
+
+    V8_FUNC_d(__script__minimapPositionY, {
+        std::string command = "minimapypos ";
+        command += Utility::toString(arg1);
+        CSSUDO(command.c_str());
+    });
+
+    V8_FUNC_d(__script__minimapRotation, {
+        std::string command = "minimaprotation ";
+        command += Utility::toString(arg1);
+        CSSUDO(command.c_str());
+    });
+
+    V8_FUNC_i(__script__minimapSidesNum, {
+        std::string command = "minimapsides ";
+        command += Utility::toString(arg1);
+        CSSUDO(command.c_str());
+    });
+
+    V8_FUNC_i(__script__minimapAlignRight, {
+        std::string command = "minimaprightalign ";
+        command += Utility::toString(arg1);
+        CSSUDO(command.c_str());
     });
 #endif
 
@@ -1862,6 +1916,12 @@ V8_FUNC_ddd(__script__getMaterial, {
         ret->setProperty("roll", camera->roll);
 
         V8_RETURN_VALUE(ret);
+    });
+
+    V8_FUNC_NOPARAM(__script__getCameraPosition__, {
+        physent *camera = CameraControl::getCamera();
+        vec& pos = camera->o;
+        RETURN_VECTOR3(pos);
     });
 #endif
 

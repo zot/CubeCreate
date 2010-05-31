@@ -396,6 +396,61 @@ void ClientSystem::drawHUD(int w, int h)
     }
 }
 
+void ClientSystem::drawMinimap(int w, int h, float minmapzoom, float maxmapzoom, float forceminmapzoom, float forcemaxmapzoom, float minimapsize, float minimapxpos, float minimapypos, float minimaprot, int minimapsides, int minimaprightalign)
+{
+    if (g3d_windowhit(true, false)) return; // Showing sauer GUI - do not show minimap
+
+    float x, y;
+    vec dir, pos;
+
+    glPushMatrix();
+    glScalef(h / 1000.0f, h / 1000.0f, 1); // we don't want the screen width
+
+    // if we want it aligned to right, we need to move stuff through screen .. if not, we just set the x position value
+    if (minimaprightalign)
+        x = (1000 * w) / h - minimapsize * 1000 - minimapxpos * 1000;
+    else
+        x = minimapxpos * 1000;
+
+    y = minimapypos * 1000;
+    glColor3f(1, 1, 1);
+
+    glDisable(GL_BLEND);
+    bindminimap();
+    pos = vec(game::hudplayer()->o).sub(minimapcenter).mul(minimapscale).add(0.5f); // hudplayer, because we want minimap also when following someone.
+
+    vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
+    float scale = clamp(max(minimapradius.x, minimapradius.y) / 3, (forceminmapzoom < 0) ? minmapzoom : forceminmapzoom, (forcemaxmapzoom < 0) ? maxmapzoom : forcemaxmapzoom);
+
+    glBegin(GL_TRIANGLE_FAN);
+
+    loopi(minimapsides) // create a triangle for every side, together it makes triangle when minimapsides is 3, square when it's 4 and "circle" for any other value.
+    {
+        // this part manages texture
+        vec tc = vec(dir).rotate_around_z((i / float(minimapsides)) * 2 * M_PI);
+
+        if (minimaprot > 0) // rotate the minimap if we want to rotate it, if not, just skip this
+            tc.rotate_around_z(minimaprot * (M_PI / 180.0f));
+
+        glTexCoord2f(pos.x + (tc.x * scale * minimapscale.x),
+                     pos.y + (tc.y * scale * minimapscale.y));
+
+        // this part actually creates the triangle which is the texture bind to
+        vec v = vec(0, -1, 0).rotate_around_z((i / float(minimapsides)) * 2 * M_PI);
+
+        if (minimaprot > 0)
+            v.rotate_around_z(minimaprot * (M_PI / 180.0f));
+
+        glVertex2f(x + 500 * minimapsize * (1.0f + v.x),
+                   y + 500 * minimapsize * (1.0f + v.y));
+    }
+
+    glEnd();
+    glEnable(GL_BLEND);
+
+    glPopMatrix();
+}
+
 void ClientSystem::cleanupHUD()
 {
     queuedHUDRects.clear();
