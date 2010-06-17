@@ -67,7 +67,6 @@
         overrideidents = old; \
     }
 
-
 // Worldsystem
 extern void removeentity(extentity* entity);
 extern void addentity(extentity* entity);
@@ -1660,6 +1659,10 @@ V8_FUNC_sss(__script__combineImages, {
         CSSUDO(command.c_str());
     });
 
+    V8_FUNC_NOPARAM(__script__usedMinimap, {
+        V8_RETURN_BOOL(game::usedminimap());
+    });
+
     V8_FUNC_i(__script__minimapMinZoom, {
         std::string command = "forceminminimapzoom ";
         command += Utility::toString(arg1);
@@ -1924,6 +1927,29 @@ V8_FUNC_ddd(__script__getMaterial, {
         RETURN_VECTOR3(pos);
     });
 #endif
+
+// Keyboard
+
+extern bool getkeydown();
+extern bool getkeyup();
+extern bool getmousedown();
+extern bool getmouseup();
+
+V8_FUNC_NOPARAM(__script__isKeyDown__, {
+    V8_RETURN_BOOL(getkeydown());
+});
+
+V8_FUNC_NOPARAM(__script__isKeyUp__, {
+    V8_RETURN_BOOL(getkeyup());
+});
+
+V8_FUNC_NOPARAM(__script__isMouseDown__, {
+    V8_RETURN_BOOL(getmousedown());
+});
+
+V8_FUNC_NOPARAM(__script__isMouseUp__, {
+    V8_RETURN_BOOL(getmouseup());
+});
 
 // Code
 

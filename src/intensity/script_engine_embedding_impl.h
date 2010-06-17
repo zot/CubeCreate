@@ -281,6 +281,7 @@ EMBED_CAPI_FUNC("combineImages", __script__combineImages, 3);
     EMBED_CAPI_FUNC("getTargetPosition", __script__getTargetPosition, 0);
     EMBED_CAPI_FUNC("getTargetEntity", __script__getTargetEntity, 0);
     EMBED_CAPI_FUNC("useMinimap", __script__useMinimap, 1);
+    EMBED_CAPI_FUNC("usedMinimap", __script__usedMinimap, 0);
     EMBED_CAPI_FUNC("minimapMinZoom", __script__minimapMinZoom, 1);
     EMBED_CAPI_FUNC("minimapMaxZoom", __script__minimapMaxZoom, 1);
     EMBED_CAPI_FUNC("minimapRadius", __script__minimapRadius, 1);
@@ -338,6 +339,13 @@ EMBED_CAPI_FUNC("getMaterial", __script__getMaterial, 3);
     EMBED_CAPI_FUNC("getCamera", __script__getCamera__, 0);
     EMBED_CAPI_FUNC("getCameraPosition", __script__getCameraPosition__, 0);
 #endif
+
+// Keyboard
+
+EMBED_CAPI_FUNC("isKeyDown", __script__isKeyDown__, 0);
+EMBED_CAPI_FUNC("isKeyUp", __script__isKeyUp__, 0);
+EMBED_CAPI_FUNC("isMouseDown", __script__isMouseDown__, 0);
+EMBED_CAPI_FUNC("isMouseUp", __script__isMouseUp__, 0);
 
 // Code
 

@@ -73,7 +73,7 @@ InstaGun = Gun.extend({
             Effect.addDecal(DECAL.BULLET, targetPosition, originPosition.subNew(targetPosition).normalize(), 3.0);
             Effect.splash(PARTICLE.SMOKE, 3, 0.5, targetPosition, 0x444444, 1.4, 50, 504, null, 2, null, 1);
         }
-        Effect.trail(PARTICLE.SMOKE, 0.5, originPosition, targetPosition, 0xC0C0C0, 0.6, 200);
+        Effect.flare(PARTICLE.SMOKETRAIL, originPosition, targetPosition, 0.5, 0x333333, 0.1, 2, shooter);
         Effect.trail(0, 0, originPosition, targetPosition, 0, 0, 0, true);
         if (CAPI.getMaterial(shooter.position.x, shooter.position.y, shooter.position.z + 13) === MATERIAL.WATER)
             Sound.play('Q009/uw/st1.ogg', originPosition);

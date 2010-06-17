@@ -4,8 +4,8 @@ Intensity Engine - Sauerbraten SVN based
 A most recent sauerbraten SVN based Syntensity branch,
 created by quaker66.
 
-Current Sauerbraten revision: 2903
-Current Sauerbraten Enhanced revision: 247
+Current Sauerbraten revision: 2940
+Current Sauerbraten Enhanced revision: 288
 
 
 Syntensity/Intensity information

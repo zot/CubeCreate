@@ -677,6 +677,11 @@ namespace game
           return false;
     }
 
+    bool usedminimap()
+    {
+        return useminimap;
+    }
+
     void drawicon(float tx, float ty, int x, int y)
     {
     }

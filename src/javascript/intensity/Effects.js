@@ -51,7 +51,8 @@ PARTICLE = {
     GLOW_TRACK: 33,
     LIGHTFLARE: 34,
     BUBBLE: 35,
-    EXPLODE: 36
+    EXPLODE: 36,
+    SMOKETRAIL: 37
 };
 
 BOUNCER = {

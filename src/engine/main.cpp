@@ -874,6 +874,34 @@ static void checkmousemotion(int &dx, int &dy)
     }
 }
 
+// INTENSITY - variables - is key down? is mouse down? etc
+VAR(iskeydown, 0, 0, 1);
+VAR(iskeyup, 0, 0, 1);
+VAR(ismousedown, 0, 0, 1);
+VAR(ismouseup, 0, 0, 1);
+
+// INTENSITY - getter functions so we can embed it from script
+// let them return booleans so it's more comfortable
+bool getkeydown()
+{
+    return iskeydown;
+}
+
+bool getkeyup()
+{
+    return iskeyup;
+}
+
+bool getmousedown()
+{
+    return ismousedown;
+}
+
+bool getmouseup()
+{
+    return ismouseup;
+}
+
 void checkinput()
 {
     SDL_Event event;
@@ -899,6 +927,18 @@ void checkinput()
                 #if 0 // INTENSITY start XXX security issue
                 printf("SDL_KEY: %d, %d, %d\r\n", event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
                 #endif // INTENSITY end
+
+                // INTENSITY - set the vars
+                if (event.type == SDL_KEYDOWN)
+                {
+                    iskeydown = 1;
+                    iskeyup = 0;
+                }
+                else
+                {
+                    iskeydown = 0;
+                    iskeyup = 1;
+                }
 
                 keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode);
                 break;
@@ -928,6 +968,18 @@ void checkinput()
                 g3d_cursorpos(x, y);
                 printf("SDL_MOUSEBUTTON: %d, %d (at %f,%f)\r\n", event.button.button, event.button.state, x, y);
                 #endif // INTENSITY end
+
+                // INTENSITY - set the vars
+                if (event.type == SDL_MOUSEBUTTONDOWN)
+                {
+                    ismousedown = 1;
+                    ismouseup = 0;
+                }
+                else
+                {
+                    ismousedown = 0;
+                    ismouseup = 1;
+                }
 
                 if(lasttype==event.type && lastbut==event.button.button) break; // why?? get event twice without it
                 keypress(-event.button.button, event.button.state!=0, 0);

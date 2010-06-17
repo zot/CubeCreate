@@ -55,6 +55,7 @@ smoke.png
 snow.png
 spark.png
 steam.png
+smoketrail.png
 
 ******************************
 * GNU General Public License *

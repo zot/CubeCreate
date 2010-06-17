@@ -400,6 +400,10 @@ vtxarray *visibleva = NULL;
 
 int lightmapping = 0;
 
+bool getkeydown() { return false; };
+bool getkeyup() { return false; };
+bool getmousedown() { return false; };
+bool getmouseup() { return false; };
 void drawminimap() { };
 void g3d_addgui(g3d_callback *cb, vec &origin, int flags) { };
 Texture *loadthumbnail(Slot &slot) { return notexture; };

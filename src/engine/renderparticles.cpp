@@ -874,7 +874,8 @@ static partrenderer *parts[] =
     new quadrenderer("<grey>packages/particles/glow.png", PT_PART|PT_TRACK),
     new taperenderer("packages/particles/lightflare.png", PT_TAPE|PT_GLARE),
     new quadrenderer("<grey>packages/particles/bubble.jpg", PT_PART|PT_GLARE),
-    new quadrenderer("packages/particles/explode.jpg", PT_PART|PT_GLARE) // must be done last // SAUER ENHANCED end - add new particles
+    new quadrenderer("packages/particles/explode.jpg", PT_PART|PT_GLARE),
+    new taperenderer("packages/particles/smoketrail.png", PT_TAPE|PT_GLARE) // must be done last // SAUER ENHANCED end - add new particles
 };
 
 void finddepthfxranges()
@@ -1153,11 +1154,11 @@ static void regularsplash(int type, int color, int radius, int num, int fade, co
 }
 
 // SAUER ENHANCED - explodesplash
-void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, int gravity, float vel, int windoffset, bool enhanced);
+void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, int gravity);
 
 void particle_explodesplash(const vec &o, int fade, int type, int color, int size, int gravity, int num)
 {
-    regularshape(type, 16, color, 22, num, fade, o, size, gravity, 0, NULL, false);
+    regularshape(type, 16, color, 22, num, fade, o, size, gravity);
 }
 
 // SAUER ENHANCED - flying_flare
@@ -1284,8 +1285,8 @@ static inline int colorfromattr(int attr)
  * 21 sphere
  * +32 to inverse direction
  */
-// SAUER ENHANCED - add enhanced and windoffset
-void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, int gravity, float vel = 0, int windoffset = 0, bool enhanced = false)
+
+void regularshape(int type, int radius, int color, int dir, int num, int fade, const vec &p, float size, int gravity)
 {
     if(!emit_particles()) return;
     
@@ -1350,20 +1351,7 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
             from = p;
         }
        
-        if(enhanced) // SAUER ENHANCED start
-        {
-            vec toz(to.x, to.y, camera1->o.z);
-            if(camera1->o.dist(toz) > 256 && !seedemitter) return;
-            vec d(to);
-            d.sub(from);
-            if(windoffset) d.add(vec(windoffset/2+rnd(windoffset), windoffset/2+rnd(windoffset), 0));
-            d.normalize().mul(-vel); //velocity
-            particle *np = newparticle(to, d, type==PART_RAIN?2000:99999, type, color, size, gravity);
-            np->fixedfade = true;
-            np->val = (to.z) - raycube(to, vec(0, 0, -1), COLLIDERADIUS/2, RAY_CLIPMAT);
-            return;
-        } // SAUER ENHANCED end
-        else if(taper)
+        if(taper)
         {
             vec o = inv ? to : from;
             o.sub(camera1->o);
@@ -1374,11 +1362,11 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
                 if(rnd(0x10000) > dist*dist*0xFFFF) continue;
             }
         }
-
+ 
         if(flare)
-            newparticle(inv?to:from, inv?from:to, rnd(fade*3)+1, type, color, size, gravity)->fastsplash = false;
-        else
-        {
+            newparticle(inv?to:from, inv?from:to, rnd(fade*3)+1, type, color, size, gravity);
+        else 
+        {  
             vec d(to);
             d.sub(from);
             d.normalize().mul(inv ? -200.0f : 200.0f); //velocity
@@ -1455,8 +1443,7 @@ static void makeparticles(entity &e)
             gravity = gravmap2[e.attr1-4];
             dir=e.attr2;
             dir &= 0x1F;
-            if(dir < 15 && dir > 6) regularshape(PART_RAIN, max(1+e.attr3, 1), colorfromattr(e.attr4=0xFFFFFF), 44, e.attr2>=128?30:20, 0, e.o, 3, 201, 2000, NULL, true); //check if imitates rain -> use enhanced one
-            else if(e.attr2 >= 256) regularshape(type, max(1+e.attr3, 1), colorfromattr(e.attr4), e.attr2-256, 5, 200, e.o, size, gravity);
+            if(e.attr2 >= 256) regularshape(type, max(1+e.attr3, 1), colorfromattr(e.attr4), e.attr2-256, 5, 200, e.o, size, gravity);
             else newparticle(e.o, offsetvec(e.o, e.attr2, max(1+e.attr3, 0)), 1, type, colorfromattr(e.attr4), size, gravity);
             break; // SAUER ENHANCED end
         }
@@ -1465,7 +1452,7 @@ static void makeparticles(entity &e)
         case 10: //water
         {
             static const int typemap[]   = { PART_STREAK, -1, -1, PART_LIGHTNING, -1, PART_STEAM, PART_WATER };
-            static const float sizemap[] = { 0.28f, 0.0f, 0.0f, 0.28f, 0.0f, 2.4f, 0.60f };
+            static const float sizemap[] = { 0.28f, 0.0f, 0.0f, 1.0f, 0.0f, 2.4f, 0.60f };
             static const int gravmap[] = { 0, 0, 0, 0, 0, -20, 2 };
             type = typemap[e.attr1-4];
             size = sizemap[e.attr1-4];
@@ -1504,12 +1491,6 @@ static void makeparticles(entity &e)
         case 35:
         {
             flares.addflare(e.o, e.attr2, e.attr3, e.attr4, (e.attr1&0x02)!=0, (e.attr1&0x01)!=0);
-            break;
-        }
-        case 77:    //snow // SAUER ENHANCED - add snow
-        case 78:    //rain // SAUER ENHANCED - add rain
-        {
-            regularshape(e.attr1==77?PART_SNOW:PART_RAIN, max(1+e.attr2, 1), colorfromattr(e.attr4), 44, e.attr2>=128?30:20, 0, e.o, e.attr1==77?1:3, e.attr1==77?200:201, e.attr1==77?350:1000, e.attr3, true);
             break;
         }
         case 79: // SAUER ENHANCED - add glow particles

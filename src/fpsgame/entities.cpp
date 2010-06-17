@@ -141,12 +141,12 @@ namespace entities
     {
         0,
         TRIG_ONCE,                    // 1
-        TRIG_RUMBLE,                  // 2  
+        TRIG_RUMBLE,                  // 2
         TRIG_TOGGLE,                  // 3
         TRIG_TOGGLE | TRIG_RUMBLE,    // 4
         TRIG_MANY,                    // 5
         TRIG_MANY | TRIG_RUMBLE,      // 6
-        TRIG_MANY | TRIG_TOGGLE,      // 7 
+        TRIG_MANY | TRIG_TOGGLE,      // 7
         TRIG_MANY | TRIG_TOGGLE | TRIG_RUMBLE,    // 8
         TRIG_COLLIDE | TRIG_TOGGLE | TRIG_RUMBLE, // 9
         TRIG_COLLIDE | TRIG_TOGGLE | TRIG_AUTO_RESET | TRIG_RUMBLE, // 10
@@ -185,7 +185,7 @@ namespace entities
         {
             case TRIGGERING:
                 if(checktriggertype(e.attr3, TRIG_COLLIDE) && lastmillis-e.lasttrigger >= 500) e.flags |= extentity::F_NOCOLLIDE;
-                break; 
+                break;
             case TRIGGERED:
                 if(checktriggertype(e.attr3, TRIG_COLLIDE)) e.flags |= extentity::F_NOCOLLIDE;
                 break;
@@ -422,7 +422,7 @@ namespace entities
             case ELEVATOR:
                 e.attr1 = (int(e.attr1)+180)%360;
                 break;
-        } 
+        }
     }
 
     void editent(int i, bool local)

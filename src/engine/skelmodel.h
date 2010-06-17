@@ -514,7 +514,7 @@ struct skelmodel : animmodel
         }
 
         template<class M>
-        void interpverts(const M * RESTRICT mdata1, const M * RESTRICT mdata2, bool norms, bool tangents, void *vdata, skin &s)
+        void interpverts(const M * RESTRICT mdata1, const M * RESTRICT mdata2, bool norms, bool tangents, void * RESTRICT vdata, skin &s)
         {
             const int blendoffset = ((skelmeshgroup *)group)->skel->numinterpbones;
             mdata2 -= blendoffset;
@@ -523,7 +523,7 @@ struct skelmodel : animmodel
                 loopi(numverts) \
                 { \
                     const vert &src = verts[i]; \
-                    type &dst = ((type *)vdata)[i]; \
+                    type &dst = ((type * RESTRICT)vdata)[i]; \
                     dosetup; \
                     const M &m = (src.interpindex < blendoffset ? mdata1 : mdata2)[src.interpindex]; \
                     dst.pos = m.transform(src.pos); \
@@ -1191,7 +1191,7 @@ struct skelmodel : animmodel
             }
         }
 
-        void cleanup()
+        void cleanup(bool full = true)
         {
             loopv(skelcache)
             {
@@ -1203,7 +1203,7 @@ struct skelmodel : animmodel
             }
             skelcache.setsize(0);
             lastsdata = lastbdata = NULL;
-            loopv(users) users[i]->cleanup();
+            if(full) loopv(users) users[i]->cleanup();
         }
 
         skelcacheentry &checkskelcache(part *p, const animstate *as, float pitch, const vec &axis, ragdolldata *rdata)
@@ -1721,6 +1721,7 @@ struct skelmodel : animmodel
             }
             if(hasVBO) { if(ebuf) { glDeleteBuffers_(1, &ebuf); ebuf = 0; } }
             else DELETEA(vdata);
+            if(skel) skel->cleanup(false);
         }
 
         #define SEARCHCACHE(cachesize, cacheentry, cache, reusecheck) \
