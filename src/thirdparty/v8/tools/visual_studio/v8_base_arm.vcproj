@@ -253,6 +253,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\circular-queue-inl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\circular-queue.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\circular-queue.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\code-stubs.cc"
 				>
 			</File>
@@ -345,6 +357,26 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\cpu-profiler.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\cpu-profiler.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\cpu-profiler-inl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\data-flow.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\data-flow.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\dateparser.cc"
 				>
 			</File>
@@ -417,6 +449,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\flow-graph.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\flow-graph.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\frame-element.cc"
 				>
 			</File>
@@ -444,6 +484,18 @@
 				RelativePath="..\..\src\frames.h"
 				>
 			</File>
+                        <File
+                                RelativePath="..\..\src\arm\full-codegen-arm.cc"
+                                >
+                        </File>
+                        <File
+                                RelativePath="..\..\src\full-codegen.cc"
+                                >
+                        </File>
+                        <File
+                                RelativePath="..\..\src\full-codegen.h"
+                                >
+                        </File>
 			<File
 				RelativePath="..\..\src\func-name-inferrer.cc"
 				>
@@ -537,11 +589,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\jump-target-inl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\jump-target-light-inl.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\jump-target.cc"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\arm\jump-target-arm.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\jump-target-light.cc"
 				>
 			</File>
 			<File
@@ -558,6 +622,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\list.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\liveedit.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\liveedit.h"
 				>
 			</File>
 			<File
@@ -654,6 +726,18 @@
 			</File>
 			<File
 				RelativePath="..\..\src\parser.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\profile-generator.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\profile-generator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\profile-generator-inl.h"
 				>
 			</File>
 			<File
@@ -853,19 +937,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\type-info.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\type-info.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\unicode-inl.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\unicode.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\usage-analyzer.cc"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\usage-analyzer.h"
 				>
 			</File>
 			<File
@@ -917,6 +1001,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\virtual-frame-inl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\virtual-frame-light-inl.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\virtual-frame.h"
 				>
 			</File>
@@ -930,6 +1022,22 @@
 			</File>
 			<File
 				RelativePath="..\..\src\arm\virtual-frame-arm.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\virtual-frame-light.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\vm-state.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\vm-state-inl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\vm-state.h"
 				>
 			</File>
 			<File
@@ -970,6 +1078,10 @@
 			>
 			<File
 				RelativePath="..\..\include\v8-debug.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\v8-profiler.h"
 				>
 			</File>
 			<File

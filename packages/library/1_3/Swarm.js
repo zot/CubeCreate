@@ -714,7 +714,7 @@ SwarmBugs = {
             );
             var flags = MODEL.LIGHT | MODEL.CULL_VFC | MODEL.CULL_DIST | MODEL.DYNSHADOW;
             var orientation = this.forward.toYawPitchRoll(this.up, this.targetDirection);
-            var args = [GameManager.getSingleton(), this.model, anim, o.x, o.y, o.z, orientation.yaw-90, orientation.pitch, orientation.roll, flags, this.basetime];
+            var args = [GameManager.getSingleton(), this.model, anim, o.x, o.y, o.z, orientation.yaw+90, orientation.pitch, orientation.roll, flags, this.basetime];
             GameManager.getSingleton().renderingHashHint = this.subEntityId;
             CAPI.renderModel2.apply(null, args);
         },
@@ -867,7 +867,7 @@ SwarmBugs = {
             var o = this.position;
             var flags = MODEL.LIGHT | MODEL.CULL_VFC | MODEL.CULL_DIST | MODEL.DYNSHADOW;
             var orientation = this.subEntity.forward.toYawPitchRoll(this.subEntity.up, this.subEntity.targetDirection);
-            var args = [GameManager.getSingleton(), this.subEntity.model, this.anim, o.x, o.y, o.z, orientation.yaw-90, orientation.pitch, orientation.roll, flags, this.basetime];
+            var args = [GameManager.getSingleton(), this.subEntity.model, this.anim, o.x, o.y, o.z, orientation.yaw+90, orientation.pitch, orientation.roll, flags, this.basetime];
             GameManager.getSingleton().renderingHashHint = this.subEntity.subEntityId;
             CAPI.renderModel2.apply(null, args);
         },

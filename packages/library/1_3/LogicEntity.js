@@ -219,10 +219,10 @@ RootLogicEntity = Class.extend({
 
         forEach([
             function(data) { return data.replace(/", "/g, '","'); },
-            function(data) { return data.replace(/"(\w+)":/g, '$1:'); },
-            function(data) { return data.replace(/:"(\d+)"/g, ':$1'); },
+            function(data) { return data.replace(/"(\w+)":/g, '\"$1\":'); },
+            function(data) { return data.replace(/:"(\d+)"/g, ':\"$1\"'); },
             function(data) { return data.replace(/"\[\]"/g, '[]'); },
-            function(data) { return data.replace(/:"(\d+)\.(\d+)"/g, ':$1.$2'); },
+            function(data) { return data.replace(/:"(\d+)\.(\d+)"/g, ':\"$1\".\"$2\"'); },
             function(data) { return data.replace(/, /g, ','); },
         ], function(func) {
             var next = func(ret);

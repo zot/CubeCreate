@@ -34,6 +34,8 @@
 #include "unicode-inl.h"
 #if V8_TARGET_ARCH_ARM
 #include "arm/constants-arm.h"
+#elif V8_TARGET_ARCH_MIPS
+#include "mips/constants-mips.h"
 #endif
 
 //
@@ -70,9 +72,11 @@
 //             - Dictionary
 //             - SymbolTable
 //             - CompilationCacheTable
+//             - CodeCacheHashTable
 //             - MapCache
 //           - Context
 //           - GlobalContext
+//           - JSFunctionResultCache
 //       - String
 //         - SeqString
 //           - SeqAsciiString
@@ -100,6 +104,7 @@
 //         - TypeSwitchInfo
 //         - DebugInfo
 //         - BreakPointInfo
+//         - CodeCache
 //
 // Formats of Object*:
 //  Smi:        [31 bit signed int] 0
@@ -177,7 +182,7 @@ class PropertyDetails BASE_EMBEDDED {
   class TypeField:       public BitField<PropertyType,       0, 3> {};
   class AttributesField: public BitField<PropertyAttributes, 3, 3> {};
   class DeletedField:    public BitField<uint32_t,           6, 1> {};
-  class IndexField:      public BitField<uint32_t,           7, 31-7> {};
+  class IndexField:      public BitField<uint32_t,           7, 32-7> {};
 
   static const int kInitialIndex = 1;
  private:
@@ -267,6 +272,7 @@ enum PropertyNormalizationMode {
   V(SIGNATURE_INFO_TYPE)                                                       \
   V(TYPE_SWITCH_INFO_TYPE)                                                     \
   V(SCRIPT_TYPE)                                                               \
+  V(CODE_CACHE_TYPE)                                                           \
                                                                                \
   V(JS_VALUE_TYPE)                                                             \
   V(JS_OBJECT_TYPE)                                                            \
@@ -362,7 +368,8 @@ enum PropertyNormalizationMode {
   V(OBJECT_TEMPLATE_INFO, ObjectTemplateInfo, object_template_info)            \
   V(SIGNATURE_INFO, SignatureInfo, signature_info)                             \
   V(TYPE_SWITCH_INFO, TypeSwitchInfo, type_switch_info)                        \
-  V(SCRIPT, Script, script)
+  V(SCRIPT, Script, script)                                                    \
+  V(CODE_CACHE, CodeCache, code_cache)
 
 #ifdef ENABLE_DEBUGGER_SUPPORT
 #define STRUCT_LIST_DEBUGGER(V)                                                \
@@ -466,6 +473,7 @@ enum InstanceType {
   SIGNATURE_INFO_TYPE,
   TYPE_SWITCH_INFO_TYPE,
   SCRIPT_TYPE,
+  CODE_CACHE_TYPE,
 #ifdef ENABLE_DEBUGGER_SUPPORT
   DEBUG_INFO_TYPE,
   BREAK_POINT_INFO_TYPE,
@@ -598,7 +606,9 @@ class Object BASE_EMBEDDED {
   inline bool IsHashTable();
   inline bool IsDictionary();
   inline bool IsSymbolTable();
+  inline bool IsJSFunctionResultCache();
   inline bool IsCompilationCacheTable();
+  inline bool IsCodeCacheHashTable();
   inline bool IsMapCache();
   inline bool IsPrimitive();
   inline bool IsGlobalObject();
@@ -1023,8 +1033,12 @@ class HeapObject: public Object {
   // Casting.
   static inline HeapObject* cast(Object* obj);
 
-  // Return the write barrier mode for this.
-  inline WriteBarrierMode GetWriteBarrierMode();
+  // Return the write barrier mode for this. Callers of this function
+  // must be able to present a reference to an AssertNoAllocation
+  // object as a sign that they are not going to use this function
+  // from code that allocates and thus invalidates the returned write
+  // barrier mode.
+  inline WriteBarrierMode GetWriteBarrierMode(const AssertNoAllocation&);
 
   // Dispatched behavior.
   void HeapObjectShortPrint(StringStream* accumulator);
@@ -1082,6 +1096,9 @@ class HeapNumber: public HeapObject {
   void HeapNumberVerify();
 #endif
 
+  inline int get_exponent();
+  inline int get_sign();
+
   // Layout description.
   static const int kValueOffset = HeapObject::kHeaderSize;
   // IEEE doubles are two 32 bit words.  The first is just mantissa, the second
@@ -1097,10 +1114,11 @@ class HeapNumber: public HeapObject {
 # define BIG_ENDIAN_FLOATING_POINT 1
 #endif
   static const int kSize = kValueOffset + kDoubleSize;
-
   static const uint32_t kSignMask = 0x80000000u;
   static const uint32_t kExponentMask = 0x7ff00000u;
   static const uint32_t kMantissaMask = 0xfffffu;
+  static const int kMantissaBits = 52;
+  static const int KExponentBits = 11;
   static const int kExponentBias = 1023;
   static const int kExponentShift = 20;
   static const int kMantissaBitsInTopWord = 20;
@@ -1156,6 +1174,7 @@ class JSObject: public HeapObject {
   inline bool HasExternalIntElements();
   inline bool HasExternalUnsignedIntElements();
   inline bool HasExternalFloatElements();
+  inline bool AllowsSetElementsLength();
   inline NumberDictionary* element_dictionary();  // Gets slow elements.
 
   // Collects elements starting at index 0.
@@ -1209,12 +1228,6 @@ class JSObject: public HeapObject {
   // Deletes the named property in a normalized object.
   Object* DeleteNormalizedProperty(String* name, DeleteMode mode);
 
-  // Sets a property that currently has lazy loading.
-  Object* SetLazyProperty(LookupResult* result,
-                          String* name,
-                          Object* value,
-                          PropertyAttributes attributes);
-
   // Returns the class name ([[Class]] property in the specification).
   String* class_name();
 
@@ -1249,13 +1262,6 @@ class JSObject: public HeapObject {
   Object* GetLocalPropertyPostInterceptor(JSObject* receiver,
                                           String* name,
                                           PropertyAttributes* attributes);
-  Object* GetLazyProperty(Object* receiver,
-                          LookupResult* result,
-                          String* name,
-                          PropertyAttributes* attributes);
-
-  // Tells whether this object needs to be loaded.
-  inline bool IsLoaded();
 
   // Returns true if this is an instance of an api function and has
   // been modified since it was created.  May give false positives.
@@ -1293,9 +1299,6 @@ class JSObject: public HeapObject {
 
   Object* DeleteProperty(String* name, DeleteMode mode);
   Object* DeleteElement(uint32_t index, DeleteMode mode);
-  Object* DeleteLazyProperty(LookupResult* result,
-                             String* name,
-                             DeleteMode mode);
 
   // Tests for the fast common case for property enumeration.
   bool IsSimpleEnum();
@@ -1311,6 +1314,9 @@ class JSObject: public HeapObject {
 
   // Return the object's prototype (might be Heap::null_value()).
   inline Object* GetPrototype();
+
+  // Set the object's prototype (only JSObject and null are allowed).
+  Object* SetPrototype(Object* value, bool skip_hidden_prototypes);
 
   // Tells whether the index'th element is present.
   inline bool HasElement(uint32_t index);
@@ -1617,6 +1623,9 @@ class FixedArray: public Array {
   inline void set_null(int index);
   inline void set_the_hole(int index);
 
+  // Gives access to raw memory which stores the array's data.
+  inline Object** data_start();
+
   // Copy operations.
   inline Object* Copy();
   Object* CopySize(int new_length);
@@ -1669,7 +1678,8 @@ class FixedArray: public Array {
   void SortPairs(FixedArray* numbers, uint32_t len);
 
  protected:
-  // Set operation on FixedArray without using write barriers.
+  // Set operation on FixedArray without using write barriers. Can
+  // only be used for storing old space objects or smis.
   static inline void fast_set(FixedArray* array, int index, Object* value);
 
  private:
@@ -1923,7 +1933,8 @@ class HashTable: public FixedArray {
   }
 
   // Returns a new HashTable object. Might return Failure.
-  static Object* Allocate(int at_least_space_for);
+  static Object* Allocate(int at_least_space_for,
+                          PretenureFlag pretenure = NOT_TENURED);
 
   // Returns the key at entry.
   Object* KeyAt(int entry) { return get(EntryToIndex(entry)); }
@@ -1955,6 +1966,8 @@ class HashTable: public FixedArray {
   static const int kEntrySize = Shape::kEntrySize;
   static const int kElementsStartOffset =
       kHeaderSize + kElementsStartIndex * kPointerSize;
+  static const int kCapacityOffset =
+      kHeaderSize + kCapacityIndex * kPointerSize;
 
   // Constant used for denoting a absent entry.
   static const int kNotFound = -1;
@@ -2132,24 +2145,24 @@ class Dictionary: public HashTable<Shape, Key> {
 
   // Returns the value at entry.
   Object* ValueAt(int entry) {
-    return get(HashTable<Shape, Key>::EntryToIndex(entry)+1);
+    return this->get(HashTable<Shape, Key>::EntryToIndex(entry)+1);
   }
 
   // Set the value for entry.
   void ValueAtPut(int entry, Object* value) {
-    set(HashTable<Shape, Key>::EntryToIndex(entry)+1, value);
+    this->set(HashTable<Shape, Key>::EntryToIndex(entry)+1, value);
   }
 
   // Returns the property details for the property at entry.
   PropertyDetails DetailsAt(int entry) {
     ASSERT(entry >= 0);  // Not found is -1, which is not caught by get().
     return PropertyDetails(
-        Smi::cast(get(HashTable<Shape, Key>::EntryToIndex(entry) + 2)));
+        Smi::cast(this->get(HashTable<Shape, Key>::EntryToIndex(entry) + 2)));
   }
 
   // Set the details for entry.
   void DetailsAtPut(int entry, PropertyDetails value) {
-    set(HashTable<Shape, Key>::EntryToIndex(entry) + 2, value.AsSmi());
+    this->set(HashTable<Shape, Key>::EntryToIndex(entry) + 2, value.AsSmi());
   }
 
   // Sorting support
@@ -2172,7 +2185,7 @@ class Dictionary: public HashTable<Shape, Key> {
 
   // Accessors for next enumeration index.
   void SetNextEnumerationIndex(int index) {
-    fast_set(this, kNextEnumerationIndexIndex, Smi::FromInt(index));
+    this->fast_set(this, kNextEnumerationIndexIndex, Smi::FromInt(index));
   }
 
   int NextEnumerationIndex() {
@@ -2295,6 +2308,39 @@ class NumberDictionary: public Dictionary<NumberDictionaryShape, uint32_t> {
   static const int kRequiresSlowElementsMask = 1;
   static const int kRequiresSlowElementsTagSize = 1;
   static const uint32_t kRequiresSlowElementsLimit = (1 << 29) - 1;
+};
+
+
+// JSFunctionResultCache caches results of some JSFunction invocation.
+// It is a fixed array with fixed structure:
+//   [0]: factory function
+//   [1]: finger index
+//   [2]: current cache size
+//   [3]: dummy field.
+// The rest of array are key/value pairs.
+class JSFunctionResultCache: public FixedArray {
+ public:
+  static const int kFactoryIndex = 0;
+  static const int kFingerIndex = kFactoryIndex + 1;
+  static const int kCacheSizeIndex = kFingerIndex + 1;
+  static const int kDummyIndex = kCacheSizeIndex + 1;
+  static const int kEntriesIndex = kDummyIndex + 1;
+
+  static const int kEntrySize = 2;  // key + value
+
+  static const int kFactoryOffset = kHeaderSize;
+  static const int kFingerOffset = kFactoryOffset + kPointerSize;
+  static const int kCacheSizeOffset = kFingerOffset + kPointerSize;
+
+  inline void MakeZeroSize();
+  inline void Clear();
+
+  // Casting
+  static inline JSFunctionResultCache* cast(Object* obj);
+
+#ifdef DEBUG
+  void JSFunctionResultCacheVerify();
+#endif
 };
 
 
@@ -2605,13 +2651,14 @@ class Code: public HeapObject {
     CALL_IC,
     STORE_IC,
     KEYED_STORE_IC,
-    // No more than eight kinds. The value currently encoded in three bits in
+    BINARY_OP_IC,
+    // No more than 16 kinds. The value currently encoded in four bits in
     // Flags.
 
     // Pseudo-kinds.
     REGEXP = BUILTIN,
     FIRST_IC_KIND = LOAD_IC,
-    LAST_IC_KIND = KEYED_STORE_IC
+    LAST_IC_KIND = BINARY_OP_IC
   };
 
   enum {
@@ -2657,7 +2704,7 @@ class Code: public HeapObject {
   inline bool is_keyed_store_stub() { return kind() == KEYED_STORE_IC; }
   inline bool is_call_stub() { return kind() == CALL_IC; }
 
-  // [major_key]: For kind STUB, the major key.
+  // [major_key]: For kind STUB or BINARY_OP_IC, the major key.
   inline CodeStub::Major major_key();
   inline void set_major_key(CodeStub::Major major);
 
@@ -2764,14 +2811,14 @@ class Code: public HeapObject {
   static const int kFlagsICStateShift        = 0;
   static const int kFlagsICInLoopShift       = 3;
   static const int kFlagsKindShift           = 4;
-  static const int kFlagsTypeShift           = 7;
-  static const int kFlagsArgumentsCountShift = 10;
+  static const int kFlagsTypeShift           = 8;
+  static const int kFlagsArgumentsCountShift = 11;
 
-  static const int kFlagsICStateMask        = 0x00000007;  // 0000000111
-  static const int kFlagsICInLoopMask       = 0x00000008;  // 0000001000
-  static const int kFlagsKindMask           = 0x00000070;  // 0001110000
-  static const int kFlagsTypeMask           = 0x00000380;  // 1110000000
-  static const int kFlagsArgumentsCountMask = 0xFFFFFC00;
+  static const int kFlagsICStateMask        = 0x00000007;  // 00000000111
+  static const int kFlagsICInLoopMask       = 0x00000008;  // 00000001000
+  static const int kFlagsKindMask           = 0x000000F0;  // 00011110000
+  static const int kFlagsTypeMask           = 0x00000700;  // 11100000000
+  static const int kFlagsArgumentsCountMask = 0xFFFFF800;
 
   static const int kFlagsNotUsedInLookup =
       (kFlagsICInLoopMask | kFlagsTypeMask);
@@ -2824,6 +2871,12 @@ class Map: public HeapObject {
   inline void set_non_instance_prototype(bool value);
   inline bool has_non_instance_prototype();
 
+  // Tells whether function has special prototype property. If not, prototype
+  // property will not be created when accessed (will return undefined),
+  // and construction from this function will not be allowed.
+  inline void set_function_with_prototype(bool value);
+  inline bool function_with_prototype();
+
   // Tells whether the instance with this map should be ignored by the
   // __proto__ accessor.
   inline void set_is_hidden_prototype() {
@@ -2866,20 +2919,6 @@ class Map: public HeapObject {
     return ((1 << kIsUndetectable) & bit_field()) != 0;
   }
 
-  inline void set_needs_loading(bool value) {
-    if (value) {
-      set_bit_field2(bit_field2() | (1 << kNeedsLoading));
-    } else {
-      set_bit_field2(bit_field2() & ~(1 << kNeedsLoading));
-    }
-  }
-
-  // Does this object or function require a lazily loaded script to be
-  // run before being used?
-  inline bool needs_loading() {
-    return ((1 << kNeedsLoading) & bit_field2()) != 0;
-  }
-
   // Tells whether the instance has a call-as-function handler.
   inline void set_has_instance_call_handler() {
     set_bit_field(bit_field() | (1 << kHasInstanceCallHandler));
@@ -2887,6 +2926,14 @@ class Map: public HeapObject {
 
   inline bool has_instance_call_handler() {
     return ((1 << kHasInstanceCallHandler) & bit_field()) != 0;
+  }
+
+  inline void set_is_extensible() {
+    set_bit_field2(bit_field2() | (1 << kIsExtensible));
+  }
+
+  inline bool is_extensible() {
+    return ((1 << kIsExtensible) & bit_field2()) != 0;
   }
 
   // Tells whether the instance needs security checks when accessing its
@@ -2904,7 +2951,7 @@ class Map: public HeapObject {
   DECL_ACCESSORS(instance_descriptors, DescriptorArray)
 
   // [stub cache]: contains stubs compiled for this map.
-  DECL_ACCESSORS(code_cache, FixedArray)
+  DECL_ACCESSORS(code_cache, Object)
 
   Object* CopyDropDescriptors();
 
@@ -2940,10 +2987,10 @@ class Map: public HeapObject {
 
   // Returns the non-negative index of the code object if it is in the
   // cache and -1 otherwise.
-  int IndexInCodeCache(Code* code);
+  int IndexInCodeCache(Object* name, Code* code);
 
   // Removes a code object from the code cache at the given index.
-  void RemoveFromCodeCache(int index);
+  void RemoveFromCodeCache(String* name, Code* code, int index);
 
   // For every transition in this map, makes the transition's
   // target's prototype pointer point back to this map.
@@ -3005,7 +3052,13 @@ class Map: public HeapObject {
   static const int kIsAccessCheckNeeded = 7;
 
   // Bit positions for bit field 2
-  static const int kNeedsLoading = 0;
+  static const int kIsExtensible = 0;
+  static const int kFunctionWithPrototype = 1;
+
+  // Layout of the default cache. It holds alternating name and code objects.
+  static const int kCodeCacheEntrySize = 2;
+  static const int kCodeCacheEntryNameOffset = 0;
+  static const int kCodeCacheEntryCodeOffset = 1;
 
  private:
   DISALLOW_IMPLICIT_CONSTRUCTORS(Map);
@@ -3149,14 +3202,25 @@ class SharedFunctionInfo: public HeapObject {
   // [instance class name]: class name for instances.
   DECL_ACCESSORS(instance_class_name, Object)
 
-  // [function data]: This field has been added for make benefit the API.
+  // [function data]: This field holds some additional data for function.
+  // Currently it either has FunctionTemplateInfo to make benefit the API
+  // or Smi identifying a custom call generator.
   // In the long run we don't want all functions to have this field but
   // we can fix that when we have a better model for storing hidden data
   // on objects.
   DECL_ACCESSORS(function_data, Object)
 
+  inline bool IsApiFunction();
+  inline FunctionTemplateInfo* get_api_func_data();
+  inline bool HasCustomCallGenerator();
+  inline int custom_call_generator_id();
+
   // [script info]: Script from which the function originates.
   DECL_ACCESSORS(script, Object)
+
+  // [num_literals]: Number of literals used by this function.
+  inline int num_literals();
+  inline void set_num_literals(int value);
 
   // [start_position_and_type]: Field used to store both the source code
   // position, whether or not the function is a function expression,
@@ -3213,8 +3277,12 @@ class SharedFunctionInfo: public HeapObject {
   // this.x = y; where y is either a constant or refers to an argument.
   inline bool has_only_simple_this_property_assignments();
 
-  inline bool try_fast_codegen();
-  inline void set_try_fast_codegen(bool flag);
+  inline bool try_full_codegen();
+  inline void set_try_full_codegen(bool flag);
+
+  // Check whether a inlined constructor can be generated with the given
+  // prototype.
+  bool CanGenerateInlineConstructor(Object* prototype);
 
   // For functions which only contains this property assignments this provides
   // access to the names for the properties assigned.
@@ -3252,39 +3320,39 @@ class SharedFunctionInfo: public HeapObject {
   static const int kDontAdaptArgumentsSentinel = -1;
 
   // Layout description.
-  // (An even number of integers has a size that is a multiple of a pointer.)
+  // Pointer fields.
   static const int kNameOffset = HeapObject::kHeaderSize;
   static const int kCodeOffset = kNameOffset + kPointerSize;
   static const int kConstructStubOffset = kCodeOffset + kPointerSize;
-  static const int kLengthOffset = kConstructStubOffset + kPointerSize;
+  static const int kInstanceClassNameOffset =
+      kConstructStubOffset + kPointerSize;
+  static const int kFunctionDataOffset =
+      kInstanceClassNameOffset + kPointerSize;
+  static const int kScriptOffset = kFunctionDataOffset + kPointerSize;
+  static const int kDebugInfoOffset = kScriptOffset + kPointerSize;
+  static const int kInferredNameOffset = kDebugInfoOffset + kPointerSize;
+  static const int kThisPropertyAssignmentsOffset =
+      kInferredNameOffset + kPointerSize;
+  // Integer fields.
+  static const int kLengthOffset =
+      kThisPropertyAssignmentsOffset + kPointerSize;
   static const int kFormalParameterCountOffset = kLengthOffset + kIntSize;
   static const int kExpectedNofPropertiesOffset =
       kFormalParameterCountOffset + kIntSize;
+  static const int kNumLiteralsOffset = kExpectedNofPropertiesOffset + kIntSize;
   static const int kStartPositionAndTypeOffset =
-      kExpectedNofPropertiesOffset + kIntSize;
+      kNumLiteralsOffset + kIntSize;
   static const int kEndPositionOffset = kStartPositionAndTypeOffset + kIntSize;
   static const int kFunctionTokenPositionOffset = kEndPositionOffset + kIntSize;
-  static const int kInstanceClassNameOffset =
+  static const int kCompilerHintsOffset =
       kFunctionTokenPositionOffset + kIntSize;
-  static const int kExternalReferenceDataOffset =
-      kInstanceClassNameOffset + kPointerSize;
-  static const int kScriptOffset = kExternalReferenceDataOffset + kPointerSize;
-  static const int kDebugInfoOffset = kScriptOffset + kPointerSize;
-  static const int kInferredNameOffset = kDebugInfoOffset + kPointerSize;
-  static const int kCompilerHintsOffset = kInferredNameOffset + kPointerSize;
-  static const int kThisPropertyAssignmentsOffset =
-      kCompilerHintsOffset + kPointerSize;
   static const int kThisPropertyAssignmentsCountOffset =
-      kThisPropertyAssignmentsOffset + kPointerSize;
-  static const int kSize = kThisPropertyAssignmentsCountOffset + kPointerSize;
+      kCompilerHintsOffset + kIntSize;
+  // Total size.
+  static const int kSize = kThisPropertyAssignmentsCountOffset + kIntSize;
+  static const int kAlignedSize = POINTER_SIZE_ALIGN(kSize);
 
  private:
-  // Bit positions in length_and_flg.
-  // The least significant bit is used as the flag.
-  static const int kFlagBit         = 0;
-  static const int kLengthShift     = 1;
-  static const int kLengthMask      = ~((1 << kLengthShift) - 1);
-
   // Bit positions in start_position_and_type.
   // The source code start position is in the 30 most significant bits of
   // the start_position_and_type field.
@@ -3295,7 +3363,7 @@ class SharedFunctionInfo: public HeapObject {
 
   // Bit positions in compiler_hints.
   static const int kHasOnlySimpleThisPropertyAssignments = 0;
-  static const int kTryFastCodegen = 1;
+  static const int kTryFullCodegen = 1;
 
   DISALLOW_IMPLICIT_CONSTRUCTORS(SharedFunctionInfo);
 };
@@ -3322,10 +3390,6 @@ class JSFunction: public JSObject {
   // 8.6.2, page 27.
   inline Code* code();
   inline void set_code(Code* value);
-
-  // Tells whether this function is a context-independent boilerplate
-  // function.
-  inline bool IsBoilerplate();
 
   // Tells whether this function is builtin.
   inline bool IsBuiltin();
@@ -3356,6 +3420,11 @@ class JSFunction: public JSObject {
   inline Object* instance_prototype();
   Object* SetInstancePrototype(Object* value);
   Object* SetPrototype(Object* value);
+
+  // After prototype is removed, it will not be created when accessed, and
+  // [[Construct]] from this function will not be allowed.
+  Object* RemovePrototype();
+  inline bool should_have_prototype();
 
   // Accessor for this function's initial map's [[class]]
   // property. This is primarily used by ECMA native functions.  This
@@ -3502,6 +3571,10 @@ class JSBuiltinsObject: public GlobalObject {
   inline Object* javascript_builtin(Builtins::JavaScript id);
   inline void set_javascript_builtin(Builtins::JavaScript id, Object* value);
 
+  // Accessors for code of the runtime routines written in JavaScript.
+  inline Code* javascript_builtin_code(Builtins::JavaScript id);
+  inline void set_javascript_builtin_code(Builtins::JavaScript id, Code* value);
+
   // Casting.
   static inline JSBuiltinsObject* cast(Object* obj);
 
@@ -3512,11 +3585,23 @@ class JSBuiltinsObject: public GlobalObject {
 #endif
 
   // Layout description.  The size of the builtins object includes
-  // room for one pointer per runtime routine written in javascript.
+  // room for two pointers per runtime routine written in javascript
+  // (function and code object).
   static const int kJSBuiltinsCount = Builtins::id_count;
   static const int kJSBuiltinsOffset = GlobalObject::kHeaderSize;
+  static const int kJSBuiltinsCodeOffset =
+      GlobalObject::kHeaderSize + (kJSBuiltinsCount * kPointerSize);
   static const int kSize =
-      kJSBuiltinsOffset + (kJSBuiltinsCount * kPointerSize);
+      kJSBuiltinsCodeOffset + (kJSBuiltinsCount * kPointerSize);
+
+  static int OffsetOfFunctionWithId(Builtins::JavaScript id) {
+    return kJSBuiltinsOffset + id * kPointerSize;
+  }
+
+  static int OffsetOfCodeWithId(Builtins::JavaScript id) {
+    return kJSBuiltinsCodeOffset + id * kPointerSize;
+  }
+
  private:
   DISALLOW_IMPLICIT_CONSTRUCTORS(JSBuiltinsObject);
 };
@@ -3640,8 +3725,17 @@ class JSRegExp: public JSObject {
       FixedArray::kHeaderSize + kTagIndex * kPointerSize;
   static const int kDataAsciiCodeOffset =
       FixedArray::kHeaderSize + kIrregexpASCIICodeIndex * kPointerSize;
+  static const int kDataUC16CodeOffset =
+      FixedArray::kHeaderSize + kIrregexpUC16CodeIndex * kPointerSize;
   static const int kIrregexpCaptureCountOffset =
       FixedArray::kHeaderSize + kIrregexpCaptureCountIndex * kPointerSize;
+
+  // In-object fields.
+  static const int kSourceFieldIndex = 0;
+  static const int kGlobalFieldIndex = 1;
+  static const int kIgnoreCaseFieldIndex = 2;
+  static const int kMultilineFieldIndex = 3;
+  static const int kLastIndexFieldIndex = 4;
 };
 
 
@@ -3683,6 +3777,97 @@ class CompilationCacheTable: public HashTable<CompilationCacheShape,
 
  private:
   DISALLOW_IMPLICIT_CONSTRUCTORS(CompilationCacheTable);
+};
+
+
+class CodeCache: public Struct {
+ public:
+  DECL_ACCESSORS(default_cache, FixedArray)
+  DECL_ACCESSORS(normal_type_cache, Object)
+
+  // Add the code object to the cache.
+  Object* Update(String* name, Code* code);
+
+  // Lookup code object in the cache. Returns code object if found and undefined
+  // if not.
+  Object* Lookup(String* name, Code::Flags flags);
+
+  // Get the internal index of a code object in the cache. Returns -1 if the
+  // code object is not in that cache. This index can be used to later call
+  // RemoveByIndex. The cache cannot be modified between a call to GetIndex and
+  // RemoveByIndex.
+  int GetIndex(Object* name, Code* code);
+
+  // Remove an object from the cache with the provided internal index.
+  void RemoveByIndex(Object* name, Code* code, int index);
+
+  static inline CodeCache* cast(Object* obj);
+
+#ifdef DEBUG
+  void CodeCachePrint();
+  void CodeCacheVerify();
+#endif
+
+  static const int kDefaultCacheOffset = HeapObject::kHeaderSize;
+  static const int kNormalTypeCacheOffset =
+      kDefaultCacheOffset + kPointerSize;
+  static const int kSize = kNormalTypeCacheOffset + kPointerSize;
+
+ private:
+  Object* UpdateDefaultCache(String* name, Code* code);
+  Object* UpdateNormalTypeCache(String* name, Code* code);
+  Object* LookupDefaultCache(String* name, Code::Flags flags);
+  Object* LookupNormalTypeCache(String* name, Code::Flags flags);
+
+  // Code cache layout of the default cache. Elements are alternating name and
+  // code objects for non normal load/store/call IC's.
+  static const int kCodeCacheEntrySize = 2;
+  static const int kCodeCacheEntryNameOffset = 0;
+  static const int kCodeCacheEntryCodeOffset = 1;
+
+  DISALLOW_IMPLICIT_CONSTRUCTORS(CodeCache);
+};
+
+
+class CodeCacheHashTableShape {
+ public:
+  static inline bool IsMatch(HashTableKey* key, Object* value) {
+    return key->IsMatch(value);
+  }
+
+  static inline uint32_t Hash(HashTableKey* key) {
+    return key->Hash();
+  }
+
+  static inline uint32_t HashForObject(HashTableKey* key, Object* object) {
+    return key->HashForObject(object);
+  }
+
+  static Object* AsObject(HashTableKey* key) {
+    return key->AsObject();
+  }
+
+  static const int kPrefixSize = 0;
+  static const int kEntrySize = 2;
+};
+
+
+class CodeCacheHashTable: public HashTable<CodeCacheHashTableShape,
+                                           HashTableKey*> {
+ public:
+  Object* Lookup(String* name, Code::Flags flags);
+  Object* Put(String* name, Code* code);
+
+  int GetIndex(String* name, Code::Flags flags);
+  void RemoveByIndex(int index);
+
+  static inline CodeCacheHashTable* cast(Object* obj);
+
+  // Initial size of the fixed array backing the hash table.
+  static const int kInitialSize = 64;
+
+ private:
+  DISALLOW_IMPLICIT_CONSTRUCTORS(CodeCacheHashTable);
 };
 
 
@@ -3803,6 +3988,13 @@ class String: public HeapObject {
   inline bool IsAsciiRepresentation();
   inline bool IsTwoByteRepresentation();
 
+  // Check whether this string is an external two-byte string that in
+  // fact contains only ascii characters.
+  //
+  // Such strings may appear when the embedder prefers two-byte
+  // representations even for ascii data.
+  inline bool IsExternalTwoByteStringWithAsciiChars();
+
   // Get and set individual two byte chars in the string.
   inline void Set(int index, uint16_t value);
   // Get individual two byte char in the string.  Repeated calls
@@ -3812,13 +4004,13 @@ class String: public HeapObject {
   // Try to flatten the top level ConsString that is hiding behind this
   // string.  This is a no-op unless the string is a ConsString.  Flatten
   // mutates the ConsString and might return a failure.
-  Object* TryFlatten();
+  Object* SlowTryFlatten(PretenureFlag pretenure);
 
   // Try to flatten the string.  Checks first inline to see if it is necessary.
-  // Do not handle allocation failures.  After calling TryFlattenIfNotFlat, the
+  // Do not handle allocation failures.  After calling TryFlatten, the
   // string could still be a ConsString, in which case a failure is returned.
   // Use FlattenString from Handles.cc to be sure to flatten.
-  inline Object* TryFlattenIfNotFlat();
+  inline Object* TryFlatten(PretenureFlag pretenure = NOT_TENURED);
 
   Vector<const char> ToAsciiVector();
   Vector<const uc16> ToUC16Vector();
@@ -3828,7 +4020,7 @@ class String: public HeapObject {
   bool MarkAsUndetectable();
 
   // Return a substring.
-  Object* SubString(int from, int to);
+  Object* SubString(int from, int to, PretenureFlag pretenure = NOT_TENURED);
 
   // String equality operations.
   inline bool Equals(String* other);
@@ -3901,7 +4093,7 @@ class String: public HeapObject {
 
   // Layout description.
   static const int kLengthOffset = HeapObject::kHeaderSize;
-  static const int kHashFieldOffset = kLengthOffset + kIntSize;
+  static const int kHashFieldOffset = kLengthOffset + kPointerSize;
   static const int kSize = kHashFieldOffset + kIntSize;
   // Notice: kSize is not pointer-size aligned if pointers are 64-bit.
 
@@ -4025,10 +4217,6 @@ class SeqString: public String {
 
   // Casting.
   static inline SeqString* cast(Object* obj);
-
-  // Dispatched behaviour.
-  // For regexp code.
-  uint16_t* SeqStringGetTwoByteAddress();
 
  private:
   DISALLOW_IMPLICIT_CONSTRUCTORS(SeqString);
@@ -4463,6 +4651,10 @@ class JSArray: public JSObject {
   // [length]: The length property.
   DECL_ACCESSORS(length, Object)
 
+  // Overload the length setter to skip write barrier when the length
+  // is set to a smi. This matches the set function on FixedArray.
+  inline void set_length(Smi* length);
+
   Object* JSArrayUpdateLengthFromIndex(uint32_t index, Object* value);
 
   // Initialize the array with the given capacity. The function may
@@ -4499,6 +4691,26 @@ class JSArray: public JSObject {
   void Expand(int minimum_size_of_backing_fixed_array);
 
   DISALLOW_IMPLICIT_CONSTRUCTORS(JSArray);
+};
+
+
+// JSRegExpResult is just a JSArray with a specific initial map.
+// This initial map adds in-object properties for "index" and "input"
+// properties, as assigned by RegExp.prototype.exec, which allows
+// faster creation of RegExp exec results.
+// This class just holds constants used when creating the result.
+// After creation the result must be treated as a JSArray in all regards.
+class JSRegExpResult: public JSArray {
+ public:
+  // Offsets of object fields.
+  static const int kIndexOffset = JSArray::kSize;
+  static const int kInputOffset = kIndexOffset + kPointerSize;
+  static const int kSize = kInputOffset + kPointerSize;
+  // Indices of in-object properties.
+  static const int kIndexIndex = 0;
+  static const int kInputIndex = 1;
+ private:
+  DISALLOW_IMPLICIT_CONSTRUCTORS(JSRegExpResult);
 };
 
 

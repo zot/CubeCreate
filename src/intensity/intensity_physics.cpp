@@ -114,12 +114,12 @@ void setupWorldGeometryVerts(vector<vertex>& verts)
 
     for (unsigned int i = 0; i < nVertices; i++)
     {
-        currVecs[i] = verts[i].tovec();
+        currVecs[i] = verts[i].pos;
     }
 }
 
 
-void setupWorldGeometryTriGroup(usvector& data, int tex, int lightmapTex, int orientation)
+void setupWorldGeometryTriGroup(vector<ushort>& data, int tex, int lightmapTex, int orientation)
 {
     REQUIRE_ENGINE
 
@@ -180,13 +180,14 @@ void finishWorldGeometryVerts()
                 // Not fully solid, create convex shape with the verts
                 // TODO: Optimize, use addStaticCube when rectangular
                 Logging::log(Logging::DEBUG, "Not fully solid nor empty\r\n");
-                vvec vv[8];
+                vec verts[8];
                 bool usefaces[8];
-                int vertused = calcverts(*c, o.x, o.y, o.z, size, vv, usefaces);
+                int vertused = 0;
+                loopi(8) if((usefaces[i] = visibletris(*c, i, o.x, o.y, o.z, size))) vertused |= fvmasks[1<<i];
                 std::vector<vec> vecs;
                 loopi(8) if(vertused&(1<<i))
                 {
-                    vec t = vv[i].tovec(o);
+					vec t = verts[i].mul(8);
                     Logging::log(Logging::INFO, "vv: %f,%f,%f\r\n", t.x, t.y, t.z);
                     vecs.push_back(t);
                 }

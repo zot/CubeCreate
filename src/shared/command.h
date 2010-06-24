@@ -1,4 +1,3 @@
-// INTENSITY: Version: rev 1758 in sauerbraten SVN, June 3 2009. Fix some uninitialized values, following our report
 // script binding functionality
 
 
@@ -91,6 +90,7 @@ struct ident
 };
 
 extern void addident(const char *name, ident *id);
+extern const char *intstr(int v);
 extern void intret(int v);
 extern const char *floatstr(float v);
 extern void floatret(float v);

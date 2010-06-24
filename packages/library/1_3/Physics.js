@@ -337,7 +337,7 @@ Physics = {
                     // Other clients, we read the C++ data and feed that into Bullet
                     Physics.Engine.setPosition(this, CAPI.getDynentO(this));
                     Physics.Engine.setVelocity(this, CAPI.getDynentVel(this));
-                    Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90).asArray());
+                    Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw+90).asArray());
                 }
             },
 
@@ -381,11 +381,11 @@ Physics = {
 
                 if (_global) {
                     this.position = position;
-                    Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90).asArray());
+                    Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw+90).asArray());
                 } else {
                     Physics.Engine.setPosition(this, position.asArray());
                     CAPI.setDynentO(this, position);
-                    Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90).asArray());
+                    Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw+90).asArray());
                 }
             },
 
@@ -547,7 +547,7 @@ PhysicalMapmodel = registerEntityClass(bakePlugins(Mapmodel, [
                 func: bind(function() {
                     if (this.physicsHandle !== undefined) {
                         if (this.yaw !== this.lastYaw) {
-                            Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw+180).asArray());
+                            Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw).asArray());
                             this.lastYaw = this.yaw;
                         }
                     }

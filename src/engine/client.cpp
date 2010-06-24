@@ -54,6 +54,24 @@ bool isconnected(bool attempt)
 
 ICOMMAND(isconnected, "i", (int *attempt), intret(isconnected(*attempt > 0) ? 1 : 0));
 
+const ENetAddress *connectedpeer()
+{
+    return curpeer ? &curpeer->address : NULL;
+}
+
+ICOMMAND(connectedip, "", (),
+{
+    const ENetAddress *address = connectedpeer();
+    string hostname;
+    result(address && enet_address_get_host_ip(address, hostname, sizeof(hostname)) >= 0 ? hostname : "");
+});
+
+ICOMMAND(connectedport, "", (),
+{
+    const ENetAddress *address = connectedpeer();
+    intret(address ? address->port : -1);
+});
+
 void abortconnect()
 {
     if(!connpeer) return;
@@ -94,11 +112,12 @@ void connectserv(const char *servername, int serverport, const char *serverpassw
         address.host = ENET_HOST_BROADCAST;
     }
 
-    if(!clienthost) clienthost = enet_host_create(NULL, 2, rate, rate);
+    if(!clienthost) 
+        clienthost = enet_host_create(NULL, 2, server::numchannels(), rate, rate);
 
     if(clienthost)
     {
-        connpeer = enet_host_connect(clienthost, &address, game::numchannels()); 
+        connpeer = enet_host_connect(clienthost, &address, server::numchannels(), 0); 
         enet_host_flush(clienthost);
         connmillis = totalmillis;
         connattempts = 0;

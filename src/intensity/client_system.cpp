@@ -117,6 +117,9 @@ void ClientSystem::onDisconnect()
     _scenarioStarted  = false;
     _mapCompletelyReceived = false;
 
+    // it's also useful to stop all mapsounds and gamesounds (but only for client that disconnects!)
+    stopsounds();
+
     LogicSystem::clear();
 }
 
@@ -230,11 +233,12 @@ struct queuedHUDRect
 {
     float x1, y1, x2, y2;
     int color;
+    float alpha;
 };
 
 std::vector<queuedHUDRect> queuedHUDRects;
 
-void ClientSystem::addHUDRect(float x1, float y1, float x2, float y2, int color)
+void ClientSystem::addHUDRect(float x1, float y1, float x2, float y2, int color, float alpha)
 {
     queuedHUDRect q;
     q.x1 = x1;
@@ -242,6 +246,7 @@ void ClientSystem::addHUDRect(float x1, float y1, float x2, float y2, int color)
     q.x2 = x2;
     q.y2 = y2;
     q.color = color;
+    q.alpha = alpha;
     queuedHUDRects.push_back(q);
 }
 
@@ -252,6 +257,8 @@ struct queuedHUDImage
 //    float widthInX, heightInY; //!< In axis-relative coordinates, how big the HUD should be.
 //                               //!< E.g. widthInX 0.5 means its width is half of the X dimension
     float width, height;
+    int color;
+    float alpha;
 
     queuedHUDImage()
     {
@@ -259,12 +266,13 @@ struct queuedHUDImage
         centerX = 0.5; centerY = 0.5;
 //        widthInX = 0; heightInY = 0;
         width = 0.61803399; height = 0.61803399;
+        color = 0xFFFFFF, alpha = 1.0;
     }
 };
 
 std::vector<queuedHUDImage> queuedHUDImages;
 
-void ClientSystem::addHUDImage(std::string tex, float centerX, float centerY, float width, float height)
+void ClientSystem::addHUDImage(std::string tex, float centerX, float centerY, float width, float height, int color, float alpha)
 {
     queuedHUDImage q;
     q.tex = tex;
@@ -272,6 +280,8 @@ void ClientSystem::addHUDImage(std::string tex, float centerX, float centerY, fl
     q.centerY = centerY;
     q.width = width;
     q.height = height;
+    q.color = color;
+    q.alpha = alpha;
     queuedHUDImages.push_back(q);
 }
 
@@ -321,15 +331,16 @@ void ClientSystem::drawHUD(int w, int h)
 
         vec rgb(q.color>>16, (q.color>>8)&0xFF, q.color&0xFF);
         rgb.mul(1.0/256.0);
-        glColor3f(rgb[0], rgb[1], rgb[2]);
+
+        glColor4f(rgb[0], rgb[1], rgb[2], q.alpha);
 
         glDisable(GL_TEXTURE_2D);
         notextureshader->set();
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_STRIP);
         glVertex2f(q.x1, q.y1);
         glVertex2f(q.x2, q.y1);
-        glVertex2f(q.x2, q.y2);
         glVertex2f(q.x1, q.y2);
+        glVertex2f(q.x2, q.y2);
         glEnd();
         glEnable(GL_TEXTURE_2D);
         defaultshader->set();	
@@ -350,13 +361,16 @@ void ClientSystem::drawHUD(int w, int h)
         float y1 = q.centerY - (hFactor*q.height/2);
         float x2 = q.centerX + (wFactor*q.width/2);
         float y2 = q.centerY + (hFactor*q.height/2);
-        glColor3f(1, 1, 1);
+        vec rgb(q.color>>16, (q.color>>8)&0xFF, q.color&0xFF);
+        rgb.mul(1.0/256.0);
+
+        glColor4f(rgb[0], rgb[1], rgb[2], q.alpha);
         settexture(q.tex.c_str(), 3);
-        glBegin(GL_QUADS);
+        glBegin(GL_TRIANGLE_STRIP);
             glTexCoord2f(0.0f, 0.0f); glVertex2f(x1, y1);
             glTexCoord2f(1.0f, 0.0f); glVertex2f(x2, y1);
-            glTexCoord2f(1.0f, 1.0f); glVertex2f(x2, y2);
             glTexCoord2f(0.0f, 1.0f); glVertex2f(x1, y2);
+            glTexCoord2f(1.0f, 1.0f); glVertex2f(x2, y2);
         glEnd();
     }
 
@@ -380,6 +394,61 @@ void ClientSystem::drawHUD(int w, int h)
 
         glPopMatrix();
     }
+}
+
+void ClientSystem::drawMinimap(int w, int h, float minmapzoom, float maxmapzoom, float forceminmapzoom, float forcemaxmapzoom, float minimapsize, float minimapxpos, float minimapypos, float minimaprot, int minimapsides, int minimaprightalign)
+{
+    if (g3d_windowhit(true, false)) return; // Showing sauer GUI - do not show minimap
+
+    float x, y;
+    vec dir, pos;
+
+    glPushMatrix();
+    glScalef(h / 1000.0f, h / 1000.0f, 1); // we don't want the screen width
+
+    // if we want it aligned to right, we need to move stuff through screen .. if not, we just set the x position value
+    if (minimaprightalign)
+        x = (1000 * w) / h - minimapsize * 1000 - minimapxpos * 1000;
+    else
+        x = minimapxpos * 1000;
+
+    y = minimapypos * 1000;
+    glColor3f(1, 1, 1);
+
+    glDisable(GL_BLEND);
+    bindminimap();
+    pos = vec(game::hudplayer()->o).sub(minimapcenter).mul(minimapscale).add(0.5f); // hudplayer, because we want minimap also when following someone.
+
+    vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
+    float scale = clamp(max(minimapradius.x, minimapradius.y) / 3, (forceminmapzoom < 0) ? minmapzoom : forceminmapzoom, (forcemaxmapzoom < 0) ? maxmapzoom : forcemaxmapzoom);
+
+    glBegin(GL_TRIANGLE_FAN);
+
+    loopi(minimapsides) // create a triangle for every side, together it makes triangle when minimapsides is 3, square when it's 4 and "circle" for any other value.
+    {
+        // this part manages texture
+        vec tc = vec(dir).rotate_around_z((i / float(minimapsides)) * 2 * M_PI);
+
+        if (minimaprot > 0) // rotate the minimap if we want to rotate it, if not, just skip this
+            tc.rotate_around_z(minimaprot * (M_PI / 180.0f));
+
+        glTexCoord2f(pos.x + (tc.x * scale * minimapscale.x),
+                     pos.y + (tc.y * scale * minimapscale.y));
+
+        // this part actually creates the triangle which is the texture bind to
+        vec v = vec(0, -1, 0).rotate_around_z((i / float(minimapsides)) * 2 * M_PI);
+
+        if (minimaprot > 0)
+            v.rotate_around_z(minimaprot * (M_PI / 180.0f));
+
+        glVertex2f(x + 500 * minimapsize * (1.0f + v.x),
+                   y + 500 * minimapsize * (1.0f + v.y));
+    }
+
+    glEnd();
+    glEnable(GL_BLEND);
+
+    glPopMatrix();
 }
 
 void ClientSystem::cleanupHUD()

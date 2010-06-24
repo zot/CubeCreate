@@ -42,6 +42,13 @@ CutScenes = {
 
             CAPI.showHUDText = CAPI.showHUDRect = CAPI.showHUDImage = function() { };
 
+            if (Global.CLIENT) {
+                if (CAPI.usedMinimap()) {
+                    this.savedMinimapState = CAPI.usedMinimap();
+                    CAPI.useMinimap(0);
+                }
+            }
+
             this.originalSecondsLeft = this.secondsLeft;
 
             this._super();
@@ -67,6 +74,9 @@ CutScenes = {
             CAPI.showHUDText = this.oldShowHUDText;
             CAPI.showHUDRect = this.oldShowHUDRect;
             CAPI.showHUDImage = this.oldShowHUDImage;
+
+            if (Global.CLIENT)
+                if (this.savedMinimapState) CAPI.useMinimap(this.savedMinimapState);
 
             this._super();
         },
@@ -98,9 +108,16 @@ CutScenes = {
         secondsPerMarker: 4.0,
         delayBefore: 0,
         delayAfter: 0,
+        looped: false,
+        looping: false,
+
+        // if you want to init markers from a function, with this you won't need to do it in doStart :)
+        initMarkers: function() { },
 
         doStart: function() {
             this._super();
+
+            this.initMarkers();
 
             this.timer = -this.secondsPerMarker/2 - this.delayBefore;
             this.secondsLeft = this.secondsPerMarker*this.markers.length;
@@ -116,7 +133,18 @@ CutScenes = {
 
             this._super(seconds);
 
-            return this.secondsLeft <= -this.delayAfter-this.delayBefore;
+            if (this.looped)
+            {
+                if ((!this.looping && this.secondsLeft <= -this.delayBefore) || (this.looping && this.secondsLeft <= 0))
+                {
+                    // reset timer and stuff ..
+                    this.timer = -this.secondsPerMarker/2;
+                    this.secondsLeft = this.secondsPerMarker*this.markers.length;
+                    if (!this.looping) this.looping = true;
+                }
+                return (this.looping) ? false : this.secondsLeft <= -this.delayBefore; // we ignore delayAfter when looping
+            }
+            return this.secondsLeft <= -this.delayAfter-this.delayBefore; // we end :(
         },
 
         smoothFunc: function(x) {
@@ -231,4 +259,3 @@ CutScenes = {
 //        this.actor.lastCamera = undefined;
 //    },
 //});
-

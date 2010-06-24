@@ -57,7 +57,6 @@ set(CLIENT_SOURCES
     ../engine/water
     ../engine/shader
     ../engine/rendersky
-    ../engine/cubeloader
     ../engine/renderparticles
     ../engine/octarender
     ../engine/server
@@ -91,6 +90,7 @@ set(CLIENT_SOURCES
 set(CLIENT_LIBRARIES
     enet
     v8
+    rt
     ${PYTHON_LIBRARIES}
     ${Boost_Python_Library}
     ${SDL_LIBRARY}

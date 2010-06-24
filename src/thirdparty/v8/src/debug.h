@@ -132,7 +132,6 @@ class BreakLocationIterator {
   int position_;
   int statement_position_;
   Handle<DebugInfo> debug_info_;
-  Handle<Code> debug_break_stub_;
   RelocIterator* reloc_iterator_;
   RelocIterator* reloc_iterator_original_;
 
@@ -378,9 +377,17 @@ class Debug {
   static void GenerateConstructCallDebugBreak(MacroAssembler* masm);
   static void GenerateReturnDebugBreak(MacroAssembler* masm);
   static void GenerateStubNoRegistersDebugBreak(MacroAssembler* masm);
+  static void GeneratePlainReturnLiveEdit(MacroAssembler* masm);
+  static void GenerateFrameDropperLiveEdit(MacroAssembler* masm);
 
   // Called from stub-cache.cc.
   static void GenerateCallICDebugBreak(MacroAssembler* masm);
+
+  static void FramesHaveBeenDropped(StackFrame::Id new_break_frame_id);
+
+  static void SetUpFrameDropperFrame(StackFrame* bottom_js_frame,
+                                     Handle<Code> code);
+  static const int kFrameDropperFrameSize;
 
  private:
   static bool CompileDebuggerScript(int index);
@@ -391,7 +398,6 @@ class Debug {
   static void ClearStepOut();
   static void ClearStepNext();
   // Returns whether the compile succeeded.
-  static bool EnsureCompiled(Handle<SharedFunctionInfo> shared);
   static void RemoveDebugInfo(Handle<DebugInfo> debug_info);
   static void SetAfterBreakTarget(JavaScriptFrame* frame);
   static Handle<Object> CheckBreakPoints(Handle<Object> break_point);
@@ -447,6 +453,9 @@ class Debug {
 
     // Storage location for jump when exiting debug break calls.
     Address after_break_target_;
+
+    // Indicates that LiveEdit has patched the stack.
+    bool frames_are_dropped_;
 
     // Top debugger entry.
     EnterDebugger* debugger_entry_;
@@ -559,6 +568,9 @@ class CommandMessageQueue BASE_EMBEDDED {
 };
 
 
+class MessageDispatchHelperThread;
+
+
 // LockingCommandMessageQueue is a thread-safe circular buffer of CommandMessage
 // messages.  The message data is not managed by LockingCommandMessageQueue.
 // Pointers to the data are passed in and out. Implemented by adding a
@@ -603,8 +615,13 @@ class Debugger {
   static void OnDebugBreak(Handle<Object> break_points_hit, bool auto_continue);
   static void OnException(Handle<Object> exception, bool uncaught);
   static void OnBeforeCompile(Handle<Script> script);
+
+  enum AfterCompileFlags {
+    NO_AFTER_COMPILE_FLAGS,
+    SEND_WHEN_DEBUGGING
+  };
   static void OnAfterCompile(Handle<Script> script,
-                           Handle<JSFunction> fun);
+                             AfterCompileFlags after_compile_flags);
   static void OnNewFunction(Handle<JSFunction> fun);
   static void OnScriptCollected(int id);
   static void ProcessDebugEvent(v8::DebugEvent event,
@@ -619,7 +636,8 @@ class Debugger {
   static void SetHostDispatchHandler(v8::Debug::HostDispatchHandler handler,
                                      int period);
   static void SetDebugMessageDispatchHandler(
-      v8::Debug::DebugMessageDispatchHandler handler);
+      v8::Debug::DebugMessageDispatchHandler handler,
+      bool provide_locker);
 
   // Invoke the message handler function.
   static void InvokeMessageHandler(MessageImpl message);
@@ -645,16 +663,23 @@ class Debugger {
   // Blocks until the agent has started listening for connections
   static void WaitForAgent();
 
+  static void CallMessageDispatchHandler();
+
+  static Handle<Context> GetDebugContext();
+
   // Unload the debugger if possible. Only called when no debugger is currently
   // active.
   static void UnloadDebugger();
+  friend void ForceUnloadDebugger();  // In test-debug.cc
 
   inline static bool EventActive(v8::DebugEvent event) {
     ScopedLock with(debugger_access_);
 
     // Check whether the message handler was been cleared.
     if (debugger_unload_pending_) {
-      UnloadDebugger();
+      if (Debug::debugger_entry() == NULL) {
+        UnloadDebugger();
+      }
     }
 
     // Currently argument event is not used.
@@ -681,7 +706,9 @@ class Debugger {
   static v8::Debug::MessageHandler2 message_handler_;
   static bool debugger_unload_pending_;  // Was message handler cleared?
   static v8::Debug::HostDispatchHandler host_dispatch_handler_;
+  static Mutex* dispatch_handler_access_;  // Mutex guarding dispatch handler.
   static v8::Debug::DebugMessageDispatchHandler debug_message_dispatch_handler_;
+  static MessageDispatchHelperThread* message_dispatch_helper_thread_;
   static int host_dispatch_micros_;
 
   static DebuggerAgent* agent_;
@@ -856,6 +883,27 @@ class Debug_Address {
  private:
   Debug::AddressId id_;
   int reg_;
+};
+
+// The optional thread that Debug Agent may use to temporary call V8 to process
+// pending debug requests if debuggee is not running V8 at the moment.
+// Techincally it does not call V8 itself, rather it asks embedding program
+// to do this via v8::Debug::HostDispatchHandler
+class MessageDispatchHelperThread: public Thread {
+ public:
+  MessageDispatchHelperThread();
+  ~MessageDispatchHelperThread();
+
+  void Schedule();
+
+ private:
+  void Run();
+
+  Semaphore* const sem_;
+  Mutex* const mutex_;
+  bool already_signalled_;
+
+  DISALLOW_COPY_AND_ASSIGN(MessageDispatchHelperThread);
 };
 
 

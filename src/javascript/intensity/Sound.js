@@ -23,6 +23,22 @@ Sound = {
         }
     },
 
+    stop: function(_name, volume, clientNumber) {
+        volume = defaultValue(volume, 0);
+            
+        if (Global.CLIENT) {
+            CAPI.stopSoundByName(_name, volume);
+        } else {
+            // Warn if using non-compressed names
+            if (_name.length > 2) {
+                log(WARNING, format("Sending a sound '{0}' to clients using full string name. This should be done rarely, for bandwidth reasons.", _name));
+            }
+
+            clientNumber = defaultValue(clientNumber, MessageSystem.ALL_CLIENTS);
+            MessageSystem.send(clientNumber, CAPI.SoundStopToClientsByName, volume, _name, -1);
+        }
+    },
+
     playMusic: function(_name) {
         CAPI.music(_name);
     },

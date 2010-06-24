@@ -59,6 +59,7 @@ static inline void putint_(T &p, int n)
 }
 void putint(ucharbuf &p, int n) { putint_(p, n); }
 void putint(packetbuf &p, int n) { putint_(p, n); }
+void putint(vector<uchar> &p, int n) { putint_(p, n); }
 
 int getint(ucharbuf &p)
 {
@@ -94,6 +95,7 @@ static inline void putuint_(T &p, int n)
 }
 void putuint(ucharbuf &p, int n) { putuint_(p, n); }
 void putuint(packetbuf &p, int n) { putuint_(p, n); }
+void putuint(vector<uchar> &p, int n) { putuint_(p, n); }
 
 int getuint(ucharbuf &p)
 {
@@ -103,7 +105,7 @@ int getuint(ucharbuf &p)
         n += (p.get() << 7) - 0x80;
         if(n & (1<<14)) n += (p.get() << 14) - (1<<14);
         if(n & (1<<21)) n += (p.get() << 21) - (1<<21);
-        if(n & (1<<28)) n |= 0xF0000000; 
+        if(n & (1<<28)) n |= -1<<28;
     }
     return n;
 }
@@ -116,6 +118,7 @@ static inline void putfloat_(T &p, float f)
 }
 void putfloat(ucharbuf &p, float f) { putfloat_(p, f); }
 void putfloat(packetbuf &p, float f) { putfloat_(p, f); }
+void putfloat(vector<uchar> &p, float f) { putfloat_(p, f); }
 
 float getfloat(ucharbuf &p)
 {
@@ -132,6 +135,7 @@ static inline void sendstring_(const char *t, T &p)
 }
 void sendstring(const char *t, ucharbuf &p) { sendstring_(t, p); }
 void sendstring(const char *t, packetbuf &p) { sendstring_(t, p); }
+void sendstring(const char *t, vector<uchar> &p) { sendstring_(t, p); }
 
 void getstring(char *text, ucharbuf &p, int len)
 {
@@ -176,7 +180,6 @@ struct client                   // server side version of "dynent" type
 vector<client *> clients;
 
 ENetHost *serverhost = NULL;
-size_t bsend = 0, brec = 0;
 int laststatus = 0; 
 ENetSocket pongsock = ENET_SOCKET_NULL, lansock = ENET_SOCKET_NULL;
 
@@ -211,7 +214,6 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
         case ST_TCPIP:
         {
             enet_peer_send(clients[n]->peer, chan, packet);
-            bsend += packet->dataLength;
 
             NetworkSystem::Cataloger::packetSent(chan, packet->dataLength); // INTENSITY
 
@@ -231,8 +233,7 @@ void sendf(int cn, int chan, const char *format, ...)
     int exclude = -1;
     bool reliable = false;
     if(*format=='r') { reliable = true; ++format; }
-    ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
-    ucharbuf p(packet->data, packet->dataLength);
+    packetbuf p(MAXTRANS, reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
     va_list args;
     va_start(args, format);
     while(*format) switch(*format++)
@@ -265,17 +266,12 @@ void sendf(int cn, int chan, const char *format, ...)
         case 'm':
         {
             int n = va_arg(args, int);
-            enet_packet_resize(packet, packet->dataLength+n);
-            p.buf = packet->data;
-            p.maxlen += n;
             p.put(va_arg(args, uchar *), n);
             break;
         }
     }
     va_end(args);
-    enet_packet_resize(packet, p.length());
-    sendpacket(cn, chan, packet, exclude);
-    if(packet->referenceCount==0) enet_packet_destroy(packet);
+    sendpacket(cn, chan, p.finalize(), exclude);
 }
 
 void sendfile(int cn, int chan, stream *file, const char *format, ...)
@@ -293,11 +289,7 @@ void sendfile(int cn, int chan, stream *file, const char *format, ...)
     int len = file->size();
     if(len <= 0) return;
 
-    bool reliable = false;
-    if(*format=='r') { reliable = true; ++format; }
-    ENetPacket *packet = enet_packet_create(NULL, MAXTRANS+len, ENET_PACKET_FLAG_RELIABLE);
-
-    ucharbuf p(packet->data, packet->dataLength);
+    packetbuf p(MAXTRANS+len, ENET_PACKET_FLAG_RELIABLE);
     va_list args;
     va_start(args, format);
     while(*format) switch(*format++)
@@ -312,25 +304,23 @@ void sendfile(int cn, int chan, stream *file, const char *format, ...)
         case 'l': putint(p, len); break;
     }
     va_end(args);
-    enet_packet_resize(packet, p.length()+len);
 
     file->seek(0, SEEK_SET);
-    file->read(&packet->data[p.length()], len);
-    enet_packet_resize(packet, p.length()+len);
+    file->read(p.subbuf(len).buf, len);
 
+    ENetPacket *packet = p.finalize();
     if(cn >= 0) sendpacket(cn, chan, packet, -1);
 #ifndef STANDALONE
     else sendclientpacket(packet, chan);
 #endif
-    if(!packet->referenceCount) enet_packet_destroy(packet);
 #endif
 }
 
-const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned", "tag type", "ip is banned", "server is in private mode", "server FULL (maxclients)", "connection timed out" };
+const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned", "tag type", "ip is banned", "server is in private mode", "server FULL", "connection timed out", "overflow" };
 
 void disconnect_client(int n, int reason)
 {
-    if(clients[n]->type!=ST_TCPIP) return;
+    if(!clients.inrange(n) || clients[n]->type!=ST_TCPIP) return;
     enet_peer_disconnect(clients[n]->peer, reason);
     server::clientdisconnect(n);
     clients[n]->type = ST_EMPTY;
@@ -406,7 +396,6 @@ int lastupdatemaster = 0;
 vector<char> masterout, masterin;
 int masteroutpos = 0, masterinpos = 0;
 VARN(updatemaster, allowupdatemaster, 0, 1, 1);
-SVAR(mastername, server::defaultmaster());
 
 void disconnectmaster()
 {
@@ -415,10 +404,15 @@ void disconnectmaster()
     enet_socket_destroy(mastersock);
     mastersock = ENET_SOCKET_NULL;
 
-    masterout.setsizenodelete(0);
-    masterin.setsizenodelete(0);
+    masterout.setsize(0);
+    masterin.setsize(0);
     masteroutpos = masterinpos = 0;
+
+    masteraddress.host = ENET_HOST_ANY;
+    masteraddress.port = ENET_PORT_ANY;
 }
+
+SVARF(mastername, server::defaultmaster(), disconnectmaster());
 
 ENetSocket connectmaster()
 {
@@ -495,7 +489,7 @@ void processmasterinput()
 
     if(masterinpos >= masterin.length())
     {
-        masterin.setsizenodelete(0);
+        masterin.setsize(0);
         masterinpos = 0;
     }
 }
@@ -513,7 +507,7 @@ void flushmasteroutput()
         masteroutpos += sent;
         if(masteroutpos >= masterout.length())
         {
-            masterout.setsizenodelete(0);
+            masterout.setsize(0);
             masteroutpos = 0;
         }
     }
@@ -614,9 +608,9 @@ void show_server_stats()
 {
     float seconds = float(totalmillis-laststatus)/1024.0f;
 
-    if(seconds > 0 && (nonlocalclients || bsend || brec))
+    if(seconds > 0 && (nonlocalclients || serverhost->totalSentData || serverhost->totalReceivedData))
     {
-        printf("%d remote clients, %.1f K/sec sent, %.1f K/sec received   [over last %.1f seconds]\n", nonlocalclients, bsend/seconds/1024, brec/seconds/1024, seconds);
+        printf("%d remote clients, %.1f K/sec sent, %.1f K/sec received   [over last %.1f seconds]\n", nonlocalclients, serverhost->totalSentData/seconds/1024, serverhost->totalReceivedData/seconds/1024, seconds);
 
         NetworkSystem::Cataloger::show(seconds);
     }
@@ -625,7 +619,7 @@ void show_server_stats()
 
     // Initialise
     laststatus = totalmillis;
-    bsend = brec = 0;
+    serverhost->totalSentData = serverhost->totalReceivedData = 0;
 }
 
 void serverslice(bool dedicated, uint timeout)   // main server update, called from main loop in sp, or from below in dedicated server
@@ -667,8 +661,8 @@ void serverslice(bool dedicated, uint timeout)   // main server update, called f
     if(totalmillis-laststatus>60*1000)   // display bandwidth stats, useful for server ops
     {
         laststatus = totalmillis;     
-        if(nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
-        bsend = brec = 0;
+        if(nonlocalclients || serverhost->totalSentData || serverhost->totalReceivedData) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, serverhost->totalSentData/60.0f/1024, serverhost->totalReceivedData/60.0f/1024);
+        serverhost->totalSentData = serverhost->totalReceivedData = 0;
     }
 #endif
 
@@ -699,7 +693,6 @@ void serverslice(bool dedicated, uint timeout)   // main server update, called f
             }
             case ENET_EVENT_TYPE_RECEIVE:
             {
-                brec += event.packet->dataLength;
                 client *c = (client *)event.peer->data;
                 if(c) process(event.packet, c->num, event.channelID);
                 if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
@@ -738,6 +731,11 @@ void force_network_flush()
 
 //    if(sv->sendpackets())
         enet_host_flush(serverhost);
+}
+
+void flushserver(bool force)
+{
+    if(server::sendpackets(force) && serverhost) enet_host_flush(serverhost);
 }
 
 #ifndef STANDALONE
@@ -807,7 +805,7 @@ bool setuplistenserver(bool dedicated)
         if(enet_address_set_host(&address, serverip)<0) conoutf(CON_WARN, "WARNING: server ip not resolved");
         else serveraddress.host = address.host;
     }
-    serverhost = enet_host_create(&address, min(maxclients + server::reserveclients(), MAXCLIENTS), 0, serveruprate);
+    serverhost = enet_host_create(&address, min(maxclients + server::reserveclients(), MAXCLIENTS), server::numchannels(), 0, serveruprate);
     if(!serverhost)
     {
         // INTENSITY: Do *NOT* fatally quit on this error. It can lead to repeated restarts etc.

@@ -201,23 +201,17 @@ class LookupResult BASE_EMBEDDED {
   }
 
   JSObject* holder() {
-    ASSERT(IsValid());
+    ASSERT(IsFound());
     return holder_;
   }
 
   PropertyType type() {
-    ASSERT(IsValid());
+    ASSERT(IsFound());
     return details_.type();
   }
 
-  bool IsTransitionType() {
-    PropertyType t = type();
-    if (t == MAP_TRANSITION || t == CONSTANT_TRANSITION) return true;
-    return false;
-  }
-
   PropertyAttributes GetAttributes() {
-    ASSERT(IsValid());
+    ASSERT(IsFound());
     return details_.attributes();
   }
 
@@ -229,27 +223,21 @@ class LookupResult BASE_EMBEDDED {
   bool IsDontDelete() { return details_.IsDontDelete(); }
   bool IsDontEnum() { return details_.IsDontEnum(); }
   bool IsDeleted() { return details_.IsDeleted(); }
+  bool IsFound() { return lookup_type_ != NOT_FOUND; }
 
-  bool IsValid() { return  lookup_type_ != NOT_FOUND; }
-  bool IsNotFound() { return lookup_type_ == NOT_FOUND; }
-
-  // Tells whether the result is a property.
-  // Excluding transitions and the null descriptor.
+  // Is the result is a property excluding transitions and the null
+  // descriptor?
   bool IsProperty() {
-    return IsValid() && type() < FIRST_PHANTOM_PROPERTY_TYPE;
+    return IsFound() && (type() < FIRST_PHANTOM_PROPERTY_TYPE);
+  }
+
+  // Is the result a property or a transition?
+  bool IsPropertyOrTransition() {
+    return IsFound() && (type() != NULL_DESCRIPTOR);
   }
 
   bool IsCacheable() { return cacheable_; }
   void DisallowCaching() { cacheable_ = false; }
-
-  // Tells whether the value needs to be loaded.
-  bool IsLoaded() {
-    if (lookup_type_ == DESCRIPTOR_TYPE || lookup_type_ == DICTIONARY_TYPE) {
-      Object* target = GetLazyValue();
-      return !target->IsJSObject() || JSObject::cast(target)->IsLoaded();
-    }
-    return true;
-  }
 
   Object* GetLazyValue() {
     switch (type()) {

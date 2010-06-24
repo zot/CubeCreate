@@ -1,4 +1,5 @@
 
+
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
@@ -111,8 +112,14 @@
     // SoundToClients
     exposeToPython("SoundToClients", &MessageSystem::send_SoundToClients);
 
+    // MapSoundToClients
+    exposeToPython("MapSoundToClients", &MessageSystem::send_MapSoundToClients);
+
     // SoundToClientsByName
     exposeToPython("SoundToClientsByName", &MessageSystem::send_SoundToClientsByName);
+
+    // SoundStopToClientsByName
+    exposeToPython("SoundStopToClientsByName", &MessageSystem::send_SoundStopToClientsByName);
 
 #ifdef CLIENT
     // EditModeC2S
@@ -139,6 +146,9 @@
 
     // ParticleSplashToClients
     exposeToPython("ParticleSplashToClients", &MessageSystem::send_ParticleSplashToClients);
+
+    // ParticleSplashRegularToClients
+    exposeToPython("ParticleSplashRegularToClients", &MessageSystem::send_ParticleSplashRegularToClients);
 
 #ifdef CLIENT
     // RequestPrivateEditMode

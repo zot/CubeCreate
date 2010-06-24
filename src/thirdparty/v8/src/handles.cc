@@ -31,6 +31,7 @@
 #include "api.h"
 #include "arguments.h"
 #include "bootstrapper.h"
+#include "codegen.h"
 #include "compiler.h"
 #include "debug.h"
 #include "execution.h"
@@ -173,13 +174,6 @@ void SetExpectedNofPropertiesFromEstimate(Handle<SharedFunctionInfo> shared,
 }
 
 
-void SetExpectedNofPropertiesFromEstimate(Handle<JSFunction> func,
-                                          int estimate) {
-  SetExpectedNofProperties(
-      func, ExpectedNofPropertiesFromEstimate(estimate));
-}
-
-
 void NormalizeProperties(Handle<JSObject> object,
                          PropertyNormalizationMode mode,
                          int expected_additional_properties) {
@@ -202,13 +196,14 @@ void TransformToFastProperties(Handle<JSObject> object,
 
 
 void FlattenString(Handle<String> string) {
-  CALL_HEAP_FUNCTION_VOID(string->TryFlattenIfNotFlat());
+  CALL_HEAP_FUNCTION_VOID(string->TryFlatten());
   ASSERT(string->IsFlat());
 }
 
 
 Handle<Object> SetPrototype(Handle<JSFunction> function,
                             Handle<Object> prototype) {
+  ASSERT(function->should_have_prototype());
   CALL_HEAP_FUNCTION(Accessors::FunctionSetPrototype(*function,
                                                      *prototype,
                                                      NULL),
@@ -239,6 +234,15 @@ Handle<Object> ForceSetProperty(Handle<JSObject> object,
                                 PropertyAttributes attributes) {
   CALL_HEAP_FUNCTION(
       Runtime::ForceSetObjectProperty(object, key, value, attributes), Object);
+}
+
+
+Handle<Object> SetNormalizedProperty(Handle<JSObject> object,
+                                     Handle<String> key,
+                                     Handle<Object> value,
+                                     PropertyDetails details) {
+  CALL_HEAP_FUNCTION(object->SetNormalizedProperty(*key, *value, details),
+                     Object);
 }
 
 
@@ -282,6 +286,12 @@ Handle<Object> GetProperty(Handle<Object> obj,
 }
 
 
+Handle<Object> GetElement(Handle<Object> obj,
+                          uint32_t index) {
+  CALL_HEAP_FUNCTION(Runtime::GetElement(obj, index), Object);
+}
+
+
 Handle<Object> GetPropertyWithInterceptor(Handle<JSObject> receiver,
                                           Handle<JSObject> holder,
                                           Handle<String> name,
@@ -296,6 +306,12 @@ Handle<Object> GetPropertyWithInterceptor(Handle<JSObject> receiver,
 Handle<Object> GetPrototype(Handle<Object> obj) {
   Handle<Object> result(obj->GetPrototype());
   return result;
+}
+
+
+Handle<Object> SetPrototype(Handle<JSObject> obj, Handle<Object> value) {
+  const bool skip_hidden_prototypes = false;
+  CALL_HEAP_FUNCTION(obj->SetPrototype(*value, skip_hidden_prototypes), Object);
 }
 
 
@@ -355,8 +371,11 @@ Handle<Object> LookupSingleCharacterStringFromCode(uint32_t index) {
 }
 
 
-Handle<String> SubString(Handle<String> str, int start, int end) {
-  CALL_HEAP_FUNCTION(str->SubString(start, end), String);
+Handle<String> SubString(Handle<String> str,
+                         int start,
+                         int end,
+                         PretenureFlag pretenure) {
+  CALL_HEAP_FUNCTION(str->SubString(start, end, pretenure), String);
 }
 
 
@@ -439,6 +458,16 @@ void InitScriptLineEnds(Handle<Script> script) {
   }
 
   Handle<String> src(String::cast(script->source()));
+
+  Handle<FixedArray> array = CalculateLineEnds(src, true);
+
+  script->set_line_ends(*array);
+  ASSERT(script->line_ends()->IsFixedArray());
+}
+
+
+Handle<FixedArray> CalculateLineEnds(Handle<String> src,
+                                     bool with_imaginary_last_new_line) {
   const int src_len = src->length();
   Handle<String> new_line = Factory::NewStringFromAscii(CStrVector("\n"));
 
@@ -450,8 +479,12 @@ void InitScriptLineEnds(Handle<Script> script) {
     if (position != -1) {
       position++;
     }
-    // Even if the last line misses a line end, it is counted.
-    line_count++;
+    if (position != -1) {
+      line_count++;
+    } else if (with_imaginary_last_new_line) {
+      // Even if the last line misses a line end, it is counted.
+      line_count++;
+    }
   }
 
   // Pass 2: Fill in line ends positions
@@ -460,15 +493,17 @@ void InitScriptLineEnds(Handle<Script> script) {
   position = 0;
   while (position != -1 && position < src_len) {
     position = Runtime::StringMatch(src, new_line, position);
-    // If the script does not end with a line ending add the final end
-    // position as just past the last line ending.
-    array->set(array_index++,
-               Smi::FromInt(position != -1 ? position++ : src_len));
+    if (position != -1) {
+      array->set(array_index++, Smi::FromInt(position++));
+    } else if (with_imaginary_last_new_line) {
+      // If the script does not end with a line ending add the final end
+      // position as just past the last line ending.
+      array->set(array_index++, Smi::FromInt(src_len));
+    }
   }
   ASSERT(array_index == line_count);
 
-  script->set_line_ends(*array);
-  ASSERT(script->line_ends()->IsFixedArray());
+  return array;
 }
 
 
@@ -476,30 +511,54 @@ void InitScriptLineEnds(Handle<Script> script) {
 int GetScriptLineNumber(Handle<Script> script, int code_pos) {
   InitScriptLineEnds(script);
   AssertNoAllocation no_allocation;
-  FixedArray* line_ends_array =
-      FixedArray::cast(script->line_ends());
+  FixedArray* line_ends_array = FixedArray::cast(script->line_ends());
   const int line_ends_len = line_ends_array->length();
 
-  int line = -1;
-  if (line_ends_len > 0 &&
-      code_pos <= (Smi::cast(line_ends_array->get(0)))->value()) {
-    line = 0;
-  } else {
-    for (int i = 1; i < line_ends_len; ++i) {
-      if ((Smi::cast(line_ends_array->get(i - 1)))->value() < code_pos &&
-          code_pos <= (Smi::cast(line_ends_array->get(i)))->value()) {
-        line = i;
-        break;
-      }
+  if (!line_ends_len)
+    return -1;
+
+  if ((Smi::cast(line_ends_array->get(0)))->value() >= code_pos)
+    return script->line_offset()->value();
+
+  int left = 0;
+  int right = line_ends_len;
+  while (int half = (right - left) / 2) {
+    if ((Smi::cast(line_ends_array->get(left + half)))->value() > code_pos) {
+      right -= half;
+    } else {
+      left += half;
     }
   }
+  return right + script->line_offset()->value();
+}
 
-  return line != -1 ? line + script->line_offset()->value() : line;
+
+int GetScriptLineNumberSafe(Handle<Script> script, int code_pos) {
+  AssertNoAllocation no_allocation;
+  if (!script->line_ends()->IsUndefined()) {
+    return GetScriptLineNumber(script, code_pos);
+  }
+  // Slow mode: we do not have line_ends. We have to iterate through source.
+  if (!script->source()->IsString()) {
+    return -1;
+  }
+  String* source = String::cast(script->source());
+  int line = 0;
+  int len = source->length();
+  for (int pos = 0; pos < len; pos++) {
+    if (pos == code_pos) {
+      break;
+    }
+    if (source->Get(pos) == '\n') {
+      line++;
+    }
+  }
+  return line;
 }
 
 
 void CustomArguments::IterateInstance(ObjectVisitor* v) {
-  v->VisitPointers(values_, values_ + 4);
+  v->VisitPointers(values_, values_ + ARRAY_SIZE(values_));
 }
 
 
@@ -666,30 +725,49 @@ Handle<FixedArray> GetEnumPropertyKeys(Handle<JSObject> object,
 }
 
 
-bool CompileLazyShared(Handle<SharedFunctionInfo> shared,
-                       ClearExceptionFlag flag,
-                       int loop_nesting) {
+bool EnsureCompiled(Handle<SharedFunctionInfo> shared,
+                    ClearExceptionFlag flag) {
+  return shared->is_compiled() || CompileLazyShared(shared, flag);
+}
+
+
+static bool CompileLazyHelper(CompilationInfo* info,
+                              ClearExceptionFlag flag) {
   // Compile the source information to a code object.
-  ASSERT(!shared->is_compiled());
-  bool result = Compiler::CompileLazy(shared, loop_nesting);
+  ASSERT(!info->shared_info()->is_compiled());
+  bool result = Compiler::CompileLazy(info);
   ASSERT(result != Top::has_pending_exception());
   if (!result && flag == CLEAR_EXCEPTION) Top::clear_pending_exception();
   return result;
 }
 
 
-bool CompileLazy(Handle<JSFunction> function, ClearExceptionFlag flag) {
-  // Compile the source information to a code object.
-  Handle<SharedFunctionInfo> shared(function->shared());
-  return CompileLazyShared(shared, flag, 0);
+bool CompileLazyShared(Handle<SharedFunctionInfo> shared,
+                       ClearExceptionFlag flag) {
+  CompilationInfo info(shared);
+  return CompileLazyHelper(&info, flag);
 }
 
 
-bool CompileLazyInLoop(Handle<JSFunction> function, ClearExceptionFlag flag) {
-  // Compile the source information to a code object.
-  Handle<SharedFunctionInfo> shared(function->shared());
-  return CompileLazyShared(shared, flag, 1);
+bool CompileLazy(Handle<JSFunction> function,
+                 Handle<Object> receiver,
+                 ClearExceptionFlag flag) {
+  CompilationInfo info(function, 0, receiver);
+  bool result = CompileLazyHelper(&info, flag);
+  PROFILE(FunctionCreateEvent(*function));
+  return result;
 }
+
+
+bool CompileLazyInLoop(Handle<JSFunction> function,
+                       Handle<Object> receiver,
+                       ClearExceptionFlag flag) {
+  CompilationInfo info(function, 1, receiver);
+  bool result = CompileLazyHelper(&info, flag);
+  PROFILE(FunctionCreateEvent(*function));
+  return result;
+}
+
 
 OptimizedObjectForAddingMultipleProperties::
 OptimizedObjectForAddingMultipleProperties(Handle<JSObject> object,
@@ -723,89 +801,6 @@ OptimizedObjectForAddingMultipleProperties::
   if (has_been_transformed_) {
     TransformToFastProperties(object_, unused_property_fields_);
   }
-}
-
-
-void LoadLazy(Handle<JSObject> obj, bool* pending_exception) {
-  HandleScope scope;
-  Handle<FixedArray> info(FixedArray::cast(obj->map()->constructor()));
-  int index = Smi::cast(info->get(0))->value();
-  ASSERT(index >= 0);
-  Handle<Context> compile_context(Context::cast(info->get(1)));
-  Handle<Context> function_context(Context::cast(info->get(2)));
-  Handle<Object> receiver(compile_context->global()->builtins());
-
-  Vector<const char> name = Natives::GetScriptName(index);
-
-  Handle<JSFunction> boilerplate;
-
-  if (!Bootstrapper::NativesCacheLookup(name, &boilerplate)) {
-    Handle<String> source_code = Bootstrapper::NativesSourceLookup(index);
-    Handle<String> script_name = Factory::NewStringFromAscii(name);
-    bool allow_natives_syntax = FLAG_allow_natives_syntax;
-    FLAG_allow_natives_syntax = true;
-    boilerplate = Compiler::Compile(source_code, script_name, 0, 0, NULL, NULL);
-    FLAG_allow_natives_syntax = allow_natives_syntax;
-    // If the compilation failed (possibly due to stack overflows), we
-    // should never enter the result in the natives cache. Instead we
-    // return from the function without marking the function as having
-    // been lazily loaded.
-    if (boilerplate.is_null()) {
-      *pending_exception = true;
-      return;
-    }
-    Bootstrapper::NativesCacheAdd(name, boilerplate);
-  }
-
-  // We shouldn't get here if compiling the script failed.
-  ASSERT(!boilerplate.is_null());
-
-#ifdef ENABLE_DEBUGGER_SUPPORT
-  // When the debugger running in its own context touches lazy loaded
-  // functions loading can be triggered. In that case ensure that the
-  // execution of the boilerplate is in the correct context.
-  SaveContext save;
-  if (!Debug::debug_context().is_null() &&
-      Top::context() == *Debug::debug_context()) {
-    Top::set_context(*compile_context);
-  }
-#endif
-
-  // Reset the lazy load data before running the script to make sure
-  // not to get recursive lazy loading.
-  obj->map()->set_needs_loading(false);
-  obj->map()->set_constructor(info->get(3));
-
-  // Run the script.
-  Handle<JSFunction> script_fun(
-      Factory::NewFunctionFromBoilerplate(boilerplate, function_context));
-  Execution::Call(script_fun, receiver, 0, NULL, pending_exception);
-
-  // If lazy loading failed, restore the unloaded state of obj.
-  if (*pending_exception) {
-    obj->map()->set_needs_loading(true);
-    obj->map()->set_constructor(*info);
-  }
-}
-
-
-void SetupLazy(Handle<JSObject> obj,
-               int index,
-               Handle<Context> compile_context,
-               Handle<Context> function_context) {
-  Handle<FixedArray> arr = Factory::NewFixedArray(4);
-  arr->set(0, Smi::FromInt(index));
-  arr->set(1, *compile_context);  // Compile in this context
-  arr->set(2, *function_context);  // Set function context to this
-  arr->set(3, obj->map()->constructor());  // Remember the constructor
-  Handle<Map> old_map(obj->map());
-  Handle<Map> new_map = Factory::CopyMapDropTransitions(old_map);
-  obj->set_map(*new_map);
-  new_map->set_needs_loading(true);
-  // Store the lazy loading info in the constructor field.  We'll
-  // reestablish the constructor from the fixed array after loading.
-  new_map->set_constructor(*arr);
-  ASSERT(!obj->IsLoaded());
 }
 
 } }  // namespace v8::internal

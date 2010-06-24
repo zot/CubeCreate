@@ -416,8 +416,8 @@ struct blobrenderer
             else
             {
                 bool solid = cu[i].ext && isclipped(cu[i].ext->material&MATF_VOLUME);
-                uchar vismask = 0;
-                loopj(6) if(!(avoid&(1<<j)) && (solid ? visiblematerial(cu[i], j, co.x, co.y, co.z, size)==MATSURF_VISIBLE : cu[i].texture[j]!=DEFAULT_SKY && visibleface(cu[i], j, co.x, co.y, co.z, size))) vismask |= 1<<j;
+                uchar vismask = 0, nmat = cu[i].ext && cu[i].ext->material&MAT_ALPHA ? MAT_AIR : MAT_ALPHA;
+                loopj(6) if(!(avoid&(1<<j)) && (solid ? visiblematerial(cu[i], j, co.x, co.y, co.z, size)==MATSURF_VISIBLE : cu[i].texture[j]!=DEFAULT_SKY && visibleface(cu[i], j, co.x, co.y, co.z, size, MAT_AIR, nmat, MAT_ALPHA))) vismask |= 1<<j;
                 if(!vismask) continue;
                 uint overlap = checkoverlap(co, size);
                 uchar vertused = fvmasks[vismask];
@@ -455,8 +455,6 @@ struct blobrenderer
 
     static void setuprenderstate()
     {
-        if(renderpath!=R_FIXEDFUNCTION && fogging) setfogplane(1, reflectz);
-
         foggedshader->set();
 
         enablepolygonoffset(GL_POLYGON_OFFSET_FILL);
@@ -566,8 +564,8 @@ VARFP(blobdyntris, 128, 4096, 1<<16, initblobs(BLOB_DYNAMIC));
 
 static blobrenderer blobs[] = 
 {
-    blobrenderer("packages/particles/blob.png"),
-    blobrenderer("packages/particles/blob.png")
+    blobrenderer("<grey>packages/particles/blob.png"),
+    blobrenderer("<grey>packages/particles/blob.png")
 };
 
 void initblobs(int type)

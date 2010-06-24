@@ -42,7 +42,7 @@ namespace internal {
 template<class T>
 class Handle {
  public:
-  INLINE(Handle(T** location)) { location_ = location; }
+  INLINE(explicit Handle(T** location)) { location_ = location; }
   INLINE(explicit Handle(T* obj));
 
   INLINE(Handle()) : location_(NULL) {}
@@ -210,6 +210,11 @@ Handle<Object> ForceSetProperty(Handle<JSObject> object,
                                 Handle<Object> value,
                                 PropertyAttributes attributes);
 
+Handle<Object> SetNormalizedProperty(Handle<JSObject> object,
+                                     Handle<String> key,
+                                     Handle<Object> value,
+                                     PropertyDetails details);
+
 Handle<Object> ForceDeleteProperty(Handle<JSObject> object,
                                    Handle<Object> key);
 
@@ -233,12 +238,17 @@ Handle<Object> GetProperty(Handle<JSObject> obj,
 Handle<Object> GetProperty(Handle<Object> obj,
                            Handle<Object> key);
 
+Handle<Object> GetElement(Handle<Object> obj,
+                          uint32_t index);
+
 Handle<Object> GetPropertyWithInterceptor(Handle<JSObject> receiver,
                                           Handle<JSObject> holder,
                                           Handle<String> name,
                                           PropertyAttributes* attributes);
 
 Handle<Object> GetPrototype(Handle<Object> obj);
+
+Handle<Object> SetPrototype(Handle<JSObject> obj, Handle<Object> value);
 
 // Return the object's hidden properties object. If the object has no hidden
 // properties and create_if_needed is true, then a new hidden property object
@@ -261,7 +271,14 @@ Handle<JSValue> GetScriptWrapper(Handle<Script> script);
 
 // Script line number computations.
 void InitScriptLineEnds(Handle<Script> script);
+// For string calculates an array of line end positions. If the string
+// does not end with a new line character, this character may optionally be
+// imagined.
+Handle<FixedArray> CalculateLineEnds(Handle<String> string,
+                                     bool with_imaginary_last_new_line);
 int GetScriptLineNumber(Handle<Script> script, int code_position);
+// The safe version does not make heap allocations but may work much slower.
+int GetScriptLineNumberSafe(Handle<Script> script, int code_position);
 
 // Computes the enumerable keys from interceptors. Used for debug mirrors and
 // by GetKeysInFixedArrayFor below.
@@ -285,7 +302,10 @@ Handle<FixedArray> GetEnumPropertyKeys(Handle<JSObject> object,
 Handle<FixedArray> UnionOfKeys(Handle<FixedArray> first,
                                Handle<FixedArray> second);
 
-Handle<String> SubString(Handle<String> str, int start, int end);
+Handle<String> SubString(Handle<String> str,
+                         int start,
+                         int end,
+                         PretenureFlag pretenure = NOT_TENURED);
 
 
 // Sets the expected number of properties for the function's instances.
@@ -296,8 +316,6 @@ void SetPrototypeProperty(Handle<JSFunction> func, Handle<JSObject> value);
 
 // Sets the expected number of properties based on estimate from compiler.
 void SetExpectedNofPropertiesFromEstimate(Handle<SharedFunctionInfo> shared,
-                                          int estimate);
-void SetExpectedNofPropertiesFromEstimate(Handle<JSFunction> func,
                                           int estimate);
 
 
@@ -313,22 +331,22 @@ Handle<Object> SetPrototype(Handle<JSFunction> function,
 // false if the compilation resulted in a stack overflow.
 enum ClearExceptionFlag { KEEP_EXCEPTION, CLEAR_EXCEPTION };
 
-bool CompileLazyShared(Handle<SharedFunctionInfo> shared,
-                       ClearExceptionFlag flag,
-                       int loop_nesting);
+bool EnsureCompiled(Handle<SharedFunctionInfo> shared,
+                    ClearExceptionFlag flag);
 
-bool CompileLazy(Handle<JSFunction> function, ClearExceptionFlag flag);
-bool CompileLazyInLoop(Handle<JSFunction> function, ClearExceptionFlag flag);
+bool CompileLazyShared(Handle<SharedFunctionInfo> shared,
+                       ClearExceptionFlag flag);
+
+bool CompileLazy(Handle<JSFunction> function,
+                 Handle<Object> receiver,
+                 ClearExceptionFlag flag);
+
+bool CompileLazyInLoop(Handle<JSFunction> function,
+                       Handle<Object> receiver,
+                       ClearExceptionFlag flag);
 
 // Returns the lazy compilation stub for argc arguments.
 Handle<Code> ComputeLazyCompile(int argc);
-
-// These deal with lazily loaded properties.
-void SetupLazy(Handle<JSObject> obj,
-               int index,
-               Handle<Context> compile_context,
-               Handle<Context> function_context);
-void LoadLazy(Handle<JSObject> obj, bool* pending_exception);
 
 class NoHandleAllocation BASE_EMBEDDED {
  public:

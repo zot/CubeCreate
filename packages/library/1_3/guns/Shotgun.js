@@ -79,13 +79,17 @@ Shotgun = Gun.extend({
             }
         }, this);
 
-        Sound.play('olpc/MichaelBierylo/sfx_DoorSlam.wav', originPosition);
-        shooter.queueAction(new ParallelAction([
-            new ShootAction3({ secondsLeft: this.delay }),
-            new DelayedAction(function() {
-                Sound.play('gk/slide', shooter.position.copy()); // may have moved
-            }, { secondsLeft: 0.6 })
-        ]));
+        if (CAPI.getMaterial(shooter.position.x, shooter.position.y, shooter.position.z + 13) === MATERIAL.WATER)
+            Sound.play('Q009/uw/st1.ogg', originPosition);
+        else {
+            Sound.play('Q009/sg.ogg', originPosition);
+            shooter.queueAction(new ParallelAction([
+                new ShootAction3({ secondsLeft: this.delay }),
+                new DelayedAction(function() {
+                    Sound.play('Q009/sgl.ogg', shooter.position.copy()); // may have moved
+                }, { secondsLeft: 0.6 })
+            ]));
+        }
     },
 
     makePellets: function(shooter, origin, target) {
@@ -140,5 +144,6 @@ Shotgun = Gun.extend({
 
 });
 
-Map.preloadSound('olpc/MichaelBierylo/sfx_DoorSlam.wav');
-
+Map.preloadSound('Q009/uw/st1.ogg');
+Map.preloadSound('Q009/sg.ogg');
+Map.preloadSound('Q009/sgl.ogg');

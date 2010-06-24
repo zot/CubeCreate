@@ -87,35 +87,14 @@ class CompressionHelper;
 #define LOG(Call) ((void) 0)
 #endif
 
-
-class VMState BASE_EMBEDDED {
-#ifdef ENABLE_LOGGING_AND_PROFILING
- public:
-  inline VMState(StateTag state);
-  inline ~VMState();
-
-  StateTag state() { return state_; }
-  Address external_callback() { return external_callback_; }
-  void set_external_callback(Address external_callback) {
-    external_callback_ = external_callback;
-  }
-
- private:
-  bool disabled_;
-  StateTag state_;
-  VMState* previous_;
-  Address external_callback_;
-#else
- public:
-  explicit VMState(StateTag state) {}
-#endif
-};
-
-
 #define LOG_EVENTS_AND_TAGS_LIST(V) \
   V(CODE_CREATION_EVENT,            "code-creation",          "cc")       \
   V(CODE_MOVE_EVENT,                "code-move",              "cm")       \
   V(CODE_DELETE_EVENT,              "code-delete",            "cd")       \
+  V(FUNCTION_CREATION_EVENT,        "function-creation",      "fc")       \
+  V(FUNCTION_MOVE_EVENT,            "function-move",          "fm")       \
+  V(FUNCTION_DELETE_EVENT,          "function-delete",        "fd")       \
+  V(SNAPSHOT_POSITION_EVENT,        "snapshot-pos",           "sp")       \
   V(TICK_EVENT,                     "tick",                   "t")        \
   V(REPEAT_META_EVENT,              "repeat",                 "r")        \
   V(BUILTIN_TAG,                    "Builtin",                "bi")       \
@@ -137,7 +116,13 @@ class VMState BASE_EMBEDDED {
   V(REG_EXP_TAG,                    "RegExp",                 "re")       \
   V(SCRIPT_TAG,                     "Script",                 "sc")       \
   V(STORE_IC_TAG,                   "StoreIC",                "sic")      \
-  V(STUB_TAG,                       "Stub",                   "s")
+  V(STUB_TAG,                       "Stub",                   "s")        \
+  V(NATIVE_FUNCTION_TAG,            "Function",               "f")        \
+  V(NATIVE_LAZY_COMPILE_TAG,        "LazyCompile",            "lc")       \
+  V(NATIVE_SCRIPT_TAG,              "Script",                 "sc")
+// Note that 'NATIVE_' cases for functions and scripts are mapped onto
+// original tags when writing to the log.
+
 
 class Logger {
  public:
@@ -156,12 +141,6 @@ class Logger {
 
   // Enable the computation of a sliding window of states.
   static void EnableSlidingStateWindow();
-
-  // Write a raw string to the log to be used as a preamble.
-  // No check is made that the 'preamble' is actually at the beginning
-  // of the log. The preample is used to write code events saved in the
-  // snapshot.
-  static void Preamble(const char* content);
 
   // Emits an event with a string value -> (name, value).
   static void StringEvent(const char* name, const char* value);
@@ -223,6 +202,14 @@ class Logger {
   static void CodeMoveEvent(Address from, Address to);
   // Emits a code delete event.
   static void CodeDeleteEvent(Address from);
+  // Emits a function object create event.
+  static void FunctionCreateEvent(JSFunction* function);
+  // Emits a function move event.
+  static void FunctionMoveEvent(Address from, Address to);
+  // Emits a function delete event.
+  static void FunctionDeleteEvent(Address from);
+
+  static void SnapshotPositionEvent(Address addr, int pos);
 
   // ==== Events logged by --log-gc. ====
   // Heap sampling events: start, end, and individual types.
@@ -254,19 +241,15 @@ class Logger {
   static void LogRuntime(Vector<const char> format, JSArray* args);
 
 #ifdef ENABLE_LOGGING_AND_PROFILING
-  static StateTag state() {
-    return current_state_ ? current_state_->state() : OTHER;
-  }
-
   static bool is_logging() {
-    return is_logging_;
+    return logging_nesting_ > 0;
   }
 
   // Pause/Resume collection of profiling data.
   // When data collection is paused, CPU Tick events are discarded until
   // data collection is Resumed.
-  static void PauseProfiler(int flags);
-  static void ResumeProfiler(int flags);
+  static void PauseProfiler(int flags, int tag);
+  static void ResumeProfiler(int flags, int tag);
   static int GetActiveProfilerModules();
 
   // If logging is performed into a memory buffer, allows to
@@ -275,15 +258,20 @@ class Logger {
 
   // Logs all compiled functions found in the heap.
   static void LogCompiledFunctions();
+  // Logs all compiled JSFunction objects found in the heap.
+  static void LogFunctionObjects();
   // Logs all accessor callbacks found in the heap.
   static void LogAccessorCallbacks();
   // Used for logging stubs found in the snapshot.
-  static void LogCodeObject(Object* code_object);
+  static void LogCodeObjects();
 
- private:
+  // Converts tag to a corresponding NATIVE_... if the script is native.
+  INLINE(static LogEventsAndTags ToNativeByScript(LogEventsAndTags, Script*));
 
   // Profiler's sampling interval (in milliseconds).
   static const int kSamplingIntervalMs = 1;
+
+ private:
 
   // Size of window used for log records compression.
   static const int kCompressionWindowSize = 4;
@@ -296,11 +284,23 @@ class Logger {
                                     const char* name,
                                     Address entry_point);
 
+  // Internal configurable move event.
+  static void MoveEventInternal(LogEventsAndTags event,
+                                Address from,
+                                Address to);
+
+  // Internal configurable move event.
+  static void DeleteEventInternal(LogEventsAndTags event,
+                                  Address from);
+
   // Emits aliases for compressed messages.
   static void LogAliases();
 
   // Emits the source code of a regexp. Used by regexp events.
   static void LogRegExpSource(Handle<JSRegExp> regexp);
+
+  // Used for logging stubs found in the snapshot.
+  static void LogCodeObject(Object* code_object);
 
   // Emits a profiler tick event. Used by the profiler thread.
   static void TickEvent(TickSample* sample, bool overflow);
@@ -309,6 +309,9 @@ class Logger {
 
   // Logs a StringEvent regardless of whether FLAG_log is true.
   static void UncheckedStringEvent(const char* name, const char* value);
+
+  // Logs an IntEvent regardless of whether FLAG_log is true.
+  static void UncheckedIntEvent(const char* name, int value);
 
   // Stops logging and profiling in case of insufficient resources.
   static void StopLoggingAndProfiling();
@@ -323,12 +326,6 @@ class Logger {
   // points to a Profiler, that handles collection
   // of samples.
   static Profiler* profiler_;
-
-  // A stack of VM states.
-  static VMState* current_state_;
-
-  // Singleton bottom or default vm state.
-  static VMState bottom_state_;
 
   // SlidingStateWindow instance keeping a sliding window of the most
   // recent VM states.
@@ -352,7 +349,11 @@ class Logger {
 
   friend class LoggerTestHelper;
 
-  static bool is_logging_;
+  static int logging_nesting_;
+  static int cpu_profiler_nesting_;
+  static int heap_profiler_nesting_;
+
+  friend class CpuProfiler;
 #else
   static bool is_logging() { return false; }
 #endif
@@ -365,7 +366,7 @@ class StackTracer : public AllStatic {
   static void Trace(TickSample* sample);
 };
 
-
 } }  // namespace v8::internal
+
 
 #endif  // V8_LOG_H_

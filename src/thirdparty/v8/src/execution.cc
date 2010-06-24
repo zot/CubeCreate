@@ -46,9 +46,6 @@ static Handle<Object> Invoke(bool construct,
                              int argc,
                              Object*** args,
                              bool* has_pending_exception) {
-  // Make sure we have a real function, not a boilerplate function.
-  ASSERT(!func->IsBoilerplate());
-
   // Entering JavaScript.
   VMState state(JS);
 
@@ -91,7 +88,7 @@ static Handle<Object> Invoke(bool construct,
     JSEntryFunction entry = FUNCTION_CAST<JSEntryFunction>(code->entry());
 
     // Call the function through the right JS entry stub.
-    byte* entry_address= func->code()->entry();
+    byte* entry_address = func->code()->entry();
     JSFunction* function = *func;
     Object* receiver_pointer = *receiver;
     value = CALL_GENERATED_CODE(entry, entry_address, function,
@@ -221,8 +218,8 @@ bool StackGuard::IsStackOverflow() {
 
 void StackGuard::EnableInterrupts() {
   ExecutionAccess access;
-  if (IsSet(access)) {
-    set_limits(kInterruptLimit, access);
+  if (has_pending_interrupts(access)) {
+    set_interrupt_limits(access);
   }
 }
 
@@ -249,11 +246,6 @@ void StackGuard::DisableInterrupts() {
 }
 
 
-bool StackGuard::IsSet(const ExecutionAccess& lock) {
-  return thread_local_.interrupt_flags_ != 0;
-}
-
-
 bool StackGuard::IsInterrupted() {
   ExecutionAccess access;
   return thread_local_.interrupt_flags_ & INTERRUPT;
@@ -263,7 +255,7 @@ bool StackGuard::IsInterrupted() {
 void StackGuard::Interrupt() {
   ExecutionAccess access;
   thread_local_.interrupt_flags_ |= INTERRUPT;
-  set_limits(kInterruptLimit, access);
+  set_interrupt_limits(access);
 }
 
 
@@ -276,7 +268,7 @@ bool StackGuard::IsPreempted() {
 void StackGuard::Preempt() {
   ExecutionAccess access;
   thread_local_.interrupt_flags_ |= PREEMPT;
-  set_limits(kInterruptLimit, access);
+  set_interrupt_limits(access);
 }
 
 
@@ -289,7 +281,7 @@ bool StackGuard::IsTerminateExecution() {
 void StackGuard::TerminateExecution() {
   ExecutionAccess access;
   thread_local_.interrupt_flags_ |= TERMINATE;
-  set_limits(kInterruptLimit, access);
+  set_interrupt_limits(access);
 }
 
 
@@ -303,7 +295,7 @@ bool StackGuard::IsDebugBreak() {
 void StackGuard::DebugBreak() {
   ExecutionAccess access;
   thread_local_.interrupt_flags_ |= DEBUGBREAK;
-  set_limits(kInterruptLimit, access);
+  set_interrupt_limits(access);
 }
 
 
@@ -317,7 +309,7 @@ void StackGuard::DebugCommand() {
   if (FLAG_debugger_auto_break) {
     ExecutionAccess access;
     thread_local_.interrupt_flags_ |= DEBUGCOMMAND;
-    set_limits(kInterruptLimit, access);
+    set_interrupt_limits(access);
   }
 }
 #endif
@@ -325,7 +317,7 @@ void StackGuard::DebugCommand() {
 void StackGuard::Continue(InterruptFlag after_what) {
   ExecutionAccess access;
   thread_local_.interrupt_flags_ &= ~static_cast<int>(after_what);
-  if (thread_local_.interrupt_flags_ == 0) {
+  if (!should_postpone_interrupts(access) && !has_pending_interrupts(access)) {
     reset_limits(access);
   }
 }
@@ -638,24 +630,32 @@ Object* Execution::DebugBreakHelper() {
   bool debug_command_only =
       StackGuard::IsDebugCommand() && !StackGuard::IsDebugBreak();
 
-  // Clear the debug request flags.
+  // Clear the debug break request flag.
   StackGuard::Continue(DEBUGBREAK);
+
+  ProcessDebugMesssages(debug_command_only);
+
+  // Return to continue execution.
+  return Heap::undefined_value();
+}
+
+void Execution::ProcessDebugMesssages(bool debug_command_only) {
+  // Clear the debug command request flag.
   StackGuard::Continue(DEBUGCOMMAND);
 
   HandleScope scope;
   // Enter the debugger. Just continue if we fail to enter the debugger.
   EnterDebugger debugger;
   if (debugger.FailedToEnter()) {
-    return Heap::undefined_value();
+    return;
   }
 
   // Notify the debug event listeners. Indicate auto continue if the break was
   // a debug command break.
   Debugger::OnDebugBreak(Factory::undefined_value(), debug_command_only);
-
-  // Return to continue execution.
-  return Heap::undefined_value();
 }
+
+
 #endif
 
 Object* Execution::HandleStackGuardInterrupt() {

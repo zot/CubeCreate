@@ -36,32 +36,6 @@ namespace internal {
 
 
 // -----------------------------------------------------------------------------
-// HeapObjectIterator
-
-bool HeapObjectIterator::has_next() {
-  if (cur_addr_ < cur_limit_) {
-    return true;  // common case
-  }
-  ASSERT(cur_addr_ == cur_limit_);
-  return HasNextInNextPage();  // slow path
-}
-
-
-HeapObject* HeapObjectIterator::next() {
-  ASSERT(has_next());
-
-  HeapObject* obj = HeapObject::FromAddress(cur_addr_);
-  int obj_size = (size_func_ == NULL) ? obj->Size() : size_func_(obj);
-  ASSERT_OBJECT_SIZE(obj_size);
-
-  cur_addr_ += obj_size;
-  ASSERT(cur_addr_ <= cur_limit_);
-
-  return obj;
-}
-
-
-// -----------------------------------------------------------------------------
 // PageIterator
 
 bool PageIterator::has_next() {
@@ -171,6 +145,40 @@ bool Page::IsRSetSet(Address address, int offset) {
 }
 
 
+bool Page::GetPageFlag(PageFlag flag) {
+  return (flags & flag) != 0;
+}
+
+
+void Page::SetPageFlag(PageFlag flag, bool value) {
+  if (value) {
+    flags |= flag;
+  } else {
+    flags &= ~flag;
+  }
+}
+
+
+bool Page::WasInUseBeforeMC() {
+  return GetPageFlag(WAS_IN_USE_BEFORE_MC);
+}
+
+
+void Page::SetWasInUseBeforeMC(bool was_in_use) {
+  SetPageFlag(WAS_IN_USE_BEFORE_MC, was_in_use);
+}
+
+
+bool Page::IsLargeObjectPage() {
+  return !GetPageFlag(IS_NORMAL_PAGE);
+}
+
+
+void Page::SetIsLargeObjectPage(bool is_large_object_page) {
+  SetPageFlag(IS_NORMAL_PAGE, !is_large_object_page);
+}
+
+
 // -----------------------------------------------------------------------------
 // MemoryAllocator
 
@@ -209,7 +217,7 @@ Page* MemoryAllocator::GetNextPage(Page* p) {
 
 int MemoryAllocator::GetChunkId(Page* p) {
   ASSERT(p->is_valid());
-  return p->opaque_header & Page::kPageAlignmentMask;
+  return static_cast<int>(p->opaque_header & Page::kPageAlignmentMask);
 }
 
 

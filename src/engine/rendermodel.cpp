@@ -11,10 +11,35 @@ model *loadingmodel = NULL;
 #include "animmodel.h"
 #include "vertmodel.h"
 #include "skelmodel.h"
+
+static model *(__cdecl *modeltypes[NUMMODELTYPES])(const char *);
+
+static int addmodeltype(int type, model *(__cdecl *loader)(const char *))
+{
+    modeltypes[type] = loader;
+    return type;
+}
+
+#define MODELTYPE(modeltype, modelclass) \
+static model *__loadmodel__##modelclass(const char *filename) \
+{ \
+    return new modelclass(filename); \
+} \
+static int __dummy__##modelclass = addmodeltype((modeltype), __loadmodel__##modelclass);
+
 #include "md2.h"
 #include "md3.h"
 #include "md5.h"
 #include "obj.h"
+#include "smd.h"
+#include "iqm.h"
+
+MODELTYPE(MDL_MD2, md2);
+MODELTYPE(MDL_MD3, md3);
+MODELTYPE(MDL_MD5, md5);
+MODELTYPE(MDL_OBJ, obj);
+MODELTYPE(MDL_SMD, smd);
+MODELTYPE(MDL_IQM, iqm);
 
 #include "utility.h" // INTENSITY
 
@@ -89,6 +114,14 @@ void mdlalphadepth(int *depth)
 }
 
 COMMAND(mdlalphadepth, "i");
+
+void mdldepthoffset(int *offset)
+{
+    checkmdl;
+    loadingmodel->depthoffset = *offset!=0;
+}
+
+COMMAND(mdldepthoffset, "i");
 
 void mdlglow(int *percent)
 {
@@ -222,13 +255,14 @@ COMMAND(mdlname, "");
     if(ragdoll->loaded) return;
     
 
-void rdvert(float *x, float *y, float *z)
+void rdvert(float *x, float *y, float *z, float *radius)
 {
     checkragdoll;
     ragdollskel::vert &v = ragdoll->verts.add();
     v.pos = vec(*x, *y, *z);
+    v.radius = *radius > 0 ? *radius : 1;
 }
-COMMAND(rdvert, "fff");
+COMMAND(rdvert, "ffff");
 
 void rdeye(int *v)
 {
@@ -280,7 +314,14 @@ void rdlimitrot(int *t1, int *t2, float *maxangle, float *qx, float *qy, float *
     r.middle = matrix3x3(quat(*qx, *qy, *qz, *qw));
 }
 COMMAND(rdlimitrot, "iifffff");
- 
+
+void rdanimjoints(int *on)
+{
+    checkragdoll;
+    ragdoll->animjoints = *on!=0;
+}
+COMMAND(rdanimjoints, "i");
+
 // mapmodels
 
 vector<mapmodelinfo> mapmodels;
@@ -300,7 +341,7 @@ void mapmodelcompat(int *rad, int *h, int *tex, char *name, char *shadow)
 void mapmodelreset() 
 { 
     if(!overrideidents && !game::allowedittoggle()) return;
-    mapmodels.setsize(0); 
+    mapmodels.shrink(0); 
 }
 
 mapmodelinfo &getmminfo(int i) { return /*mapmodels.inrange(i) ? mapmodels[i] :*/ *(mapmodelinfo *)0; } // INTENSITY
@@ -330,7 +371,7 @@ void flushpreloadedmodels()
         loadprogress = float(i+1)/preloadmodels.length();
         loadmodel(preloadmodels[i], -1, true);
     }
-    preloadmodels.deletecontentsa();
+    preloadmodels.deletearrays();
     loadprogress = 0;
 }
 
@@ -348,38 +389,22 @@ model *loadmodel(const char *name, int i, bool msg)
     if(mm) m = *mm;
     else
     { 
+        if(lightmapping > 1) return NULL;
         if(msg)
         {
             defformatstring(filename)("packages/models/%s", name);
             renderprogress(loadprogress, filename);
         }
-        m = new md2(name);
-        loadingmodel = m;
-        if(!m->load())
+        loopi(NUMMODELTYPES)
         {
-            delete m;
-            m = new md3(name);
+            m = modeltypes[i](name);
+            if(!m) continue;
             loadingmodel = m;
-            if(!m->load())
-            {    
-                delete m;
-                m = new md5(name);
-                loadingmodel = m;
-                if(!m->load())
-                {
-                    delete m;
-                    m = new obj(name);
-                    loadingmodel = m;
-                    if(!m->load())
-                    {
-                        delete m;
-                        loadingmodel = NULL;
-                        return NULL; 
-                    }
-                }
-            }
+            if(m->load()) break;
+            DELETEP(m);
         }
         loadingmodel = NULL;
+        if(!m) return NULL;
         mdllookup.access(m->name(), m);
     }
     if(mapmodels.inrange(i) && !mapmodels[i].m) mapmodels[i].m = m;
@@ -441,7 +466,7 @@ void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradi
     c.sub(vec(xradius, yradius, tofloor));
     float xsz = xradius*2, ysz = yradius*2;
     float h = tofloor+toceil;
-    notextureshader->set();
+    lineshader->set();
     glDisable(GL_TEXTURE_2D);
     glColor3f(1, 1, 1);
     render2dbox(c, xsz, 0, h);
@@ -455,7 +480,7 @@ void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradi
 
 void renderellipse(vec &o, float xradius, float yradius, float yaw)
 {
-    notextureshader->set();
+    lineshader->set();
     glDisable(GL_TEXTURE_2D);
     glColor3f(0.5f, 0.5f, 0.5f);
     glBegin(GL_LINE_LOOP);
@@ -495,7 +520,7 @@ static occludequery *modelquery = NULL;
 void startmodelbatches()
 {
     numbatches = 0;
-    modelattached.setsizenodelete(0);
+    modelattached.setsize(0);
 }
 
 modelbatch &addbatchedmodel(model *m)
@@ -507,7 +532,7 @@ modelbatch &addbatchedmodel(model *m)
         if(numbatches<batches.length())
         {
             b = batches[numbatches];
-            b->batched.setsizenodelete(0);
+            b->batched.setsize(0);
         }
         else b = batches.add(new modelbatch);
         b->m = m;
@@ -517,13 +542,22 @@ modelbatch &addbatchedmodel(model *m)
     return *b;
 }
 
+VAR(modeltweaks, 0, 0, 1); // INTENSITY: SkyManager: tweaks for models (like ambience, glow, so we can sync it with ambientlight
+FVAR(tweakmodelspec, 0, 1.0, 100.0);
+FVAR(tweakmodelambient, 0, 1.0, 100.0);
+FVAR(tweakmodelglow, 0, 1.0, 100.0);
+FVAR(tweakmodelspecglare, 0, 1.0, 100.0);
+FVAR(tweakmodelglowglare, 0, 1.0, 100.0);
+
+FVARR(tweakmodelscale, 0.001, 1.0, 100.0); // end INTENSITY
+
 void renderbatchedmodel(model *m, batchedmodel &b)
 {
     modelattach *a = NULL;
     if(b.attached>=0) a = &modelattached[b.attached];
 
     int anim = b.anim;
-    if(shadowmapping) 
+    if(shadowmapping)
     {
         anim |= ANIM_NOSKIN; 
         if(renderpath!=R_FIXEDFUNCTION) setenvparamf("shadowintensity", SHPARAM_VERTEX, 1, b.transparent);
@@ -531,6 +565,15 @@ void renderbatchedmodel(model *m, batchedmodel &b)
     else 
     {
         if(b.flags&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
+        if(b.flags&MDL_GHOST) anim |= ANIM_GHOST;
+    }
+
+    if(modeltweaks) { // INTENSITY: SkyManager: do modeltweaks
+        if (!b.d) m->setambient(tweakmodelambient);	// t7g; This is how we adjust ambient and related for all models at once.
+        else m->setambient(tweakmodelambient / 10.0f);
+        m->setglow(tweakmodelglow);
+	    m->setspec(tweakmodelspec);
+	    m->setglare(tweakmodelspecglare, tweakmodelglowglare);
     }
 
     m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir, b.transparent, b.rotation); // INTENSITY: roll, rotation
@@ -571,10 +614,25 @@ void endmodelbatches()
         }
         bool rendered = false;
         occludequery *query = NULL;
+        if(b.flags&MDL_GHOST)
+        {
+            loopvj(b.batched)
+            {
+                batchedmodel &bm = b.batched[j];
+                if((bm.flags&(MDL_CULL_VFC|MDL_GHOST))!=MDL_GHOST || bm.query) continue;
+                if(!rendered) { b.m->startrender(); rendered = true; }
+                renderbatchedmodel(b.m, bm);
+            }
+            if(rendered) 
+            {
+                b.m->endrender();
+                rendered = false;
+            }
+        }
         loopvj(b.batched) 
         {
             batchedmodel &bm = b.batched[j];
-            if(bm.flags&MDL_CULL_VFC) continue;
+            if(bm.flags&(MDL_CULL_VFC|MDL_GHOST)) continue;
             if(bm.query!=query)
             {
                 if(query) endquery(query);
@@ -660,7 +718,7 @@ void endmodelquery()
     }
     endquery(modelquery);
     modelquery = NULL;
-    modelattached.setsizenodelete(minattached);
+    modelattached.setsize(minattached);
 }
 
 VARP(maxmodelradiusdistance, 10, 200, 1000);
@@ -709,7 +767,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
         }
         else
         {
-            center.rotate_around_z((-180-yaw)*RAD);
+            center.rotate_around_z(-yaw*RAD);
             center.add(o);
         }
         if(flags&MDL_CULL_DIST && center.dist(camera1->o)/radius>maxmodelradiusdistance) return;
@@ -728,7 +786,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
                 }
                 if(center.dist(camera1->o)-radius>reflectdist) return;
             }
-            if(isvisiblesphere(radius, center) >= VFC_FOGGED) return;
+            if(isfoggedsphere(radius, center)) return;
             if(shadowmapping && !isshadowmapcaster(center, radius)) return;
         }
         if(shadowmapping)
@@ -761,7 +819,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
     }
 
     if(flags&MDL_NORENDER) anim |= ANIM_NORENDER;
-    else if(showboundingbox && !shadowmapping && !reflecting && !refracting)
+    else if(showboundingbox && !shadowmapping && !reflecting && !refracting && editmode)
     {
         if(d && showboundingbox==1) 
         {
@@ -794,7 +852,8 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
                     pos = d->ragdoll->center;
                     pos.z += radius/2;
                 }
-                lightreaching(pos, light->color, light->dir);
+                else pos.z += 0.75f*(d->eyeheight + d->aboveeye);
+                lightreaching(pos, light->color, light->dir, (flags&MDL_LIGHT_FAST)!=0);
                 dynlightreaching(pos, light->color, light->dir);
                 game::lighteffects(d, light->color, light->dir);
                 light->millis = lastmillis;
@@ -804,12 +863,12 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
         {
             if(!light) 
             {
-                lightreaching(pos, lightcolor, lightdir);
+                lightreaching(pos, lightcolor, lightdir, (flags&MDL_LIGHT_FAST)!=0);
                 dynlightreaching(pos, lightcolor, lightdir);
             }
             else if(light->millis!=lastmillis)
             {
-                lightreaching(pos, light->color, light->dir);
+                lightreaching(pos, light->color, light->dir, (flags&MDL_LIGHT_FAST)!=0);
                 dynlightreaching(pos, light->color, light->dir);
                 light->millis = lastmillis;
             }
@@ -863,6 +922,8 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
         if((flags&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
     }
 
+	//m->setambient(mdlambienttweak); // INTENSITY: SkyManager
+
     m->startrender();
 
     if(shadowmapping)
@@ -873,6 +934,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
     else 
     {
         if(flags&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
+        if(flags&MDL_GHOST) anim |= ANIM_GHOST;
     }
 
     if(doOQ)
@@ -922,20 +984,7 @@ bool matchanim(const char *name, const char *pattern)
 
 void findanims(const char *pattern, vector<int> &anims)
 {
-    static const char *names[] = 
-    { 
-        "dead", "dying", "idle", 
-        "forward", "backward", "left", "right", 
-        "hold1", "hold2", "hold3", "hold4", "hold5", "hold6", "hold7", // INTENSITY: No spaces, so can be validated as non-spaced
-        "attack1", "attack2", "attack3", "attack4", "attack5", "attack6", "attack7", // INTENSITY: No spaces, so can be validated as non-spaced
-        "pain", 
-        "jump", "sink", "swim", 
-        "edit", "lag", "taunt", "win", "lose", 
-        "gun idle", "gun shoot",
-        "vwep idle", "vwep shoot", "shield", "powerup", 
-        "mapmodel", "trigger"
-    };
-    loopi(sizeof(names)/sizeof(names[0])) if(matchanim(names[i], pattern)) anims.add(i);
+    loopi(sizeof(animnames)/sizeof(animnames[0])) if(matchanim(animnames[i], pattern)) anims.add(i);
 
     // INTENSITY: Accept integer values as well, up to 128 of them
     loopi(ANIM_ALL+1)
@@ -949,14 +998,14 @@ void findanims(const char *pattern, vector<int> &anims)
 void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&masks) // model skin sharing
 {
 #define ifnoload(tex, path) if((tex = textureload(path, 0, true, false))==notexture)
-#define tryload(tex, cmd, name) \
-    ifnoload(tex, makerelpath(mdir, name ".jpg", NULL, cmd)) \
+#define tryload(tex, prefix, cmd, name) \
+    ifnoload(tex, makerelpath(mdir, name ".jpg", prefix, cmd)) \
     { \
-        ifnoload(tex, makerelpath(mdir, name ".png", NULL, cmd)) \
+        ifnoload(tex, makerelpath(mdir, name ".png", prefix, cmd)) \
         { \
-            ifnoload(tex, makerelpath(maltdir, name ".jpg", NULL, cmd)) \
+            ifnoload(tex, makerelpath(maltdir, name ".jpg", prefix, cmd)) \
             { \
-                ifnoload(tex, makerelpath(maltdir, name ".png", NULL, cmd)) return; \
+                ifnoload(tex, makerelpath(maltdir, name ".png", prefix, cmd)) return; \
             } \
         } \
     }
@@ -964,8 +1013,8 @@ void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&mas
     defformatstring(mdir)("packages/models/%s", dir);
     defformatstring(maltdir)("packages/models/%s", altdir);
     masks = notexture;
-    tryload(skin, NULL, "skin");
-    tryload(masks, "<ffmask:25>", "masks");
+    tryload(skin, NULL, NULL, "skin");
+    tryload(masks, "<stub>", NULL, "masks");
 }
 
 // convenient function that covers the usual anims for players/monsters/npcs
@@ -1056,13 +1105,13 @@ void setbbfrommodel(dynent *d, const char *mdl, LogicEntityPtr entity) // INTENS
     m->collisionbox(0, center, radius, entity.get()); // INTENSITY: Added entity
     if(d->type==ENT_INANIMATE && !m->ellipsecollide)
     {
-        d->collidetype = COLLIDE_AABB;
-        rotatebb(center, radius, int(d->yaw));
+        d->collidetype = COLLIDE_OBB;
+        //d->collidetype = COLLIDE_AABB;
+        //rotatebb(center, radius, int(d->yaw));
     }
     d->xradius   = radius.x + fabs(center.x);
     d->yradius   = radius.y + fabs(center.y);
-    d->radius    = max(d->xradius, d->yradius);
-    if(d->collidetype!=COLLIDE_ELLIPSE) d->xradius = d->yradius = d->radius;
+    d->radius    = d->collidetype==COLLIDE_OBB ? sqrtf(d->xradius*d->xradius + d->yradius*d->yradius) : max(d->xradius, d->yradius);
     d->eyeheight = (center.z-radius.z) + radius.z*2*m->eyeheight;
     d->aboveeye  = radius.z*2*(1.0f-m->eyeheight);
 }

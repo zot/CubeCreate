@@ -27,34 +27,31 @@
 
 {
   'variables': {
-    'chromium_code': 1,
     'msvs_use_common_release': 0,
     'gcc_version%': 'unknown',
-    'target_arch%': 'ia32',
+    'v8_target_arch%': '<(target_arch)',
     'v8_use_snapshot%': 'true',
-    'v8_regexp%': 'native',
   },
   'target_defaults': {
     'defines': [
       'ENABLE_LOGGING_AND_PROFILING',
       'ENABLE_DEBUGGER_SUPPORT',
+      'ENABLE_VMSTATE_TRACKING',
     ],
     'conditions': [
-      ['target_arch=="arm"', {
+      ['v8_target_arch=="arm"', {
         'defines': [
           'V8_TARGET_ARCH_ARM',
         ],
       }],
-      ['target_arch=="ia32"', {
+      ['v8_target_arch=="ia32"', {
         'defines': [
           'V8_TARGET_ARCH_IA32',
-          'V8_NATIVE_REGEXP',
         ],
       }],
-      ['target_arch=="x64"', {
+      ['v8_target_arch=="x64"', {
         'defines': [
           'V8_TARGET_ARCH_X64',
-          'V8_NATIVE_REGEXP',
         ],
       }],
     ],
@@ -75,10 +72,15 @@
             'LinkIncremental': '2',
           },
         },
+        'conditions': [
+         ['OS=="freebsd" or OS=="openbsd"', {
+           'cflags': [ '-I/usr/local/include' ],
+         }],
+       ],
       },
       'Release': {
         'conditions': [
-          ['OS=="linux"', {
+          ['OS=="linux" or OS=="freebsd" or OS=="openbsd"', {
             'cflags!': [
               '-O2',
               '-Os',
@@ -98,6 +100,9 @@
               }],
             ],
           }],
+         ['OS=="freebsd" or OS=="openbsd"', {
+           'cflags': [ '-I/usr/local/include' ],
+         }],
           ['OS=="mac"', {
             'xcode_settings': {
               'GCC_OPTIMIZATION_LEVEL': '3',  # -O3
@@ -199,7 +204,7 @@
       'conditions': [
         # The ARM assembler assumes the host is 32 bits, so force building
         # 32-bit host tools.
-        ['target_arch=="arm" and host_arch=="x64" and _toolset=="host"', {
+        ['v8_target_arch=="arm" and host_arch=="x64" and _toolset=="host"', {
           'cflags': ['-m32'],
           'ldflags': ['-m32'],
         }]
@@ -230,10 +235,14 @@
         '../../src/builtins.cc',
         '../../src/builtins.h',
         '../../src/bytecodes-irregexp.h',
+        '../../src/cached-powers.h',
         '../../src/char-predicates-inl.h',
         '../../src/char-predicates.h',
         '../../src/checks.cc',
         '../../src/checks.h',
+        '../../src/circular-queue-inl.h',
+        '../../src/circular-queue.cc',
+        '../../src/circular-queue.h',
         '../../src/code-stubs.cc',
         '../../src/code-stubs.h',
         '../../src/code.h',
@@ -252,6 +261,11 @@
         '../../src/counters.cc',
         '../../src/counters.h',
         '../../src/cpu.h',
+        '../../src/cpu-profiler-inl.h',
+        '../../src/cpu-profiler.cc',
+        '../../src/cpu-profiler.h',
+        '../../src/data-flow.cc',
+        '../../src/data-flow.h',
         '../../src/dateparser.cc',
         '../../src/dateparser.h',
         '../../src/dateparser-inl.h',
@@ -262,21 +276,33 @@
         '../../src/disasm.h',
         '../../src/disassembler.cc',
         '../../src/disassembler.h',
+        '../../src/dtoa.cc',
+        '../../src/dtoa.h',
         '../../src/dtoa-config.c',
+        '../../src/diy-fp.cc',
+        '../../src/diy-fp.h',
+        '../../src/double.h',
         '../../src/execution.cc',
         '../../src/execution.h',
         '../../src/factory.cc',
         '../../src/factory.h',
-        '../../src/fast-codegen.cc',
         '../../src/fast-codegen.h',
+        '../../src/fast-dtoa.cc',
+        '../../src/fast-dtoa.h',
         '../../src/flag-definitions.h',
+        '../../src/fixed-dtoa.cc',
+        '../../src/fixed-dtoa.h',
         '../../src/flags.cc',
         '../../src/flags.h',
+        '../../src/flow-graph.cc',
+        '../../src/flow-graph.h',
         '../../src/frame-element.cc',
         '../../src/frame-element.h',
         '../../src/frames-inl.h',
         '../../src/frames.cc',
         '../../src/frames.h',
+        '../../src/full-codegen.cc',
+        '../../src/full-codegen.h',
         '../../src/func-name-inferrer.cc',
         '../../src/func-name-inferrer.h',
         '../../src/global-handles.cc',
@@ -297,13 +323,15 @@
         '../../src/ic.h',
         '../../src/interpreter-irregexp.cc',
         '../../src/interpreter-irregexp.h',
+        '../../src/jump-target-inl.h',
         '../../src/jump-target.cc',
         '../../src/jump-target.h',
-        '../../src/jump-target-inl.h',
         '../../src/jsregexp.cc',
         '../../src/jsregexp.h',
         '../../src/list-inl.h',
         '../../src/list.h',
+        '../../src/liveedit.cc',
+        '../../src/liveedit.h',
         '../../src/log-inl.h',
         '../../src/log-utils.cc',
         '../../src/log-utils.h',
@@ -325,10 +353,14 @@
         '../../src/parser.cc',
         '../../src/parser.h',
         '../../src/platform.h',
+        '../../src/powers-ten.h',
         '../../src/prettyprinter.cc',
         '../../src/prettyprinter.h',
         '../../src/property.cc',
         '../../src/property.h',
+        '../../src/profile-generator-inl.h',
+        '../../src/profile-generator.cc',
+        '../../src/profile-generator.h',
         '../../src/regexp-macro-assembler-irregexp-inl.h',
         '../../src/regexp-macro-assembler-irregexp.cc',
         '../../src/regexp-macro-assembler-irregexp.h',
@@ -368,11 +400,11 @@
         '../../src/token.h',
         '../../src/top.cc',
         '../../src/top.h',
+        '../../src/type-info.cc',
+        '../../src/type-info.h',
         '../../src/unicode-inl.h',
         '../../src/unicode.cc',
         '../../src/unicode.h',
-        '../../src/usage-analyzer.cc',
-        '../../src/usage-analyzer.h',
         '../../src/utils.cc',
         '../../src/utils.h',
         '../../src/v8-counters.cc',
@@ -385,18 +417,27 @@
         '../../src/variables.h',
         '../../src/version.cc',
         '../../src/version.h',
-        '../../src/virtual-frame.h',
+        '../../src/virtual-frame-inl.h',
         '../../src/virtual-frame.cc',
+        '../../src/virtual-frame.h',
+        '../../src/vm-state-inl.h',
+        '../../src/vm-state.cc',
+        '../../src/vm-state.h',
         '../../src/zone-inl.h',
         '../../src/zone.cc',
         '../../src/zone.h',
       ],
       'conditions': [
-        ['target_arch=="arm"', {
+        ['v8_target_arch=="arm"', {
           'include_dirs+': [
             '../../src/arm',
           ],
           'sources': [
+            '../../src/fast-codegen.cc',
+            '../../src/jump-target-light-inl.h',
+            '../../src/jump-target-light.cc',
+            '../../src/virtual-frame-light-inl.h',
+            '../../src/virtual-frame-light.cc',
             '../../src/arm/assembler-arm-inl.h',
             '../../src/arm/assembler-arm.cc',
             '../../src/arm/assembler-arm.h',
@@ -411,6 +452,7 @@
             '../../src/arm/fast-codegen-arm.cc',
             '../../src/arm/frames-arm.cc',
             '../../src/arm/frames-arm.h',
+            '../../src/arm/full-codegen-arm.cc',
             '../../src/arm/ic-arm.cc',
             '../../src/arm/jump-target-arm.cc',
             '../../src/arm/macro-assembler-arm.cc',
@@ -432,11 +474,15 @@
             }]
           ]
         }],
-        ['target_arch=="ia32"', {
+        ['v8_target_arch=="ia32"', {
           'include_dirs+': [
             '../../src/ia32',
           ],
           'sources': [
+            '../../src/jump-target-heavy-inl.h',
+            '../../src/jump-target-heavy.cc',
+            '../../src/virtual-frame-heavy-inl.h',
+            '../../src/virtual-frame-heavy.cc',
             '../../src/ia32/assembler-ia32-inl.h',
             '../../src/ia32/assembler-ia32.cc',
             '../../src/ia32/assembler-ia32.h',
@@ -447,8 +493,10 @@
             '../../src/ia32/debug-ia32.cc',
             '../../src/ia32/disasm-ia32.cc',
             '../../src/ia32/fast-codegen-ia32.cc',
+            '../../src/ia32/fast-codegen-ia32.h',
             '../../src/ia32/frames-ia32.cc',
             '../../src/ia32/frames-ia32.h',
+            '../../src/ia32/full-codegen-ia32.cc',
             '../../src/ia32/ic-ia32.cc',
             '../../src/ia32/jump-target-ia32.cc',
             '../../src/ia32/macro-assembler-ia32.cc',
@@ -461,11 +509,16 @@
             '../../src/ia32/virtual-frame-ia32.h',
           ],
         }],
-        ['target_arch=="x64"', {
+        ['v8_target_arch=="x64"', {
           'include_dirs+': [
             '../../src/x64',
           ],
           'sources': [
+            '../../src/fast-codegen.cc',
+            '../../src/jump-target-heavy-inl.h',
+            '../../src/jump-target-heavy.cc',
+            '../../src/virtual-frame-heavy-inl.h',
+            '../../src/virtual-frame-heavy.cc',
             '../../src/x64/assembler-x64-inl.h',
             '../../src/x64/assembler-x64.cc',
             '../../src/x64/assembler-x64.h',
@@ -478,6 +531,7 @@
             '../../src/x64/fast-codegen-x64.cc',
             '../../src/x64/frames-x64.cc',
             '../../src/x64/frames-x64.h',
+            '../../src/x64/full-codegen-x64.cc',
             '../../src/x64/ic-x64.cc',
             '../../src/x64/jump-target-x64.cc',
             '../../src/x64/macro-assembler-x64.cc',
@@ -498,6 +552,17 @@
             ]},
             'sources': [
               '../../src/platform-linux.cc',
+              '../../src/platform-posix.cc'
+            ],
+          }
+        ],
+        ['OS=="freebsd"', {
+            'link_settings': {
+              'libraries': [
+                '-L/usr/local/lib -lexecinfo',
+            ]},
+            'sources': [
+              '../../src/platform-freebsd.cc',
               '../../src/platform-posix.cc'
             ],
           }
@@ -549,11 +614,12 @@
           '../../src/math.js',
           '../../src/messages.js',
           '../../src/apinatives.js',
-          '../../src/debug-delay.js',
-          '../../src/mirror-delay.js',
-          '../../src/date-delay.js',
-          '../../src/json-delay.js',
-          '../../src/regexp-delay.js',
+          '../../src/debug-debugger.js',
+          '../../src/mirror-debugger.js',
+          '../../src/liveedit-debugger.js',
+          '../../src/date.js',
+          '../../src/json.js',
+          '../../src/regexp.js',
           '../../src/macros.py',
         ],
       },
@@ -594,7 +660,7 @@
       'conditions': [
         # The ARM assembler assumes the host is 32 bits, so force building
         # 32-bit host tools.
-        ['target_arch=="arm" and host_arch=="x64" and _toolset=="host"', {
+        ['v8_target_arch=="arm" and host_arch=="x64" and _toolset=="host"', {
           'cflags': ['-m32'],
           'ldflags': ['-m32'],
         }]

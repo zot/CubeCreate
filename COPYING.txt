@@ -26,7 +26,7 @@ The Syntensity Contributors, who all agree to release their code under
 the above license, are:
 
   * Alon 'kripken' Zakai - kripken@syntensity.com
-
+  * quaker66 - quaker66@gmail.com
 
 ------------------------------------------------------------------------------
 
@@ -38,3 +38,6 @@ may be bundled under thirdparty directories, with included license info.
     is zlib (like Sauerbraten). Such code is demarked with // SAUER ENHANCED
     Thanks to Q009 (SauerEnhanced author).
 
+  * In addition, code has been ported from SauerEnhanced, whose license
+    is zlib (like Sauerbraten). Such code is demarked with // SAUER ENHANCED
+    Thanks to Q009 (SauerEnhanced author).

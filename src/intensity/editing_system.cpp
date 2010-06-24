@@ -661,7 +661,7 @@ LogicEntityPtr getSelectedEntity()
         for (std::set<int>::iterator it = listTextures.begin(); it != listTextures.end(); it++)
         {
             extern Slot dummyslot;
-            Slot &currSlot = lookuptexture(*it, false);
+            Slot &currSlot = lookupslot(*it, false);
             if (&currSlot != &dummyslot)
                 printf("%d : %s\r\n", *it, currSlot.sts[0].name);
         }
@@ -696,9 +696,9 @@ LogicEntityPtr getSelectedEntity()
 
         REFLECT_PYTHON( prepare_texture_replace );
         boost::python::list currTextures;
-        extern vector<Slot> slots;
+        extern vector<Slot *> slots;
         for (int i = 0; i < slots.length(); i++)
-            currTextures.append(slots[i].sts[0].name);
+            currTextures.append(*slots[i]->sts[0].name);
         boost::python::dict lookup = boost::python::extract<boost::python::dict>(prepare_texture_replace(std::string(filename), currTextures));
 
         loopi(8) massreplacetexcube(worldroot[i], lookup);

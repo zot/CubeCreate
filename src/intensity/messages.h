@@ -1,4 +1,5 @@
 
+
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
@@ -363,11 +364,25 @@ struct SoundToClients : MessageType
 void send_SoundToClients(int clientNumber, int soundId, int originalClientNumber);
 
 
+// MapSoundToClients
+
+struct MapSoundToClients : MessageType
+{
+    MapSoundToClients() : MessageType(1027, "MapSoundToClients") { };
+
+#ifdef CLIENT
+    void receive(int receiver, int sender, ucharbuf &p);
+#endif
+};
+
+void send_MapSoundToClients(int clientNumber, std::string soundName, int entityUniqueId);
+
+
 // SoundToClientsByName
 
 struct SoundToClientsByName : MessageType
 {
-    SoundToClientsByName() : MessageType(1027, "SoundToClientsByName") { };
+    SoundToClientsByName() : MessageType(1028, "SoundToClientsByName") { };
 
 #ifdef CLIENT
     void receive(int receiver, int sender, ucharbuf &p);
@@ -377,11 +392,25 @@ struct SoundToClientsByName : MessageType
 void send_SoundToClientsByName(int clientNumber, float x, float y, float z, std::string soundName, int originalClientNumber);
 
 
+// SoundStopToClientsByName
+
+struct SoundStopToClientsByName : MessageType
+{
+    SoundStopToClientsByName() : MessageType(1029, "SoundStopToClientsByName") { };
+
+#ifdef CLIENT
+    void receive(int receiver, int sender, ucharbuf &p);
+#endif
+};
+
+void send_SoundStopToClientsByName(int clientNumber, int volume, std::string soundName, int originalClientNumber);
+
+
 // EditModeC2S
 
 struct EditModeC2S : MessageType
 {
-    EditModeC2S() : MessageType(1028, "EditModeC2S") { };
+    EditModeC2S() : MessageType(1030, "EditModeC2S") { };
 
 #ifdef SERVER
     void receive(int receiver, int sender, ucharbuf &p);
@@ -395,7 +424,7 @@ void send_EditModeC2S(int mode);
 
 struct EditModeS2C : MessageType
 {
-    EditModeS2C() : MessageType(1029, "EditModeS2C") { };
+    EditModeS2C() : MessageType(1031, "EditModeS2C") { };
 
     void receive(int receiver, int sender, ucharbuf &p);
 };
@@ -407,7 +436,7 @@ void send_EditModeS2C(int clientNumber, int otherClientNumber, int mode);
 
 struct RequestMap : MessageType
 {
-    RequestMap() : MessageType(1030, "RequestMap") { };
+    RequestMap() : MessageType(1032, "RequestMap") { };
 
 #ifdef SERVER
     void receive(int receiver, int sender, ucharbuf &p);
@@ -421,7 +450,7 @@ void send_RequestMap();
 
 struct DoClick : MessageType
 {
-    DoClick() : MessageType(1031, "DoClick") { };
+    DoClick() : MessageType(1033, "DoClick") { };
 
 #ifdef SERVER
     void receive(int receiver, int sender, ucharbuf &p);
@@ -435,7 +464,7 @@ void send_DoClick(int button, int down, float x, float y, float z, int uniqueId)
 
 struct MapUpdated : MessageType
 {
-    MapUpdated() : MessageType(1032, "MapUpdated") { };
+    MapUpdated() : MessageType(1034, "MapUpdated") { };
 
 #ifdef CLIENT
     void receive(int receiver, int sender, ucharbuf &p);
@@ -449,7 +478,7 @@ void send_MapUpdated(int clientNumber, int updatingClientNumber);
 
 struct ParticleSplashToClients : MessageType
 {
-    ParticleSplashToClients() : MessageType(1033, "ParticleSplashToClients") { };
+    ParticleSplashToClients() : MessageType(1035, "ParticleSplashToClients") { };
 
 #ifdef CLIENT
     void receive(int receiver, int sender, ucharbuf &p);
@@ -459,11 +488,25 @@ struct ParticleSplashToClients : MessageType
 void send_ParticleSplashToClients(int clientNumber, int _type, int num, int fade, float x, float y, float z);
 
 
+// ParticleSplashRegularToClients
+
+struct ParticleSplashRegularToClients : MessageType
+{
+    ParticleSplashRegularToClients() : MessageType(1036, "ParticleSplashRegularToClients") { };
+
+#ifdef CLIENT
+    void receive(int receiver, int sender, ucharbuf &p);
+#endif
+};
+
+void send_ParticleSplashRegularToClients(int clientNumber, int _type, int num, int fade, float x, float y, float z);
+
+
 // RequestPrivateEditMode
 
 struct RequestPrivateEditMode : MessageType
 {
-    RequestPrivateEditMode() : MessageType(1034, "RequestPrivateEditMode") { };
+    RequestPrivateEditMode() : MessageType(1037, "RequestPrivateEditMode") { };
 
 #ifdef SERVER
     void receive(int receiver, int sender, ucharbuf &p);
@@ -477,7 +520,7 @@ void send_RequestPrivateEditMode();
 
 struct NotifyPrivateEditMode : MessageType
 {
-    NotifyPrivateEditMode() : MessageType(1035, "NotifyPrivateEditMode") { };
+    NotifyPrivateEditMode() : MessageType(1038, "NotifyPrivateEditMode") { };
 
 #ifdef CLIENT
     void receive(int receiver, int sender, ucharbuf &p);

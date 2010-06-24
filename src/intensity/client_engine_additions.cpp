@@ -69,23 +69,77 @@ bool useForcedCamera = false;
 float forcedCameraFov = -1;
 int savedThirdperson = -1;
 
-void CameraControl::forceCamera(vec& position, float yaw, float pitch, float roll, float fov)
+bool useForcedPosition = false;
+bool useForcedYaw = false;
+bool useForcedPitch = false;
+bool useForcedRoll = false;
+
+void CameraControl::forcePosition(vec& position)
 {
-    useForcedCamera = true;
+    useForcedPosition = true;
     forcedCamera.o = position;
-    forcedCamera.yaw = yaw;
-    forcedCamera.pitch = pitch;
-    forcedCamera.roll = roll;
-    forcedCameraFov = fov;
 
     // If we just switched to forced camera mode, save thirdperson state and go to third person
     // (We need third person so that we show the player's avatar as the camera moves. There is
     // currently no support for forcing the camera in first person mode, which would be tricky to do.)
-    if (!thirdperson)
+    if (!thirdperson && savedThirdperson == -1)
     {
         savedThirdperson = thirdperson;
         thirdperson = 1;
     }
+}
+
+void CameraControl::forceYaw(float yaw)
+{
+    useForcedYaw = true;
+    forcedCamera.yaw = yaw;
+    if (!thirdperson && savedThirdperson == -1)
+    {
+        savedThirdperson = thirdperson;
+        thirdperson = 1;
+    }
+}
+
+void CameraControl::forcePitch(float pitch)
+{
+    useForcedPitch = true;
+    forcedCamera.pitch = pitch;
+    if (!thirdperson && savedThirdperson == -1)
+    {
+        savedThirdperson = thirdperson;
+        thirdperson = 1;
+    }
+}
+
+void CameraControl::forceRoll(float roll)
+{
+    useForcedRoll = true;
+    forcedCamera.roll = roll;
+    if (!thirdperson && savedThirdperson == -1)
+    {
+        savedThirdperson = thirdperson;
+        thirdperson = 1;
+    }
+}
+
+void CameraControl::forceFov(float fov)
+{
+    forcedCameraFov = fov;
+    if (!thirdperson && savedThirdperson == -1)
+    {
+        savedThirdperson = thirdperson;
+        thirdperson = 1;
+    }
+}
+
+void CameraControl::forceCamera(vec& position, float yaw, float pitch, float roll, float fov)
+{
+    useForcedCamera = true;
+    CameraControl::forcePosition(position);
+    CameraControl::forceYaw(yaw);
+    CameraControl::forcePitch(pitch);
+    CameraControl::forceRoll(roll);
+    CameraControl::forceFov(fov);
 }
 
 physent* CameraControl::getCamera()
@@ -98,16 +152,18 @@ void CameraControl::positionCamera(physent* camera1)
     Logging::log(Logging::INFO, "CameraControl::positionCamera\r\n");
     INDENT_LOG(Logging::INFO);
 
-    if (useForcedCamera)
+    if (useForcedCamera || useForcedPosition || useForcedYaw || useForcedPitch || useForcedRoll)
     {
-        camera1->o = forcedCamera.o;
-        camera1->yaw = forcedCamera.yaw;
-        camera1->pitch = forcedCamera.pitch;
-        camera1->roll = forcedCamera.roll;
+        if (useForcedPosition) { camera1->o = forcedCamera.o; useForcedPosition = false; };
+        if (useForcedYaw) { camera1->yaw = forcedCamera.yaw; useForcedYaw = false; };
+        if (useForcedPitch) { camera1->pitch = forcedCamera.pitch; useForcedPitch = false; };
+        if (useForcedRoll) { camera1->roll = forcedCamera.roll; useForcedRoll = false; };
 
-        useForcedCamera = false; // Prepare for next frame
-
-        return;
+        if (useForcedCamera)
+        {
+            useForcedCamera = false; // Prepare for next frame
+            return;
+        }
     }
 
     // Sync camera height to scripts, if necessary

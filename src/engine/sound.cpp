@@ -256,7 +256,7 @@ COMMAND(mapsound, "sii");
 void resetchannels()
 {
     loopv(channels) if(channels[i].inuse) freechannel(i);
-    channels.setsize(0);
+    channels.shrink(0);
 }
 
 void clear_sound()
@@ -266,8 +266,8 @@ void clear_sound()
     stopmusic();
     Mix_CloseAudio();
     resetchannels();
-    gamesounds.setsizenodelete(0);
-    mapsounds.setsizenodelete(0);
+    gamesounds.setsize(0);
+    mapsounds.setsize(0);
     samples.clear();
 }
 
@@ -278,7 +278,16 @@ void clearmapsounds()
         Mix_HaltChannel(i);
         freechannel(i);
     }
-    mapsounds.setsizenodelete(0);
+    mapsounds.setsize(0);
+}
+
+// INTENSITY: playmapsound, to play file directly but still adding it into mapsounds and assigning entity to channel, prototype inside iengine.h in shared.
+int playmapsound(const char *s, extentity *ent, int vol, int loops)
+{ 
+    if(!vol) vol = 100;
+    int id = findsound(s, vol, mapsounds);
+    if(id < 0) id = addsound(s, vol, 0, mapsounds);
+    return playsound(id, NULL, ent, loops, 0, -1, 0, -1, vol);
 }
 
 void stopmapsound(extentity *e)
@@ -293,17 +302,31 @@ void stopmapsound(extentity *e)
         }
     }
 }
-        
+
+int waterchan = -1; // SAUER ENHANCED - underwater ambient channel
+VAR(uwambient, 0, 0, 1);
+
 void checkmapsounds()
 {
     const vector<extentity *> &ents = entities::getents();
+    if(lookupmaterial(camera1->o)==MAT_WATER && uwambient) // SAUER ENHANCED start - underwater sound
+    {
+        if(waterchan==-1) waterchan = playsound(6, NULL, NULL, -1, NULL, NULL, waterchan);
+    }
+    else
+    {
+        stopsound(6, waterchan);
+        waterchan = -1;
+    } // SAUER ENHANCED end
     loopv(ents)
     {
         extentity &e = *ents[i];
         if(e.type!=ET_SOUND) continue;
         if(camera1->o.dist(e.o) < e.attr2)
         {
-            if(!e.visible) playsound(e.attr1, NULL, &e, -1);
+            // INTENSITY: use LogicEntity system to get the sound file; don't register sounds in mapscript.
+            if(!e.visible && lookupmaterial(camera1->o)!=MAT_WATER) playmapsound(LogicSystem::getLogicEntity(e).get()->getSound(), &e, e.attr4, -1);
+            else if(lookupmaterial(camera1->o)==MAT_WATER) stopmapsound(&e); // SAUER ENHANCED - underwater ambient
         }
         else if(e.visible) stopmapsound(&e);
     }
@@ -320,7 +343,7 @@ bool updatechannel(soundchannel &chan)
     if(chan.hasloc())
     {
         vec v;
-        float dist = camera1->o.dist(chan.loc, v);
+        float dist = chan.loc.dist(camera1->o, v);
         int rad = maxsoundradius;
         if(chan.ent)
         {
@@ -335,8 +358,8 @@ bool updatechannel(soundchannel &chan)
         if(rad > 0) vol -= int(clamp(dist/rad, 0.0f, 1.0f)*soundvol); // simple mono distance attenuation
         if(stereo && (v.x != 0 || v.y != 0) && dist>0)
         {
-            float yaw = -atan2f(v.x, v.y) - camera1->yaw*RAD; // relative angle of sound along X-Y axis
-            pan = int(255.9f*(0.5f*sinf(yaw)+0.5f)); // range is from 0 (left) to 255 (right)
+            v.rotate_around_z(-camera1->yaw*RAD);
+            pan = int(255.9f*(0.5f - 0.5f*v.x/v.magnitude2())); // range is from 0 (left) to 255 (right)
         }
     }
     vol = (vol*MAXVOL*chan.slot->volume)/255/255;
@@ -398,13 +421,14 @@ static Mix_Chunk *loadwav(const char *name)
     return c;
 }
 
-int playsound(int n, const vec *loc, extentity *ent, int loops, int fade, int chanid, int radius)
+int playsound(int n, const vec *loc, extentity *ent, int loops, int fade, int chanid, int radius, int expire, int vol) // SAUER ENHANCED - volume for playsound
 {
     if(nosound || !soundvol) return -1;
 
     vector<soundslot> &sounds = ent ? mapsounds : gamesounds;
     if(!sounds.inrange(n)) { conoutf(CON_WARN, "unregistered sound: %d", n); return -1; }
     soundslot &slot = sounds[n];
+    if(vol) slot.volume = vol;
 
     if(loc && (maxsoundradius || radius > 0))
     {
@@ -489,9 +513,9 @@ int playsound(int n, const vec *loc, extentity *ent, int loops, int fade, int ch
     if(fade) 
     {
         Mix_Volume(chanid, chan.volume);
-        playing = Mix_FadeInChannel(chanid, slot.sample->chunk, loops, fade);
+        playing = expire >= 0 ? Mix_FadeInChannelTimed(chanid, slot.sample->chunk, loops, fade, expire) : Mix_FadeInChannel(chanid, slot.sample->chunk, loops, fade);
     }
-    else playing = Mix_PlayChannel(chanid, slot.sample->chunk, loops);
+    else playing = expire >= 0 ? Mix_PlayChannelTimed(chanid, slot.sample->chunk, loops, expire) : Mix_PlayChannel(chanid, slot.sample->chunk, loops);
     if(playing >= 0) syncchannel(chan); 
     else freechannel(chanid);
     SDL_UnlockAudio();
@@ -506,6 +530,27 @@ int preload_sound(char *name, int vol) // INTENSITY: Actually preload sounds, fo
     soundslot &slot = gamesounds[id];
     LOAD_SLOT(slot);
     return id;
+}
+
+// INTENSITY: getsoundid, to get ID of sound of certain file and volume
+int getsoundid(const char *s, int vol)
+{
+    if(!vol) vol = 100;
+    return findsound(s, vol, gamesounds);
+}
+
+// INTENSITY: stopsoundbyid, to stop some gamesound by ID
+void stopsoundbyid(int id)
+{
+    loopv(channels)
+    {
+        soundchannel &chan = channels[i];
+        if(chan.inuse && chan.id == id)
+        {
+            Mix_HaltChannel(i);
+            freechannel(i);
+        }
+    }
 }
 
 void stopsounds()
@@ -529,12 +574,12 @@ bool stopsound(int n, int chanid, int fade)
     return true;
 }
 
-int playsoundname(const char *s, const vec *loc, int vol, int loops, int fade, int chanid, int radius) 
+int playsoundname(const char *s, const vec *loc, int vol, int loops, int fade, int chanid, int radius, int expire) 
 { 
     if(!vol) vol = 100;
     int id = findsound(s, vol, gamesounds);
     if(id < 0) id = addsound(s, vol, 0, gamesounds);
-    return playsound(id, loc, NULL, loops, fade, chanid, radius);
+    return playsound(id, loc, NULL, loops, fade, chanid, radius, expire);
 }
 
 void sound(int *n) { playsound(*n); }
@@ -567,8 +612,8 @@ void resetsound()
         DELETEA(musicfile);
         DELETEA(musicdonecmd);
         music = NULL;
-        gamesounds.setsizenodelete(0);
-        mapsounds.setsizenodelete(0);
+        gamesounds.setsize(0);
+        mapsounds.setsize(0);
         samples.clear();
         return;
     }
@@ -670,9 +715,9 @@ void closemumble()
 
 static inline vec mumblevec(const vec &v, bool pos = false)
 {
-    // change from Z up, -Y forward to Y up, +Z forward
+    // change from X left, Z up, Y forward to X right, Y up, Z forward
     // 8 cube units = 1 meter
-    vec m(v.x, v.z, -v.y);
+    vec m(-v.x, v.z, v.y);
     if(pos) m.div(8);
     return m;
 }

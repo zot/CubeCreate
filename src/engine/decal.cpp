@@ -479,8 +479,8 @@ struct decalrenderer
             else
             {
                 bool solid = cu[i].ext && isclipped(cu[i].ext->material&MATF_VOLUME);
-                uchar vismask = 0;
-                loopj(6) if(!(avoid&(1<<j)) && (solid ? visiblematerial(cu[i], j, co.x, co.y, co.z, size)==MATSURF_VISIBLE : cu[i].texture[j]!=DEFAULT_SKY && visibleface(cu[i], j, co.x, co.y, co.z, size))) vismask |= 1<<j;
+                uchar vismask = 0, nmat = cu[i].ext && cu[i].ext->material&MAT_ALPHA ? MAT_AIR : MAT_ALPHA;
+                loopj(6) if(!(avoid&(1<<j)) && (solid ? visiblematerial(cu[i], j, co.x, co.y, co.z, size)==MATSURF_VISIBLE : cu[i].texture[j]!=DEFAULT_SKY && visibleface(cu[i], j, co.x, co.y, co.z, size, MAT_AIR, nmat, MAT_ALPHA))) vismask |= 1<<j;
                 if(!vismask) continue;
                 uchar vertused = fvmasks[vismask];
                 vec v[8];
@@ -493,9 +493,10 @@ struct decalrenderer
 
 decalrenderer decals[] =
 {
-    decalrenderer("packages/particles/scorch.png", DF_ROTATE, 500),
-    decalrenderer("packages/particles/blood.png", DF_RND4|DF_ROTATE|DF_INVMOD),
-    decalrenderer("<decal>packages/particles/bullet.png", DF_OVERBRIGHT)
+    decalrenderer("<grey>packages/particles/scorch.png", DF_ROTATE, 500),
+    decalrenderer("<grey>packages/particles/blood.png", DF_RND4|DF_ROTATE|DF_INVMOD),
+    decalrenderer("<grey><decal>packages/particles/bullet.png", DF_OVERBRIGHT),
+    decalrenderer("<grey>packages/particles/decal.png", 0, 25, 500, 20), // SAUER ENHANCED
 };
 
 void initdecals()

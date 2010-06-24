@@ -110,7 +110,7 @@ int handleBodyCounter = 0;
         {
             vec sauerLocation;
             TO_SAUER_VEC( sauerLocation, location );
-            particle_text(sauerLocation, textString, PART_TEXT, 0);
+            particle_textcopy(sauerLocation, textString, PART_TEXT, 0);
         }
 
         virtual void drawContactPoint (const btVector3 &PointOnB, const btVector3 &normalOnB, btScalar distance, int lifeTime, const btVector3 &color) { }

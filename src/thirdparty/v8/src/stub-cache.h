@@ -56,6 +56,8 @@ class StubCache : public AllStatic {
 
   // Computes the right stub matching. Inserts the result in the
   // cache before returning.  This might compile a stub if needed.
+  static Object* ComputeLoadNonexistent(String* name, JSObject* receiver);
+
   static Object* ComputeLoadField(String* name,
                                   JSObject* receiver,
                                   JSObject* holder,
@@ -312,6 +314,7 @@ Object* LoadPropertyWithInterceptorForLoad(Arguments args);
 Object* LoadPropertyWithInterceptorForCall(Arguments args);
 Object* StoreInterceptorProperty(Arguments args);
 Object* CallInterceptorProperty(Arguments args);
+Object* KeyedLoadPropertyWithInterceptor(Arguments args);
 
 
 // Support function for computing call IC miss stubs.
@@ -325,8 +328,7 @@ class StubCompiler BASE_EMBEDDED {
     RECEIVER_MAP_CHECK,
     STRING_CHECK,
     NUMBER_CHECK,
-    BOOLEAN_CHECK,
-    JSARRAY_HAS_FAST_ELEMENTS_CHECK
+    BOOLEAN_CHECK
   };
 
   StubCompiler() : scope_(), masm_(NULL, 256), failure_(NULL) { }
@@ -346,6 +348,7 @@ class StubCompiler BASE_EMBEDDED {
   static void GenerateLoadGlobalFunctionPrototype(MacroAssembler* masm,
                                                   int index,
                                                   Register prototype);
+
   static void GenerateFastPropertyLoad(MacroAssembler* masm,
                                        Register dst, Register src,
                                        JSObject* holder, int index);
@@ -354,22 +357,20 @@ class StubCompiler BASE_EMBEDDED {
                                       Register receiver,
                                       Register scratch,
                                       Label* miss_label);
+
   static void GenerateLoadStringLength(MacroAssembler* masm,
                                        Register receiver,
-                                       Register scratch,
+                                       Register scratch1,
+                                       Register scratch2,
                                        Label* miss_label);
-  static void GenerateLoadStringLength2(MacroAssembler* masm,
-                                        Register receiver,
-                                        Register scratch1,
-                                        Register scratch2,
-                                        Label* miss_label);
+
   static void GenerateLoadFunctionPrototype(MacroAssembler* masm,
                                             Register receiver,
                                             Register scratch1,
                                             Register scratch2,
                                             Label* miss_label);
+
   static void GenerateStoreField(MacroAssembler* masm,
-                                 Builtins::Name storage_extend,
                                  JSObject* object,
                                  int index,
                                  Map* transition,
@@ -377,16 +378,30 @@ class StubCompiler BASE_EMBEDDED {
                                  Register name_reg,
                                  Register scratch,
                                  Label* miss_label);
+
   static void GenerateLoadMiss(MacroAssembler* masm, Code::Kind kind);
 
   // Check the integrity of the prototype chain to make sure that the
   // current IC is still valid.
+
   Register CheckPrototypes(JSObject* object,
                            Register object_reg,
                            JSObject* holder,
                            Register holder_reg,
                            Register scratch,
                            String* name,
+                           Label* miss) {
+    return CheckPrototypes(object, object_reg, holder, holder_reg, scratch,
+                           name, kInvalidProtoDepth, miss);
+  }
+
+  Register CheckPrototypes(JSObject* object,
+                           Register object_reg,
+                           JSObject* holder,
+                           Register holder_reg,
+                           Register scratch,
+                           String* name,
+                           int save_at_depth,
                            Label* miss);
 
  protected:
@@ -435,6 +450,10 @@ class StubCompiler BASE_EMBEDDED {
                                String* name,
                                Label* miss);
 
+  static void LookupPostInterceptor(JSObject* holder,
+                                    String* name,
+                                    LookupResult* lookup);
+
  private:
   HandleScope scope_;
   MacroAssembler masm_;
@@ -444,18 +463,25 @@ class StubCompiler BASE_EMBEDDED {
 
 class LoadStubCompiler: public StubCompiler {
  public:
+  Object* CompileLoadNonexistent(String* name,
+                                 JSObject* object,
+                                 JSObject* last);
+
   Object* CompileLoadField(JSObject* object,
                            JSObject* holder,
                            int index,
                            String* name);
+
   Object* CompileLoadCallback(String* name,
                               JSObject* object,
                               JSObject* holder,
                               AccessorInfo* callback);
+
   Object* CompileLoadConstant(JSObject* object,
                               JSObject* holder,
                               Object* value,
                               String* name);
+
   Object* CompileLoadInterceptor(JSObject* object,
                                  JSObject* holder,
                                  String* name);
@@ -477,17 +503,21 @@ class KeyedLoadStubCompiler: public StubCompiler {
                            JSObject* object,
                            JSObject* holder,
                            int index);
+
   Object* CompileLoadCallback(String* name,
                               JSObject* object,
                               JSObject* holder,
                               AccessorInfo* callback);
+
   Object* CompileLoadConstant(String* name,
                               JSObject* object,
                               JSObject* holder,
                               Object* value);
+
   Object* CompileLoadInterceptor(JSObject* object,
                                  JSObject* holder,
                                  String* name);
+
   Object* CompileLoadArrayLength(String* name);
   Object* CompileLoadStringLength(String* name);
   Object* CompileLoadFunctionPrototype(String* name);
@@ -529,12 +559,34 @@ class KeyedStoreStubCompiler: public StubCompiler {
 };
 
 
+// List of functions with custom constant call IC stubs.
+//
+// Installation of custom call generators for the selected builtins is
+// handled by the bootstrapper.
+//
+// Each entry has a name of a global function (lowercased), a name of
+// a builtin function on its instance prototype (the one the generator
+// is set for), and a name of a generator itself (used to build ids
+// and generator function names).
+#define CUSTOM_CALL_IC_GENERATORS(V) \
+  V(array, push, ArrayPush) \
+  V(array, pop, ArrayPop)
+
+
 class CallStubCompiler: public StubCompiler {
  public:
-  explicit CallStubCompiler(int argc, InLoopFlag in_loop)
+  enum {
+#define DECLARE_CALL_GENERATOR_ID(ignored1, ignored2, name) \
+    k##name##CallGenerator,
+    CUSTOM_CALL_IC_GENERATORS(DECLARE_CALL_GENERATOR_ID)
+#undef DECLARE_CALL_GENERATOR_ID
+    kNumCallGenerators
+  };
+
+  CallStubCompiler(int argc, InLoopFlag in_loop)
       : arguments_(argc), in_loop_(in_loop) { }
 
-  Object* CompileCallField(Object* object,
+  Object* CompileCallField(JSObject* object,
                            JSObject* holder,
                            int index,
                            String* name);
@@ -543,7 +595,7 @@ class CallStubCompiler: public StubCompiler {
                               JSFunction* function,
                               String* name,
                               CheckType check);
-  Object* CompileCallInterceptor(Object* object,
+  Object* CompileCallInterceptor(JSObject* object,
                                  JSObject* holder,
                                  String* name);
   Object* CompileCallGlobal(JSObject* object,
@@ -552,6 +604,23 @@ class CallStubCompiler: public StubCompiler {
                             JSFunction* function,
                             String* name);
 
+  // Compiles a custom call constant IC using the generator with given id.
+  Object* CompileCustomCall(int generator_id,
+                            Object* object,
+                            JSObject* holder,
+                            JSFunction* function,
+                            String* name,
+                            CheckType check);
+
+#define DECLARE_CALL_GENERATOR(ignored1, ignored2, name) \
+  Object* Compile##name##Call(Object* object,            \
+                              JSObject* holder,          \
+                              JSFunction* function,      \
+                              String* fname,             \
+                              CheckType check);
+  CUSTOM_CALL_IC_GENERATORS(DECLARE_CALL_GENERATOR)
+#undef DECLARE_CALL_GENERATOR
+
  private:
   const ParameterCount arguments_;
   const InLoopFlag in_loop_;
@@ -559,6 +628,10 @@ class CallStubCompiler: public StubCompiler {
   const ParameterCount& arguments() { return arguments_; }
 
   Object* GetCode(PropertyType type, String* name);
+
+  // Convenience function. Calls GetCode above passing
+  // CONSTANT_FUNCTION type and the name of the given function.
+  Object* GetCode(JSFunction* function);
 };
 
 
@@ -572,6 +645,54 @@ class ConstructStubCompiler: public StubCompiler {
   Object* GetCode();
 };
 
+
+// Holds information about possible function call optimizations.
+class CallOptimization BASE_EMBEDDED {
+ public:
+  explicit CallOptimization(LookupResult* lookup);
+
+  explicit CallOptimization(JSFunction* function);
+
+  bool is_constant_call() const {
+    return constant_function_ != NULL;
+  }
+
+  JSFunction* constant_function() const {
+    ASSERT(constant_function_ != NULL);
+    return constant_function_;
+  }
+
+  bool is_simple_api_call() const {
+    return is_simple_api_call_;
+  }
+
+  FunctionTemplateInfo* expected_receiver_type() const {
+    ASSERT(is_simple_api_call_);
+    return expected_receiver_type_;
+  }
+
+  CallHandlerInfo* api_call_info() const {
+    ASSERT(is_simple_api_call_);
+    return api_call_info_;
+  }
+
+  // Returns the depth of the object having the expected type in the
+  // prototype chain between the two arguments.
+  int GetPrototypeDepthOfExpectedType(JSObject* object,
+                                      JSObject* holder) const;
+
+ private:
+  void Initialize(JSFunction* function);
+
+  // Determines whether the given function can be called using the
+  // fast api call builtin.
+  void AnalyzePossibleApiFunction(JSFunction* function);
+
+  JSFunction* constant_function_;
+  bool is_simple_api_call_;
+  FunctionTemplateInfo* expected_receiver_type_;
+  CallHandlerInfo* api_call_info_;
+};
 
 } }  // namespace v8::internal
 

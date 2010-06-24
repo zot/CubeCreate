@@ -31,6 +31,7 @@
 #include "ast.h"
 #include "code-stubs.h"
 #include "runtime.h"
+#include "type-info.h"
 
 // Include the declaration of the architecture defined class CodeGenerator.
 // The contract  to the shared code is that the the CodeGenerator is a subclass
@@ -55,9 +56,9 @@
 //   CodeGenerator
 //   ~CodeGenerator
 //   ProcessDeferred
-//   GenCode
+//   Generate
 //   ComputeLazyCompile
-//   BuildBoilerplate
+//   BuildFunctionInfo
 //   ComputeCallInitialize
 //   ComputeCallInitializeInLoop
 //   ProcessDeclarations
@@ -86,6 +87,8 @@ enum UncatchableExceptionType { OUT_OF_MEMORY, TERMINATION };
 #include "x64/codegen-x64.h"
 #elif V8_TARGET_ARCH_ARM
 #include "arm/codegen-arm.h"
+#elif V8_TARGET_ARCH_MIPS
+#include "mips/codegen-mips.h"
 #else
 #error Unsupported target architecture.
 #endif
@@ -94,6 +97,63 @@ enum UncatchableExceptionType { OUT_OF_MEMORY, TERMINATION };
 
 namespace v8 {
 namespace internal {
+
+
+#define INLINE_RUNTIME_FUNCTION_LIST(F) \
+  F(IsSmi, 1, 1)                                                             \
+  F(IsNonNegativeSmi, 1, 1)                                                  \
+  F(IsArray, 1, 1)                                                           \
+  F(IsRegExp, 1, 1)                                                          \
+  F(CallFunction, -1 /* receiver + n args + function */, 1)                  \
+  F(IsConstructCall, 0, 1)                                                   \
+  F(ArgumentsLength, 0, 1)                                                   \
+  F(Arguments, 1, 1)                                                         \
+  F(ClassOf, 1, 1)                                                           \
+  F(ValueOf, 1, 1)                                                           \
+  F(SetValueOf, 2, 1)                                                        \
+  F(FastCharCodeAt, 2, 1)                                                    \
+  F(CharFromCode, 1, 1)                                                      \
+  F(ObjectEquals, 2, 1)                                                      \
+  F(Log, 3, 1)                                                               \
+  F(RandomHeapNumber, 0, 1)                                          \
+  F(IsObject, 1, 1)                                                          \
+  F(IsFunction, 1, 1)                                                        \
+  F(IsUndetectableObject, 1, 1)                                              \
+  F(StringAdd, 2, 1)                                                         \
+  F(SubString, 3, 1)                                                         \
+  F(StringCompare, 2, 1)                                                     \
+  F(RegExpExec, 4, 1)                                                        \
+  F(RegExpConstructResult, 3, 1)                                             \
+  F(GetFromCache, 2, 1)                                                      \
+  F(NumberToString, 1, 1)                                                    \
+  F(SwapElements, 3, 1)                                                      \
+  F(MathPow, 2, 1)                                                           \
+  F(MathSin, 1, 1)                                                           \
+  F(MathCos, 1, 1)                                                           \
+  F(MathSqrt, 1, 1)
+
+
+// Support for "structured" code comments.
+#ifdef DEBUG
+
+class Comment BASE_EMBEDDED {
+ public:
+  Comment(MacroAssembler* masm, const char* msg);
+  ~Comment();
+
+ private:
+  MacroAssembler* masm_;
+  const char* msg_;
+};
+
+#else
+
+class Comment BASE_EMBEDDED {
+ public:
+  Comment(MacroAssembler*, const char*)  {}
+};
+
+#endif  // DEBUG
 
 
 // Code generation can be nested.  Code generation scopes form a stack
@@ -173,50 +233,18 @@ class DeferredCode: public ZoneObject {
   Label entry_label_;
   Label exit_label_;
 
-  int registers_[RegisterAllocator::kNumRegisters];
+  // C++ doesn't allow zero length arrays, so we make the array length 1 even
+  // if we don't need it.
+  static const int kRegistersArrayLength =
+      (RegisterAllocator::kNumRegisters == 0) ?
+          1 : RegisterAllocator::kNumRegisters;
+  int registers_[kRegistersArrayLength];
 
 #ifdef DEBUG
   const char* comment_;
 #endif
   DISALLOW_COPY_AND_ASSIGN(DeferredCode);
 };
-
-
-// RuntimeStub models code stubs calling entry points in the Runtime class.
-class RuntimeStub : public CodeStub {
- public:
-  explicit RuntimeStub(Runtime::FunctionId id, int num_arguments)
-      : id_(id), num_arguments_(num_arguments) { }
-
-  void Generate(MacroAssembler* masm);
-
-  // Disassembler support.  It is useful to be able to print the name
-  // of the runtime function called through this stub.
-  static const char* GetNameFromMinorKey(int minor_key) {
-    return Runtime::FunctionForId(IdField::decode(minor_key))->stub_name;
-  }
-
- private:
-  Runtime::FunctionId id_;
-  int num_arguments_;
-
-  class ArgumentField: public BitField<int,  0, 16> {};
-  class IdField: public BitField<Runtime::FunctionId, 16, kMinorBits - 16> {};
-
-  Major MajorKey() { return Runtime; }
-  int MinorKey() {
-    return IdField::encode(id_) | ArgumentField::encode(num_arguments_);
-  }
-
-  const char* GetName();
-
-#ifdef DEBUG
-  void Print() {
-    PrintF("RuntimeStub (id %s)\n", Runtime::FunctionForId(id_)->name);
-  }
-#endif
-};
-
 
 class StackCheckStub : public CodeStub {
  public:
@@ -327,8 +355,13 @@ class CompareStub: public CodeStub {
  public:
   CompareStub(Condition cc,
               bool strict,
-              NaNInformation nan_info = kBothCouldBeNaN) :
-      cc_(cc), strict_(strict), never_nan_nan_(nan_info == kCantBothBeNaN) { }
+              NaNInformation nan_info = kBothCouldBeNaN,
+              bool include_number_compare = true) :
+      cc_(cc),
+      strict_(strict),
+      never_nan_nan_(nan_info == kCantBothBeNaN),
+      include_number_compare_(include_number_compare),
+      name_(NULL) { }
 
   void Generate(MacroAssembler* masm);
 
@@ -341,6 +374,16 @@ class CompareStub: public CodeStub {
   // generating the minor key for other comparisons to avoid creating more
   // stubs.
   bool never_nan_nan_;
+  // Do generate the number comparison code in the stub. Stubs without number
+  // comparison code is used when the number comparison has been inlined, and
+  // the stub will be called if one of the operands is not a number.
+  bool include_number_compare_;
+
+  // Encoding of the minor key CCCCCCCCCCCCCCNS.
+  class StrictField: public BitField<bool, 0, 1> {};
+  class NeverNanNanField: public BitField<bool, 1, 1> {};
+  class IncludeNumberCompareField: public BitField<bool, 2, 1> {};
+  class ConditionField: public BitField<int, 3, 13> {};
 
   Major MajorKey() { return Compare; }
 
@@ -354,12 +397,16 @@ class CompareStub: public CodeStub {
 
   // Unfortunately you have to run without snapshots to see most of these
   // names in the profile since most compare stubs end up in the snapshot.
+  char* name_;
   const char* GetName();
 #ifdef DEBUG
   void Print() {
-    PrintF("CompareStub (cc %d), (strict %s)\n",
+    PrintF("CompareStub (cc %d), (strict %s), "
+           "(never_nan_nan %s), (number_compare %s)\n",
            static_cast<int>(cc_),
-           strict_ ? "true" : "false");
+           strict_ ? "true" : "false",
+           never_nan_nan_ ? "true" : "false",
+           include_number_compare_ ? "included" : "not included");
   }
 #endif
 };
@@ -367,25 +414,31 @@ class CompareStub: public CodeStub {
 
 class CEntryStub : public CodeStub {
  public:
-  explicit CEntryStub(int result_size) : result_size_(result_size) { }
+  explicit CEntryStub(int result_size,
+                      ExitFrame::Mode mode = ExitFrame::MODE_NORMAL)
+      : result_size_(result_size), mode_(mode) { }
 
-  void Generate(MacroAssembler* masm) { GenerateBody(masm, false); }
+  void Generate(MacroAssembler* masm);
 
- protected:
-  void GenerateBody(MacroAssembler* masm, bool is_debug_break);
+ private:
   void GenerateCore(MacroAssembler* masm,
                     Label* throw_normal_exception,
                     Label* throw_termination_exception,
                     Label* throw_out_of_memory_exception,
-                    ExitFrame::Mode mode,
                     bool do_gc,
-                    bool always_allocate_scope);
+                    bool always_allocate_scope,
+                    int alignment_skew = 0);
   void GenerateThrowTOS(MacroAssembler* masm);
   void GenerateThrowUncatchable(MacroAssembler* masm,
                                 UncatchableExceptionType type);
- private:
+
   // Number of pointers/values returned.
-  int result_size_;
+  const int result_size_;
+  const ExitFrame::Mode mode_;
+
+  // Minor key encoding
+  class ExitFrameModeBits: public BitField<ExitFrame::Mode, 0, 1> {};
+  class IndirectResultBits: public BitField<bool, 1, 1> {};
 
   Major MajorKey() { return CEntry; }
   // Minor key must differ if different result_size_ values means different
@@ -407,7 +460,7 @@ class ApiGetterEntryStub : public CodeStub {
   virtual bool GetCustomCache(Code** code_out);
   virtual void SetCustomCache(Code* value);
 
-  static const int kStackSpace = 6;
+  static const int kStackSpace = 5;
   static const int kArgc = 4;
  private:
   Handle<AccessorInfo> info() { return info_; }
@@ -419,19 +472,6 @@ class ApiGetterEntryStub : public CodeStub {
   Handle<AccessorInfo> info_;
   // The function to be called.
   ApiFunction* fun_;
-};
-
-
-class CEntryDebugBreakStub : public CEntryStub {
- public:
-  CEntryDebugBreakStub() : CEntryStub(1) { }
-
-  void Generate(MacroAssembler* masm) { GenerateBody(masm, true); }
-
- private:
-  int MinorKey() { return 1; }
-
-  const char* GetName() { return "CEntryDebugBreakStub"; }
 };
 
 
@@ -468,7 +508,6 @@ class JSConstructEntryStub : public JSEntryStub {
 class ArgumentsAccessStub: public CodeStub {
  public:
   enum Type {
-    READ_LENGTH,
     READ_ELEMENT,
     NEW_OBJECT
   };
@@ -482,7 +521,6 @@ class ArgumentsAccessStub: public CodeStub {
   int MinorKey() { return type_; }
 
   void Generate(MacroAssembler* masm);
-  void GenerateReadLength(MacroAssembler* masm);
   void GenerateReadElement(MacroAssembler* masm);
   void GenerateNewObject(MacroAssembler* masm);
 
@@ -513,6 +551,64 @@ class RegExpExecStub: public CodeStub {
     PrintF("RegExpExecStub\n");
   }
 #endif
+};
+
+
+class CallFunctionStub: public CodeStub {
+ public:
+  CallFunctionStub(int argc, InLoopFlag in_loop, CallFunctionFlags flags)
+      : argc_(argc), in_loop_(in_loop), flags_(flags) { }
+
+  void Generate(MacroAssembler* masm);
+
+ private:
+  int argc_;
+  InLoopFlag in_loop_;
+  CallFunctionFlags flags_;
+
+#ifdef DEBUG
+  void Print() {
+    PrintF("CallFunctionStub (args %d, in_loop %d, flags %d)\n",
+           argc_,
+           static_cast<int>(in_loop_),
+           static_cast<int>(flags_));
+  }
+#endif
+
+  // Minor key encoding in 32 bits with Bitfield <Type, shift, size>.
+  class InLoopBits: public BitField<InLoopFlag, 0, 1> {};
+  class FlagBits: public BitField<CallFunctionFlags, 1, 1> {};
+  class ArgcBits: public BitField<int, 2, 32 - 2> {};
+
+  Major MajorKey() { return CallFunction; }
+  int MinorKey() {
+    // Encode the parameters in a unique 32 bit value.
+    return InLoopBits::encode(in_loop_)
+           | FlagBits::encode(flags_)
+           | ArgcBits::encode(argc_);
+  }
+
+  InLoopFlag InLoop() { return in_loop_; }
+  bool ReceiverMightBeValue() {
+    return (flags_ & RECEIVER_MIGHT_BE_VALUE) != 0;
+  }
+
+ public:
+  static int ExtractArgcFromMinorKey(int minor_key) {
+    return ArgcBits::decode(minor_key);
+  }
+};
+
+
+class ToBooleanStub: public CodeStub {
+ public:
+  ToBooleanStub() { }
+
+  void Generate(MacroAssembler* masm);
+
+ private:
+  Major MajorKey() { return ToBoolean; }
+  int MinorKey() { return 0; }
 };
 
 

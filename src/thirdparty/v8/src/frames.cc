@@ -32,7 +32,6 @@
 #include "scopeinfo.h"
 #include "string-stream.h"
 #include "top.h"
-#include "zone-inl.h"
 
 namespace v8 {
 namespace internal {
@@ -176,7 +175,7 @@ StackFrame* StackFrameIterator::SingletonFor(StackFrame::Type type) {
 
 
 StackTraceFrameIterator::StackTraceFrameIterator() {
-  if (!done() && !frame()->function()->IsJSFunction()) Advance();
+  if (!done() && !IsValidFrame()) Advance();
 }
 
 
@@ -184,8 +183,16 @@ void StackTraceFrameIterator::Advance() {
   while (true) {
     JavaScriptFrameIterator::Advance();
     if (done()) return;
-    if (frame()->function()->IsJSFunction()) return;
+    if (IsValidFrame()) return;
   }
+}
+
+bool StackTraceFrameIterator::IsValidFrame() {
+    if (!frame()->function()->IsJSFunction()) return false;
+    Object* script = JSFunction::cast(frame()->function())->shared()->script();
+    // Don't show functions from native scripts to user.
+    return (script->IsScript() &&
+            Script::TYPE_NATIVE != Script::cast(script)->type()->value());
 }
 
 
@@ -299,14 +306,12 @@ void SafeStackTraceFrameIterator::Advance() {
 
 
 void StackHandler::Cook(Code* code) {
-  ASSERT(MarkCompactCollector::IsCompacting());
   ASSERT(code->contains(pc()));
   set_pc(AddressFrom<Address>(pc() - code->instruction_start()));
 }
 
 
 void StackHandler::Uncook(Code* code) {
-  ASSERT(MarkCompactCollector::HasCompacted());
   set_pc(code->instruction_start() + OffsetFrom(pc()));
   ASSERT(code->contains(pc()));
 }
@@ -322,9 +327,6 @@ bool StackFrame::HasHandler() const {
 
 
 void StackFrame::CookFramesForThread(ThreadLocalTop* thread) {
-  // Only cooking frames when the collector is compacting and thus moving code
-  // around.
-  ASSERT(MarkCompactCollector::IsCompacting());
   ASSERT(!thread->stack_is_cooked());
   for (StackFrameIterator it(thread); !it.done(); it.Advance()) {
     it.frame()->Cook();
@@ -334,9 +336,6 @@ void StackFrame::CookFramesForThread(ThreadLocalTop* thread) {
 
 
 void StackFrame::UncookFramesForThread(ThreadLocalTop* thread) {
-  // Only uncooking frames when the collector is compacting and thus moving code
-  // around.
-  ASSERT(MarkCompactCollector::HasCompacted());
   ASSERT(thread->stack_is_cooked());
   for (StackFrameIterator it(thread); !it.done(); it.Advance()) {
     it.frame()->Uncook();
@@ -347,6 +346,7 @@ void StackFrame::UncookFramesForThread(ThreadLocalTop* thread) {
 
 void StackFrame::Cook() {
   Code* code = this->code();
+  ASSERT(code->IsCode());
   for (StackHandlerIterator it(this, top_handler()); !it.done(); it.Advance()) {
     it.handler()->Cook(code);
   }
@@ -357,6 +357,7 @@ void StackFrame::Cook() {
 
 void StackFrame::Uncook() {
   Code* code = this->code();
+  ASSERT(code->IsCode());
   for (StackHandlerIterator it(this, top_handler()); !it.done(); it.Advance()) {
     it.handler()->Uncook(code);
   }
@@ -381,6 +382,12 @@ void EntryFrame::ComputeCallerState(State* state) const {
 }
 
 
+void EntryFrame::SetCallerFp(Address caller_fp) {
+  const int offset = EntryFrameConstants::kCallerFPOffset;
+  Memory::Address_at(this->fp() + offset) = caller_fp;
+}
+
+
 StackFrame::Type EntryFrame::GetCallerState(State* state) const {
   const int offset = EntryFrameConstants::kCallerFPOffset;
   Address fp = Memory::Address_at(this->fp() + offset);
@@ -400,12 +407,7 @@ Object*& ExitFrame::code_slot() const {
 
 
 Code* ExitFrame::code() const {
-  Object* code = code_slot();
-  if (code->IsSmi()) {
-    return Heap::c_entry_debug_break_code();
-  } else {
-    return Code::cast(code);
-  }
+  return Code::cast(code_slot());
 }
 
 
@@ -415,6 +417,11 @@ void ExitFrame::ComputeCallerState(State* state) const {
   state->fp = Memory::Address_at(fp() + ExitFrameConstants::kCallerFPOffset);
   state->pc_address
       = reinterpret_cast<Address*>(fp() + ExitFrameConstants::kCallerPCOffset);
+}
+
+
+void ExitFrame::SetCallerFp(Address caller_fp) {
+  Memory::Address_at(fp() + ExitFrameConstants::kCallerFPOffset) = caller_fp;
 }
 
 
@@ -444,6 +451,12 @@ void StandardFrame::ComputeCallerState(State* state) const {
   state->sp = caller_sp();
   state->fp = caller_fp();
   state->pc_address = reinterpret_cast<Address*>(ComputePCAddress(fp()));
+}
+
+
+void StandardFrame::SetCallerFp(Address caller_fp) {
+  Memory::Address_at(fp() + StandardFrameConstants::kCallerFPOffset) =
+      caller_fp;
 }
 
 
@@ -518,6 +531,31 @@ void JavaScriptFrame::Print(StringStream* accumulator,
   Code* code = NULL;
   if (IsConstructor()) accumulator->Add("new ");
   accumulator->PrintFunction(function, receiver, &code);
+
+  if (function->IsJSFunction()) {
+    Handle<SharedFunctionInfo> shared(JSFunction::cast(function)->shared());
+    Object* script_obj = shared->script();
+    if (script_obj->IsScript()) {
+      Handle<Script> script(Script::cast(script_obj));
+      accumulator->Add(" [");
+      accumulator->PrintName(script->name());
+
+      Address pc = this->pc();
+      if (code != NULL && code->kind() == Code::FUNCTION &&
+          pc >= code->instruction_start() && pc < code->relocation_start()) {
+        int source_pos = code->SourcePosition(pc);
+        int line = GetScriptLineNumberSafe(script, source_pos) + 1;
+        accumulator->Add(":%d", line);
+      } else {
+        int function_start_pos = shared->start_position();
+        int line = GetScriptLineNumberSafe(script, function_start_pos) + 1;
+        accumulator->Add(":~%d", line);
+      }
+
+      accumulator->Add("] ");
+    }
+  }
+
   accumulator->Add("(this=%o", receiver);
 
   // Get scope information for nicer output, if possible. If code is
@@ -743,6 +781,42 @@ int JSCallerSavedCode(int n) {
   }
   ASSERT(0 <= n && n < kNumJSCallerSaved);
   return reg_code[n];
+}
+
+
+#define DEFINE_WRAPPER(type, field)                              \
+class field##_Wrapper : public ZoneObject {                      \
+ public:  /* NOLINT */                                           \
+  field##_Wrapper(const field& original) : frame_(original) {    \
+  }                                                              \
+  field frame_;                                                  \
+};
+STACK_FRAME_TYPE_LIST(DEFINE_WRAPPER)
+#undef DEFINE_WRAPPER
+
+static StackFrame* AllocateFrameCopy(StackFrame* frame) {
+#define FRAME_TYPE_CASE(type, field) \
+  case StackFrame::type: { \
+    field##_Wrapper* wrapper = \
+        new field##_Wrapper(*(reinterpret_cast<field*>(frame))); \
+    return &wrapper->frame_; \
+  }
+
+  switch (frame->type()) {
+    STACK_FRAME_TYPE_LIST(FRAME_TYPE_CASE)
+    default: UNREACHABLE();
+  }
+#undef FRAME_TYPE_CASE
+  return NULL;
+}
+
+Vector<StackFrame*> CreateStackMap() {
+  ZoneList<StackFrame*> list(10);
+  for (StackFrameIterator it; !it.done(); it.Advance()) {
+    StackFrame* frame = AllocateFrameCopy(it.frame());
+    list.Add(frame);
+  }
+  return list.ToVector();
 }
 
 

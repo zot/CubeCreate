@@ -158,8 +158,8 @@ Vector3 = Class.extend({
     fromYawPitch: function(yaw, pitch) {
         var TO_RAD = Math.PI / 180.0;
 
-        this.x = Math.sin(TO_RAD*yaw);
-        this.y = -Math.cos(TO_RAD*yaw);
+        this.x = -Math.sin(TO_RAD*yaw);
+        this.y = Math.cos(TO_RAD*yaw);
 
         if(pitch !== 0) {
             this.x *= Math.cos(TO_RAD*pitch);
@@ -179,7 +179,7 @@ Vector3 = Class.extend({
 
         var RAD = (Math.PI/180.0);
         return {
-            yaw: -Math.atan2(this.x, this.y)/RAD + 180.0,
+            yaw: -Math.atan2(this.x, this.y)/RAD,
             pitch: Math.asin(this.z/size)/RAD,
         };
     },
@@ -435,7 +435,7 @@ function yawTo(origin, target, _reverse) {
     _reverse = defaultValue(_reverse, false);
 
     if (!_reverse) {
-        return (-Math.atan2(target.x - origin.x, target.y - origin.y)/(Math.PI/180.0)) + 180.0;
+        return (-Math.atan2(target.x - origin.x, target.y - origin.y)/(Math.PI/180.0));
     } else {
         return yawTo(target, origin); // Slow, TODO: write this explicitly
     }

@@ -2,7 +2,7 @@
 
 namespace entities
 {
-    extern void editent(int i);
+    extern void editent(int i, bool local);
     extern const char *entnameinfo(entity &e);
     extern const char *entname(int i);
     extern int extraentinfosize();
@@ -21,6 +21,7 @@ namespace entities
     extern void clearents();
     extern vector<extentity *> &getents();
     extern const char *entmodel(const entity &e);
+    extern void animatemapmodel(const extentity &e, int &anim, int &basetime);
 }
 
 namespace game
@@ -38,11 +39,11 @@ namespace game
     extern void toserver(char *text);
     extern void changemap(const char *name);
     extern void forceedit(const char *name);
-    extern int numchannels();
     extern bool ispaused();
 
     extern const char *gameident();
     extern const char *savedconfig();
+    extern const char *restoreconfig();
     extern const char *defaultconfig();
     extern const char *autoexec();
     extern const char *savedservers();
@@ -85,6 +86,7 @@ namespace game
     extern bool serverinfostartcolumn(g3d_gui *g, int i);
     extern void serverinfoendcolumn(g3d_gui *g, int i);
     extern bool serverinfoentry(g3d_gui *g, int i, const char *name, int port, const char *desc, const char *map, int ping, const vector<int> &attr, int np);
+    extern bool needminimap();
 } 
  
 namespace server
@@ -93,6 +95,7 @@ namespace server
     extern void deleteclientinfo(void *ci);
     extern void serverinit();
     extern int reserveclients();
+    extern int numchannels();
     extern void clientdisconnect(int n);
     extern int clientconnect(int n, uint ip);
     extern void localdisconnect(int n);
@@ -101,7 +104,7 @@ namespace server
     extern void recordpacket(int chan, void *data, int len);
     extern void parsepacket(int sender, int chan, packetbuf &p);
     extern void sendservmsg(const char *s);
-    extern bool sendpackets();
+    extern bool sendpackets(bool force = false);
     extern void serverinforeply(ucharbuf &req, ucharbuf &p);
     extern void serverupdate();
     extern bool servercompatible(char *name, char *sdec, char *map, int ping, const vector<int> &attr, int np);

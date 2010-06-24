@@ -94,6 +94,24 @@ int OS::ActivationFrameAlignment() {
 }
 
 
+const char* OS::LocalTimezone(double time) {
+  if (isnan(time)) return "";
+  time_t tv = static_cast<time_t>(floor(time/msPerSecond));
+  struct tm* t = localtime(&tv);
+  if (NULL == t) return "";
+  return t->tm_zone;
+}
+
+
+double OS::LocalTimeOffset() {
+  time_t tv = time(NULL);
+  struct tm* t = localtime(&tv);
+  // tm_gmtoff includes any daylight savings offset, so subtract it.
+  return static_cast<double>(t->tm_gmtoff * msPerSecond -
+                             (t->tm_isdst > 0 ? 3600 * msPerSecond : 0));
+}
+
+
 // We keep the lowest and highest addresses mapped as a quick way of
 // determining that pointers are outside the heap (used mostly in assertions
 // and verification).  The estimate is conservative, ie, not all addresses in
@@ -172,7 +190,8 @@ void OS::Abort() {
 
 
 void OS::DebugBreak() {
-#if defined(__arm__) || defined(__thumb__)
+#if (defined(__arm__) || defined(__thumb__)) && \
+    defined(CAN_USE_ARMV5_INSTRUCTIONS)
   asm("bkpt 0");
 #else
   asm("int $3");
@@ -523,7 +542,7 @@ static void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   TickSample sample;
 
   // We always sample the VM state.
-  sample.state = Logger::state();
+  sample.state = VMState::current_state();
 
   active_sampler_->Tick(&sample);
 }

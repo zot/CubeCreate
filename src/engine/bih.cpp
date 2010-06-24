@@ -17,7 +17,7 @@ bool BIH::triintersect(tri &t, const vec &o, const vec &ray, float maxdist, floa
     float f = t.c.dot(q) / det;
     if(f < 0 || f > maxdist) return false;
     if(!(mode&RAY_SHADOW) && &t >= noclip) return false;
-    if(t.tex && (mode&RAY_ALPHAPOLY)==RAY_ALPHAPOLY && (t.tex->alphamask || (loadalphamask(t.tex), t.tex->alphamask)))
+    if(t.tex && (mode&RAY_ALPHAPOLY)==RAY_ALPHAPOLY && (t.tex->alphamask || (lightmapping <= 1 && (loadalphamask(t.tex), t.tex->alphamask))))
     {
         int si = clamp(int(t.tex->xs * (t.tc[0] + u*(t.tc[2] - t.tc[0]) + v*(t.tc[4] - t.tc[0]))), 0, t.tex->xs-1),
             ti = clamp(int(t.tex->ys * (t.tc[1] + u*(t.tc[3] - t.tc[1]) + v*(t.tc[5] - t.tc[1]))), 0, t.tex->ys-1);
@@ -33,29 +33,11 @@ struct BIHStack
     float tmin, tmax;
 };
 
-bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int mode)
+inline bool BIH::traverse(const vec &o, const vec &ray, const vec &invray, float maxdist, float &dist, int mode, BIHNode *curnode, float tmin, float tmax)
 {
-    if(!numnodes) return false;
-
-    vec invray(ray.x ? 1/ray.x : 1e16f, ray.y ? 1/ray.y : 1e16f, ray.z ? 1/ray.z : 1e16f);
-    float tmin, tmax;
-    float t1 = (bbmin.x - o.x)*invray.x, 
-          t2 = (bbmax.x - o.x)*invray.x;
-    if(invray.x > 0) { tmin = t1; tmax = t2; } else { tmin = t2; tmax = t1; }
-    t1 = (bbmin.y - o.y)*invray.y;
-    t2 = (bbmax.y - o.y)*invray.y;
-    if(invray.y > 0) { tmin = max(tmin, t1); tmax = min(tmax, t2); } else { tmin = max(tmin, t2); tmax = min(tmax, t1); }
-    t1 = (bbmin.z - o.z)*invray.z;
-    t2 = (bbmax.z - o.z)*invray.z;
-    if(invray.z > 0) { tmin = max(tmin, t1); tmax = min(tmax, t2); } else { tmin = max(tmin, t2); tmax = min(tmax, t1); }
-    if(tmin >= maxdist || tmin>=tmax) return false;
-    tmax = min(tmax, maxdist);
-
-    static vector<BIHStack> stack;
-    stack.setsizenodelete(0);
-
+    BIHStack stack[128];
+    int stacksize = 0;
     ivec order(ray.x>0 ? 0 : 1, ray.y>0 ? 0 : 1, ray.z>0 ? 0 : 1);
-    BIHNode *curnode = &nodes[0];
     for(;;)
     {
         int axis = curnode->axis();
@@ -96,10 +78,21 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
             {
                 if(!curnode->isleaf(faridx))
                 {
-                    BIHStack &save = stack.add();
-                    save.node = &nodes[curnode->childindex(faridx)];
-                    save.tmin = max(tmin, farsplit);
-                    save.tmax = tmax;
+                    if(stacksize < int(sizeof(stack)/sizeof(stack[0])))
+                    {
+                        BIHStack &save = stack[stacksize++];
+                        save.node = &nodes[curnode->childindex(faridx)];
+                        save.tmin = max(tmin, farsplit);
+                        save.tmax = tmax;
+                    }
+                    else 
+                    {
+                        if(traverse(o, ray, invray, maxdist, dist, mode, &nodes[curnode->childindex(nearidx)], tmin, min(tmax, nearsplit))) return true;
+                        curnode = &nodes[curnode->childindex(faridx)];
+                        tmin = min(tmin, farsplit);
+                        tmax = tmax;
+                        continue;
+                    }
                 }
                 else if(triintersect(tris[curnode->childindex(faridx)], o, ray, maxdist, dist, mode, noclip)) return true;
             }
@@ -107,96 +100,97 @@ bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int
             tmax = min(tmax, nearsplit);
             continue;
         }
-        if(stack.empty()) return false;
-        BIHStack &restore = stack.pop();
+        if(stacksize <= 0) return false;
+        BIHStack &restore = stack[--stacksize];
         curnode = restore.node;
         tmin = restore.tmin;
         tmax = restore.tmax;
     }
 }
 
-static BIH::tri *sorttris = NULL;
-static int sortaxis = 0;
-
-static int bihsort(const ushort *x, const ushort *y)
+inline bool BIH::traverse(const vec &o, const vec &ray, float maxdist, float &dist, int mode)
 {
-    BIH::tri &xtri = sorttris[*x], &ytri = sorttris[*y];
-    float xmin = min(xtri.a[sortaxis], min(xtri.b[sortaxis], xtri.c[sortaxis])),
-          ymin = min(ytri.a[sortaxis], min(ytri.b[sortaxis], ytri.c[sortaxis]));
-    if(xmin < ymin) return -1;
-    if(xmin > ymin) return 1;
-    return 0;
+    if(!numnodes) return false;
+
+    vec invray(ray.x ? 1/ray.x : 1e16f, ray.y ? 1/ray.y : 1e16f, ray.z ? 1/ray.z : 1e16f);
+    float tmin, tmax;
+    float t1 = (bbmin.x - o.x)*invray.x,
+          t2 = (bbmax.x - o.x)*invray.x;
+    if(invray.x > 0) { tmin = t1; tmax = t2; } else { tmin = t2; tmax = t1; }
+    t1 = (bbmin.y - o.y)*invray.y;
+    t2 = (bbmax.y - o.y)*invray.y;
+    if(invray.y > 0) { tmin = max(tmin, t1); tmax = min(tmax, t2); } else { tmin = max(tmin, t2); tmax = min(tmax, t1); }
+    t1 = (bbmin.z - o.z)*invray.z;
+    t2 = (bbmax.z - o.z)*invray.z;
+    if(invray.z > 0) { tmin = max(tmin, t1); tmax = min(tmax, t2); } else { tmin = max(tmin, t2); tmax = min(tmax, t1); }
+    if(tmin >= maxdist || tmin>=tmax) return false;
+    tmax = min(tmax, maxdist);
+
+    return BIH::traverse(o, ray, invray, maxdist, dist, mode, &nodes[0], tmin, tmax); 
 }
 
-void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, int depth)
+void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, const vec &vmin, const vec &vmax, int depth)
 {
     maxdepth = max(maxdepth, depth);
    
-    vec vmin(1e16f, 1e16f, 1e16f), vmax(-1e16f, -1e16f, -1e16f);
-    loopi(numindices)
-    {
-        tri &tri = tris[indices[i]];
-        loopk(3)
-        {
-            float amin = min(tri.a[k], min(tri.b[k], tri.c[k])),
-                  amax = max(tri.a[k], max(tri.b[k], tri.c[k]));
-            vmin[k] = min(vmin[k], amin);
-            vmax[k] = max(vmax[k], amax);
-        }
-    }
-    if(depth==1)
-    {
-        bbmin = vmin;
-        bbmax = vmax;
-    }
-
     int axis = 2;
     loopk(2) if(vmax[k] - vmin[k] > vmax[axis] - vmin[axis]) axis = k;
 
-/*
-    sorttris = tris;
-    sortaxis = axis;
-    qsort(indices, numindices, sizeof(ushort), (int (__cdecl *)(const void *, const void *))bihsort);
-    tri &median = tris[numindices/2];
-    float split = min(median.a[axis], min(median.b[axis], median.c[axis]));
-*/
-
-    float split = 0.5f*(vmax[axis] + vmin[axis]);
-
-    float splitleft = SHRT_MIN, splitright = SHRT_MAX;
+    vec leftmin, leftmax, rightmin, rightmax;
+    float splitleft, splitright;
     int left, right;
-    for(left = 0, right = numindices; left < right;)
+    loopk(3)
     {
-        tri &tri = tris[indices[left]];
-        float amin = min(tri.a[axis], min(tri.b[axis], tri.c[axis])),
-              amax = max(tri.a[axis], max(tri.b[axis], tri.c[axis]));
-        if(max(split - amin, 0.0f) > max(amax - split, 0.0f)) 
+        leftmin = rightmin = vec(1e16f, 1e16f, 1e16f);
+        leftmax = rightmax = vec(-1e16f, -1e16f, -1e16f);
+        float split = 0.5f*(vmax[axis] + vmin[axis]);
+        for(left = 0, right = numindices, splitleft = SHRT_MIN, splitright = SHRT_MAX; left < right;)
         {
-            ++left;
-            splitleft = max(splitleft, amax);
+            tri &tri = tris[indices[left]];
+            float amin = min(tri.a[axis], min(tri.b[axis], tri.c[axis])),
+                  amax = max(tri.a[axis], max(tri.b[axis], tri.c[axis]));
+            if(max(split - amin, 0.0f) > max(amax - split, 0.0f)) 
+            {
+                ++left;
+                splitleft = max(splitleft, amax);
+                leftmin.min(tri.a).min(tri.b).min(tri.c);
+                leftmax.max(tri.a).max(tri.b).max(tri.c);
+            }
+            else 
+            {    
+                --right; 
+                swap(indices[left], indices[right]); 
+                splitright = min(splitright, amin);
+                rightmin.min(tri.a).min(tri.b).min(tri.c);
+                rightmax.max(tri.a).max(tri.b).max(tri.c);
+            }
         }
-        else 
-        { 
-            --right; 
-            swap(indices[left], indices[right]); 
-            splitright = min(splitright, amin);
-        }
+        if(left > 0 && right < numindices) break;
+        axis = (axis+1)%3;
     }
 
-    if(!left || right==numindices)
+    if(!left || right==numindices) 
     {
-        sorttris = tris;
-        sortaxis = axis;
-        qsort(indices, numindices, sizeof(ushort), (int (__cdecl *)(const void *, const void *))bihsort);
-
+        leftmin = rightmin = vec(1e16f, 1e16f, 1e16f);
+        leftmax = rightmax = vec(-1e16f, -1e16f, -1e16f);
         left = right = numindices/2;
         splitleft = SHRT_MIN;
         splitright = SHRT_MAX;
         loopi(numindices)
         {
             tri &tri = tris[indices[i]];
-            if(i < left) splitleft = max(splitleft, max(tri.a[axis], max(tri.b[axis], tri.c[axis])));
-            else splitright = min(splitright, min(tri.a[axis], min(tri.b[axis], tri.c[axis])));
+            if(i < left) 
+            {
+                splitleft = max(splitleft, max(tri.a[axis], max(tri.b[axis], tri.c[axis])));
+                leftmin.min(tri.a).min(tri.b).min(tri.c);
+                leftmax.max(tri.a).max(tri.b).max(tri.c);
+            }
+            else 
+            {
+                splitright = min(splitright, min(tri.a[axis], min(tri.b[axis], tri.c[axis])));
+                rightmin.min(tri.a).min(tri.b).min(tri.c);
+                rightmax.max(tri.a).max(tri.b).max(tri.c);
+            }
         }
     }
 
@@ -209,33 +203,34 @@ void BIH::build(vector<BIHNode> &buildnodes, ushort *indices, int numindices, in
     else
     {
         buildnodes[node].child[0] = (axis<<14) | buildnodes.length();
-        build(buildnodes, indices, left, depth+1);
+        build(buildnodes, indices, left, leftmin, leftmax, depth+1);
     }
 
     if(numindices-right==1) buildnodes[node].child[1] = (1<<15) | (left==1 ? 1<<14 : 0) | indices[right];
     else 
     {
         buildnodes[node].child[1] = (left==1 ? 1<<14 : 0) | buildnodes.length();
-        build(buildnodes, &indices[right], numindices-right, depth+1);
+        build(buildnodes, &indices[right], numindices-right, rightmin, rightmax, depth+1);
     }
 }
- 
+
 BIH::BIH(vector<tri> *t)
+  : maxdepth(0), numnodes(0), nodes(NULL), numtris(0), tris(NULL), noclip(NULL), bbmin(1e16f, 1e16f, 1e16f), bbmax(-1e16f, -1e16f, -1e16f)
 {
     numtris = t[0].length() + t[1].length();
-    if(!numtris) 
-    {
-        tris = NULL;
-        numnodes = 0;
-        nodes = NULL;
-        maxdepth = 0;
-        return;
-    }
+    if(!numtris) return; 
 
     tris = new tri[numtris];
     noclip = &tris[t[0].length()];
     memcpy(tris, t[0].getbuf(), t[0].length()*sizeof(tri));
     memcpy(noclip, t[1].getbuf(), t[1].length()*sizeof(tri));
+
+    loopi(numtris)
+    {
+        tri &tri = tris[i];
+        bbmin.min(tri.a).min(tri.b).min(tri.c);
+        bbmax.max(tri.a).max(tri.b).max(tri.c);
+    }
     
     vector<BIHNode> buildnodes;
     ushort *indices = new ushort[numtris];
@@ -243,7 +238,7 @@ BIH::BIH(vector<tri> *t)
 
     maxdepth = 0;
 
-    build(buildnodes, indices, numtris);
+    build(buildnodes, indices, numtris, bbmin, bbmax);
 
     delete[] indices;
 
@@ -280,15 +275,15 @@ bool mmintersect(const extentity &e, const vec &o, const vec &ray, float maxdist
     if(!m) return false;
     if(mode&RAY_SHADOW)
     {
-        if(!m->shadow || checktriggertype(e.attr3, TRIG_COLLIDE|TRIG_DISAPPEAR)) return false;
+        if(!m->shadow || e.flags&extentity::F_NOSHADOW) return false;
     }
-    else if((mode&RAY_ENTS)!=RAY_ENTS && !m->collide) return false;
+    else if((mode&RAY_ENTS)!=RAY_ENTS && (!m->collide || e.flags&extentity::F_NOCOLLIDE)) return false;
 //    if((mode&RAY_ENTS)!=RAY_ENTS && m->collisionsonlyfortriggering) return false; // INTENSITY: Might need this
     if(!m->bih && !m->setBIH()) return false;
     if(!maxdist) maxdist = 1e16f;
     vec yo(o);
     yo.sub(e.o);
-    float yaw = -180.0f-(float)((e.attr1+7)-(e.attr1+7)%15);
+    float yaw = -(float)((e.attr1+7)-(e.attr1+7)%15);
     vec yray(ray);
     if(yaw != 0) yawray(yo, yray, yaw);
     return m->bih->traverse(yo, yray, maxdist, dist, mode);

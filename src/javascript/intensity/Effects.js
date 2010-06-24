@@ -8,7 +8,8 @@ DECAL = {
     SCORCH: 0,
     BLOOD: 1,
     BULLET: 2,
-    CIRCLE: 3,
+    DECAL: 3,
+    CIRCLE: 4
 };
 
 //== Particles - sync with iengine.h
@@ -17,24 +18,41 @@ PARTICLE = {
     BLOOD: 0,
     WATER: 1,
     SMOKE: 2,
-    STEAM: 3,
-    FLAME: 4,
-    FIREBALL1: 5,
-    FIREBALL2: 6,
-    FIREBALL3: 7,
-    STREAK: 8,
-    LIGHTNING: 9,
-    EXPLOSION: 10,
-    EXPLOSION_NO_GLARE: 11,
-    SPARK: 12,
-    EDIT: 13,
-    MUZZLE_FLASH1: 14,
-    MUZZLE_FLASH2: 15,
-    MUZZLE_FLASH3: 16,
-    TEXT: 17,
-    METER: 18,
-    METER_VS: 19,
-    LENS_FLARE: 20
+    SOFTSMOKE: 3,
+    STEAM: 4,
+    FLAME: 5,
+    FIREBALL1: 6,
+    FIREBALL2: 7,
+    FIREBALL3: 8,
+    STREAK: 9,
+    LIGHTNING: 10,
+    EXPLOSION: 11,
+    EXPLOSION_NO_GLARE: 12,
+    SPARK: 13,
+    EDIT: 14,
+    MUZZLE_FLASH1: 15,
+    MUZZLE_FLASH2: 16,
+    MUZZLE_FLASH3: 17,
+    MUZZLE_FLASH4A: 18,
+    MUZZLE_FLASH4B: 19,
+    MUZZLE_FLASH5: 20,
+    TEXT: 21,
+    METER: 22,
+    METER_VS: 23,
+    LENS_FLARE: 24,
+    FLAME1: 25,
+    FLAME2: 26,
+    FLAME3: 27,
+    FLAME4: 28,
+    SNOW: 29,
+    RAIN: 30,
+    BULLET: 31,
+    GLOW: 32,
+    GLOW_TRACK: 33,
+    LIGHTFLARE: 34,
+    BUBBLE: 35,
+    EXPLODE: 36,
+    SMOKETRAIL: 37
 };
 
 BOUNCER = {
@@ -95,19 +113,52 @@ Effect = {
     //! @param num The number of particles to show.
     //! @param fade (?) How fast to fade the effect into nothingness, in seconds.
     //! @param position Where to apply the effect.
-    splash: function (_type, num, fade, position, color, size, radius, gravity) {
+    splash: function (_type, num, fade, position, color, size, radius, gravity, regfade, flag, fastsplash, grow) {
         if (Global.CLIENT) {
             color = defaultValue(color, 0xFFFFFF);
             size = defaultValue(size, 1.0);
             radius = defaultValue(radius, 150);
             gravity = defaultValue(gravity, 2);
-            CAPI.particleSplash(_type, num, integer(fade*1000), position.x, position.y, position.z, color, size, radius, gravity);
+            regfade = defaultValue(regfade, false);
+            flag = defaultValue(flag, 0);
+            fastsplash = defaultValue(fastsplash, false);
+            grow = defaultValue(grow, 0);
+            CAPI.particleSplash(_type, num, integer(fade*1000), position.x, position.y, position.z, color, size, radius, gravity, regfade, flag, fastsplash, grow);
         } else {
             // On server, send message to clients
             MessageSystem.send(MessageSystem.ALL_CLIENTS, CAPI.ParticleSplashToClients, _type, num, integer(fade*1000), position.x, position.y, position.z); // TODO: last 4 parameters
         }
     },
 
+    splashRegular: function (_type, num, fade, position, color, size, radius, gravity, delay, hover, grow) {
+        if (Global.CLIENT) {
+            color = defaultValue(color, 0xFFFFFF);
+            size = defaultValue(size, 1.0);
+            radius = defaultValue(radius, 150);
+            gravity = defaultValue(gravity, 2);
+            delay = defaultValue(delay, 0);
+            hover = defaultValue(hover, false);
+            grow = defaultValue(grow, 0);
+            CAPI.particleSplashRegular(_type, num, integer(fade*1000), position.x, position.y, position.z, color, size, radius, gravity, delay);
+        } else {
+            // On server, send message to clients
+            MessageSystem.send(MessageSystem.ALL_CLIENTS, CAPI.ParticleSplashRegularToClients, _type, num, integer(fade*1000), position.x, position.y, position.z); // TODO: last 5 parameters
+        }
+    },
+
+    explodeSplash: function (_type, position, fade, color, size, gravity, _num) {
+        if (fade !== undefined) {
+            fade = integer(fade*1000);
+        } else {
+            fade = -1;
+        }
+        color = defaultValue(color, 0xFFFFFF);
+        size = defaultValue(size, 1);
+        gravity = defaultValue(gravity, -20);
+        _num = defaultValue(_num, 16);
+
+        CAPI.particleFireball(position.x, position.y, position.z, fade, _type, color, size, gravity, _num);
+    },
 
     //== Fireballs
 
@@ -135,7 +186,7 @@ Effect = {
     //! @param end Where to end the effect.
     //! @param _type The specific type of flare effect, PARTICLE_*_FLARE, or PARTICLE_*_LIGHTNING (others?).
     //! @param fade How fast to fade the effect into nothingness, in seconds
-    flare: function (_type, end, start, fade, color, size) {
+    flare: function (_type, end, start, fade, color, size, grow, owner) {
         if (fade === undefined) {
             fade = 0;
         } else {
@@ -143,14 +194,31 @@ Effect = {
         }
         color = defaultValue(color, 0xFFFFFF);
         size = defaultValue(size, 0.28);
-        CAPI.particleFlare(start.x, start.y, start.z, end.x, end.y, end.z, fade, _type, color, size);
+        grow = defaultValue(grow, 0);
+        if (owner === undefined) {
+            var ownerid = -1;
+        } else {
+            var ownerid = owner.uniqueId;
+        }
+        CAPI.particleFlare(start.x, start.y, start.z, end.x, end.y, end.z, fade, _type, color, size, grow, ownerid);
     },
 
-    trail: function (_type, fade, from, to, color, size, gravity) {
+    flyingFlare: function (_type, end, start, fade, color, size, gravity) {
+        if (fade === undefined) {
+            fade = 0;
+        } else {
+            fade = integer(fade*1000);
+        }
+        gravity = defaultValue(grow, 0);
+        CAPI.particleFlyingFlare(start.x, start.y, start.z, end.x, end.y, end.z, fade, _type, color, size, gravity);
+    },
+
+    trail: function (_type, fade, from, to, color, size, gravity, bubbles) {
         color = defaultValue(color, 0xFFFFFF);
         size = defaultValue(size, 1.0);
         gravity = defaultValue(gravity, 20);
-        CAPI.particleTrail(_type, integer(fade*1000), from.x, from.y, from.z, to.x, to.y, to.z, color, size, gravity);
+        bubbles = defaultValue(bubbles, false);
+        CAPI.particleTrail(_type, integer(fade*1000), from.x, from.y, from.z, to.x, to.y, to.z, color, size, gravity, bubbles);
     },
 
     flame: function(_type, position, radius, height, color, density, scale, speed, fade, gravity) {
@@ -172,7 +240,7 @@ Effect = {
     //! and will flicker otherwise.
     //! @param end Where the lightning ends. This can be a movable position, the animation will not flicker even if so.
     lightning: function (start, end, fade, color, size) {
-        Effect.flare(PARTICLE.LIGHTNING, end, start, fade, color, size);
+        Effect.flare(PARTICLE.LIGHTNING, start, end, fade, color, size);
     },
 
     //== Other effects

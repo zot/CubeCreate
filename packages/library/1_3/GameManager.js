@@ -495,15 +495,42 @@ GameManager = {
                 radius: 0.1,
                 image: 'packages/hud/radar/gk_level_2_rada_01_frame.png',
                 elements: [],
+                useMinimap: 1,
+          /*      minimapRadius: 0.28,
+                minimapPositionX: 0.038,
+                minimapPositionY: 0.01,
+                minimapRotation: 45.0,
+                minimapSidesNum: 4,
+                minimapAlignRight: 1,
+                minimapMinZoom: -1,
+                minimapMaxZoom: -1,*/
             },
+
+          /*  clientActivate: function() {
+                if (Global.gameHUD) {
+                    this.radar = merge(this.radar, Global.gameHUD.getRadarParams());
+                }
+                CAPI.useMinimap(this.radar.useMinimap);
+            },*/
 
             clientAct: function() {
                 // Radar
                 if (Global.gameHUD) {
                     this.radar = merge(this.radar, Global.gameHUD.getRadarParams());
                 } else {
-                    CAPI.showHUDRect(this.radar.centerX, this.radar.centerY, -0.98*this.radar.radius*2, -0.98*this.radar.radius*2, 0xF0F0F0);
+                   // CAPI.showHUDRect(this.radar.centerX, this.radar.centerY, -0.98*this.radar.radius*2, -0.98*this.radar.radius*2, 0xF0F0F0, this.radar.useMinimap ? 0.0 : 1.0);
+                   CAPI.showHUDRect(this.radar.centerX, this.radar.centerY, -0.98*this.radar.radius*2, -0.98*this.radar.radius*2, 0xF0F0F0);
                 }
+             /*   if (this.radar.useMinimap) {
+                    CAPI.minimapRadius(this.radar.minimapRadius);
+                    CAPI.minimapPositionX(this.radar.minimapPositionX);
+                    CAPI.minimapPositionY(this.radar.minimapPositionY);
+                    CAPI.minimapRotation(this.radar.minimapRotation);
+                    CAPI.minimapSidesNum(this.radar.minimapSidesNum);
+                    CAPI.minimapAlignRight(this.radar.minimapAlignRight);
+                    CAPI.minimapMinZoom(this.radar.minimapMinZoom);
+                    CAPI.minimapMaxZoom(this.radar.minimapMaxZoom);
+                }*/
                 CAPI.showHUDImage(this.radar.image, this.radar.centerX, this.radar.centerY, this.radar.radius*2, this.radar.radius*2);
 
                 // Elements

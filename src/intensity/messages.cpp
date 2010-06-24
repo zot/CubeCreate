@@ -1,4 +1,5 @@
 
+
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
@@ -1340,7 +1341,7 @@ namespace MessageSystem
 
         if (!is_npc)
         {
-            Logging::log(Logging::DEBUG, "client.h: SV_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
+            Logging::log(Logging::DEBUG, "client.h: N_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
             if(protocolVersion != PROTOCOL_VERSION)
             {
                 conoutf(CON_ERROR, "You are using a different network protocol (you: %d, server: %d)", PROTOCOL_VERSION, protocolVersion);
@@ -1355,7 +1356,7 @@ namespace MessageSystem
             #endif
         } else {
             // NPC
-            Logging::log(Logging::INFO, "client.h (npc): SV_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
+            Logging::log(Logging::INFO, "client.h (npc): N_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
             assert(0); //does this ever occur?
         }
     }
@@ -1553,13 +1554,87 @@ namespace MessageSystem
 #endif
 
 
+// MapSoundToClients
+
+    void send_MapSoundToClients(int clientNumber, std::string soundName, int entityUniqueId)
+    {
+        int exclude = -1; // Set this to clientNumber to not send to
+
+        Logging::log(Logging::DEBUG, "Sending a message of type MapSoundToClients (1027)\r\n");
+        INDENT_LOG(Logging::DEBUG);
+
+         
+
+        int start, finish;
+        if (clientNumber == -1)
+        {
+            // Send to all clients
+            start  = 0;
+            finish = getnumclients() - 1;
+        } else {
+            start  = clientNumber;
+            finish = clientNumber;
+        }
+
+#ifdef SERVER
+        int testUniqueId;
+#endif
+        for (clientNumber = start; clientNumber <= finish; clientNumber++)
+        {
+            if (clientNumber == exclude) continue;
+#ifdef SERVER
+            fpsent* fpsEntity = dynamic_cast<fpsent*>( FPSClientInterface::getPlayerByNumber(clientNumber) );
+            bool serverControlled = fpsEntity ? fpsEntity->serverControlled : false;
+
+            testUniqueId = FPSServerInterface::getUniqueId(clientNumber);
+            if ( (!serverControlled && testUniqueId != DUMMY_SINGLETON_CLIENT_UNIQUE_ID) || // If a remote client, send even if negative (during login process)
+                 (false && testUniqueId == DUMMY_SINGLETON_CLIENT_UNIQUE_ID) || // If need to send to dummy server, send there
+                 (false && testUniqueId != DUMMY_SINGLETON_CLIENT_UNIQUE_ID && serverControlled) )  // If need to send to npcs, send there
+#endif
+            {
+                #ifdef SERVER
+                    Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
+                #endif
+                sendf(clientNumber, MAIN_CHANNEL, "isi", 1027, soundName.c_str(), entityUniqueId);
+
+            }
+        }
+    }
+
+#ifdef CLIENT
+    void MapSoundToClients::receive(int receiver, int sender, ucharbuf &p)
+    {
+        bool is_npc;
+        is_npc = false;
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type MapSoundToClients (1027)\r\n");
+
+        char tmp_soundName[MAXTRANS];
+        getstring(tmp_soundName, p);
+        std::string soundName = tmp_soundName;
+        int entityUniqueId = getint(p);
+
+        LogicEntityPtr entity = LogicSystem::getLogicEntity(entityUniqueId);
+        if (entity.get() != NULL)
+        {
+            extentity *e = entity.get()->staticEntity;
+            stopmapsound(e);
+            if(camera1->o.dist(e->o) < e->attr2)
+            {
+                if(!e->visible) playmapsound(soundName.c_str(), e, e->attr4, -1);
+                else if(e->visible) stopmapsound(e);
+            }
+        }
+    }
+#endif
+
+
 // SoundToClientsByName
 
     void send_SoundToClientsByName(int clientNumber, float x, float y, float z, std::string soundName, int originalClientNumber)
     {
         int exclude = -1; // Set this to clientNumber to not send to
 
-        Logging::log(Logging::DEBUG, "Sending a message of type SoundToClientsByName (1027)\r\n");
+        Logging::log(Logging::DEBUG, "Sending a message of type SoundToClientsByName (1028)\r\n");
         INDENT_LOG(Logging::DEBUG);
 
                  exclude = originalClientNumber; // This is how to ensure we do not send back to the client who originally sent it
@@ -1595,7 +1670,7 @@ namespace MessageSystem
                 #ifdef SERVER
                     Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
                 #endif
-                sendf(clientNumber, MAIN_CHANNEL, "iiiisi", 1027, int(x*DMF), int(y*DMF), int(z*DMF), soundName.c_str(), originalClientNumber);
+                sendf(clientNumber, MAIN_CHANNEL, "iiiisi", 1028, int(x*DMF), int(y*DMF), int(z*DMF), soundName.c_str(), originalClientNumber);
 
             }
         }
@@ -1606,7 +1681,7 @@ namespace MessageSystem
     {
         bool is_npc;
         is_npc = false;
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type SoundToClientsByName (1027)\r\n");
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type SoundToClientsByName (1028)\r\n");
 
         float x = float(getint(p))/DMF;
         float y = float(getint(p))/DMF;
@@ -1626,26 +1701,93 @@ namespace MessageSystem
 #endif
 
 
+// SoundStopToClientsByName
+
+    void send_SoundStopToClientsByName(int clientNumber, int volume, std::string soundName, int originalClientNumber)
+    {
+        int exclude = -1; // Set this to clientNumber to not send to
+
+        Logging::log(Logging::DEBUG, "Sending a message of type SoundStopToClientsByName (1029)\r\n");
+        INDENT_LOG(Logging::DEBUG);
+
+                 exclude = originalClientNumber; // This is how to ensure we do not send back to the client who originally sent it
+
+
+        int start, finish;
+        if (clientNumber == -1)
+        {
+            // Send to all clients
+            start  = 0;
+            finish = getnumclients() - 1;
+        } else {
+            start  = clientNumber;
+            finish = clientNumber;
+        }
+
+#ifdef SERVER
+        int testUniqueId;
+#endif
+        for (clientNumber = start; clientNumber <= finish; clientNumber++)
+        {
+            if (clientNumber == exclude) continue;
+#ifdef SERVER
+            fpsent* fpsEntity = dynamic_cast<fpsent*>( FPSClientInterface::getPlayerByNumber(clientNumber) );
+            bool serverControlled = fpsEntity ? fpsEntity->serverControlled : false;
+
+            testUniqueId = FPSServerInterface::getUniqueId(clientNumber);
+            if ( (!serverControlled && testUniqueId != DUMMY_SINGLETON_CLIENT_UNIQUE_ID) || // If a remote client, send even if negative (during login process)
+                 (false && testUniqueId == DUMMY_SINGLETON_CLIENT_UNIQUE_ID) || // If need to send to dummy server, send there
+                 (false && testUniqueId != DUMMY_SINGLETON_CLIENT_UNIQUE_ID && serverControlled) )  // If need to send to npcs, send there
+#endif
+            {
+                #ifdef SERVER
+                    Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
+                #endif
+                sendf(clientNumber, MAIN_CHANNEL, "iisi", 1029, volume, soundName.c_str(), originalClientNumber);
+
+            }
+        }
+    }
+
+#ifdef CLIENT
+    void SoundStopToClientsByName::receive(int receiver, int sender, ucharbuf &p)
+    {
+        bool is_npc;
+        is_npc = false;
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type SoundStopToClientsByName (1029)\r\n");
+
+        int volume = getint(p);
+        char tmp_soundName[MAXTRANS];
+        getstring(tmp_soundName, p);
+        std::string soundName = tmp_soundName;
+        int originalClientNumber = getint(p);
+
+        assert(ClientSystem::playerNumber != originalClientNumber);
+        stopsoundbyid(getsoundid(soundName.c_str(), volume));
+    }
+#endif
+
+
 // EditModeC2S
 
     void send_EditModeC2S(int mode)
     {
-        Logging::log(Logging::DEBUG, "Sending a message of type EditModeC2S (1028)\r\n");
+        Logging::log(Logging::DEBUG, "Sending a message of type EditModeC2S (1030)\r\n");
         INDENT_LOG(Logging::DEBUG);
 
-        game::addmsg(1028, "ri", mode);
+        game::addmsg(1030, "ri", mode);
     }
 
 #ifdef SERVER
     void EditModeC2S::receive(int receiver, int sender, ucharbuf &p)
     {
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type EditModeC2S (1028)\r\n");
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type EditModeC2S (1030)\r\n");
 
         int mode = getint(p);
 
         if (!ServerSystem::isRunningMap()) return;
         #if 0 // The old sauer code from fpsserver.h
-            case SV_EDITMODE:
+            case N_EDITMODE:
             {
                 int val = getint(p);
                 if(!ci->local && gamemode!=1) break;
@@ -1682,7 +1824,7 @@ namespace MessageSystem
     {
         int exclude = -1; // Set this to clientNumber to not send to
 
-        Logging::log(Logging::DEBUG, "Sending a message of type EditModeS2C (1029)\r\n");
+        Logging::log(Logging::DEBUG, "Sending a message of type EditModeS2C (1031)\r\n");
         INDENT_LOG(Logging::DEBUG);
 
                  exclude = otherClientNumber;
@@ -1718,7 +1860,7 @@ namespace MessageSystem
                 #ifdef SERVER
                     Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
                 #endif
-                sendf(clientNumber, MAIN_CHANNEL, "riii", 1029, otherClientNumber, mode);
+                sendf(clientNumber, MAIN_CHANNEL, "riii", 1031, otherClientNumber, mode);
 
             }
         }
@@ -1732,7 +1874,7 @@ namespace MessageSystem
 #else // SERVER
         is_npc = true;
 #endif
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type EditModeS2C (1029)\r\n");
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type EditModeS2C (1031)\r\n");
 
         int otherClientNumber = getint(p);
         int mode = getint(p);
@@ -1758,16 +1900,16 @@ namespace MessageSystem
 
     void send_RequestMap()
     {
-        Logging::log(Logging::DEBUG, "Sending a message of type RequestMap (1030)\r\n");
+        Logging::log(Logging::DEBUG, "Sending a message of type RequestMap (1032)\r\n");
         INDENT_LOG(Logging::DEBUG);
 
-        game::addmsg(1030, "r");
+        game::addmsg(1032, "r");
     }
 
 #ifdef SERVER
     void RequestMap::receive(int receiver, int sender, ucharbuf &p)
     {
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type RequestMap (1030)\r\n");
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type RequestMap (1032)\r\n");
 
 
         if (!ServerSystem::isRunningMap()) return;
@@ -1780,16 +1922,16 @@ namespace MessageSystem
 
     void send_DoClick(int button, int down, float x, float y, float z, int uniqueId)
     {
-        Logging::log(Logging::DEBUG, "Sending a message of type DoClick (1031)\r\n");
+        Logging::log(Logging::DEBUG, "Sending a message of type DoClick (1033)\r\n");
         INDENT_LOG(Logging::DEBUG);
 
-        game::addmsg(1031, "riiiiii", button, down, int(x*DMF), int(y*DMF), int(z*DMF), uniqueId);
+        game::addmsg(1033, "riiiiii", button, down, int(x*DMF), int(y*DMF), int(z*DMF), uniqueId);
     }
 
 #ifdef SERVER
     void DoClick::receive(int receiver, int sender, ucharbuf &p)
     {
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type DoClick (1031)\r\n");
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type DoClick (1033)\r\n");
 
         int button = getint(p);
         int down = getint(p);
@@ -1827,7 +1969,7 @@ namespace MessageSystem
     {
         int exclude = -1; // Set this to clientNumber to not send to
 
-        Logging::log(Logging::DEBUG, "Sending a message of type MapUpdated (1032)\r\n");
+        Logging::log(Logging::DEBUG, "Sending a message of type MapUpdated (1034)\r\n");
         INDENT_LOG(Logging::DEBUG);
 
          
@@ -1862,7 +2004,7 @@ namespace MessageSystem
                 #ifdef SERVER
                     Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
                 #endif
-                sendf(clientNumber, MAIN_CHANNEL, "rii", 1032, updatingClientNumber);
+                sendf(clientNumber, MAIN_CHANNEL, "rii", 1034, updatingClientNumber);
 
             }
         }
@@ -1873,7 +2015,7 @@ namespace MessageSystem
     {
         bool is_npc;
         is_npc = false;
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type MapUpdated (1032)\r\n");
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type MapUpdated (1034)\r\n");
 
         int updatingClientNumber = getint(p);
 
@@ -1895,7 +2037,7 @@ namespace MessageSystem
     {
         int exclude = -1; // Set this to clientNumber to not send to
 
-        Logging::log(Logging::DEBUG, "Sending a message of type ParticleSplashToClients (1033)\r\n");
+        Logging::log(Logging::DEBUG, "Sending a message of type ParticleSplashToClients (1035)\r\n");
         INDENT_LOG(Logging::DEBUG);
 
          
@@ -1930,7 +2072,7 @@ namespace MessageSystem
                 #ifdef SERVER
                     Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
                 #endif
-                sendf(clientNumber, MAIN_CHANNEL, "iiiiiii", 1033, _type, num, fade, int(x*DMF), int(y*DMF), int(z*DMF));
+                sendf(clientNumber, MAIN_CHANNEL, "iiiiiii", 1035, _type, num, fade, int(x*DMF), int(y*DMF), int(z*DMF));
 
             }
         }
@@ -1941,7 +2083,7 @@ namespace MessageSystem
     {
         bool is_npc;
         is_npc = false;
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type ParticleSplashToClients (1033)\r\n");
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type ParticleSplashToClients (1035)\r\n");
 
         int _type = getint(p);
         int num = getint(p);
@@ -1956,35 +2098,13 @@ namespace MessageSystem
 #endif
 
 
-// RequestPrivateEditMode
+// ParticleSplashRegularToClients
 
-    void send_RequestPrivateEditMode()
-    {
-        Logging::log(Logging::DEBUG, "Sending a message of type RequestPrivateEditMode (1034)\r\n");
-        INDENT_LOG(Logging::DEBUG);
-
-        game::addmsg(1034, "r");
-    }
-
-#ifdef SERVER
-    void RequestPrivateEditMode::receive(int receiver, int sender, ucharbuf &p)
-    {
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type RequestPrivateEditMode (1034)\r\n");
-
-
-        if (!ServerSystem::isRunningMap()) return;
-        REFLECT_PYTHON( request_private_edit );
-        request_private_edit(sender);
-    }
-#endif
-
-// NotifyPrivateEditMode
-
-    void send_NotifyPrivateEditMode(int clientNumber)
+    void send_ParticleSplashRegularToClients(int clientNumber, int _type, int num, int fade, float x, float y, float z)
     {
         int exclude = -1; // Set this to clientNumber to not send to
 
-        Logging::log(Logging::DEBUG, "Sending a message of type NotifyPrivateEditMode (1035)\r\n");
+        Logging::log(Logging::DEBUG, "Sending a message of type ParticleSplashRegularToClients (1036)\r\n");
         INDENT_LOG(Logging::DEBUG);
 
          
@@ -2019,7 +2139,96 @@ namespace MessageSystem
                 #ifdef SERVER
                     Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
                 #endif
-                sendf(clientNumber, MAIN_CHANNEL, "ri", 1035);
+                sendf(clientNumber, MAIN_CHANNEL, "iiiiiii", 1036, _type, num, fade, int(x*DMF), int(y*DMF), int(z*DMF));
+
+            }
+        }
+    }
+
+#ifdef CLIENT
+    void ParticleSplashRegularToClients::receive(int receiver, int sender, ucharbuf &p)
+    {
+        bool is_npc;
+        is_npc = false;
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type ParticleSplashRegularToClients (1036)\r\n");
+
+        int _type = getint(p);
+        int num = getint(p);
+        int fade = getint(p);
+        float x = float(getint(p))/DMF;
+        float y = float(getint(p))/DMF;
+        float z = float(getint(p))/DMF;
+
+        vec pos(x,y,z);
+        regular_particle_splash(_type, num, fade, pos);
+    }
+#endif
+
+
+// RequestPrivateEditMode
+
+    void send_RequestPrivateEditMode()
+    {
+        Logging::log(Logging::DEBUG, "Sending a message of type RequestPrivateEditMode (1037)\r\n");
+        INDENT_LOG(Logging::DEBUG);
+
+        game::addmsg(1037, "r");
+    }
+
+#ifdef SERVER
+    void RequestPrivateEditMode::receive(int receiver, int sender, ucharbuf &p)
+    {
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type RequestPrivateEditMode (1037)\r\n");
+
+
+        if (!ServerSystem::isRunningMap()) return;
+        REFLECT_PYTHON( request_private_edit );
+        request_private_edit(sender);
+    }
+#endif
+
+// NotifyPrivateEditMode
+
+    void send_NotifyPrivateEditMode(int clientNumber)
+    {
+        int exclude = -1; // Set this to clientNumber to not send to
+
+        Logging::log(Logging::DEBUG, "Sending a message of type NotifyPrivateEditMode (1038)\r\n");
+        INDENT_LOG(Logging::DEBUG);
+
+         
+
+        int start, finish;
+        if (clientNumber == -1)
+        {
+            // Send to all clients
+            start  = 0;
+            finish = getnumclients() - 1;
+        } else {
+            start  = clientNumber;
+            finish = clientNumber;
+        }
+
+#ifdef SERVER
+        int testUniqueId;
+#endif
+        for (clientNumber = start; clientNumber <= finish; clientNumber++)
+        {
+            if (clientNumber == exclude) continue;
+#ifdef SERVER
+            fpsent* fpsEntity = dynamic_cast<fpsent*>( FPSClientInterface::getPlayerByNumber(clientNumber) );
+            bool serverControlled = fpsEntity ? fpsEntity->serverControlled : false;
+
+            testUniqueId = FPSServerInterface::getUniqueId(clientNumber);
+            if ( (!serverControlled && testUniqueId != DUMMY_SINGLETON_CLIENT_UNIQUE_ID) || // If a remote client, send even if negative (during login process)
+                 (false && testUniqueId == DUMMY_SINGLETON_CLIENT_UNIQUE_ID) || // If need to send to dummy server, send there
+                 (false && testUniqueId != DUMMY_SINGLETON_CLIENT_UNIQUE_ID && serverControlled) )  // If need to send to npcs, send there
+#endif
+            {
+                #ifdef SERVER
+                    Logging::log(Logging::DEBUG, "Sending to %d (%d) ((%d))\r\n", clientNumber, testUniqueId, serverControlled);
+                #endif
+                sendf(clientNumber, MAIN_CHANNEL, "ri", 1038);
 
             }
         }
@@ -2030,7 +2239,7 @@ namespace MessageSystem
     {
         bool is_npc;
         is_npc = false;
-        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type NotifyPrivateEditMode (1035)\r\n");
+        Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type NotifyPrivateEditMode (1038)\r\n");
 
 
         IntensityGUI::showMessage("", "Server: You are now in private edit mode");
@@ -2069,13 +2278,16 @@ void MessageManager::registerAll()
     registerMessageType( new MapChange() );
     registerMessageType( new SoundToServer() );
     registerMessageType( new SoundToClients() );
+    registerMessageType( new MapSoundToClients() );
     registerMessageType( new SoundToClientsByName() );
+    registerMessageType( new SoundStopToClientsByName() );
     registerMessageType( new EditModeC2S() );
     registerMessageType( new EditModeS2C() );
     registerMessageType( new RequestMap() );
     registerMessageType( new DoClick() );
     registerMessageType( new MapUpdated() );
     registerMessageType( new ParticleSplashToClients() );
+    registerMessageType( new ParticleSplashRegularToClients() );
     registerMessageType( new RequestPrivateEditMode() );
     registerMessageType( new NotifyPrivateEditMode() );
 }

@@ -161,3 +161,5 @@ UserInterface.forceCamera = function(position, yaw, pitch, roll, fov) {
     CAPI.forceCamera(position.x, position.y, position.z, yaw, pitch, roll, defaultValue(fov, -1));
 };
 
+// enable underwater ambience, because 1_3 supports that
+if (Global.CLIENT) CAPI.underwaterAmbient(1);

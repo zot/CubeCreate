@@ -42,6 +42,9 @@ GamePlayer = registerEntityClass(
         [
             Vehicles.plugin,
             Health.plugin,
+            {
+                visualPainEffect: function() { },
+            },
             GameManager.playerPlugin,
             Chat.playerPlugin,
 //            Chat.extraPlugins.skype,

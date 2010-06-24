@@ -301,6 +301,39 @@ void CLogicEntity::setAnimation(int _animation)
                             // leading to a negative number and segfaults in finding frame data
 }
 
+void CLogicEntity::setSound(std::string _sound)
+{
+    Logging::log(Logging::DEBUG, "setSound: %s\r\n", _sound.c_str());
+
+    // This is important as this is called before setupExtent.
+    if ((!this) || (!staticEntity && !dynamicEntity))
+        return;
+
+    Logging::log(Logging::DEBUG, "(2) setSound: %s\r\n", _sound.c_str());
+
+    soundName = _sound;
+
+#ifdef CLIENT
+    stopmapsound(staticEntity);
+    if(camera1->o.dist(staticEntity->o) < staticEntity->attr2)
+      {
+        if(!staticEntity->visible) playmapsound(soundName.c_str(), staticEntity, staticEntity->attr4, -1);
+        else if(staticEntity->visible) stopmapsound(staticEntity);
+      }
+#else
+    MessageSystem::send_MapSoundToClients(-1, soundName, LogicSystem::getUniqueId(staticEntity));
+#endif
+}
+
+const char *CLogicEntity::getSound()
+{
+    // This is important as this is called before setupExtent.
+    if ((!this) || (!staticEntity && !dynamicEntity))
+        return NULL;
+
+    return soundName.c_str();
+}
+
 vec& CLogicEntity::getAttachmentPosition(std::string tag)
 {
     // If last actual render - which actually calculated the attachment positions - was recent
@@ -556,6 +589,7 @@ void LogicSystem::setupExtent(ScriptValuePtr scriptEntity, int type, float x, fl
     {
         extern void addentity(extentity* entity);
         addentity(&e);
+        attachentity(e);
     }
 
     LogicSystem::setUniqueId(&e, uniqueId);
@@ -637,7 +671,9 @@ void LogicSystem::dismantleExtent(ScriptValuePtr scriptEntity)
     Logging::log(Logging::DEBUG, "Dismantle extent: %d\r\n", uniqueId);
 
     extentity* extent = getLogicEntity(uniqueId)->staticEntity;
-
+#ifdef CLIENT
+    if (extent->type == ET_SOUND) stopmapsound(extent);
+#endif
     removeentity(extent);
     extent->type = ET_EMPTY;
 

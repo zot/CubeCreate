@@ -8,17 +8,17 @@ old_dir = os.getcwd()
 os.chdir(os.path.dirname(__file__))
 
 strings = [
-    'i', 's', 'd', 'o',
+    'i', 's', 'd', 'o', 'b',
     'ii', 'is', 'ss', 'sd', 'si', 'oi', 'ob', 'os', 'od', 'dd', 'ds', 'do',
-    'iis', 'iii', 'iid', 'ddd', 'sss',
-    'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdd', 'iiii',
-    'sdddi', 'sssdd', 'ddddi', 'sdddd', 'iiiss', 'iiisi', 'iiiii', 'idddd',
-    'dddddd', 'iidddi', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddddd', 'iiiiddd', 'iiddddd', 'iiiiii',
-    'ddddddii', 'ddddiiid', 'ssiiidi', 'iidddddd', 'iiiiiii',
-    'ddddddiii', 'oidddiiii', 'idddidddi', 'dddsiiidi',
-    'iiidddidii', 'ddddddiiid', 'osiddddddii',
-    'iissdddiiii', 'iiddddddidi',
-    'idddddddiiii', 'idddddiidddi',
+    'iis', 'iii', 'iid', 'ddd', 'sdd', 'sss',
+    'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdi', 'ssdd', 'iiii',
+    'sdddi', 'sssdd', 'ddddi', 'sdddd', 'siidi', 'iiiss', 'iiisi', 'iiiii', 'idddd',
+    'sdddii', 'dddddd', 'iidddi', 'iisddd', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddid', 'iiiiii',
+    'sdddddd', 'ddddddd', 'iiiiddd', 'iiddddd', 'ssiiidi', 'iiiiiii', 'sddddid',
+    'ddddddii', 'ddddiiid', 'iidddddd',
+    'ddddddiii', 'oidddiiii', 'idddidddi', 'dddsiiidi', 'iiidddidii', 'ddddddiiid', 'dddiiiiii',
+    'ddddddiiidi', 'osiddddddii', 'iiidddidiii', 'iissdddiiii', 'iiddddddidi', 'ddddddiiidii',
+    'iiidddidiiibi', 'iiidddidiibibi', 'iiddddddidib', 'idddddddiiii', 'idddddiidddi',
     'dddddddiiidddd',
     'osiddddddiidddd'
 ]

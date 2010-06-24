@@ -37,7 +37,6 @@
 
 #include "runtime.h"
 #include "top.h"
-#include "zone-inl.h"
 #include "token.h"
 
 namespace v8 {
@@ -119,6 +118,7 @@ class RelocInfo BASE_EMBEDDED {
     // Please note the order is important (see IsCodeTarget, IsGCRelocMode).
     CONSTRUCT_CALL,  // code target that is a call to a JavaScript constructor.
     CODE_TARGET_CONTEXT,  // code target used for contextual loads.
+    DEBUG_BREAK,
     CODE_TARGET,         // code target which is not any of the above.
     EMBEDDED_OBJECT,
     EMBEDDED_STRING,
@@ -398,8 +398,9 @@ class ExternalReference BASE_EMBEDDED {
   // ExternalReferenceTable in serialize.cc manually.
 
   static ExternalReference perform_gc_function();
-  static ExternalReference builtin_passed_function();
-  static ExternalReference random_positive_smi_function();
+  static ExternalReference fill_heap_number_with_random_function();
+  static ExternalReference random_uint32_function();
+  static ExternalReference transcendental_cache_array_address();
 
   // Static data in the keyed lookup cache.
   static ExternalReference keyed_lookup_cache_keys();
@@ -427,6 +428,7 @@ class ExternalReference BASE_EMBEDDED {
 
   // Static variable Heap::NewSpaceStart()
   static ExternalReference new_space_start();
+  static ExternalReference new_space_mask();
   static ExternalReference heap_always_allocate_scope_depth();
 
   // Used for fast allocation in generated code.
@@ -452,7 +454,7 @@ class ExternalReference BASE_EMBEDDED {
   static ExternalReference debug_step_in_fp_address();
 #endif
 
-#ifdef V8_NATIVE_REGEXP
+#ifndef V8_INTERPRETED_REGEXP
   // C functions called from RegExp generated code.
 
   // Function NativeRegExpMacroAssembler::CaseInsensitiveCompareUC16()
@@ -463,6 +465,10 @@ class ExternalReference BASE_EMBEDDED {
 
   // Function NativeRegExpMacroAssembler::GrowStack()
   static ExternalReference re_grow_stack();
+
+  // byte NativeRegExpMacroAssembler::word_character_bitmap
+  static ExternalReference re_word_character_map();
+
 #endif
 
   // This lets you register a function that rewrites all external references.
@@ -503,8 +509,10 @@ static inline bool is_intn(int x, int n)  {
   return -(1 << (n-1)) <= x && x < (1 << (n-1));
 }
 
-static inline bool is_int24(int x)  { return is_intn(x, 24); }
 static inline bool is_int8(int x)  { return is_intn(x, 8); }
+static inline bool is_int16(int x)  { return is_intn(x, 16); }
+static inline bool is_int18(int x)  { return is_intn(x, 18); }
+static inline bool is_int24(int x)  { return is_intn(x, 24); }
 
 static inline bool is_uintn(int x, int n) {
   return (x & -(1 << n)) == 0;
@@ -516,9 +524,20 @@ static inline bool is_uint4(int x)  { return is_uintn(x, 4); }
 static inline bool is_uint5(int x)  { return is_uintn(x, 5); }
 static inline bool is_uint6(int x)  { return is_uintn(x, 6); }
 static inline bool is_uint8(int x)  { return is_uintn(x, 8); }
+static inline bool is_uint10(int x)  { return is_uintn(x, 10); }
 static inline bool is_uint12(int x)  { return is_uintn(x, 12); }
 static inline bool is_uint16(int x)  { return is_uintn(x, 16); }
 static inline bool is_uint24(int x)  { return is_uintn(x, 24); }
+static inline bool is_uint26(int x)  { return is_uintn(x, 26); }
+static inline bool is_uint28(int x)  { return is_uintn(x, 28); }
+
+static inline int NumberOfBitsSet(uint32_t x) {
+  unsigned int num_bits_set;
+  for (num_bits_set = 0; x; x >>= 1) {
+    num_bits_set += x & 1;
+  }
+  return num_bits_set;
+}
 
 } }  // namespace v8::internal
 

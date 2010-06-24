@@ -72,6 +72,7 @@ static inline bool clipgrassquad(const grasstri &g, vec &p1, vec &p2)
 }
 
 VARR(grassscale, 1, 2, 64);
+FVARR(grassalpha, 0, 1, 1);
  
 static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstri &g, Texture *tex)
 {
@@ -136,7 +137,7 @@ static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstr
               lm2u = g.tcu.dot(p2), lm2v = g.tcv.dot(p2),
               fade = dist > taperdist ? (grassdist - dist)*taperscale : 1,
               height = grassheight * fade;
-        uchar color[4] = { 255, 255, 255, uchar(fade*255) };
+        uchar color[4] = { 255, 255, 255, uchar(fade*grassalpha*255) };
 
         #define GRASSVERT(n, tcv, modify) { \
             grassvert &gv = grassverts.add(); \
@@ -156,14 +157,14 @@ static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstr
 
 static void gengrassquads(vtxarray *va)
 {
-    loopv(*va->grasstris)
+    loopv(va->grasstris)
     {
-        grasstri &g = (*va->grasstris)[i];
-        if(isvisiblesphere(g.radius, g.center) >= VFC_FOGGED) continue;
+        grasstri &g = va->grasstris[i];
+        if(isfoggedsphere(g.radius, g.center)) continue;
         float dist = g.center.dist(camera1->o);
         if(dist - g.radius > grassdist) continue;
             
-        Slot &s = lookuptexture(g.texture, false);
+        Slot &s = *lookupvslot(g.texture, false).slot;
         if(!s.grasstex) 
         {
             if(!s.autograss) continue;
@@ -192,8 +193,8 @@ void generategrass()
 {
     if(!grass || !grassdist) return;
 
-    grassgroups.setsizenodelete(0);
-    grassverts.setsizenodelete(0);
+    grassgroups.setsize(0);
+    grassverts.setsize(0);
 
     if(grassoffsets[0] < 0) loopi(NUMGRASSOFFSETS) grassoffsets[i] = rnd(0x1000000)/float(0x1000000);
 
@@ -207,7 +208,7 @@ void generategrass()
     extern vtxarray *visibleva;
     for(vtxarray *va = visibleva; va; va = va->next)
     {
-        if(!va->grasstris || va->occluded >= OCCLUDE_GEOM) continue;
+        if(va->grasstris.empty() || va->occluded >= OCCLUDE_GEOM) continue;
         if(va->distance > grassdist) continue;
         if(reflecting || refracting>0 ? va->o.z+va->size<reflectz : va->o.z>=reflectz) continue;
         gengrassquads(va);
@@ -259,7 +260,7 @@ void rendergrass()
                 min(g.tri->numv>3 ? min(g.tri->v[0].z, g.tri->v[3].z) : g.tri->v[0].z, min(g.tri->v[1].z, g.tri->v[2].z)) > reflectz :
                 max(g.tri->numv>3 ? max(g.tri->v[0].z, g.tri->v[3].z) : g.tri->v[0].z, max(g.tri->v[1].z, g.tri->v[2].z)) + grassheight < reflectz) 
                 continue;
-            if(isvisiblesphere(g.tri->radius, g.tri->center) >= VFC_FOGGED) continue;
+            if(isfoggedsphere(g.tri->radius, g.tri->center)) continue;
         }
 
         if(texid != g.tex)

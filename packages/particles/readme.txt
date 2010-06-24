@@ -1,10 +1,87 @@
-(C) Alon Zakai ('Kripken')
+Authors:
 
-Licensed under CC-BY-SA 3.0  -  http://creativecommons.org/licenses/by-sa/3.0/
+**********************
+* Creative Commons 0 *
+**********************
 
-These are a file-for-file replacement of the original files in Sauerbraten, created
-from scratch.
+Kubuntiac:
+----------
 
+ball1.png
 
-bullet.png, scorch.png: Gregor Koch
+T7g:
+----
 
+base.png
+
+quaker66:
+---------
+
+scorch.png
+
+***********************************
+* Creative Commons BY Share-Alike *
+***********************************
+
+kripken - Syntensity:
+---------------------
+
+blob.png
+circle.png
+
+q009 - Sauerbraten Enhanced:
+----------------------------
+
+beam.png
+blood.png
+bubble.jpg
+decal.png
+explode.png
+flame1.png
+flame2.png
+flame3.png
+flame4.png
+flare.png
+glow.png
+lightflare.png
+muzzleflash1.jpg
+muzzleflash2.jpg
+muzzleflash3.jpg
+muzzleflash4a.jpg
+muzzleflash4b.jpg
+muzzleflash4.jpg
+rain.png
+smoke.png
+snow.png
+spark.png
+steam.png
+smoketrail.png
+
+******************************
+* GNU General Public License *
+******************************
+
+OpenArena:
+----------
+
+bullet.png
+
+*****************
+* Public domain *
+*****************
+
+baby-rabbit:
+------------
+
+lensflares.png
+flames.png
+
+RaZgRiZ - Sauerbraten:
+----------------------
+
+explosion.png
+
+quin - Sauerbraten:
+-------------------
+
+lightning.jpg

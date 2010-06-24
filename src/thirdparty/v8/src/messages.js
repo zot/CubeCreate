@@ -27,10 +27,23 @@
 
 
 // -------------------------------------------------------------------
+//
+// Matches Script::Type from objects.h
+var TYPE_NATIVE = 0;
+var TYPE_EXTENSION = 1;
+var TYPE_NORMAL = 2;
+
+// Matches Script::CompilationType from objects.h
+var COMPILATION_TYPE_HOST = 0;
+var COMPILATION_TYPE_EVAL = 1;
+var COMPILATION_TYPE_JSON = 2;
 
 // Lazily initialized.
 var kVowelSounds = 0;
 var kCapitalVowelSounds = 0;
+
+// Matches Messages::kNoLineNumberInfo from v8.h
+var kNoLineNumberInfo = 0;
 
 // If this object gets passed to an error constructor the error will
 // get an accessor for .message that constructs a descriptive error
@@ -127,6 +140,7 @@ function FormatMessage(message) {
       malformed_regexp:             "Invalid regular expression: /%0/: %1",
       unterminated_regexp:          "Invalid regular expression: missing /",
       regexp_flags:                 "Cannot supply flags when constructing one RegExp from another",
+      incompatible_method_receiver: "Method %0 called on incompatible receiver %1",
       invalid_lhs_in_assignment:    "Invalid left-hand side in assignment",
       invalid_lhs_in_for_in:        "Invalid left-hand side in for-in",
       invalid_lhs_in_postfix_op:    "Invalid left-hand side expression in postfix operation",
@@ -162,6 +176,8 @@ function FormatMessage(message) {
       value_and_accessor:           "Invalid property.  A property cannot both have accessors and be writable or have a value: %0",
       proto_object_or_null:         "Object prototype may only be an Object or null",
       property_desc_object:         "Property description must be an object: %0",
+      redefine_disallowed:          "Cannot redefine property: %0",
+      define_disallowed:            "Cannot define property, object is not extensible: %0",
       // RangeError
       invalid_array_length:         "Invalid array length",
       stack_overflow:               "Maximum call stack size exceeded",
@@ -178,9 +194,9 @@ function FormatMessage(message) {
       result_not_primitive:         "Result of %0 must be a primitive, was %1",
       invalid_json:                 "String '%0' is not valid JSON",
       circular_structure:           "Converting circular structure to JSON",
-      object_keys_non_object:       "Object.keys called on non-object",
-      object_get_prototype_non_object: "Object.getPrototypeOf called on non-object",
-      array_indexof_not_defined:    "Array.getIndexOf: Argument undefined"
+      obj_ctor_property_non_object: "Object.%0 called on non-object",
+      array_indexof_not_defined:    "Array.getIndexOf: Argument undefined",
+      illegal_access:               "illegal access"
     };
   }
   var format = kMessages[message.type];
@@ -190,9 +206,9 @@ function FormatMessage(message) {
 
 
 function GetLineNumber(message) {
-  if (message.startPos == -1) return -1;
+  if (message.startPos == -1) return kNoLineNumberInfo;
   var location = message.script.locationFromPosition(message.startPos, true);
-  if (location == null) return -1;
+  if (location == null) return kNoLineNumberInfo;
   return location.line + 1;
 }
 
@@ -420,6 +436,30 @@ Script.prototype.lineCount = function() {
 
 
 /**
+ * Returns the name of script if available, contents of sourceURL comment
+ * otherwise. See 
+ * http://fbug.googlecode.com/svn/branches/firebug1.1/docs/ReleaseNotes_1.1.txt
+ * for details on using //@ sourceURL comment to identify scritps that don't
+ * have name.
+ * 
+ * @return {?string} script name if present, value for //@ sourceURL comment
+ * otherwise.
+ */
+Script.prototype.nameOrSourceURL = function() {
+  if (this.name)
+    return this.name;
+  // TODO(608): the spaces in a regexp below had to be escaped as \040 
+  // because this file is being processed by js2c whose handling of spaces
+  // in regexps is broken. Also, ['"] are excluded from allowed URLs to
+  // avoid matches against sources that invoke evals with sourceURL.
+  var sourceUrlPattern =
+    /\/\/@[\040\t]sourceURL=[\040\t]*([^\s'"]*)[\040\t]*$/m;
+  var match = sourceUrlPattern.exec(this.source);
+  return match ? match[1] : this.name;
+}
+
+
+/**
  * Class for source location. A source location is a position within some
  * source with the following properties:
  *   script   : script object for the source
@@ -631,7 +671,7 @@ CallSite.prototype.isToplevel = function () {
 
 CallSite.prototype.isEval = function () {
   var script = %FunctionGetScript(this.fun);
-  return script && script.compilation_type == 1;
+  return script && script.compilation_type == COMPILATION_TYPE_EVAL;
 };
 
 CallSite.prototype.getEvalOrigin = function () {
@@ -653,7 +693,7 @@ CallSite.prototype.getFunctionName = function () {
   }
   // Maybe this is an evaluation?
   var script = %FunctionGetScript(this.fun);
-  if (script && script.compilation_type == 1)
+  if (script && script.compilation_type == COMPILATION_TYPE_EVAL)
     return "eval";
   return null;
 };
@@ -709,7 +749,7 @@ CallSite.prototype.getColumnNumber = function () {
 
 CallSite.prototype.isNative = function () {
   var script = %FunctionGetScript(this.fun);
-  return script ? (script.type == 0) : false;
+  return script ? (script.type == TYPE_NATIVE) : false;
 };
 
 CallSite.prototype.getPosition = function () {
@@ -730,10 +770,10 @@ function FormatEvalOrigin(script) {
   } else {
     eval_origin +=  "<anonymous>";
   }
-  
+
   var eval_from_script = script.eval_from_script;
   if (eval_from_script) {
-    if (eval_from_script.compilation_type == 1) {
+    if (eval_from_script.compilation_type == COMPILATION_TYPE_EVAL) {
       // eval script originated from another eval.
       eval_origin += " (eval at " + FormatEvalOrigin(eval_from_script) + ")";
     } else {
@@ -751,7 +791,7 @@ function FormatEvalOrigin(script) {
       }
     }
   }
-  
+
   return eval_origin;
 };
 

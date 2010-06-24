@@ -10,11 +10,9 @@ enum
 
 struct elementset
 {
-    ushort texture;
-    uchar lmid, layer;
-    ushort envmap;
-    ushort length[6];
-    ushort minvert[6], maxvert[6];
+    ushort texture, lmid, envmap;
+    uchar dim, layer;
+    ushort length[2], minvert[2], maxvert[2];
 };
 
 enum
@@ -27,6 +25,11 @@ enum
 
 struct materialsurface
 {
+    enum
+    {
+        F_EDIT = 1<<0
+    };
+
     ivec o;
     ushort csize, rsize;
     union
@@ -34,7 +37,7 @@ struct materialsurface
         short index;
         short depth;
     };
-    uchar material, orient;
+    uchar material, orient, flags;
     union
     {
         entity *light;
@@ -120,7 +123,7 @@ struct vtxarray
     ushort minvert, maxvert; // DRE info
     elementset *eslist;      // List of element indices sets (range) per texture
     materialsurface *matbuf; // buffer of material surfaces
-    int verts, tris, texs, blends, texmask, sky, explicitsky, skyfaces, skyclip, matsurfs, distance;
+    int verts, tris, texs, blendtris, blends, alphabacktris, alphaback, alphafronttris, alphafront, texmask, sky, explicitsky, skyfaces, skyclip, matsurfs, distance;
     double skyarea;
     ivec o;
     int size;                // location and size of cube.
@@ -129,9 +132,9 @@ struct vtxarray
     ivec matmin, matmax;     // BB of any materials
     ivec bbmin, bbmax;       // BB of everything including children
     uchar curvfc, occluded;
-    occludequery *query, *rquery;
-    vector<octaentities *> *mapmodels;
-    vector<grasstri> *grasstris;
+    occludequery *query;
+    vector<octaentities *> mapmodels;
+    vector<grasstri> grasstris;
     int hasmerges;
     uint dynlightmask;
     bool shadowed;
@@ -141,10 +144,12 @@ struct cube;
 
 struct clipplanes
 {
-    vec o, r;
-    int size;
+    vec o, r, v[8];
     plane p[12];
+    uchar side[12];
+    uchar size, visible;
     cube *owner;
+    int version;
 };
 
 struct mergeinfo
@@ -233,8 +238,6 @@ struct undoblock // undo header, all data sits in payload
 };
 
 extern cube *worldroot;             // the world data. only a ptr to 8 cubes (ie: like cube.children above)
-extern ivec lu;
-extern int lusize;
 extern int wtris, wverts, vtris, vverts, glde, gbatches, rplanes;
 extern int allocnodes, allocva, selchildcount;
 
@@ -256,7 +259,7 @@ const uint F_SOLID = 0x80808080;    // all edges in the range (0,8)
 #define octadim(d)          (1<<(d))                    // creates mask for bit of given dimension
 #define octacoord(d, i)     (((i)&octadim(d))>>(d))
 #define oppositeocta(d, i)  ((i)^octadim(D[d]))
-#define octaindex(d,x,y,z)  (octadim(D[d])*(z)+octadim(C[d])*(y)+octadim(R[d])*(x))
+#define octaindex(d,x,y,z)  (((z)<<D[d])+((y)<<C[d])+((x)<<R[d]))
 #define octastep(x, y, z, scale) (((((z)>>(scale))&1)<<2) | ((((y)>>(scale))&1)<<1) | (((x)>>(scale))&1))
 
 #define loopoctabox(c, size, o, s) uchar possible = octantrectangleoverlap(c, size, o, s); loopi(8) if(possible&(1<<i))

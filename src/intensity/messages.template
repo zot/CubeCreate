@@ -588,7 +588,7 @@ InitS2C(server->client)
     receive:
         if (!is_npc)
         {
-            Logging::log(Logging::DEBUG, "client.h: SV_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
+            Logging::log(Logging::DEBUG, "client.h: N_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
 
             if(protocolVersion != PROTOCOL_VERSION)
             {
@@ -606,7 +606,7 @@ InitS2C(server->client)
             #endif
         } else {
             // NPC
-            Logging::log(Logging::INFO, "client.h (npc): SV_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
+            Logging::log(Logging::INFO, "client.h (npc): N_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
             assert(0); //does this ever occur?
         }
 end
@@ -677,6 +677,26 @@ SoundToClients(server->client)
         }
 end
 
+// Server notifies clients of changed volume / sound on mapsound entity
+MapSoundToClients(server->client)
+    unreliable
+    implicit clientNumber
+    std::string soundName
+    int entityUniqueId
+    receive:
+        LogicEntityPtr entity = LogicSystem::getLogicEntity(entityUniqueId);
+        if (entity.get() != NULL)
+        {
+            extentity *e = entity.get()->staticEntity;
+            stopmapsound(e);
+            if(camera1->o.dist(e->o) < e->attr2)
+            {
+                if(!e->visible) playmapsound(soundName.c_str(), e, e->attr4, -1);
+                else if(e->visible) stopmapsound(e);
+            }
+        }
+end
+
 // Server notifies clients of a sound
 SoundToClientsByName(server->client)
     unreliable
@@ -698,6 +718,20 @@ SoundToClientsByName(server->client)
             playsoundname(soundName.c_str());
 end
 
+// Server notifies clients of that sound stops
+SoundStopToClientsByName(server->client)
+    unreliable
+    implicit clientNumber
+    int volume
+    std::string soundName
+    int originalClientNumber
+    send:
+        exclude = originalClientNumber; // This is how to ensure we do not send back to the client who originally sent it
+    receive:
+        assert(ClientSystem::playerNumber != originalClientNumber);
+        stopsoundbyid(getsoundid(soundName.c_str(), volume));
+end
+
 // Ask server to switch edit mode status
 EditModeC2S(client->server)
     int mode
@@ -705,7 +739,7 @@ EditModeC2S(client->server)
         if (!ServerSystem::isRunningMap()) return;
 
         #if 0 // The old sauer code from fpsserver.h
-            case SV_EDITMODE:
+            case N_EDITMODE:
             {
                 int val = getint(p);
                 if(!ci->local && gamemode!=1) break;
@@ -834,6 +868,20 @@ ParticleSplashToClients(server->client)
     receive:
         vec pos(x,y,z);
         particle_splash(_type, num, fade, pos);
+end
+
+ParticleSplashRegularToClients(server->client)
+    unreliable
+    implicit clientNumber
+    int _type
+    int num
+    int fade
+    float x
+    float y
+    float z
+    receive:
+        vec pos(x,y,z);
+        regular_particle_splash(_type, num, fade, pos);
 end
 
 // Request to enter the server into private edit mode

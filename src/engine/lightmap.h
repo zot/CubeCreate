@@ -91,7 +91,7 @@ extern bvec ambientcolor, skylightcolor;
 extern void clearlights();
 extern void initlights();
 extern void clearlightcache(int e = -1);
-extern void resetlightmaps();
+extern void resetlightmaps(bool fullclean = true);
 extern void newsurfaces(cube &c, const surfaceinfo *surfs, int numsurfs);
 extern void freesurfaces(cube &c);
 extern void brightencube(cube &c);
@@ -116,7 +116,7 @@ struct lerpbounds
 
 extern void calcnormals();
 extern void clearnormals();
-extern void findnormal(const ivec &origin, const vvec &offset, const vec &surface, vec &v);
+extern void findnormal(const vec &key, const vec &surface, vec &v);
 extern void calclerpverts(const vec &origin, const vec *p, const vec *n, const vec &ustep, const vec &vstep, lerpvert *lv, int &numv);
 extern void initlerpbounds(const lerpvert *lv, int numv, lerpbounds &start, lerpbounds &end);
 extern void lerpnormal(float v, const lerpvert *lv, int numv, lerpbounds &start, lerpbounds &end, vec &normal, vec &nstep);
@@ -124,19 +124,24 @@ extern void lerpnormal(float v, const lerpvert *lv, int numv, lerpbounds &start,
 extern void newnormals(cube &c);
 extern void freenormals(cube &c);
 
-#define CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_progress) \
+#define CHECK_CALCLIGHT_PROGRESS_LOCKED(exit, show_calclight_progress, before, after) \
     if(check_calclight_progress) \
     { \
         if(!calclight_canceled) \
         { \
+            before; \
             show_calclight_progress(); \
             check_calclight_canceled(); \
+            after; \
         } \
-        if(calclight_canceled) exit; \
+        if(calclight_canceled) { exit; } \
     }
+#define CHECK_CALCLIGHT_PROGRESS(exit, show_calclight_progress) CHECK_CALCLIGHT_PROGRESS_LOCKED(exit, show_calclight_progress, , )
 
 extern bool calclight_canceled;
 extern volatile bool check_calclight_progress;
 
 extern void check_calclight_canceled();
+
+extern int lightmapping;
 

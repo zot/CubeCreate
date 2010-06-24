@@ -1,4 +1,4 @@
-// Copyright 2009 the V8 project authors. All rights reserved.
+// Copyright 2010 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -72,6 +72,15 @@
 # define CAN_USE_THUMB_INSTRUCTIONS 1
 #endif
 
+#if CAN_USE_UNALIGNED_ACCESSES
+#define V8_TARGET_CAN_READ_UNALIGNED 1
+#endif
+
+// Using blx may yield better code, so use it when required or when available
+#if defined(USE_THUMB_INTERWORK) || defined(CAN_USE_ARMV5_INSTRUCTIONS)
+#define USE_BLX 1
+#endif
+
 namespace assembler {
 namespace arm {
 
@@ -79,7 +88,10 @@ namespace arm {
 static const int kNumRegisters = 16;
 
 // VFP support.
-static const int kNumVFPRegisters = 48;
+static const int kNumVFPSingleRegisters = 32;
+static const int kNumVFPDoubleRegisters = 16;
+static const int kNumVFPRegisters =
+    kNumVFPSingleRegisters + kNumVFPDoubleRegisters;
 
 // PC is register 15.
 static const int kPCRegister = 15;
@@ -143,22 +155,17 @@ enum Opcode {
 };
 
 
-// Some special instructions encoded as a TEQ with S=0 (bit 20).
-enum Opcode9Bits {
+// The bits for bit 7-4 for some type 0 miscellaneous instructions.
+enum MiscInstructionsBits74 {
+  // With bits 22-21 01.
   BX   =  1,
   BXJ  =  2,
   BLX  =  3,
-  BKPT =  7
-};
+  BKPT =  7,
 
-
-// Some special instructions encoded as a CMN with S=0 (bit 20).
-enum Opcode11Bits {
+  // With bits 22-21 11.
   CLZ  =  1
 };
-
-
-// S
 
 
 // Shifter types for Data-processing operands as defined in section A5.1.2.
@@ -237,6 +244,7 @@ class Instr {
   inline int RnField() const { return Bits(19, 16); }
   inline int RdField() const { return Bits(15, 12); }
 
+  inline int CoprocessorField() const { return Bits(11, 8); }
   // Support for VFP.
   // Vn(19-16) | Vd(15-12) |  Vm(3-0)
   inline int VnField() const { return Bits(19, 16); }
@@ -246,6 +254,16 @@ class Instr {
   inline int MField() const { return Bit(5); }
   inline int DField() const { return Bit(22); }
   inline int RtField() const { return Bits(15, 12); }
+  inline int PField() const { return Bit(24); }
+  inline int UField() const { return Bit(23); }
+  inline int Opc1Field() const { return (Bit(23) << 2) | Bits(21, 20); }
+  inline int Opc2Field() const { return Bits(19, 16); }
+  inline int Opc3Field() const { return Bits(7, 6); }
+  inline int SzField() const { return Bit(8); }
+  inline int VLField() const { return Bit(20); }
+  inline int VCField() const { return Bit(8); }
+  inline int VAField() const { return Bits(23, 21); }
+  inline int VBField() const { return Bits(6, 5); }
 
   // Fields used in Data processing instructions
   inline Opcode OpcodeField() const {
@@ -291,11 +309,18 @@ class Instr {
   // as well as multiplications).
   inline bool IsSpecialType0() const { return (Bit(7) == 1) && (Bit(4) == 1); }
 
+  // Test for miscellaneous instructions encodings of type 0 instructions.
+  inline bool IsMiscType0() const { return (Bit(24) == 1)
+                                           && (Bit(23) == 0)
+                                           && (Bit(20) == 0)
+                                           && ((Bit(7) == 0)); }
+
   // Special accessors that test for existence of a value.
   inline bool HasS()    const { return SField() == 1; }
   inline bool HasB()    const { return BField() == 1; }
   inline bool HasW()    const { return WField() == 1; }
   inline bool HasL()    const { return LField() == 1; }
+  inline bool HasU()    const { return UField() == 1; }
   inline bool HasSign() const { return SignField() == 1; }
   inline bool HasH()    const { return HField() == 1; }
   inline bool HasLink() const { return LinkField() == 1; }
@@ -335,7 +360,12 @@ class Registers {
 class VFPRegisters {
  public:
   // Return the name of the register.
-  static const char* Name(int reg);
+  static const char* Name(int reg, bool is_double);
+
+  // Lookup the register number for the name provided.
+  // Set flag pointed by is_double to true if register
+  // is double-precision.
+  static int Number(const char* name, bool* is_double);
 
  private:
   static const char* names_[kNumVFPRegisters];

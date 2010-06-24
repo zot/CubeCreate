@@ -228,6 +228,78 @@ Light = StaticEntity.extend({
     }
 });
 
+//! A spotlight with the given "radius" (in degrees, 0 to 90). 
+//! A 90 degree spotlight will be a full hemisphere, whereas 0 degrees is simply a line
+//! These will attach to the nearest "light" entity within 100 units of the spotlight
+//! The spotlight will shine in the direction of the spotlight, relative to the "light" entity it is attached to
+//! It inherits the sphere of influence (length of the spotlight) and color values from the attached light as well
+Spotlight = StaticEntity.extend({
+    _class: "Spotlight",
+
+    _sauerTypeIndex: 7,
+
+    //! see Light
+    attr1: new WrappedCInteger({ cGetter: 'CAPI.getAttr1', cSetter: 'CAPI.setAttr1', guiName: "radius", altName: "radius" }),
+
+    //! The radius of spotlight
+    radius: new VariableAlias("attr1"),
+
+    init: function(uniqueId, kwargs) {
+        this._super(uniqueId, kwargs);
+        this.radius = 90;
+    }
+});
+
+//! An environment map
+//! Sets geometry around it as environment map, good for glass reflections and stuff
+//! requires calclight if not previously done or recalc
+Envmap = StaticEntity.extend({
+    _class: "Envmap",
+
+    _sauerTypeIndex: 4,
+
+    //! see Light
+    attr1: new WrappedCInteger({ cGetter: 'CAPI.getAttr1', cSetter: 'CAPI.setAttr1', guiName: "radius", altName: "radius" }),
+
+    //! The radius of envmap, i.e. how far it should create envmap from geometry
+    radius: new VariableAlias("attr1"),
+
+    init: function(uniqueId, kwargs) {
+        this._super(uniqueId, kwargs);
+        this.radius = 128;
+    }
+});
+
+//! A sound effect entity (ambient sound)
+//! Plays sound you set to infinite. Properties are radius and size. Radius defaults to 100.
+//! The sound is played as long as you're in radius.
+//! With default size property (0) the sound is a point source.
+SoundEffect = StaticEntity.extend({
+    _class: "SoundEffect",
+
+    _sauerTypeIndex: 6,
+
+    attr2: new WrappedCInteger({ cGetter: 'CAPI.getAttr2', cSetter: 'CAPI.setAttr2', guiName: "radius", altName: "radius" }),
+    attr3: new WrappedCInteger({ cGetter: 'CAPI.getAttr3', cSetter: 'CAPI.setAttr3', guiName: "size", altName: "size" }),
+    attr4: new WrappedCInteger({ cGetter: 'CAPI.getAttr4', cSetter: 'CAPI.setSoundVolume', guiName: "volume", altName: "volume" }),
+
+    // our soundname has only a setter.
+    soundName: new WrappedCString({ cSetter: 'CAPI.setSoundName' }),
+
+    radius: new VariableAlias("attr2"),
+    size: new VariableAlias("attr3"),
+    volume: new VariableAlias("attr4"),
+
+    init: function(uniqueId, kwargs) {
+        this._super(uniqueId, kwargs);
+        // attr1 is the sound slot index, we replaced it
+        this.attr1 = -1;
+        this.radius = 100; // default radius is set to 100.
+        this.size = 0;
+        if (!this.volume) this.volume = 100;
+        this.soundName = "";
+    }
+});
 
 //! A particle effect. Until this is better documented, see the Sauer documentation for
 //! the meanings of particle_type and value1-3 (editref.html in docs/).
@@ -611,6 +683,9 @@ WorldMarker = StaticEntity.extend({
 
 registerEntityClass(StaticEntity, "mapmodel");
 registerEntityClass(Light, "light");
+registerEntityClass(Spotlight, "spotlight");
+registerEntityClass(Envmap, "envmap");
+registerEntityClass(SoundEffect, "sound");
 registerEntityClass(ParticleEffect, "particles");
 registerEntityClass(Mapmodel, "mapmodel");
 registerEntityClass(AreaTrigger, "mapmodel");

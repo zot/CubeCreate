@@ -615,9 +615,6 @@ void Map::MapPrint() {
   if (is_undetectable()) {
     PrintF(" - undetectable\n");
   }
-  if (needs_loading()) {
-    PrintF(" - needs_loading\n");
-  }
   if (has_instance_call_handler()) {
     PrintF(" - instance_call_handler\n");
   }
@@ -641,6 +638,24 @@ void Map::MapVerify() {
          && instance_size() < Heap::Capacity());
   VerifyHeapPointer(prototype());
   VerifyHeapPointer(instance_descriptors());
+}
+
+
+void CodeCache::CodeCachePrint() {
+  HeapObject::PrintHeader("CodeCache");
+  PrintF("\n - default_cache: ");
+  default_cache()->ShortPrint();
+  PrintF("\n - normal_type_cache: ");
+  normal_type_cache()->ShortPrint();
+}
+
+
+void CodeCache::CodeCacheVerify() {
+  VerifyHeapPointer(default_cache());
+  VerifyHeapPointer(normal_type_cache());
+  ASSERT(default_cache()->IsFixedArray());
+  ASSERT(normal_type_cache()->IsUndefined()
+         || normal_type_cache()->IsCodeCacheHashTable());
 }
 
 
@@ -710,7 +725,6 @@ void String::StringVerify() {
 void JSFunction::JSFunctionPrint() {
   HeapObject::PrintHeader("Function");
   PrintF(" - map = 0x%p\n", map());
-  PrintF(" - is boilerplate: %s\n", IsBoilerplate() ? "yes" : "no");
   PrintF(" - initial_map = ");
   if (has_initial_map()) {
     initial_map()->ShortPrint();
@@ -771,7 +785,7 @@ void SharedFunctionInfo::SharedFunctionInfoVerify() {
   VerifyObjectField(kNameOffset);
   VerifyObjectField(kCodeOffset);
   VerifyObjectField(kInstanceClassNameOffset);
-  VerifyObjectField(kExternalReferenceDataOffset);
+  VerifyObjectField(kFunctionDataOffset);
   VerifyObjectField(kScriptOffset);
   VerifyObjectField(kDebugInfoOffset);
 }
@@ -1036,6 +1050,8 @@ void FunctionTemplateInfo::FunctionTemplateInfoVerify() {
 
 void FunctionTemplateInfo::FunctionTemplateInfoPrint() {
   HeapObject::PrintHeader("FunctionTemplateInfo");
+  PrintF("\n - class name: ");
+  class_name()->ShortPrint();
   PrintF("\n - tag: ");
   tag()->ShortPrint();
   PrintF("\n - property_list: ");
@@ -1309,6 +1325,32 @@ bool DescriptorArray::IsSortedNoDuplicates() {
     current = hash;
   }
   return true;
+}
+
+
+void JSFunctionResultCache::JSFunctionResultCacheVerify() {
+  JSFunction::cast(get(kFactoryIndex))->Verify();
+
+  int size = Smi::cast(get(kCacheSizeIndex))->value();
+  ASSERT(kEntriesIndex <= size);
+  ASSERT(size <= length());
+  ASSERT_EQ(0, size % kEntrySize);
+
+  int finger = Smi::cast(get(kFingerIndex))->value();
+  ASSERT(kEntriesIndex <= finger);
+  ASSERT(finger < size || finger == kEntriesIndex);
+  ASSERT_EQ(0, finger % kEntrySize);
+
+  if (FLAG_enable_slow_asserts) {
+    for (int i = kEntriesIndex; i < size; i++) {
+      ASSERT(!get(i)->IsTheHole());
+      get(i)->Verify();
+    }
+    for (int i = size; i < length(); i++) {
+      ASSERT(get(i)->IsTheHole());
+      get(i)->Verify();
+    }
+  }
 }
 
 
