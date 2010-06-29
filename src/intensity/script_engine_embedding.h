@@ -2470,6 +2470,10 @@ V8_FUNC_ddd(__script__physicsAddCapsule, {
     V8_RETURN_INT(ret);
 });
 
+#define GET_VEC(letter, v) \
+	scriptVec = scriptTris->getProperty(Utility::toString(i))->getProperty(letter); \
+	v = vec(scriptVec->getPropertyFloat("x"), scriptVec->getPropertyFloat("y"), scriptVec->getPropertyFloat("z"));
+
 V8_FUNC_do(__script__physicsAddMesh, {
     ScriptValuePtr scriptTris(new V8Value(ScriptEngineManager::getEngine(), arg2));
     std::vector<triangle> tris;
@@ -2477,9 +2481,6 @@ V8_FUNC_do(__script__physicsAddMesh, {
     for (int i = 0; i < num; i++)
     {
         ScriptValuePtr scriptVec;
-        #define GET_VEC(letter, v) \
-            scriptVec = scriptTris->getProperty(Utility::toString(i))->getProperty(letter); \
-            v = vec(scriptVec->getPropertyFloat("x"), scriptVec->getPropertyFloat("y"), scriptVec->getPropertyFloat("z"));
         vec a; vec b; vec c;
         GET_VEC("a", a);
         GET_VEC("b", b);
@@ -2491,6 +2492,7 @@ V8_FUNC_do(__script__physicsAddMesh, {
     physicsHandle ret = PhysicsManager::getEngine()->addMesh(arg1, tris);
     V8_RETURN_INT(ret);
 });
+
 
 V8_FUNC_i(__script__physicsRemoveBody, {
     PhysicsManager::getEngine()->removeBody(arg1);
