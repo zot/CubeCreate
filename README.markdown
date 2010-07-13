@@ -1,23 +1,23 @@
-Intensity Engine - Sauerbraten SVN based
+CubeCreate
 ================
 
-A most recent sauerbraten SVN based Syntensity branch,
-created by quaker66.
+A new engine and gaming platform based on Syntensity. While Syntensity aims at small hardware requirements and no core changes when possible,
+CubeCreate aims to create a modern engine and gaming platform, developed independently.
+For now, it's in sync with Sauerbraten and SauerEnhanced:
 
 Current Sauerbraten revision: 2940
 Current Sauerbraten Enhanced revision: 288
 
-
-Syntensity/Intensity information
---------------------
-
-See kripken/intensityengine original branch. It is displayed
-from README.markdown.
-
-
-FAQ
+TODO
 =====
 
-Q: Will it work with syntensity.com masterserver?
+For now, we have a few todos to do.
 
-A: No, sorry. The network code quite changed, so no backwards compatibility.
+- SET UP INFRASTRUCTURE (masterserver, website, blog ..)
+- REMOVE THINGS WE DON'T NEED
+- FINISH THE NEWUI
+- IMPLEMENT TTF RENDERING
+- IMPLEMENT ODE PHYSICS
+- IMPLEMENT SPARK ENGINE
+
+More TODOs will come later.
