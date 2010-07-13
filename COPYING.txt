@@ -1,7 +1,7 @@
-Syntensity/the Intensity Engine is licensed under the MIT/X11 license:
+CubeCreate is licensed under the MIT/X11 license:
 
 ==============================================================================
-Copyright (c) 2010 the Syntensity Contributors (see below)
+Copyright (c) 2010 CubeCreate developers
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,11 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ==============================================================================
 
-The Syntensity Contributors, who all agree to release their code under
-the above license, are:
+CubeCreate is based on Syntensity project, Syntensity author + contributors are:
 
   * Alon 'kripken' Zakai - kripken@syntensity.com
-  * quaker66 - quaker66@gmail.com
+  * quaker66 - quaker66 @gmail.com
+
 
 ------------------------------------------------------------------------------
 
@@ -38,6 +38,3 @@ may be bundled under thirdparty directories, with included license info.
     is zlib (like Sauerbraten). Such code is demarked with // SAUER ENHANCED
     Thanks to Q009 (SauerEnhanced author).
 
-  * In addition, code has been ported from SauerEnhanced, whose license
-    is zlib (like Sauerbraten). Such code is demarked with // SAUER ENHANCED
-    Thanks to Q009 (SauerEnhanced author).
