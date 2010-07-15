@@ -11,9 +11,6 @@
 #include "intensity_physics_realistic.h"
 
 #include "intensity_physics_sauer.h" // Just for line with creation - nothing else
-#ifdef INTENSITY_BULLET
-    #include "intensity_physics_bullet.h" // Just for line with creation - nothing else
-#endif
 #ifdef CLIENT
     #include "client_system.h"
 #else // SERVER
@@ -38,13 +35,6 @@ void createEngine(std::string type)
         Logging::log(Logging::DEBUG, "Using sauer physics engine\r\n");
         engine = new SauerPhysicsEngine();
     }
-#ifdef INTENSITY_BULLET
-    else if (type == "bullet")
-    {
-        Logging::log(Logging::DEBUG, "Using bullet physics engine\r\n");
-        engine = new BulletPhysicsEngine();
-    }
-#endif
     else
     {
         #ifdef CLIENT

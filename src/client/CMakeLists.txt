@@ -84,7 +84,6 @@ set(CLIENT_SOURCES
     ../intensity/shared_module_members_boost
     ../fpsgame/scoreboard
     ${Extra_ClientServer_Sources}
-    ${BULLET_SOURCES}
 )
 
 set(CLIENT_LIBRARIES
@@ -99,7 +98,6 @@ set(CLIENT_LIBRARIES
     ${SDLSOUND_LIBRARY}
     ${OPENGL_LIBRARIES}
     ${ZLIB_LIBRARIES}
-    ${BULLET_LIBRARIES}
     ${UTIL}
 )
 

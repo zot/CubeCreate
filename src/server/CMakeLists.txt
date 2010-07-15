@@ -57,7 +57,6 @@ add_executable(Intensity_CServer
     ../intensity/shared_module_members_boost
     ../intensity/NPC
     ${Extra_ClientServer_Sources}
-    ${BULLET_SOURCES}
 )
 
 target_link_libraries(Intensity_CServer
@@ -70,7 +69,6 @@ target_link_libraries(Intensity_CServer
     ${SDLIMAGE_LIBRARY}
     ${SDLSOUND_LIBRARY}
     ${ZLIB_LIBRARIES}
-    ${BULLET_LIBRARIES}
     ${UTIL}
 )
 
