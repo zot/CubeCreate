@@ -2,7 +2,7 @@
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
 //! This is a flashlight plugin for Syntensity. It's quite heavily based on Firing.js, but a lot modified.
-//! Needs Firing and Editing included. Also GameManager, but that's included in every map.
+//! Needs Firing included. Also GameManager, but that's included in every map.
 //! It consists of two plugins meant to be activated from your mapscript - protocol and player. Protocol plugin handles server-side stuff,
 //! player plugin handles properties, charging and stuff..
 //!
@@ -35,7 +35,6 @@
 
 //! these are required libraries to include, since we use functions from them.
 Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
-Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
 
 Flashlight = {
     plugins: {

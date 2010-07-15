@@ -40,6 +40,8 @@ function registerEntityClass(_class, sauerType) {
         );
     }
 
+    if (sauerType === undefined) sauerType = '';
+
     // Store in registry
     eval(assert(' _logicEntityClasses[_className] === undefined && "Must not exist already! Ensure each class has a different _class" '));
     _logicEntityClasses[_className] = [_class, sauerType];
@@ -61,6 +63,8 @@ function registerEntityClass(_class, sauerType) {
     log(DEBUG, "Generating protocol data for " + stateVariableNames);
 
     MessageSystem.generateProtocolData(_className, stateVariableNames);
+
+    return _class;
 }
 
 //! Gets the actual scripting class based on the string of its name, for a registered logic entity subclass.

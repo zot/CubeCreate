@@ -71,8 +71,8 @@ RootLogicEntity = Class.extend({
         //! The actual values of state variables
         this.stateVariableValues = {};
 
-// XXX Experimental caching code
-//        this.stateVariableValueTimestamps = {};
+        // Caching reads from script into C++ (search for "// Caching")
+        this.stateVariableValueTimestamps = {};
 
         //! Set to true once this entity is deactivated. At that point the entity will be removed from memory as
         //! soon as nothing else references it.
@@ -112,12 +112,6 @@ RootLogicEntity = Class.extend({
     //! Clears the action system of all actions.
     clearActions: function() {
         this.actionSystem.clear();
-    },
-
-    //! Sets this entity to 'sleep' - i.e., perform no actions - for a certain period of time. This
-    //! is done efficiently, i.e., it saves CPU to do this instead of not doing sleep and just
-    //! doing nothing. TODO: Implement in scripting, currently inactive.
-    setSleep: function(seconds) {
     },
 
     addTag: function(tag) {
@@ -172,18 +166,31 @@ RootLogicEntity = Class.extend({
     //! Serializes all state variables into their 'data' form, and returns
     //! a dictionary with them (that can then be serialized using e.g. JSON)
     //! Variables with hasHistory set to false are not included here.
-    createStateDataDict: function() {
-        log(DEBUG, "createStateDataDict():" + this._class + this.uniqueId);
+    //! @param targetClientNumber If provided, the client who we will send to.
+    //!                           Otherwise, ignore permissions and such.
+    //! @param kwargs.compressed   If not, will not compress the variable
+    //!                            names into protocol ids, which is useful
+    //!                            for serializing them for storage.
+    //!                            When compressed, we return a string - as we
+    //!                            logically must. When uncompressed, an object.
+    createStateDataDict: function(targetClientNumber, kwargs) {
+        targetClientNumber = defaultValue(targetClientNumber, MessageSystem.ALL_CLIENTS);
+        kwargs = defaultValue(kwargs, {});
+
+        log(DEBUG, "createStateDataDict():" + this._class + this.uniqueId + ',' + targetClientNumber);
 
         var ret = {};
 
         forEach(iter(keys(this)), function(_name) {
             var variable = this[_name];
             if (isVariable(variable) && variable.hasHistory) {
+                // Do not send private data
+                if (targetClientNumber >= 0 && !variable.shouldSend(this, targetClientNumber)) return;
+
                 var value = this[variable._name];
                 if (value != undefined) {
                     log(INFO, "createStateDataDict() adding " + variable._name + ":" + serializeJSON(value));
-                    ret[variable._name] = variable.toData( value );
+                    ret[!kwargs.compressed ? variable._name : MessageSystem.toProtocolId(this._class, variable._name)] = variable.toData( value );
                     log(INFO, "createStateDataDict() currently...");
                     log(INFO, "createStateDataDict() currently: " + serializeJSON(ret));
                 }
@@ -192,7 +199,41 @@ RootLogicEntity = Class.extend({
 
         log(DEBUG, "createStateDataDict() returns: " + serializeJSON(ret));
 
-        return ret;
+        if (!kwargs.compressed) {
+            return ret;
+        }
+
+        // Pre-compression - keep numbers as numbers, not strings
+
+        forEach(keys(ret), function(key) {
+            if (!isNaN(ret[key]) && ret[key] !== '') {
+                ret[key] = parseFloat(ret[key]); // Keep 
+            }
+        });
+
+        ret = serializeJSON(ret);
+
+        log(DEBUG, "pre-compression: " + serializeJSON(ret));
+
+        // Compression tricks - used only if they don't break things
+
+        forEach([
+            function(data) { return data.replace(/", "/g, '","'); },
+            function(data) { return data.replace(/"(\w+)":/g, '\"$1\":'); },
+            function(data) { return data.replace(/:"(\d+)"/g, ':\"$1\"'); },
+            function(data) { return data.replace(/"\[\]"/g, '[]'); },
+            function(data) { return data.replace(/:"(\d+)\.(\d+)"/g, ':\"$1\".\"$2\"'); },
+            function(data) { return data.replace(/, /g, ','); },
+        ], function(func) {
+            var next = func(ret);
+            if (next.length < ret.length && serializeJSON(evalJSON(next)) === serializeJSON(evalJSON(ret))) {
+                ret = next;
+            }
+        });
+
+        log(DEBUG, "compressed: " + ret);
+
+        return ret.substr(1, ret.length-2); // Remove {, }
     },
 
     //! Updates the entire state data. In general, only used for initial initialization.
@@ -200,6 +241,10 @@ RootLogicEntity = Class.extend({
     //! @param stateData The actual state data, in network-appropriate form (needs to be parsed).
     _updateCompleteStateData: function(stateData) {
         log(DEBUG, format("updating complete state data for {0} with {1} ({2})", this.uniqueId, stateData, typeof stateData));
+
+        if (stateData[0] !== '{') {
+            stateData = '{' + stateData + '}';
+        }
 
         var newStateData = evalJSON(stateData); // FIXME XXX: Use json.org version of this, which is safer
 
@@ -213,8 +258,14 @@ RootLogicEntity = Class.extend({
 
         // Set each datum separately, calling onModify's as necessary, etc.
         forEach(items(newStateData), function(item) {
-            log(DEBUG, format("update of complete state datum: {0} = {1}", item[0], item[1]));
-            this._setStateDatum(item[0], item[1], undefined, true); // true - this is an internal op, we are sending raw state data
+            var key = item[0];
+            var value = item[1];
+            if (!isNaN(key)) {
+                key = MessageSystem.fromProtocolId(this._class, key); // Numbers are protocol identifiers
+            }
+
+            log(DEBUG, format("update of complete state datum: {0} = {1}", key, value));
+            this._setStateDatum(key, value, undefined, true); // true - this is an internal op, we are sending raw state data
             log(DEBUG, format("update of complete state datum ok"));
         }, this);
 
@@ -280,7 +331,7 @@ var ClientLogicEntity = RootLogicEntity.extend({
     //!                      client itself in a script. Currently any value except for null is
     //!                      considered as a server update.
     _setStateDatum : function(key, value, actorUniqueId) {
-        log(INFO, format("Setting state datum: {0} = {1} for {2}", key, serializeJSON(value), this.uniqueId));
+        log(DEBUG, format("Setting state datum: {0} = {1} for {2}", key, serializeJSON(value), this.uniqueId));
 
         var variable = this[_SV_PREFIX + key];
 
@@ -376,6 +427,7 @@ var ServerLogicEntity = RootLogicEntity.extend({
         if (!this._sauerType) {
             log(DEBUG, "non-Sauer entity going to be set up:" + this._class, + "," + this._sauerType);
             CAPI.setupNonSauer(this); // Does C++ registration, etc. Sauer types need special registration, which is done by them
+            this._flushQueuedStateVariableChanges();
         }
 
 /*
@@ -398,16 +450,20 @@ var ServerLogicEntity = RootLogicEntity.extend({
     //! Override if the notification uses a different message type.
     sendCompleteNotification: function(clientNumber) {
         clientNumber = defaultValue(clientNumber, MessageSystem.ALL_CLIENTS);
+        var clientNumbers = clientNumber === MessageSystem.ALL_CLIENTS ? getClientNumbers() : [clientNumber];
 
         log(DEBUG, format("LE.sendCompleteNotification: {1}, {2}", this.clientNumber, this.uniqueId));
 
-        MessageSystem.send( clientNumber,
-                            CAPI.LogicEntityCompleteNotification,
-                            this.clientNumber ? this.clientNumber :  -1,
-                            this.uniqueId,
-                            this._class,
-                            serializeJSON(this.createStateDataDict())
-                          );
+        forEach(clientNumbers, function(currClientNumber) {
+            MessageSystem.send(
+                currClientNumber,
+                CAPI.LogicEntityCompleteNotification,
+                this.clientNumber ? this.clientNumber :  -1,
+                this.uniqueId,
+                this._class,
+                this.createStateDataDict(currClientNumber, { compressed: true }) // Custom data per client
+            );
+        }, this);
 
         log(DEBUG, "LE.sendCompleteNotification complete");
     },
@@ -424,6 +480,7 @@ var ServerLogicEntity = RootLogicEntity.extend({
             //! See _queueStateVariableChange. As an object (/dict), we will not repeat the same
             //! value more than once - only the last one
             this._queuedStateVariableChanges = {};
+            this._queuedStateVariableChangesComplete = false;
 
             //! Server GEs are always initialized (unlike client ones, which must be initialized).
             //! Still, we need this variable to exist (even though it always contains 'True')
@@ -477,6 +534,11 @@ var ServerLogicEntity = RootLogicEntity.extend({
 
         var variable = this[_SV_PREFIX + key];
 
+        if (!variable) {
+            log(WARNING, "Ignoring state data setting for unknown (possibly deprecated) variable: " + key);
+            return;
+        }
+
         // If this is over the wire, need to translate it, and check if it is even valid to get clients to do this
         if (actorUniqueId) {
             value = variable.fromWire(value); // Translate to correct type
@@ -489,7 +551,8 @@ var ServerLogicEntity = RootLogicEntity.extend({
             value = variable.fromData(value); // Translate to correct type
         }
 
-        log(DEBUG, format("Translated value: {0} = {1} ({2}) : {3}, {4}", key, value, typeof value, serializeJSON(value)), value._class);
+        log(DEBUG, format("Translated value: {0} = {1} ({2}) : {3}, {4}", key, value, typeof value, serializeJSON(value)));
+        log(DEBUG, "value._class: " + value._class);
 
 /*
         if ( !variable.validate(value) ) {
@@ -534,12 +597,22 @@ var ServerLogicEntity = RootLogicEntity.extend({
                     return; // No need to send individual updates until the entire entity is sent
                 }
 
-                MessageSystem.send(MessageSystem.ALL_CLIENTS,
-                                   variable.reliable ? CAPI.StateDataUpdate : CAPI.UnreliableStateDataUpdate,
-                                   this.uniqueId,
-                                   MessageSystem.toProtocolId(_class, key),
-                                   variable.toWire(value),
-                                   (variable.clientSet && actorUniqueId) ? getEntity(actorUniqueId).clientNumber : -1);
+                var args = [
+                    null,
+                    variable.reliable ? CAPI.StateDataUpdate : CAPI.UnreliableStateDataUpdate,
+                    this.uniqueId,
+                    MessageSystem.toProtocolId(_class, key),
+                    variable.toWire(value),
+                    (variable.clientSet && actorUniqueId) ? getEntity(actorUniqueId).clientNumber : -1,
+                ];
+
+                forEach(getClientNumbers(), function(clientNumber) {
+                    // Do not send private data
+                    if (!variable.shouldSend(this, clientNumber)) return;
+
+                    args[0] = clientNumber;
+                    MessageSystem.send.apply(MessageSystem, args);
+                }, this);
             }
         }
     },
@@ -580,6 +653,8 @@ var ServerLogicEntity = RootLogicEntity.extend({
             this[key] = this.stateVariableValues[key];
             log(DEBUG, format("(B) Flushing of {0} - ok", key));
         }, this);
+
+        this._queuedStateVariableChangesComplete = true;
     }
 });
 

@@ -2,12 +2,11 @@
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
-Library.include('library/1_3/');
+Library.include('library/1_0/');
 
 Library.include('library/' + Global.LIBRARY_VERSION + '/Plugins');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Health');
 Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
-Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
 
 // Default materials, etc.
 

@@ -2,7 +2,6 @@
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
-Library.include('library/' + Global.LIBRARY_VERSION + '/Projectiles'); // For swarmbug ragdoll
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/EditingTools');
 
 

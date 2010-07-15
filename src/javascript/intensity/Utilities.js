@@ -99,14 +99,18 @@ Vector3 = Class.extend({
     normalize: function() {
         var mag = this.magnitude();
         if (mag !== 0.0) {
-            this.x /= mag;
-            this.y /= mag;
-            this.z /= mag;
+            this.mul(1/mag);
         } else {
             log(WARNING, "Trying to normalize a length 0 Vector3");
 //            eval(assert(' false ')); // Uncomment this to help debug these messages
         }
 
+        return this;
+    },
+
+    cap: function(size) {
+        var mag = this.magnitude();
+        if (mag > size) this.mul(size/mag);
         return this;
     },
 
@@ -168,10 +172,15 @@ Vector3 = Class.extend({
     },
 
     toYawPitch: function() {
+        var size = this.magnitude();
+        if (size < 0.001) return {
+            yaw: 0, pitch: 0,
+        };
+
         var RAD = (Math.PI/180.0);
         return {
             yaw: -Math.atan2(this.x, this.y)/RAD,
-            pitch: Math.asin(this.z/this.magnitude())/RAD,
+            pitch: Math.asin(this.z/size)/RAD,
         };
     },
 
@@ -210,6 +219,102 @@ Vector3 = Class.extend({
         return this.scalarProduct(other) / (this.magnitude() * other.magnitude());
     },
 });
+
+Vector3.zero = new Vector3(0, 0, 0);
+
+Vector4 = Vector3.extend({
+    create: function(x, y, z, w) {
+        if (typeof x === 'object' && x.length === 4) {
+            this.x = x[0]; this.y = x[1]; this.z = x[2]; this.w = x[3];
+        } else {
+            this.x = x; this.y = y; this.z = z; this.w = w;
+        }
+
+        this.__defineGetter__("length", function() { return 4; });
+    },
+
+    toString: function() {
+        return '{' + this.x.toString() + ',' + this.y.toString() + ',' + this.z.toString() + ',' + this.w.toString() + '}';
+    },
+
+    asArray: function() {
+        return [ this.x, this.y, this.z, this.w ];
+    },
+
+    quatFromAxisAngle: function(axis, angle) {
+        angle = angle*Math.PI/180;
+        this.w = Math.cos(angle/2);
+        var s = Math.sin(angle/2);
+        this.x = s*axis.x;
+        this.y = s*axis.y;
+        this.z = s*axis.z;
+        return this;
+    },
+
+    toYawPitchRoll: function() {
+        var ret = this.toYawPitch();
+        ret.roll = 0;
+        return ret;
+
+        if (Math.abs(this.z) < 0.99) {
+            var ret = this.toYawPitch();
+            ret.roll = this.w/(Math.PI/180.0);
+            return ret;
+        } else {
+            return {
+                yaw: this.w/(Math.PI/180.0) * (this.z < 0 ? 1 : -1),
+                pitch: this.z > 0 ? -90 : 90,
+                roll: 0,
+            };
+        }
+    },
+
+    subNew: function(other) {
+        return new Vector4(this.x - other.x, this.y - other.y, this.z - other.z, this.w - other.w);
+    },
+
+    addNew: function(other) {
+        return new Vector4(this.x + other.x, this.y + other.y, this.z + other.z, this.w + other.w);
+    },
+
+    mulNew: function(other) {
+        return new Vector4(this.x * other, this.y * other, this.z * other, this.w * other);
+    },
+
+    sub: function(other) {
+        this.x -= other.x;
+        this.y -= other.y;
+        this.z -= other.z;
+        this.w -= other.w;
+        return this;
+    },
+
+    add: function(other) {
+        this.x += other.x;
+        this.y += other.y;
+        this.z += other.z;
+        this.w += other.w;
+        return this;
+    },
+
+    mul: function(other) {
+        this.x *= other;
+        this.y *= other;
+        this.z *= other;
+        this.w *= other;
+        return this;
+    },
+
+    copy: function() {
+        return new Vector4(this.x, this.y, this.z, this.w);
+    },
+
+    magnitude: function() {
+        return Math.sqrt( this.x*this.x + this.y*this.y + this.z*this.z + this.w*this.w );
+    },
+});
+
+Vector4.zero = new Vector4(0, 0, 0, 0);
 
 /*
 //! Internal function to simplify the API. Many API functions expect a Vector3, but

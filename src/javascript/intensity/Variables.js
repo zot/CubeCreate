@@ -116,6 +116,13 @@ StateVariable = Variable.extend({
         //! see that, but in completeEntityUpdates for new clients nothing will be sent. This is useful
         //! for signalling events using a state variable as a network protocol.
         this.hasHistory = defaultValue(kwargs.hasHistory, true);
+
+        //! clientPrivate variables are private to the owning client. That is, for player entities,
+        //! the variable is only updated to the client whose avatar that is. Players cannot read such
+        //! fields from other entities. The server, on the other hand, has access to everything.
+        //! By default fields are not private - they are synched to all clients.
+        //! Example uses: Inventory in an RPG, private messages, etc. etc.
+        this.clientPrivate = defaultValue(kwargs.clientPrivate, false);
     },
 
     //! Internal method that lets a variable know it's name in the parent, and related
@@ -159,14 +166,18 @@ StateVariable = Variable.extend({
             log(ERROR, "Trying to write to a field " + this._name + " of " + entity.uniqueId + "," + entity._class);
             eval(assert(" false /* entity.deactivated */ "));
         }
-        eval(assert(" Global.SERVER || this.clientWrite "));
-        eval(assert(" entity.initialized "));
+        if (!(Global.SERVER || this.clientWrite)) {
+            eval(assert(" Global.SERVER || this.clientWrite "));
+        }
+        if (!entity.initialized) {
+            eval(assert(" entity.initialized "));
+        }
     },
 
     getter: function(variable) {
-        variable.readTests(this);
+        log(INFO, "getter.readtests:" + variable.readTests(this));
 
-        return this._getStateDatum(variable._name);
+        return this.stateVariableValues[variable._name];
     },
 
     //! This function is copied to the LogicEntity, where it will have 'this' as
@@ -182,7 +193,12 @@ StateVariable = Variable.extend({
     //! Overridden in child classes with relevant functionality
     validate: function(value) {
         return true;
-    }
+    },
+
+    //! Whether this variable, on entity 'entity', should be synched to client targetClientNumber.
+    shouldSend: function(entity, targetClientNumber) {
+        return !this.clientPrivate || entity.clientNumber === targetClientNumber;
+    },
 });
 
         // TODO: Cache values efficiently
@@ -218,6 +234,7 @@ StateInteger = StateVariable.extend({
 
 // Utility to parse floats into 2 decimal places
 decimal2 = function(x) {
+    if (Math.abs(x) < 0.01) return '0'; // Makes no sense to use 1.234e-5 etc. notation
     var ret = string(x);
     var i = ret.indexOf('.');
     if (i != -1) {
@@ -336,6 +353,8 @@ var ArraySurrogate = Class.extend({
 StateArray = StateVariable.extend({
     _class: "StateArray",
 
+    separator: "|",
+
     //! The class whose instances are our surrogates. Overridden in some child classes
     surrogateClass: ArraySurrogate,
 
@@ -343,8 +362,7 @@ StateArray = StateVariable.extend({
     emptyValue: function() { return []; },
 
     getter: function(variable) {
-        log(INFO, "StateArray.getter");
-        variable.readTests(this);
+        log(INFO, "StateArray.getter " + variable.readTests(this));
 
         // If we have nothing to give, do not return an array of undefineds, return simply undefined
         if (variable.getRaw(this) == undefined) {
@@ -421,7 +439,7 @@ StateArray = StateVariable.extend({
             value = value.asArray();
         }
 
-        return '[' + map(this.toWireItem, value).join("|") + ']';
+        return '[' + map(this.toWireItem, value).join(this.separator) + ']';
     },
 
     fromWireItem: string,
@@ -431,7 +449,7 @@ StateArray = StateVariable.extend({
         if (value === "[]") {
             return [];
         } else {
-            return map(this.fromWireItem, value.slice(1,-1).split("|"));
+            return map(this.fromWireItem, value.slice(1,-1).split(this.separator));
         }
     },
 
@@ -448,7 +466,7 @@ StateArray = StateVariable.extend({
 
         log(INFO, "(2) StateArray.toData:" + value + typeof value + serializeJSON(value));
 
-        return '[' + map(this.toDataItem, value).join("|") + ']';
+        return '[' + map(this.toDataItem, value).join(this.separator) + ']';
     },
 
     //! Converts an *item* of the array from its data (string) form
@@ -459,16 +477,17 @@ StateArray = StateVariable.extend({
         if (value === "[]") {
             return [];
         } else {
-            return map(this.fromDataItem, value.slice(1,-1).split("|"));
+            return map(this.fromDataItem, value.slice(1,-1).split(this.separator));
         }
     },
 
     //! Gets a raw array from the data. By default this is the
     //! stateData, but it can be overridden in child classes.
     getRaw: function(entity) {
-        log(INFO, "getRaw:");
+        log(INFO, "getRaw:" + this._class);
         log(INFO, serializeJSON(entity.stateVariableValues));
-        var value = entity._getStateDatum(this._name);
+        var value = entity.stateVariableValues[this._name];
+
         if (value === undefined) {
             value = [];
         }
@@ -502,6 +521,12 @@ StateArray = StateVariable.extend({
     }
 });
 
+StateArrayString = StateArray.extend({
+    _class: "StateArrayString",
+});
+
+StateArrayStringComma = StateArrayString.extend({separator: ','});
+
 /*
 registerJSON("StateArray", function(val) { return val instanceof ArraySurrogate; }, function(val) {
     var ret = format("StateArraySurrogate: (len: {1}) [", val.length);
@@ -524,6 +549,15 @@ StateArrayFloat = StateArray.extend({
     fromDataItem: parseFloat
 });
 
+StateArrayInteger = StateArray.extend({
+    _class: "StateArrayInteger",
+
+    toWireItem: string,
+    fromWireItem: integer,
+
+    toDataItem: string,
+    fromDataItem: integer,
+});
 
 //! A generic wrapper around an actual Variable. In effect creates an alias for an attribute, giving
 //! it a nicer name. Used to wrap around attributes such as WrappedCVariable, to
@@ -605,11 +639,9 @@ WrappedCVariable = {
                     // We have been set up, so apply the change
                     variable.cSetter(parent, value);
 
-// XXX Experimental caching code
-//                    // Note the value and timestamp, we might re-read during this frame
-//                    parent.stateVariableValues[variable._name] = value;
-//                    parent.stateVariableValueTimestamps[variable._name] = currTimestamp;
-
+                    // Caching reads from script into C++ (search for "// Caching")
+                    parent.stateVariableValues[variable._name] = value;
+                    parent.stateVariableValueTimestamps[variable._name] = Global.currTimestamp;
                 } else {
                     // We are not yet set up, so queue this change
                     parent._queueStateVariableChange(variable._name, value);
@@ -622,15 +654,13 @@ WrappedCVariable = {
     },
 
     getter: function(variable) {
-        variable.readTests(this);
+        log(INFO, "WCV getter readtests " + variable.readTests(this));
 
-// XXX Experimental caching code
-//        var cachedTimestamp = this.stateVariableValueTimestamps[variable._name];
-//        if (cachedTimestamp === currTimestamp) {
-//log(DEBUG, "Using cached for " + variable._name);
-//            return this.stateVariableValues[variable._name];
-//        }
-//log(DEBUG, "Going to read from source for " + variable._name);
+        // Caching
+        var cachedTimestamp = this.stateVariableValueTimestamps[variable._name];
+        if (cachedTimestamp === Global.currTimestamp) {
+            return this.stateVariableValues[variable._name];
+        }
 
         log(INFO, "WCV getter " + variable._name);
         if (variable.cGetter !== undefined && (Global.CLIENT || this.canCallCFuncs())) {
@@ -638,10 +668,11 @@ WrappedCVariable = {
             // We have a special getter, and can call it, so do so
             var value = variable.cGetter(this);
 
-// XXX Experimental caching code
-//            // Note the value and timestamp, we might re-read during this frame
-//            this.stateVariableValues[variable._name] = value;
-//            this.stateVariableValueTimestamps[variable._name] = currTimestamp;
+            // Caching
+            if (Global.CLIENT || this._queuedStateVariableChangesComplete) {
+                this.stateVariableValues[variable._name] = value;
+                this.stateVariableValueTimestamps[variable._name] = Global.currTimestamp;
+            }
 
             return value;
         } else {
@@ -677,11 +708,24 @@ WrappedCArray = StateArray.extend(
             getRaw: function(entity) {
                 log(INFO, "WCA.getRaw " + this._name + this.cGetter);
                 if (this.cGetter !== undefined && (Global.CLIENT || entity.canCallCFuncs())) {
+                    // Caching
+                    var cachedTimestamp = entity.stateVariableValueTimestamps[this._name];
+                    if (cachedTimestamp === Global.currTimestamp) {
+                        return entity.stateVariableValues[this._name];
+                    }
+
                     log(INFO, "WCA.getRaw: call C");
-                    return this.cGetter(entity);
+
+                    // Caching
+                    var value = this.cGetter(entity);
+                    if (Global.CLIENT || entity._queuedStateVariableChangesComplete) {
+                        entity.stateVariableValues[this._name] = value;
+                        entity.stateVariableValueTimestamps[this._name] = Global.currTimestamp;
+                    }
+                    return value;
                 } else {
                     log(INFO, "WCA.getRaw: fallback to stateData");
-                    var ret = entity._getStateDatum(this._name);
+                    var ret = entity.stateVariableValues[this._name];
                     log(INFO, "WCA.getRaw..." + ret);
                     return ret;
                 }
@@ -761,7 +805,9 @@ var Vector3Surrogate = ArraySurrogate.extend(
     )
 );
 
-WrappedCVector3 = WrappedCArray.extend({
+Vector3ArrayPlugin = {
+    _class: 'Vector3ArrayPlugin',
+
     surrogateClass: Vector3Surrogate,
 
     // Our empty value is still a triple 
@@ -778,8 +824,77 @@ WrappedCVector3 = WrappedCArray.extend({
         log(INFO, "StateArray.getItem " + array + " ==> " + array[i]);
         return array[i]; // TODO optimize all of this
     }*/
-});
+};
 
+WrappedCVector3 = WrappedCArray.extend(Vector3ArrayPlugin).extend({ _class: 'WrappedCVector3' });
+
+StateVector3 = StateArray.extend(Vector3ArrayPlugin).extend({ _class: 'StateVector3' });
+
+var Vector4Surrogate = ArraySurrogate.extend(
+    merge(
+        Vector4.prototype,
+        {
+            _class: "Vector4Surrogate", // Debugging XXX
+
+            create: function(entity, variable) {
+                this._super(entity, variable);
+
+                this.entity = entity;
+                this.variable = variable;
+
+                this.__defineGetter__("length", function() {
+                    log(INFO, "Vector4Surrogate.length: always 4");
+                    return 4;
+                });
+
+                this.__defineGetter__("x", function() {
+                    return this.get(0);
+                });
+                this.__defineGetter__("y", function() {
+                    return this.get(1);
+                });
+                this.__defineGetter__("z", function() {
+                    return this.get(2);
+                });
+                this.__defineGetter__("w", function() {
+                    return this.get(3);
+                });
+
+                this.__defineSetter__("x", function(value) {
+                    this.set(0, value);
+                });
+                this.__defineSetter__("y", function(value) {
+                    this.set(1, value);
+                });
+                this.__defineSetter__("z", function(value) {
+                    this.set(2, value);
+                });
+                this.__defineSetter__("w", function(value) {
+                    this.set(3, value);
+                });
+            },
+
+            // 'Remove' super's function of the same name
+            push: function(value) {
+                eval(assert(' false /* No such thing as .push() for Vector4Surrogate '));
+            },
+        }
+    )
+);
+
+Vector4ArrayPlugin = merge(
+    Vector3ArrayPlugin,
+    {
+        surrogateClass: Vector4Surrogate,
+
+        // Our empty value is still a triple 
+        emptyValue: function() { return [0,0,0,0]; },
+    }
+);
+
+WrappedCVector4 = WrappedCArray.extend(Vector4ArrayPlugin);
+
+StateVector4 = StateArray.extend(Vector4ArrayPlugin);
 
 //! JSON StateVariable. Note: No surrogate, so will not notice changes to internals
 StateJSON = StateVariable.extend({

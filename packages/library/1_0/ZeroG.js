@@ -121,7 +121,7 @@ World.gravityDirection = new Vector3(0, 0, 0);
 
 /* Example map script
 
-Library.include('library/1_3/');
+Library.include('library/1_0/');
 
 Library.include('library/' + Global.LIBRARY_VERSION + '/__CorePatches');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Plugins');

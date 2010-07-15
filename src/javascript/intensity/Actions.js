@@ -293,20 +293,18 @@ ActionSystem = Class.extend({
     //! Run the current action and otherwise manage the list
     //! @param seconds How many seconds to simulate as passing.
     manageActions: function(seconds) {
-        // Remove all finished actions - due to a clear() call that might have occurred
-        this.actionList = filter(function(action) { return !action.finished; }, this.actionList);
-
         // Run current action, if any
         if (this.actionList.length > 0) {
-            log(INFO, "Executing: %s" % (this.actionList[0]._name));
-            if (this.actionList[0].execute(seconds)) { // If the action completed, remove it now - don't wait til next time
-                                                       // (no special reason)
-                this.actionList.shift();
+            // Remove all finished actions - due to a clear() call that might have occurred
+            this.actionList = filter(function(action) { return !action.finished; }, this.actionList);
+
+            if (this.actionList.length > 0) {
+                log(INFO, "Executing: %s" % (this.actionList[0]._name));
+                if (this.actionList[0].execute(seconds)) { // If the action completed, remove it now - don't wait til next time
+                                                           // (no special reason)
+                    this.actionList.shift();
+                }
             }
-        } else {
-            // No actions, set us up to sleep for a bit - saves the C from calling Python at all, so this
-            // is faster, and when an action is queued this is undone of course.
-            this.parent.setSleep(0.2); // 5fps
         }
 
         //!// TODO: for now, we don't move the remaining seconds to the next action.
@@ -346,8 +344,6 @@ ActionSystem = Class.extend({
 
         this.actionList.push(action);
         action.actor = this.parent; // Set the actor, our parent. A notational convenience, see Action() for the reason
-
-        this.parent.setSleep(0); // Stop the parent from sleeping
     },
 
     //! DEPRECATED?

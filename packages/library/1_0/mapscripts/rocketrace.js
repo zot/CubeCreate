@@ -1,6 +1,6 @@
 // Copyright (C) 2009 Alon 'Kripken' Zakai
 
-Library.include('library/1_3/');
+Library.include('library/1_0/');
 
 Library.include('library/' + Global.LIBRARY_VERSION + '/__CorePatches');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Plugins');

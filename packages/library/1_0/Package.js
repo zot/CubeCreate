@@ -2,7 +2,7 @@
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
-Global.LIBRARY_VERSION = '1_3';
+Global.LIBRARY_VERSION = '1_0';
 
 // Intensity version comparing
 
@@ -26,15 +26,4 @@ function isIntensityVersionAtLeast(test) {
 _logicEntityClasses = {}; // Clear old classes, make room for new
 
 Library.include('library/' + Global.LIBRARY_VERSION + '/Tools', true);
-Library.include('library/' + Global.LIBRARY_VERSION + '/Utilities', true);
 Library.include('library/' + Global.LIBRARY_VERSION + '/__CorePatches', true);
-Library.include('library/' + Global.LIBRARY_VERSION + '/LogicEntityClasses', true);
-Library.include('library/' + Global.LIBRARY_VERSION + '/Actions', true);
-Library.include('library/' + Global.LIBRARY_VERSION + '/Variables', true);
-Library.include('library/' + Global.LIBRARY_VERSION + '/LogicEntity', true);
-Library.include('library/' + Global.LIBRARY_VERSION + '/Animatable', true);
-Library.include('library/' + Global.LIBRARY_VERSION + '/Character', true);
-Library.include('library/' + Global.LIBRARY_VERSION + '/StaticEntity', true);
-Library.include('library/' + Global.LIBRARY_VERSION + '/LogicEntityStore', true);
-Library.include('library/' + Global.LIBRARY_VERSION + '/Application', true);
-

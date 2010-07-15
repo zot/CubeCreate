@@ -28,8 +28,6 @@
  *=============================================================================
  */
 
-Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
-
 // These values are "leashes" that the cloud manager will keep on certain variables. Lower/upper limit.
 fArrCloudLayerAlpha = [ 0.0, 1.0 ];			fArrAltCloudLayerAlpha = [ 0.0, 1.0 ];
 fArrCloudLayerHeight = [ 0.03, 0.37 ];		fArrAltCloudLayerHeight = [ 0.01, 0.23 ];

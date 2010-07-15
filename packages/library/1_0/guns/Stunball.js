@@ -3,8 +3,6 @@
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
 Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
-Library.include('library/' + Global.LIBRARY_VERSION + '/Projectiles');
-
 
 /*
 StunAction = LocalAnimationAction.extend({

@@ -2,7 +2,6 @@
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
-
 ApplicationManager = {
     //! Sets the actual instance of a (child class of) Application. This is the singleton instance that we will
     //! use.
@@ -104,7 +103,7 @@ Application = Class.extend({
     },
 
     //! Allows customization of the effects of mouse moving. The returned yaw, pitch are applied to
-    //! the normal sauer camera system. You can set the return values to 0 and alter things otherwise if you want
+    //! the normal sauer camera system. You can set the return values to 0 and alter things otherwise if you want.
     performMousemove: function(yaw, pitch) {
         return { yaw: yaw, pitch: pitch };
     },
@@ -133,16 +132,25 @@ Application = Class.extend({
 
     //! Called on the client when an entity is clicked. See performClick() for more details about how this fits in the big picture.
     clientClick: function(button, down, position, entity, x, y) {
+        if (entity && entity.clientClick) {
+            return entity.clientClick(button, down, position, x, y);
+        }
+        return false;
     },
 
     //! Called on the server when an entity is clicked. See performClick() for more details about how this fits in the big picture.
     click: function(button, down, position, entity) {
+        if (entity && entity.click) {
+            return entity.click(button, down, position);
+        }
+        return false;
     },
 
     //! Called when an 'action key' is pressed down or up. This occurs when a key is bound
     //! to actionkeyX in cubescript, where X is in the range 0 to 29. This lets people
     //! bind keys however they want, and games always deal with action keys 0-29.
     actionKey: function(index, down) {
+        this.emit.apply(this, ['actionKey'].concat(Array.prototype.slice.call(arguments)));
     },
 
     getScoreboardText: function() {
@@ -167,6 +175,8 @@ Application = Class.extend({
         return false;
     },
 });
+
+Object.addSignalMethods(Application.prototype);
 
 //! A simple Application class, used until replaced. This is just to prevent runtime errors in
 //! the case that the Application is *not* replaced (it should be)
