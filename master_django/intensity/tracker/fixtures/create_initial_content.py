@@ -11,7 +11,7 @@ from intensity.signals import multiple_send
 from intensity.tracker.signals import store_asset
 
 
-INITIAL_ASSET_LOCATIONS = set(['emptymap.tar.gz', 'storming.tar.gz'])
+INITIAL_ASSET_LOCATIONS = set(['emptymap.tar.gz'])
 INITIAL_ASSET_LOCATIONS__ORIGINAL = INITIAL_ASSET_LOCATIONS.copy()
 
 def create_initial_asset_content(asset):
