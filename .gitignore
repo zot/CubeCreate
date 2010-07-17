@@ -18,4 +18,11 @@ src/thirdparty/v8/.sconsign.dblite
 src/thirdparty/v8/libv8.a
 src/thirdparty/v8/obj/
 log.*20??
-
+config.*
+configure
+depcomp
+install-sh
+ltmain.sh
+libtool
+missing
+autom4te.cache

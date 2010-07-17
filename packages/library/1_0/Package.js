@@ -26,4 +26,14 @@ function isIntensityVersionAtLeast(test) {
 _logicEntityClasses = {}; // Clear old classes, make room for new
 
 Library.include('library/' + Global.LIBRARY_VERSION + '/Tools', true);
+Library.include('library/' + Global.LIBRARY_VERSION + '/Utilities', true);
 Library.include('library/' + Global.LIBRARY_VERSION + '/__CorePatches', true);
+Library.include('library/' + Global.LIBRARY_VERSION + '/LogicEntityClasses', true);
+Library.include('library/' + Global.LIBRARY_VERSION + '/Actions', true);
+Library.include('library/' + Global.LIBRARY_VERSION + '/Variables', true);
+Library.include('library/' + Global.LIBRARY_VERSION + '/LogicEntity', true);
+Library.include('library/' + Global.LIBRARY_VERSION + '/Animatable', true);
+Library.include('library/' + Global.LIBRARY_VERSION + '/Character', true);
+Library.include('library/' + Global.LIBRARY_VERSION + '/StaticEntity', true);
+Library.include('library/' + Global.LIBRARY_VERSION + '/LogicEntityStore', true);
+Library.include('library/' + Global.LIBRARY_VERSION + '/Application', true);

@@ -7,7 +7,7 @@ SET PYTHONHOME=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTH
 SET OLD_PYTHONPATH=%PYTHONPATH%
 SET PYTHONPATH=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTHONPATH%
 
-cbuild\src\server\Release\Intensity_CServer %*
+src\cubecreate_server %*
 
 echo "To save the output, add     > out_server 2>&1"
 

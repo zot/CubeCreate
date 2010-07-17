@@ -7,6 +7,7 @@ Library.include('library/1_0/');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Plugins');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Health');
 Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
 
 // Default materials, etc.
 

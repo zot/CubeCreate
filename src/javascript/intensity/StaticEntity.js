@@ -11,9 +11,6 @@ StaticEntity = AnimatableLogicEntity.extend({
     //! a particular subclass to have act/clientAct called each frame.
     shouldAct: false,
 
-    //! Static entities generally benefit from this culling method
-    useRenderDynamicTest: true,
-
     //! StaticEntities correspond to the extent Sauer type
     _sauerType: "extent",
     //! The ent_type integer value in Sauer. Overridden in child classes
@@ -157,29 +154,18 @@ StaticEntity = AnimatableLogicEntity.extend({
     },
 
     sendCompleteNotification: function(clientNumber) {
-        clientNumber = defaultValue(clientNumber, MessageSystem.ALL_CLIENTS);
-        var clientNumbers = clientNumber === MessageSystem.ALL_CLIENTS ? getClientNumbers() : [clientNumber];
-
         log(DEBUG, "StaticE.sendCompleteNotification:"); // + serializeJSON(this.stateData));
 
-        forEach(clientNumbers, function(currClientNumber) {
-            MessageSystem.send( currClientNumber,
-                                CAPI.ExtentCompleteNotification,
-                                this.uniqueId,
-                                this._class,
-                                this.createStateDataDict(currClientNumber, { compressed: true }), // Custom data per client
-                                this.position.x, this.position.y, this.position.z,
-                                this.attr1, this.attr2, this.attr3, this.attr4     );
-        }, this);
+        MessageSystem.send( clientNumber,
+                            CAPI.ExtentCompleteNotification,
+                            this.uniqueId,
+                            this._class,
+                            serializeJSON(this.createStateDataDict()),
+                            this.position.x, this.position.y, this.position.z,
+                            this.attr1, this.attr2, this.attr3, this.attr4     );
 
         log(DEBUG, "StaticE.sendCompleteNotification complete");
-    },
-
-    getCenter: function() {
-        var ret = this.position.copy();
-        ret.z += this.radius;
-        return ret;
-    },
+    }
 });
 
 //! A fixed light source in the world, used for ray-traced (baked) shadows and lighting. Changes to this entity will only
@@ -381,8 +367,8 @@ Mapmodel = StaticEntity.extend({
         this.yaw = 0; // TODO: Make dependent upon player yaw?
 
         // Need the following so that the C++ cached copies are in fact up to date.
-        this.collisionRadiusWidth = 0;
-        this.collisionRadiusHeight = 0;
+        this.collisionRadiusWidth = 10;
+        this.collisionRadiusHeight = 10;
 
         log(DEBUG, "Mapmodel.init complete");
     },
@@ -403,17 +389,7 @@ Mapmodel = StaticEntity.extend({
     //! Called on the client when a dynamic entity - like a player - collides with this mapmodel.
     //! @param collider The colliding dynamic entity
     clientOnCollision: function(collider) {
-    },
-
-    getCenter: function() {
-        if (this.collisionRadiusHeight) {
-            var ret = this.position.copy();
-            ret.z += this.collisionRadiusHeight;
-            return ret;
-        } else {
-            return this._super();
-        }
-    },
+    }
 });
 
 
@@ -435,16 +411,13 @@ AreaTrigger = Mapmodel.extend({
 
         this.scriptToRun = "";
 
-        this.collisionRadiusWidth = 10;
-        this.collisionRadiusHeight = 10;
-
         this.modelName = "areatrigger"; // Hardcoded, an appropriate model with mdlcollisionsonlyfortriggering, mdlperentitycollisionboxes
     },
 
     onCollision: function(collider) {
         // XXX Should validate the scriptToRun, that it is the simple name of a function to be called. Passing
         // this to hasattr is a potential security risk.
-        if (this.scriptToRun) {
+        if (this.scriptToRun !== "") {
 //            assert( hasattr(__main__, this.scriptToRun) )
             eval(this.scriptToRun + "(collider);"); // XXX Minor security risk
         }
@@ -476,23 +449,25 @@ ResettableAreaTrigger = AreaTrigger.extend({
     //! client and server. The latter lets client and server triggering states be separate.
     onCollision: function(collider) {
         if (this.readyToTrigger) {
-            this.readyToTrigger = false;
             if (this.scriptToRun !== "") {
                 this._super(collider);
             } else {
                 this.onTrigger(collider);
             }
+
+            this.readyToTrigger = false;
         }
     },
 
     clientOnCollision: function(collider) {
         if (this.readyToTrigger) {
-            this.readyToTrigger = false;
             if (this.scriptToRun !== "") {
                 this._super(collider);
             } else {
                 this.clientOnTrigger(collider);
             }
+
+            this.readyToTrigger = false;
         }
     },
 
@@ -677,6 +652,14 @@ WorldMarker = StaticEntity.extend({
 });
 
 
+//! PlayerStart - DEPRECATED.
+PlayerStart = StaticEntity.extend({
+    _class: "PlayerStart",
+
+    _sauerTypeIndex: 3
+});
+
+
 //
 // Register classes
 //
@@ -690,5 +673,7 @@ registerEntityClass(ParticleEffect, "particles");
 registerEntityClass(Mapmodel, "mapmodel");
 registerEntityClass(AreaTrigger, "mapmodel");
 registerEntityClass(ResettableAreaTrigger, "mapmodel");
+//registerEntityClass(Door, "mapmodel");
+registerEntityClass(PlayerStart, "playerstart"); // TODO: Remove
 registerEntityClass(WorldMarker, "playerstart");
 

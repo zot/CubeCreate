@@ -100,18 +100,6 @@ AnimatableLogicEntity = LogicEntity.extend({
         CAPI.setAnimation(this, animation);
         this.stateVariableValues['animation'] = animation; // Store value so that readings of this.animation return the value
     },
-
-    //! TODO: Move to Animatable?
-    setLocalModelName: function(modelName) {
-        CAPI.setModelName(this, modelName);
-        this.stateVariableValues['modelName'] = modelName; // Store value so that readings of this.animation return the value
-    },
-
-    _generalSetup: function() {
-        this._super.apply(this, arguments);
-
-        this.__defineGetter__('center', bind(this.getCenter, this));
-    },
 });
 
 
@@ -129,7 +117,7 @@ LocalAnimationAction = Action.extend({
     doFinish: function() {
         // Return to original animation, unless it was changed meanwhile - then do nothing
         if (this.actor.animation === this.localAnimation) {
-            this.actor.setLocalAnimation(this.oldAnimation);
+            this.actor.animation = this.oldAnimation;
         }
     }
 });

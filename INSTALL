@@ -1,0 +1,153 @@
+=======
+COMPILE
+=======
+
+
+General
+=======
+
+CubeCreate works on Linux, BSD, Solaris etc., it should work also on Mac
+and Windows (when compiling using either cygwin or mingw+msys+msysdtk).
+Compilation instructions differ for certain platforms.
+
+1. In all cases, you need to get source code by cloning our git repo.
+
+        git clone git://github.com/quaker66/CubeCreate.git
+
+   For that, you'll need to have Git installed, get it either from repository (if using linux, bsd ..),
+   ports or anything your OS uses and as executable installer for Windows.
+
+2. After downloading sourcecode, you need to build Google V8, which is for now built using scons separately.
+   We're working on getting rid of scons and building v8 included in next step.
+   it's in src/thirdparty/v8. You can build using command
+
+        scons
+
+   If you use 64 bit OS, you'll need to give scons parameter "arch=x64", like this
+
+        scons arch=x64
+
+   If you build using new version of gcc (4.4 and higher) on Linux/*NIX, then you need to build like this
+
+        GCC_VERSION=44 scons
+
+3. Then, you need to build the engine. We're using GNU Build System (Autotools) for that.
+   On Linux, BSD and other UNIX based it's pretty straightforward:
+
+        ./autogen.sh; make; make install
+
+   On Windows, you'll need to get msysDTK, mingw and msys http://www.mingw.org/node/48 or build using cygwin.
+   There will be also code::blocks project available very soon, which will ease the build a lot.
+
+   After autogen is ran once, you don't need to run it again, unless makefile.am or configure.ac changes.
+   Instead, you can run
+
+        ./configure; make; make install
+
+   Autogen basically copies and generates needed files and runs configure which is generated using autogen.
+
+   On Mac, you'll need to use autotools, we're currently looking for someone who could do xcode project.
+
+3. After compiling, see the README.
+
+
+Specific Platforms
+==================
+
+Linux
+=====
+
+These instructions apply to Debian, Ubuntu and distros based on those two.
+On different Linux distros (RPM-based etc.) package names should be simillar, but they may differ.
+
+You'll have to install dependencies:
+
+    sudo apt-get install git-core cmake scons build-essential libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev zlib1g-dev autoconf automake autotools-dev libtool pkg-config
+
+Then follow the main instructions
+
+OS X
+====
+
+TBD - old modified doc:
+
+The following works on Snow Leopard 10.6 (thanks to abs1nth!):
+
+    * Install the developer tools, which are an optional install from the
+      OS X DVD, or download them from http://developer.apple.com/mac/
+    * Install SDL.framework, SDL_mixer.frameworks and SDL_image.framework
+      in /Library/Frameworks
+    * Install scons, autotools (probably using MacPorts or Fink)
+    * Follow instructions above.
+
+Windows
+=======
+
+TBD - for now, find some info about msys, mingw, msystk or cygwin and you can try following
+linux instructions with either cygwin or mingw+msys+msysdtk.
+Links:
+
+   1. Git git-scm.com.
+   2. SCons www.scons.org.
+   3. Mingw www.mingw.org.
+   4. Python www.python.org. (version 2.6)
+
+You can build scons like this (assuming you have visual studio stuff and microsoft SDKs installed)
+
+    scons mode=release env="INCLUDE:C:\Program Files\Microsoft SDKs\Windows\v6.0A\Include;C:\Program Files\Microsoft Visual Studio 9.0\VC\Include;,LIB:C:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib;C:\Program Files\Microsoft Visual Studio 9.0\VC\Lib;"
+
+Then, you can try building using linux instructions with modification for mingw, msys, msysdtk or cygwin.
+
+Also, there will be Code::blocks project set up very soon, which will make building very easy.
+
+Some things to be aware of:
+
+    * zlib, SDL, SDL_Image and SDL_Mixer are bundled in the source code repo for you,
+      so you don't need to get those.
+    * Python libs, cflags are got from python-config. You must have that.
+    * SDL libs, cflags are got from sdl-config. You must have that.
+    * You should also have pkg-config data for needed libs and pkg-config installed.
+
+
+FreeBSD
+=======
+
+Compiling on FreeBSD should work by following the instructions for Linux
+as written above.
+
+Packaging Releases
+==================
+
+We'll try to provide as many binaries as possible to keep you without work =)
+
+
+Advanced Usage
+==============
+
+Browser Plugin
+--------------
+
+To compile the experimental browser plugin, use
+
+    ./autogen.sh --enable-web-plugin
+
+Note that you will need some things like GTK development headers, etc. On
+Ubuntu/Debian the relevant packages are libgtk2.0-dev, libxt-dev.
+
+Then copy the browser plugin to where it will be found, using something
+like
+
+    sudo cp lib/libintensity_plugin_YOUROS-YOURARCH.so* /usr/lib/mozilla/plugins/
+
+Then restart your browser and open
+
+    src/client/plugin/test.html
+
+
+What to do when you're done
+===========================
+
+See README for how to connect to syntensity.com, and
+README-standalone.txt for how to run locally/standalone
+(which is a quick way to see some stuff running in the engine).
+

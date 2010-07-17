@@ -2,27 +2,13 @@
 // Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
-// Caching by time delay
-
-cacheByTimeDelay = function(func, delay) {
-    func.lastTime = -delay*2;
-    return function() {
-        if (Global.time - func.lastTime >= delay) {
-            func.lastCachedValue = func.apply(this, arguments);
-            func.lastTime = Global.time;
-        }
-        return func.lastCachedValue;
-    }
-};
-
 
 __entitiesStore = {}; //! Local store of entities, in Python. Parallels the C++ LogicData store, has same interface as server's persistence
-__entitiesStoreByClass = {};
 
 //! Same interface as the server's persistence system, but accesses just the local client's store of active LogicEntities.
 //! @param uniqueId The unique id of the entity to be retrieved.
 //! @return The logic entity corresponding to that unique id.
-getEntity = function(uniqueId) {
+function getEntity(uniqueId) {
     log(INFO, "getEntity" + uniqueId);
     var ret = __entitiesStore[uniqueId];
     if (ret !== undefined) {
@@ -37,7 +23,7 @@ getEntity = function(uniqueId) {
 
 //! @param withTag If given, only active entities with that tag are returned
 //! @return All the currently active logic entities (i.e., registered LEs), currently in memory and running.
-getEntitiesByTag = function(withTag) {
+function getEntitiesByTag(withTag) {
     var ret = [];
     forEach(values(__entitiesStore), function(entity) {
         if (entity.hasTag(withTag)) {
@@ -50,7 +36,7 @@ getEntitiesByTag = function(withTag) {
 
 //! A singleton version of getEntities: returns the single entity having a tag. If there are
 //! no such entities, or more than one, None is returned.
-getEntityByTag = function(withTag) {
+function getEntityByTag(withTag) {
     var ret = getEntitiesByTag(withTag);
     if (ret.length == 1) {
         return ret[0];
@@ -63,42 +49,6 @@ getEntityByTag = function(withTag) {
     }
 }
 
-
-//! Returns all the entities of a particular class (and subclasses)
-//! @param _class The class to filter by (either the name of the class, or the actual class)
-getEntitiesByClass = function(_class) {
-    if (typeof _class === 'function') {
-        _class = _class.prototype._class;
-    }
-
-    if (__entitiesStoreByClass[_class]) {
-        return __entitiesStoreByClass[_class];
-    } else {
-        return [];
-    }
-}
-
-
-//! Returns all the client entities, i.e., that are avatars of players
-getClientEntities = function() {
-    return getEntitiesByClass('Player');
-}
-
-
-//! Returns all the client numbers
-getClientNumbers = function() {
-    return map(function(client) { return client.clientNumber; }, getClientEntities());
-}
-
-
-isPlayerEditing = function(player) {
-    if (Global.CLIENT) {
-        player = defaultValue(player, getPlayerEntity());
-    }
-    return player && player.clientState === CLIENTSTATE.EDITING;
-}
-
-
 //! Returns the Logic Entities close to a particular entity (the entity itself is ignored).
 //! @param origin The logic entity or position around which we look.
 //! @param max_distance How far to look.
@@ -107,36 +57,37 @@ isPlayerEditing = function(player) {
 //! @param with_tag If provided, then only entities having this tag will be taken into consideration.
 //! @param unsorted By default we sort the output; this can disable that.
 //! @return A list, from close to far, of tuples of the form (entity, distance)
-getCloseEntities = function(origin, maxDistance, _class, withTag, unsorted) {
+function getCloseEntities(origin, maxDistance, _class, withTag, unsorted) {
     var ret = [];
 
-    var entities = _class ? getEntitiesByClass(_class) : values(__entitiesStore);
-    for (var i = 0; i < entities.length; i++) {
-        var otherEntity = entities[i];
+    forEach(values(__entitiesStore), function(otherEntity) {
+        if ( _class && !(otherEntity instanceof _class) ) {
+            return;
+        }
 
-        if ( withTag && !entity.hasTag(withTag) ) continue;
-        if (!otherEntity.position) continue;
+        if ( withTag && !entity.hasTag(withTag) ) {
+            return;
+        }
+
+        if (!otherEntity.position) return;
 
         var distance = origin.subNew(otherEntity.position).magnitude();
 
         if (distance <= maxDistance) {
             ret.push( [otherEntity, distance] );
         }
-    }
+    });
 
     // Sort results by distance
     if (!unsorted) {
-        ret.sort(function(a, b) { return (a[1] - b[1]); });
+        ret.sort(function(a, b) { return (b[1] - a[1]); });
     }
 
     return ret;
 }
 
 
-addEntity = function(_className, uniqueId, kwargs, _new) {
-//    if (_className.indexOf('Light') !== -1) return;
-//    if (_className.indexOf('Flicker') !== -1) return;
-
+function addEntity(_className, uniqueId, kwargs, _new) {
     uniqueId = defaultValue(uniqueId, 1331); // Useful for debugging
 
     log(DEBUG, format("Adding new Scripting LogicEntity of type {0} with unique ID {1}", _className, uniqueId));
@@ -162,19 +113,6 @@ addEntity = function(_className, uniqueId, kwargs, _new) {
     __entitiesStore[ret.uniqueId] = ret;
     eval(assert(' getEntity(uniqueId) ===  ret '));
 
-    // Caching
-
-    forEach(items(_logicEntityClasses), function(pair) {
-        var className = pair[0];
-        var classClass = pair[1][0];
-        if (ret instanceof classClass) {
-            if (!__entitiesStoreByClass[className]) {
-                __entitiesStoreByClass[className] = [];
-            }
-            __entitiesStoreByClass[className].push(ret);
-        }
-    });
-
     // Done after setting the unique ID and placing in the global store, because C++
     // registration relies on both.
 
@@ -192,7 +130,7 @@ addEntity = function(_className, uniqueId, kwargs, _new) {
 
 //! Removes a logic entity from the local store. Called from LogicData::unregisterLogicEntity. Calls __nregister__
 //! @param uniqueId The unique id of the entity to unregister
-removeEntity = function(uniqueId) {
+function removeEntity(uniqueId) {
     log(DEBUG, format("Removing Scripting LogicEntity: {0}", uniqueId));
 
     if (__entitiesStore[uniqueId] === undefined) {
@@ -208,26 +146,12 @@ removeEntity = function(uniqueId) {
         __entitiesStore[uniqueId].deactivate();
     }
 
-    // Caching
-
-    var entity = __entitiesStore[uniqueId];
-    forEach(items(_logicEntityClasses), function(pair) {
-        var className = pair[0];
-        var classClass = pair[1][0];
-        if (entity instanceof classClass) {
-            __entitiesStoreByClass[className].splice(
-                findIdentical(__entitiesStoreByClass[className], entity),
-                1
-            );
-        }
-    });
-
     delete __entitiesStore[uniqueId];
 }
 
 
 //! Removes all entities from the store. This typically used when a map is removed from memory.
-removeAllEntities = function() {
+function removeAllEntities() {
     forEach(keys(__entitiesStore), function(uniqueId) {
         removeEntity(uniqueId);
     });
@@ -247,59 +171,21 @@ startFrame = function() {
 
 Global.time = 0; //!< Total time passed
 Global.currTimeDelta = 1.0; //!< Current frame time. Initialized to 1.0 just to give a valid value if anyone reads it.
-Global.lastmillis = 0; //<! Sauer-relevant value of lastmillis, useful for basetime of animations, etc.
-Global.profiling = null; //!< To enable, place something like { interval: 1.0 } in this
 
-Global.queuedActions = []; //!< Add actions here, that will be run the first time manageActions
-                           //!< is called. That is only done *after* all entities are loaded
-                           //!< and the scenario has started. So it is useful e.g. if you need
-                           //!< to rely on a combination of entities to be present (like the
-                           //!< GameManager)
-
-manageActions = function(seconds, lastmillis) {
-    log(INFO, "manageActions: queued");
-
-    var currentActions = Global.queuedActions.slice(); // Work on copy as these may add more!
-    Global.queuedActions = [];
-    forEach(currentActions, function(action) { action(); });
-
+manageActions = function(seconds) {
     Global.time += seconds;
     Global.currTimeDelta = seconds;
-    Global.lastmillis = lastmillis;
 
     log(INFO, "manageActions: " + seconds);
 
-    if (Global.profiling) {
-        if (!Global.profiling.counter) {
-            Global.profiling.data = {};
-            Global.profiling.counter = seconds;
-        } else {
-            Global.profiling.counter += seconds;
-            if (Global.profiling.counter >= Global.profiling.interval) {
-                Global.profiling.counter = 0; // Will reset data next time
-            }
-        }
-    }
-    var time;
-
-    var entities = values(__entitiesStore);
-    var i;
-    for (i = 0; i < entities.length; i++) {
-        var entity = entities[i];
+    forEach(values(__entitiesStore), function(entity) {
 //        log(INFO, "manageActions for: " + entity.uniqueId);
         if (entity.deactivated) {
-            continue;
+            return;
         }
 
-        if (entity.shouldAct === false) {
-            continue;
-        }
-        if (entity.shouldAct !== true && ((Global.CLIENT && !entity.shouldAct.client) || (Global.SERVER && !entity.shouldAct.server))) {
-            continue;
-        }
-
-        if (Global.profiling) {
-            time = CAPI.currTime();
+        if (!entity.shouldAct) {
+            return;
         }
 
         if (Global.CLIENT) {
@@ -307,109 +193,31 @@ manageActions = function(seconds, lastmillis) {
         } else {
             entity.act(seconds);
         }
-
-        if (Global.profiling) {
-            time = CAPI.currTime() - time;
-            if (Global.profiling.data[entity._class] === undefined) Global.profiling.data[entity._class] = 0;
-            Global.profiling.data[entity._class] += time;
-        }
-    }
-
-    if (Global.profiling && Global.profiling.counter === 0) {
-        log(ERROR, "---------------profiling (time per second)---------------");
-        var sortedKeys = keys(Global.profiling.data);
-        sortedKeys.sort(function(a, b) { return Global.profiling.data[b] - Global.profiling.data[a]; });
-        forEach(sortedKeys, function(_class) {
-            log(ERROR, "profiling: " + _class + ': ' + (Global.profiling.data[_class]/(1000*Global.profiling.interval)));
-        });
-        log(ERROR, "---------------profiling (time per second)---------------");
-    }
-}
-
-// Replaces previous C++ system using Cube's octree
-manageTriggeringCollisions = cacheByTimeDelay(function() {
-    var time;
-    if (Global.profiling && Global.profiling.data) {
-        time = CAPI.currTime();
-    }
-
-    var entities = getEntitiesByClass('AreaTrigger');
-
-    forEach(getClientEntities(), function(player) {
-        if (isPlayerEditing(player)) return;
-
-        var i;
-        for (i = 0; i < entities.length; i++) {
-            var entity = entities[i];
-
-            if (World.isPlayerCollidingEntity(player, entity)) {
-                if (Global.CLIENT) {
-                    entity.clientOnCollision(player);
-                } else {
-                    entity.onCollision(player);
-                }
-            }
-        }
     });
-
-    if (Global.profiling && Global.profiling.data) {
-        var _class = '__TriggeringCollisions__';
-        time = CAPI.currTime() - time;
-        if (Global.profiling.data[_class] === undefined) Global.profiling.data[_class] = 0;
-        Global.profiling.data[_class] += time;
-    }
-}, defaultValue(Global.triggeringCollisionsDelay, 1/10)); // Important for performance, until we have a script octree
+}
 
 //! Perform dynamic rendering for all entities that need it. See renderDynamic
 //! in LogicEntity. Should only be called on the client, of course.
 //! @param thirdperson True is we are in thirdperson mode. In this case
 //!                    the player entity should not be rendered
 //!                    (HUD models should be drawn in renderHUDModels)
-renderDynamic = function(thirdperson) {
+function renderDynamic(thirdperson) {
     log(INFO, "renderDynamic");
 
-    var time;
-
-    var player = getPlayerEntity();
-    if (!player) return;
-
-    var entities = values(__entitiesStore);
-    var i;
-    for (i = 0; i < entities.length; i++) {
-        var entity = entities[i];
-
+    forEach(values(__entitiesStore), function(entity) {
         log(INFO, "renderDynamic for: " + entity.uniqueId);
 
         if (entity.deactivated || entity.renderDynamic === null) {
-            continue;
+            return;
         }
 
-        if (Global.profiling && Global.profiling.data) {
-            time = CAPI.currTime();
-        }
-
-        if (entity.useRenderDynamicTest) {
-            if (!entity.renderDynamicTest) {
-                Rendering.setupDynamicTest(entity);
-            }
-
-            if (!entity.renderDynamicTest()) continue;
-        }
-
-        entity.renderDynamic(false, !thirdperson && entity === player);
-
-        if (Global.profiling && Global.profiling.data) {
-            var _class = entity._class + '::renderDynamic';
-            time = CAPI.currTime() - time;
-            if (Global.profiling.data[_class] === undefined) Global.profiling.data[_class] = 0;
-            Global.profiling.data[_class] += time;
-        }
-    };
+        entity.renderDynamic(false, !thirdperson && entity === getPlayerEntity());
+    });
 }
 
-renderHUDModels = function() {
+function renderHUDModels() {
     var player = getPlayerEntity();
-    if (player.HUDModelName && player.clientState !== CLIENTSTATE.EDITING) {
+    if (player.HUDModelName) {
         player.renderDynamic(true, true);
     }
 }
@@ -436,7 +244,7 @@ if (Global.CLIENT) {
     //! Sets the unique ID of the player (reflects ClientSystem::uniqueId). Creates the playerLogicEntity global
     //! which can then be accessed by get_playerLogicEntity().
     //! @param uniqueId The unique id of the player's LogicEntity.
-    setPlayerUniqueId = function(uniqueId) {
+    function setPlayerUniqueId(uniqueId) {
         log(DEBUG, format("Setting player unique ID to {0}", uniqueId));
 
         if (uniqueId !== null) {
@@ -450,7 +258,7 @@ if (Global.CLIENT) {
     }
 
     //! @return The player logic entity, i.e., the logic entity of the character the player controls.
-    getPlayerEntity = function() {
+    function getPlayerEntity() {
         return playerLogicEntity;
     }
 
@@ -465,14 +273,13 @@ if (Global.CLIENT) {
     //! @param uniqueId The unique id corresponding to the entity for which we will change the state datum.
     //! @param keyProtocolId The protocol_id of the state datum.
     //! @param value The value to set for that state datum.
-    setStateDatum = function(uniqueId, keyProtocolId, value) {
+    function setStateDatum(uniqueId, uniqueId, value) {
         entity = getEntity(uniqueId);
         // The entity might not exist if this state datum update is due to an object not yet sent to us from the
         // server. We might in the future want TODO that the server only sends such updates when the client is
         // ready to accept them. Then 'None' here would be an error
         if (entity !== null) {
-            var key = MessageSystem.fromProtocolId(entity._class, keyProtocolId);
-            log(DEBUG, "setStateDatum: " + uniqueId + ' , ' + keyProtocolId + ' , ' + key);
+            var key = MessageSystem.fromProtocolId(entity._class, uniqueId);
             entity._setStateDatum(key, value);
         }
     }
@@ -480,7 +287,7 @@ if (Global.CLIENT) {
     //! Checks whether the client has all necessary info to actually run the scenario, i.e. the current
     //! application. In particular, tests if all LogicEntities are initialized, and if the player logic entity
     //! has been created in completion.
-    testScenarioStarted = function() {
+    function testScenarioStarted() {
         log(INFO, "Testing whether the scenario started");
 
         if (getPlayerEntity() === null) {
@@ -516,7 +323,7 @@ if (Global.SERVER) {
     //! Returns a new UniqueID that isn't used by anything. This UiD is *NOT* reserved, it remains
     //! valid only as long as no other entity has been created (which, using this same function,
     //! might well want the same UiD)
-    getNewUniqueId = function() {
+    function getNewUniqueId() {
         var ret = 0;
         forEach(keys(__entitiesStore), function(uniqueId) {
             ret = Math.max(ret, uniqueId);
@@ -526,7 +333,7 @@ if (Global.SERVER) {
         return ret;
     }
 
-    newEntity = function(_className, kwargs, forceUniqueId, returnUniqueId) {
+    function newEntity(_className, kwargs, forceUniqueId, returnUniqueId) {
         log(DEBUG, "New logic entity: " + forceUniqueId);
 
         if (forceUniqueId === undefined) {
@@ -542,7 +349,7 @@ if (Global.SERVER) {
         }
     }
 
-    newNPC = function(_className) {
+    function newNPC(_className) {
         var npc = CAPI.addNPC(_className);
         npc._controlledHere = true;
         return npc;
@@ -551,7 +358,7 @@ if (Global.SERVER) {
     //! Send a client all the data on the currently active entities. This include in-map entities (mapmodels etc.)
     //! and non-map (NPCs, non-Sauers, etc.)
     //! @param clientNumber The identifier of the client to which to send all data, or ALL_CLIENTS (-1) for all of them.
-    sendEntities = function(clientNumber) {
+    function sendEntities(clientNumber) {
         log(DEBUG, "Sending active logic entities to " + clientNumber);
 
         var numEntities = 0; // TODO: Better JS-ey way to do this?
@@ -565,12 +372,9 @@ if (Global.SERVER) {
             numEntities
         );
 
-        // Send in correct order, we need e.g. GameManager there first
-        var ids = keys(__entitiesStore);
-        ids.sort();
-        for (var i = 0; i < ids.length; i++) {
-            __entitiesStore[ids[i]].sendCompleteNotification(clientNumber);
-        }
+        forEach(values(__entitiesStore), function(entity) {
+            entity.sendCompleteNotification(clientNumber);
+        });
     }
 
 
@@ -580,7 +384,7 @@ if (Global.SERVER) {
     //! @param uniqueId The unique id corresponding to the entity for which we will change the state datum.
     //! @param keyProtocolId The protocol_id of the state datum.
     //! @param value The value to set for that state datum.
-    setStateDatum = function(uniqueId, keyProtocolId, value, actorUniqueId) {
+    function setStateDatum(uniqueId, keyProtocolId, value, actorUniqueId) {
         var entity = getEntity(uniqueId);
         // The entity might not exist if this state datum update is due to an object meanwhile destroyed, etc.
         if (entity !== null) {
@@ -594,7 +398,7 @@ if (Global.SERVER) {
     //! the Sauerbraten .ogz file, but we no longer do that. Instead, we read all the entities
     //! in the database that correspond to that map. This in particular lets us handle static and
     //! dynamic entities in the same manner.
-    loadEntities = function(serializedEntities) {
+    function loadEntities(serializedEntities) {
         log(DEBUG, "Loading entities...: " + serializedEntities + typeof(serializedEntities));
 
         var entities = evalJSON(serializedEntities);
@@ -605,8 +409,6 @@ if (Global.SERVER) {
             var _class = entity[1];
             var stateData = entity[2];
             log(DEBUG, format("loadEntities: {0},{1},{2}", uniqueId, _class, stateData));
-
-            if (_class === 'PlayerStart') _class = 'WorldMarker'; // backwards compatibility
 
             if (CAPI.getMapversion() <= 30 && stateData.attr1) {
                 switch (_class) {
@@ -626,59 +428,30 @@ if (Global.SERVER) {
 
         log(DEBUG, "Loading entities complete");
     }
-}
 
-//! Serializes the (persistent) entities and returns them in a form that can later be
-//! read by loadEntities
-saveEntities = function() {
-    var ret = [];
+    //! Serializes the (persistent) entities and returns them in a form that can later be
+    //! read by loadEntities
+    function saveEntities() {
+        var ret = [];
 
-    log(DEBUG, "Saving entities...:");
+        log(DEBUG, "Saving entities...:");
 
-    forEach(values(__entitiesStore), function(entity) {
-        if (entity._persistent) {
-            log(DEBUG, "Saving entity " + entity.uniqueId);
-            var uniqueId = entity.uniqueId;
-            var _class = entity._class;
-            var stateData = entity.createStateDataDict();
-                                                // TODO: Also, store as serialized here, not as dict, to save all the
-                                                // parse-unparsing that makes things slow
-            ret.push(serializeJSON([uniqueId, _class, stateData]));
-        }
-    });
-
-    log(DEBUG, "Saving entities complete");
-
-    return '[\n' + ret.join(',\n') + '\n]\n\n';
-}
-
-
-// Caching per Global.timestamp
-
-cacheByGlobalTimestamp = function(func) {
-    return function() {
-        if (func.lastTimestamp !== Global.currTimestamp) {
-            func.lastCachedValue = func.apply(this, arguments);
-            func.lastTimestamp = Global.currTimestamp;
-        }
-        return func.lastCachedValue;
-    }
-};
-
-
-CAPI.getTargetPosition = cacheByGlobalTimestamp(CAPI.getTargetPosition);
-CAPI.getTargetEntity = cacheByGlobalTimestamp(CAPI.getTargetEntity);
-
-
-Rendering = {
-    setupDynamicTest: function(entity) {
-        var currEntity = entity;
-        entity.renderDynamicTest = cacheByTimeDelay(function() {
-            var playerCenter = getPlayerEntity().center;
-            if (currEntity.position.subNew(playerCenter).magnitude() > 256) {
-                if (!hasLineOfSight(playerCenter, currEntity.position)) return false;
+        forEach(values(__entitiesStore), function(entity) {
+            if (entity._persistent) {
+                log(DEBUG, "Saving entity " + entity.uniqueId);
+                var uniqueId = entity.uniqueId;
+                var _class = entity._class;
+                var stateData = entity.createStateDataDict();
+                                                  // TODO: Also, store as serialized here, not as dict, to save all the
+                                                  // parse-unparsing that makes things slow
+                ret.push([uniqueId, _class, stateData]);
             }
-            return true;
-        }, 1/3);
-    },
-};
+        });
+
+        log(DEBUG, "Saving entities complete");
+
+        return serializeJSON(ret);
+    }
+
+}
+
