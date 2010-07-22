@@ -26,3 +26,4 @@ ltmain.sh
 libtool
 missing
 autom4te.cache
+docs/build/
