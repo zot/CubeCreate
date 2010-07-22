@@ -1,5 +1,5 @@
 CubeCreate
-================
+==========
 
 CubeCreate is a modern gaming engine / platform based on Syntensity.
 
@@ -35,7 +35,7 @@ See INSTALL for how to compile the source code, if binaries are not provided for
 
 
 Running - Locally
---------------------------------------------
+-----------------
 
 See README-standalone.txt. It explains how to quickly run a map
 using the client, and also more complex things like running your
@@ -140,12 +140,12 @@ See docs/code.markdown.
 Notes
 =====
 
-1. The CubeCreate is licensed under the MIT/X11 
-   license. See COPYING for details.
+1. CubeCreate is licensed under the MIT/X11 license.
+   See COPYING.txt for details.
 2. For more information, including links to the mailing list,
    bugs, wiki, etc., see the main website,
 
-        NOT DONE YET
+        http://cubecreate.com/
 
 3. This distribution may contain sources or binaries of other open
    source projects /src or /windows/dll), supplied for
