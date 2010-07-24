@@ -15,9 +15,8 @@ Shared
 
        git clone git://github.com/quaker66/CubeCreate.git
 
-   You need the Git version control system installed,::
+   You need the Git version control system installed. You can get it at `git-scm.com <http://git-scm.com/>`_.
 
-       http://git-scm.com/
 
 Windows
 -------

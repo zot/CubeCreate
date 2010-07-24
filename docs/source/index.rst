@@ -6,13 +6,12 @@
 CubeCreate's documentation
 ==========================
 
-Contents:
-
 .. toctree::
    :maxdepth: 2
 
    introduction.rst
    guide/index.rst
+   develop/index.rst
 
 Indices and tables
 ==================
