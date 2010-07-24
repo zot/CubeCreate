@@ -11,9 +11,11 @@ Shared
 
 1. In both cases you should get the source code, either a zip file/tarball
    with a release, or straight from the source code repository, in which
-   case you can simply do::
+   case you can simply do
 
-       git clone git://github.com/quaker66/CubeCreate.git
+   .. code-block :: bash
+
+       $ git clone git://github.com/quaker66/CubeCreate.git
 
    You need the Git version control system installed. You can get it at `git-scm.com <http://git-scm.com/>`_.
 
@@ -30,15 +32,19 @@ In the directory where the source code was placed (usually 'CubeCreate'),
 run (in a DOS shell, that is, inside cmd.exe) the following commands. They
 assume you are building with Visual Studio Express 2008.
 
-First, build V8 by going to src\thirdparty\v8 and running::
+First, build V8 by going to src\thirdparty\v8 and running
 
-    scons mode=release env="INCLUDE:C:\Program Files\Microsoft SDKs\Windows\v6.0A\Include;C:\Program Files\Microsoft Visual Studio 9.0\VC\Include;,LIB:C:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib;C:\Program Files\Microsoft Visual Studio 9.0\VC\Lib;"
+.. code-block :: bash
+
+    $ scons mode=release env="INCLUDE:C:\Program Files\Microsoft SDKs\Windows\v6.0A\Include;C:\Program Files\Microsoft Visual Studio 9.0\VC\Include;,LIB:C:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib;C:\Program Files\Microsoft Visual Studio 9.0\VC\Lib;"
 
 (change the path to point to where you have the Windows platform SDKs).
 
-Then, go back up and to \cbuild, and there run::
+Then, go back up and to \cbuild, and there run
 
-    SET PATH=%PATH%;C:\Program Files\Microsoft Visual Studio 9.0\VC\bin;C:\Program Files\Microsoft Visual Studio 9.0\Common7\IDE
+.. code-block :: bash
+
+    $ SET PATH=%PATH%;C:\Program Files\Microsoft Visual Studio 9.0\VC\bin;C:\Program Files\Microsoft Visual Studio 9.0\Common7\IDE
     cmake -G "Visual Studio 9 2008" ..
 
 This should create a project file for VC++, which you can then build. Note
@@ -60,19 +66,20 @@ to the package names and so forth, but overall, things should be similar.
 
 First, install Git, CMake, SCons and other important stuff:
 
-  Ubuntu 9.10::
+  Ubuntu 9.10
 
-     sudo apt-get install git-core cmake scons g++ libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev zlib1g-dev
+.. code-block :: bash
+
+     $ sudo apt-get install git-core cmake scons g++ libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev zlib1g-dev
 
 Go to the V8 directory, ./src/thirdparty/v8, and run::
 
-    GCC_VERSION="44" scons
+    $ GCC_VERSION="44" scons
 
-there. Then go back down to the base dir, and enter the directory 'cbuild', and run::
+there. Then go back down to the base dir and run
 
-    cmake ..
+.. code-block :: bash
 
-this should configure things correctly. Then run::
+    $ ./autogen.sh; make;
 
-    make
-
+this should configure and compile things correctly.

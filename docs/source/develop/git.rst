@@ -24,12 +24,16 @@ Windows
 
    * Right click (on empty space) -> TortoiseGit -> Settings
    * In General options, in MSysGit field make sure your path is set.
-     If it appears to be empty write::
+     If it appears to be empty write
+
+     .. code-block :: bash
 
          C:\Program Files\Git\bin
 
-     Then click "Check now" and it should say version you're using.
-     Try reinstalling/rewriting your path if something's gone wrong.
+     .. note::
+         This path may be different if you changed the default path.
+         Then click "Check now" and it should say version you're using.
+         Try reinstalling/rewriting your path if something's gone wrong.
 
 
 Preparing
