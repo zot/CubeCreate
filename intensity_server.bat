@@ -7,42 +7,21 @@ SET PYTHONHOME=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTH
 SET OLD_PYTHONPATH=%PYTHONPATH%
 SET PYTHONPATH=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTHONPATH%
 
-if "%PROCESSOR_ARCHITECTURE%" == "x86"
+SET PREFIX="cbuild\src\server"
+if exist %PREFIX%\CC_Server_Windows-%PROCESSOR_ARCHITECTURE%.exe
 (
-    SET ccarch=32
-)
-else
-(
-    SET ccarch=64
-)
-
-@echo off
-for %exe in (bin\cc_server*.exe) do
-(
-    echo %exe | find %ccarch%
-    if errorlevel 0
-    (
-        SET ccexec=%exe
-    )
-)
-@echo on
-
-if defined ccexec
-(
-    bin\%ccexec% %*
+    %PREFIX%\CC_Server_Windows-%PROCESSOR_ARCHITECTURE%.exe %*
     echo "To save the output, add     > out_server 2>&1"
 )
 else
 (
-    echo "No executable exists for architecture %ccarch%."
+    echo "No executable exists for architecture %PROCESSOR_ARCHITECTURE%."
     SET PATH=%OLD_PATH%
     SET PYTHONHOME=%OLD_PYTHONHOME%
     SET PYTHONPATH=%OLD_PYTHONPATH%
     pause
     goto :end
 )
-
-pause
 
 SET PATH=%OLD_PATH%
 SET PYTHONHOME=%OLD_PYTHONHOME%
