@@ -6,17 +6,23 @@ path_only=`dirname "$abspath"`
 cd ${path_only}
 
 # find out needed information
-os=$(uname -s | tr '[:upper:]' '[:lower:]')
+os=$(uname -s)
 arch=$(uname -m)
+archp=$(uname -p)
 
-if [ -f ./bin/cc_client_*${os}*${arch} ]; then
-    ./bin/cc_client_*${os}*${arch} $@ -r
+PREFIX="./cbuild/src/client"
+if [ -f ${PREFIX}/CC_Client_${os}-${arch} ]; then
+    ${PREFIX}/CC_Client_${os}-${arch} $@ -r
 else
-    echo "Binary for your OS (${os}) and/or architecture (${arch}) was not found."
-    echo "You must compile one. If you'll compile, it would be good if you sent the binary to developers,"
-    echo "to help support of CubeCreate on various platforms."
-    read end
-    exit 1
+    if [ -f ${PREFIX}/CC_Client_${os}-${archp} ]; then
+        ${PREFIX}/CC_Client_${os}-${archp} $@ -r
+    else
+        echo "Binary for your OS (${os}) and/or architecture (${arch}) was not found."
+        echo "You must compile one. If you'll compile, it would be good if you sent the binary to developers,"
+        echo "to help support of CubeCreate on various platforms."
+        read end
+        exit 1
+    fi
 fi
 
 exit 0
