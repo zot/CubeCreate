@@ -95,7 +95,6 @@ set(CLIENT_SOURCES
 set(CLIENT_LIBRARIES
     enet_${CC_BUILD_SUFFIX}
     v8
-    rt
     ${PYTHON_LIBRARIES}
     boost_python_${CC_BUILD_SUFFIX}
     ${SDL_LIBRARY}
@@ -107,9 +106,16 @@ set(CLIENT_LIBRARIES
     ${UTIL}
 )
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+   set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES} rt)
+endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
 # additional libs on windows
 if (MINGW OR WIN32)
-    set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES} opengl32 glu32 ws2_32 winmm msvcrt user32 imagehlp)
+    set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES} opengl32 glu32 ws2_32 winmm)
+    if (NOT MINGW)
+        set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES} msvcrt user32 imagehlp)
+    endif (NOT MINGW)
 endif (MINGW OR WIN32)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "BSD") # there is no BSD variable declared
