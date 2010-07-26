@@ -8,8 +8,15 @@ For now, it's in sync with Sauerbraten and SauerEnhanced:
 Current Sauerbraten revision: 2940
 Current Sauerbraten Enhanced revision: 288
 
-TODO
+
+Notes
 =====
+
+Please see 'legacy docs' for incomplete guides on compiling and running the
+engine. We are currently in the process of updating our docs.
+
+TODO
+====
 
 For now, we have a few todos to do.
 
