@@ -81,7 +81,10 @@ set(SERVER_LIBRARIES
 
 # additional libs on windows
 if (MINGW OR WIN32)
-    set(SERVER_LIBRARIES ${SERVER_LIBRARIES} cc_server ws2_32 winmm msvcrt opengl32)
+    set(SERVER_LIBRARIES ${SERVER_LIBRARIES} ws2_32 opengl32 winmm)
+    if (NOT MINGW)
+        set(SERVER_LIBRARIES ${SERVER_LIBRARIES} msvcrt)
+    endif (NOT MINGW)
 endif (MINGW OR WIN32)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "BSD") # there is no BSD variable declared
