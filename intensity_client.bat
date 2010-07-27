@@ -35,7 +35,7 @@ if %PROCESSOR_ARCHITECTURE%==AMD64 (
 )
 
 :run
-bin\CC_Client_Windows-x86.exe %* -r > out_client 2>&1
+bin\CC_Client_Windows-%CCARCH%.exe %* -r > out_client 2>&1
 
 echo "(If a problem occurred, look in out_client)"
 

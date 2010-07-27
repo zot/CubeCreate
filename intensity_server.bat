@@ -37,7 +37,7 @@ if %PROCESSOR_ARCHITECTURE%==AMD64 (
 )
 
 :run
-bin\CC_Server_Windows-x86.exe %*
+bin\CC_Server_Windows-%CCARCH%.exe %*
 
 echo "To save the output, add     > out_server 2>&1"
 

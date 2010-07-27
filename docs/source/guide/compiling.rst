@@ -100,9 +100,10 @@ You need to get:
 
 1. CMake from www.cmake.org. Install it into standard directory. Let it write PATH variable when installing so it works correctly.
 2. Python from www.python.org. **Note:** The batch files etc. assume
-   you are using Python 2.6.x, so get 2.6 release (CC will be updated to latest soon)
-   Install it into C:\\Python26 as usual and always install it under administrator.
+   you are using Python 2.6.x, so get 2.6.X release (currently 2.6.5 - http://python.org/download/releases/2.6.5/ , CC will be updated to latest soon)
+   Install it into C:\\Python26 as usual and install it for ALL USERS.
 3. SCons from www.scons.org.
+   You must install SCons as administrator otherwise it won't be able to properly write some things into registry.
    After installing SCons, run Control panel of windows, edit environment variables of system and append this into PATH:
 
    .. code-block :: bash
@@ -143,7 +144,8 @@ This is an easier and more straightforward version. Also, mingw build doesn't wo
 
 4. Double-click CubeCreate.sln file in CCROOT\\cbuild, it'll open solution in MS Visual C++.
 
-5. Right-click solution CubeCreate, select Properties, if active Configuration is Debug, run Configuration Manager, set active
+5. Right-click solution CubeCreate, select Properties, if active Configuration is Debug,
+   click Configuration Properties on the left, run Configuration Manager on the top, set active
    Configuration to Release. Then, in those solution properties, in Configuration category, check "Build" checkbox for
    INSTALL project, and click Apply and close properties.
 
