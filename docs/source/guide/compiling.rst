@@ -59,17 +59,17 @@ with little modifications it should work everywhere.
 
    .. code-block :: bash
 
-       $ scons
+       $ GCC_VERSION=44 scons
 
-   If you're using a 64bit OS, run scons with arch=x64 argument.
+   If you're using a 64bit OS, run scons with the arch=x64 argument.
 
    If you have a dualcore CPU, you can add -j2 argument to scons (number after -j is cores number).
 
-   If you're using a gcc 4.4 or newer, run it with variable GCC_VERSION=44 set, i.e.
+   If you're using a gcc that is version 4.3 or older, run it without the GCC_VERSION variable set, i.e.
 
    .. code-block :: bash
 
-       $ GCC_VERSION=44 scons arch=x64
+       $ scons
 
    That should make file libv8.a in v8 directory, meaning you've just built a v8 static library.
 
@@ -109,12 +109,12 @@ You need to get:
 
        ;C:\Python26;C:\Python26\Scripts
 
-Then, you have two ways to build CC.
+Then, you have two ways to build CC. Visual Studio Express Edition is recommended and Code::Blocks support is currently incomplete.
 
-Using Visual Studio Express Edition (recommended, fully working)
-----------------------------------------------------------------
+Using Visual Studio Express Edition
+-----------------------------------
 
-This is the easier and more straightforward version. Also, mingw build doesn't work correctly yet
+This is an easier and more straightforward version. Also, mingw build doesn't work correctly yet
 (builds, links, but there are runtime errors)
 
 1. Get Microsoft Visual Studio 2008 Express Edition from Microsoft website. CC works just with 2008 now.
@@ -149,12 +149,12 @@ This is the easier and more straightforward version. Also, mingw build doesn't w
 
 6. Press F7, it'll build solution. After successful build, you should get binaries into bin/ and libraries into lib/
 
-Using MinGW and optionally Code::Blocks (WIP, not recommended now)
-------------------------------------------------------------------
+Using MinGW and Code::Blocks
+----------------------------
 
 **Note:** it compiles and links, but has run-time errors atm.
 
-1. Get MinGW from here, install it http://freefr.dl.sourceforge.net/project/mingw/Automated%20MinGW%20Installer/MinGW%205.1.6/MinGW-5.1.6.exe
+1. Get MinGW from `sourceforge <http://sourceforge.net/projects/mingw/files/Automated MinGW Installer/MinGW 5.1.6/MinGW-5.1.6.exe/download>`_ and install it.
    Choose "Download and install", then "Candidate", let it install to for example C:\\mingw.
 
 2. Append this into your PATH (as you did with python)

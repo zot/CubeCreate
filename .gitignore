@@ -2,7 +2,7 @@
 debugit*
 out
 *~
-.*
+.directory
 src/client/plugin/third_party/libevent/*
 cbuild/CMakeCache.txt
 cbuild/CMakeFiles/
@@ -19,3 +19,4 @@ src/thirdparty/v8/.sconsign.dblite
 src/thirdparty/v8/libv8.a
 src/thirdparty/v8/obj/
 log.*20??
+docs/build/
