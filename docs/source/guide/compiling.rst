@@ -37,43 +37,18 @@ with little modifications it should work everywhere.
 
    .. code-block :: bash
 
-       $ sudo apt-get install cmake scons build-essential libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev zlib1g-dev
+       $ sudo apt-get install cmake build-essential libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev zlib1g-dev
 
    If I list the dependencies (for other OSes), they are:
 
    1. CMake - http://cmake.org - this is a build system.
-   2. SCons - http://scons.org - build system used to build Google V8 JS interpreter. We'll get rid of it soon.
-   3. build-essential - on Debian, metapackage installing GNU compiler set and a few other things.
+   2. build-essential - on Debian, metapackage installing GNU compiler set and a few other things.
       Basically basic things you need to build sources.
-   4. SDL dev package, SDL_image dev package, SDL_mixer dev package
-   5. Python dev libraries and headers
-   6. Zlib dev libraries and headers
+   3. SDL dev package, SDL_image dev package, SDL_mixer dev package
+   4. Python dev libraries and headers
+   5. Zlib dev libraries and headers
 
-2. In that terminal, "cd" into your CC directory and from there, into src/thirdparty/v8. Example:
-
-   .. code-block :: bash
-
-       $ cd $HOME/cubecreate_source/src/thirdparty/v8
-
-3. Build V8.
-
-   .. code-block :: bash
-
-       $ GCC_VERSION=44 scons
-
-   If you're using a 64bit OS, run scons with the arch=x64 argument.
-
-   If you have a dualcore CPU, you can add -j2 argument to scons (number after -j is cores number).
-
-   If you're using a gcc that is version 4.3 or older, run it without the GCC_VERSION variable set, i.e.
-
-   .. code-block :: bash
-
-       $ scons
-
-   That should make file libv8.a in v8 directory, meaning you've just built a v8 static library.
-
-4. Then, you can build CC:
+2. Open a terminal, build CC:
 
    .. code-block :: bash
 
@@ -88,7 +63,7 @@ with little modifications it should work everywhere.
 
    See more info about webbrowser plugin at the end of this page.
 
-5. You're done, you should have binaries in CCROOT/bin and libraries in CCROOT/lib.
+3. You're done, you should have binaries in CCROOT/bin and libraries in CCROOT/lib.
 
 Windows
 =======
@@ -102,9 +77,7 @@ You need to get:
 2. Python from www.python.org. **Note:** The batch files etc. assume
    you are using Python 2.6.x, so get 2.6.X release (currently 2.6.5 - http://python.org/download/releases/2.6.5/ , CC will be updated to latest soon)
    Install it into C:\\Python26 as usual and install it for ALL USERS.
-3. SCons from www.scons.org.
-   You must install SCons as administrator otherwise it won't be able to properly write some things into registry.
-   After installing SCons, run Control panel of windows, edit environment variables of system and append this into PATH:
+   After installing, run Control panel of Windows, edit environment variables of system and append this into PATH:
 
    .. code-block :: bash
 
@@ -133,23 +106,14 @@ This is an easier and more straightforward version. Also, mingw build doesn't wo
 
    Hit Configure once again, and Generate.
 
-3. Run a command prompt. "cd" into your CCROOT\\src\\thirdparty\\v8 and run inside:
+3. Double-click CubeCreate.sln file in CCROOT\\cbuild, it'll open solution in MS Visual C++.
 
-   .. code-block :: bash
-
-       $ "C:\Program Files\Microsoft Visual Studio 9.0\VC\vcvarsall.bat"
-       $ scons env="PATH:%PATH%,INCLUDE:%INCLUDE%,LIB:%LIB%"
-
-   That will compile the v8 library. If you have 64bit system, replace "Program Files" with "Program Files (x86)" for vcvarsall.bat.
-
-4. Double-click CubeCreate.sln file in CCROOT\\cbuild, it'll open solution in MS Visual C++.
-
-5. Right-click solution CubeCreate, select Properties, if active Configuration is Debug,
+4. Right-click solution CubeCreate, select Properties, if active Configuration is Debug,
    click Configuration Properties on the left, run Configuration Manager on the top, set active
    Configuration to Release. Then, in those solution properties, in Configuration category, check "Build" checkbox for
    INSTALL project, and click Apply and close properties.
 
-6. Press F7, it'll build solution. After successful build, you should get binaries into bin/ and libraries into lib/
+5. Press F7, it'll build solution. After successful build, you should get binaries into bin/ and libraries into lib/
 
 Using MinGW and Code::Blocks
 ----------------------------
@@ -177,24 +141,15 @@ Using MinGW and Code::Blocks
 
    Hit Configure once again, and Generate.
 
-2. Run a command prompt. "cd" into your CCROOT\\src\\thirdparty\\v8 and run inside:
+2. Run a command prompt, and "cd" into your CCROOT\\cbuild. Then run:
 
    .. code-block :: bash
 
-       $ scons visibility=default
-
-   That will compile the v8 library.
-
-3. In that command prompt where you have built v8, run:
-
-   .. code-block :: bash
-
-       $ cd ..\..\..\cbuild
        $ mingw32-make
 
    and wait until it finishes.
 
-4. Run
+3. Run
 
    .. code-block :: bash
 
@@ -219,14 +174,6 @@ Using MinGW and Code::Blocks
    ("C:\\Program Files\\CodeBlocks\\codeblocks.exe", usually, on 64bit, it's "C:\\Program Files (x86)\\CodeBlocks\\codeblocks.exe")
 
    Hit Configure once again, and Generate.
-
-3. Run a command prompt. "cd" into your CCROOT\\src\\thirdparty\\v8 and run inside:
-
-   .. code-block :: bash
-
-       $ scons visibility=default
-
-   That will compile the v8 library.
 
 3. Navigate into CCROOT\\cbuild in your file manager, open the cbp file using Code::Blocks.
 
