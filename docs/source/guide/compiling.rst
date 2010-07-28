@@ -102,8 +102,6 @@ This is an easier and more straightforward version. Also, mingw build doesn't wo
    Select MS Visual Studio 9 project. Don't set x64 even if you have 64bit OS.
 
    You'll see some variables in red. Set CMAKE_INSTALL_PREFIX to same value as "Where is source code" is.
-   If you have 64bit Windows, create new variable CC_WIN64_VCPP in the GUI of string type with value "1"
-
    Hit Configure once again, and Generate.
 
 3. Double-click CubeCreate.sln file in CCROOT\\cbuild, it'll open solution in MS Visual C++.
