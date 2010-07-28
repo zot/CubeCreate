@@ -1,0 +1,7 @@
+changes in V8:
+
+- removal of SCons, replacement with CMake
+- added script tools/generate_from_library.py
+- added gen/* generated using the script
+
+V8 revision: 5140

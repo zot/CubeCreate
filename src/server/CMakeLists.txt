@@ -4,14 +4,15 @@
 # this makes server binary.
 #
 
+# include sdl and python headers
+include_directories(${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH})
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux") # there is no LINUX variable declared
    add_definitions (-fsigned-char)
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 # now, include v8
 include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/v8/include)
-link_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/v8)
-
 # server def and executable build
 add_definitions(-DSERVER)
 set(SERVER_SOURCES
@@ -68,7 +69,7 @@ set(SERVER_SOURCES
 # link libs to executable
 set(SERVER_LIBRARIES
     enet_${CC_BUILD_SUFFIX}
-    v8
+    V8_${CC_BUILD_SUFFIX}
     ${PYTHON_LIBRARIES}
     boost_python_${CC_BUILD_SUFFIX}
     ${SDL_LIBRARY}

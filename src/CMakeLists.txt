@@ -5,7 +5,7 @@
 #
 
 # internal things
-include_directories(shared engine fpsgame intensity enet/include thirdparty/boost include ${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH})
+include_directories(shared engine fpsgame intensity enet/include thirdparty/boost include)
 link_directories(${CMAKE_SOURCE_DIR}/src/enet)
 link_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/boost/libs/python)
 
