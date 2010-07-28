@@ -4,6 +4,9 @@
 # this builds boost_python into a library.
 #
 
+# include python
+include_directories(${PYTHON_INCLUDE_PATH})
+
 if (UNIX)
     set(CMAKE_CXX_FLAGS "-O2")
 else (UNIX)
