@@ -72,9 +72,9 @@ else (UNIX) # this is windows. Well, not really, but mostly yes (TODO: check?)
         file(TO_CMAKE_PATH "C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0A" PLATFORM_SDK_A)
         if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
             file(TO_CMAKE_PATH "C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC" PLATFORM_SDK_B)
-        else (${CC_WIN64_VCPP})
+        else (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
             file(TO_CMAKE_PATH "C:\\Program Files\\Microsoft Visual Studio 9.0\\VC" PLATFORM_SDK_B)
-        endif (${CC_WIN64_VCPP})
+        endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
 
     endif (MINGW)
 
