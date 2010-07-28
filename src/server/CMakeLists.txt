@@ -4,7 +4,11 @@
 # this makes server binary.
 #
 
-# include sdl and python headers
+# include vcpp, sdl and python headers
+if (WIN32 AND NOT MINGW)
+    include_directories(${PLATFORM_SDK_A}/Include)
+    include_directories(${PLATFORM_SDK_B}/Include)
+endif (WIN32 AND NOT MINGW)
 include_directories(${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH})
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux") # there is no LINUX variable declared

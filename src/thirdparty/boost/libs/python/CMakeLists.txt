@@ -4,7 +4,11 @@
 # this builds boost_python into a library.
 #
 
-# include python
+# include vcpp and python
+if (WIN32 AND NOT MINGW)
+    include_directories(${PLATFORM_SDK_A}/Include)
+    include_directories(${PLATFORM_SDK_B}/Include)
+endif (WIN32 AND NOT MINGW)
 include_directories(${PYTHON_INCLUDE_PATH})
 
 if (UNIX)

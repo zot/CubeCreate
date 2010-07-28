@@ -394,7 +394,7 @@ if (WIN32)
 endif (WIN32)
 
 if (MSVC)
-    add_definitions(/W0 /GR- /Gy /W3 /WX /wd4355 /wd4800)
+    add_definitions(/W0 /GR- /Gy /W3 /wd4355 /wd4800)
     add_definitions(/D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE)
     if (${CC_V8_ARCHITECTURE} STREQUAL "arm")
         add_definitions(/wd4996)
@@ -406,7 +406,7 @@ if (MSVC)
         add_definitions(-DENABLE_DISASSEMBLER)
     endif (${CC_V8_ENABLE_DISASSEMBLER})
     # dtoa cflags
-    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} /WX /wd4018 /wd4244)
+    set(CMAKE_C_FLAGS ${CMAKE_C_FLAGS} /wd4018 /wd4244)
 endif (MSVC)
 
 if (CMAKE_COMPILER_IS_GNUCXX)

@@ -5,6 +5,10 @@
 #
 
 # includes.
+if (WIN32 AND NOT MINGW)
+    include_directories(${PLATFORM_SDK_A}/Include)
+    include_directories(${PLATFORM_SDK_B}/Include)
+endif (WIN32 AND NOT MINGW)
 include_directories(include)
 
 # a cpp flag for enet.

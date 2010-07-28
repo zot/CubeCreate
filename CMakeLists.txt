@@ -70,13 +70,11 @@ else (UNIX) # this is windows. Well, not really, but mostly yes (TODO: check?)
         set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CC_ADDITIONAL_DEPS})
         # windows SDK stuff
         file(TO_CMAKE_PATH "C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0A" PLATFORM_SDK_A)
-        include_directories(${PLATFORM_SDK_A}/Include)
         if (${CC_WIN64_VCPP})
             file(TO_CMAKE_PATH "C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC" PLATFORM_SDK_B)
         else (${CC_WIN64_VCPP})
             file(TO_CMAKE_PATH "C:\\Program Files\\Microsoft Visual Studio 9.0\\VC" PLATFORM_SDK_B)
         endif (${CC_WIN64_VCPP})
-        include_directories(${PLATFORM_SDK_B}/Include)
 
     endif (MINGW)
 
