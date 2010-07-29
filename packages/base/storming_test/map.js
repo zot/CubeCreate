@@ -21,22 +21,6 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/Cannons');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
 Library.include('library/' + Global.LIBRARY_VERSION + '/CustomEffect');
 
-//// Setup physics
-
-var BULLET = 0;
-
-if (BULLET) {
-    Library.include('library/' + Global.LIBRARY_VERSION + '/Physics');
-    Projectiles.serverside = false;
-    Physics.Engine.create('bullet', true);
-    physicsPlugins = [
-        Physics.Engine.objectPlugin,
-        Physics.Engine.playerPlugin,
-    ];
-} else {
-    physicsPlugins = [];
-}
-
 //// Materials
 
 Map.materialReset();
