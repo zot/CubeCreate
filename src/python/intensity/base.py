@@ -26,7 +26,7 @@ assert(WINDOWS or UNIX)
 # Version
 #
 
-INTENSITY_VERSION_STRING = '1.1.7'
+INTENSITY_VERSION_STRING = '0.0.5'
 
 def comparable_version(version_string):
     return tuple(map(int, version_string.split('.')))
@@ -88,9 +88,9 @@ def get_home_subdir():
     # Use default value if none given to us
     if HOME_SUBDIR is None:
         if UNIX:
-            HOME_SUBDIR = os.path.join( os.path.expanduser('~'), '.intensityengine_'+suffix )
+            HOME_SUBDIR = os.path.join( os.path.expanduser('~'), '.cubecreate_'+suffix )
         elif WINDOWS:
-            HOME_SUBDIR = os.path.join( os.path.expanduser('~'), 'intensityengine_'+suffix )
+            HOME_SUBDIR = os.path.join( os.path.expanduser('~'), 'cubecreate_'+suffix )
         else:
             print "Error: Not sure where to set the home directory for this platform,", sys.platform
             raise Exception
