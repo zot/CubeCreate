@@ -1,11 +1,4 @@
-SET OLD_PATH=%PATH%
-SET PATH=windows\dll;Python26;C:\PYTHON26\;src\windows\sdl_vcpp\lib;src\windows\sdl_image\lib;src\windows\sdl_mixer\lib;%PATH%
-
-SET OLD_PYTHONHOME=%PYTHONHOME%
-SET PYTHONHOME=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTHONHOME%
-
-SET OLD_PYTHONPATH=%PYTHONPATH%
-SET PYTHONPATH=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTHONPATH%
+@echo off
 
 if %PROCESSOR_ARCHITECTURE%==AMD64 (
     if exist bin\CC_Client_Windows-AMD64.exe (
@@ -37,6 +30,26 @@ if %PROCESSOR_ARCHITECTURE%==AMD64 (
 )
 
 :run
+
+if %PROCESSOR_ARCHITECTURE%==AMD64 (
+    if %CCARCH%==x86 (
+	    FOR /F "tokens=2* delims=	 " %%A IN ('REG QUERY "HKLM\Software\Wow6432Node\Python\PythonCore\2.6\InstallPath"') DO SET PYVER=%%B
+	) else (
+	    FOR /F "tokens=2* delims=	 " %%A IN ('REG QUERY "HKLM\Software\Python\PythonCore\2.6\InstallPath"') DO SET PYVER=%%B
+	)
+) else (
+    FOR /F "tokens=2* delims=	 " %%A IN ('REG QUERY "HKLM\Software\Python\PythonCore\2.6\InstallPath"') DO SET PYVER=%%B
+)
+
+SET OLD_PATH=%PATH%
+SET PATH=%PYVER%;src\windows\sdl_vcpp\lib;src\windows\sdl_image\lib;src\windows\sdl_mixer\lib;%PATH%
+
+SET OLD_PYTHONHOME=%PYTHONHOME%
+SET PYTHONHOME=%PYVER%\lib;%PYVER%\DLLs;%PYTHONHOME%
+
+SET OLD_PYTHONPATH=%PYTHONPATH%
+SET PYTHONHOME=%PYVER%\lib;%PYVER%\DLLs;%PYTHONHOME%
+
 bin\CC_Server_Windows-%CCARCH%.exe %*
 
 echo "To save the output, add     > out_server 2>&1"
