@@ -1205,7 +1205,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
     sauerlog("video: misc");
-    SDL_WM_SetCaption("Syntensity", NULL); // INTENSITY
+    SDL_WM_SetCaption("CubeCreate", NULL); // INTENSITY
     keyrepeat(false);
     SDL_ShowCursor(0);
 
@@ -1217,7 +1217,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     sauerlog("console");
     persistidents = false;
-    if(!execfile("data/stdlib.cfg", false)) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");   // this is the first file we load.
+    if(!execfile("data/stdlib.cfg", false)) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
     if(!execfile("data/font.cfg", false)) fatal("cannot find font definitions");
     if(!setfont("default")) fatal("no default font specified");
 
