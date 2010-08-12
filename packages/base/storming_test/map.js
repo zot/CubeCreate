@@ -151,7 +151,7 @@ registerEntityClass(
                     this.movementSpeed = 80;
                 },
             }
-        ].concat(physicsPlugins)
+        ]
     )
 );
 
