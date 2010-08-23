@@ -13,6 +13,9 @@ In general, content creators must allow the users the freedom to modify, share a
 
 The following are a few licenses that would be acceptable.
 
+    * BSD license
     * Creative Commons Attribution
     * Creative Commons Attribution Share-Alike
+    * Creative Commons Zero
     * MIT/X11 license
+    * Public Domain
