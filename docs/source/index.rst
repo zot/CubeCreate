@@ -24,9 +24,10 @@ Reference
 ---------
 
 .. toctree::
-    :maxdepth: 2
+   :maxdepth: 2
 
-    glossary.rst
+   glossary.rst
+   licensing.rst
 
 
 Indices and tables
