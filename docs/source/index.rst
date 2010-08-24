@@ -26,7 +26,7 @@ Reference
 .. toctree::
    :maxdepth: 2
 
-   glossary.rst
+   editing.rst
    licensing.rst
 
 
