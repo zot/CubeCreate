@@ -1,13 +1,12 @@
 Editing Reference
 =================
 
-Preface
--------
-
-**IMPORTANT NOTE**: When dealing with array attributes (getting a piece of information from a set of values) it is important to know that most start at zero (0) and count upwards from there. This means that the first value is 0, the second is 1, the third is 2 and so forth. Please keep this in mind, especially when dealing with entity attributes, as zero is always considered to be the first/default value, not 1.
-
 Editing
 -------
+
+  .. note ::
+
+    When dealing with array attributes (getting a piece of information from a set of values) it is important to know that most start at zero (0) and count upwards from there. This means that the first value is 0, the second is 1, the third is 2 and so forth. Please keep this in mind, especially when dealing with entity attributes, as zero is always considered to be the first/default value, not 1.
 
 edittoggle
 ^^^^^^^^^^

@@ -97,11 +97,12 @@ html_theme = 'default'
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "rightsidebar": "true",
-    "relbarbgcolor": "#629632",
+    "rightsidebar": "false",
+    "relbarbgcolor": "#436722",
     "footerbgcolor": "white",
     "footertextcolor": "black",
-    "sidebarbgcolor": "#436722"
+    "sidebarbgcolor": "#629632",
+    "sidebarlinkcolor": "white"
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
