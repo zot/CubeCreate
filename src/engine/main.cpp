@@ -1215,10 +1215,14 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     notexture = textureload("data/notexture.png");
     if(!notexture) fatal("could not find core textures");
 
+    sauerlog("js");
+    ScriptEngineManager::createEngine();
+    if (!ScriptEngineManager::hasEngine()) fatal("failed to spawn script engine.");
+
     sauerlog("console");
     persistidents = false;
     if(!execfile("data/stdlib.cfg", false)) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
-    if(!execfile("data/font.cfg", false)) fatal("cannot find font definitions");
+    if(!ScriptEngineManager::runFile("data/font.js", false)) fatal("cannot find font definitions");
     if(!setfont("default")) fatal("no default font specified");
 
     inbetweenframes = true;
@@ -1237,10 +1241,11 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     initsound();
 
     sauerlog("cfg");
-    execfile("data/keymap.cfg");
+
+    ScriptEngineManager::runFile("data/keymap.js", false);
+    ScriptEngineManager::runFile("data/sounds.js", false);
     execfile("data/stdedit.cfg");
     execfile("data/menus.cfg");
-    execfile("data/sounds.cfg");
     execfile("data/brush.cfg");
     execfile("mybrushes.cfg");
     if(game::savedservers()) execfile(game::savedservers());
@@ -1258,13 +1263,10 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     persistidents = false;
 
-    string gamecfgname;
-    copystring(gamecfgname, "data/game_");
-    concatstring(gamecfgname, game::gameident());
-    concatstring(gamecfgname, ".cfg");
-    execfile(gamecfgname);
-    
     game::loadconfigs();
+
+    sauerlog("destroying JS ...");
+    ScriptEngineManager::destroyEngine();
 
     persistidents = true;
 

@@ -739,3 +739,32 @@ CAPI.showHUDImage = function(tex, centerx, centery, width, height, color, alpha)
     alpha = defaultValue(alpha, 1.0);
     oldShowHUDImage(tex, centerx, centery, width, height, color, alpha);
 };
+
+// data/ directory embeds
+
+if (Global.CLIENT) {
+    Data = {
+        keymap: CAPI.keymap,
+
+        registerSound: function(sound, vol) {
+            vol = defaultValue(vol, 0);
+            CAPI.registerSound(sound, vol);
+        },
+
+        font: function(name, tex, defaultw, defaulth, offsetx, offsety, offsetw, offseth) {
+            offsetx = defaultValue(offsetx, 0);
+            offsety = defaultValue(offsety, 0);
+            offsetw = defaultValue(offsetw, 0);
+            offseth = defaultValue(offseth, 0);
+            CAPI.font(name, tex, defaultw, defaulth, offsetx, offsety, offsetw, offseth);
+        },
+
+        fontOffset: CAPI.fontOffset,
+
+        fontChar: function(x, y, w, h) {
+			h = defaultValue(h, 0);
+			CAPI.fontChar(x, y, w, h);
+		},
+    };
+
+}

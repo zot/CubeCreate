@@ -1213,10 +1213,10 @@ bool emptymap(int scale, bool force, const char *mname, bool usecfg)    // main 
 
     clearmainmenu();
 
-    if(usecfg)
+    if (usecfg)
     {
         overrideidents = true;
-        execfile("data/default_map_settings.cfg", false);
+        if (ScriptEngineManager::hasEngine()) ScriptEngineManager::runFile("data/default_map_settings.js", false);
         overrideidents = false;
     }
 

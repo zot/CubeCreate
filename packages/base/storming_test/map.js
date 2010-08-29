@@ -359,11 +359,7 @@ CatapultTrigger = ResettableAreaTrigger.extend({
 
     clientOnTrigger: function(collider) {
         collider.position.z += 5; // Prevent colliding with catapult itself
-        if (!BULLET) {
-            collider.falling = [-90, 0, 440]; // Hurl collider up and away
-        } else {
-            collider.velocity = [-600, 0, 440]; // Handle air friction as well
-        }
+        collider.falling = [-90, 0, 440]; // Hurl collider up and away
         // Show effect for this client instantly, for others using network protocol
         this.showEffectFor = collider.uniqueId;
         Effect.clientDamage(5, 20);

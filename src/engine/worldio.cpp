@@ -11,6 +11,7 @@
     #include "client_system.h"
 #endif
 #include "intensity_physics.h"
+#include "script_engine_manager.h"
 
 
 void backup(char *name, char *backupname)
@@ -1022,12 +1023,11 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     clearmainmenu();
 
     overrideidents = true;
-    execfile("data/default_map_settings.cfg", false);
-#if 0 // INTENSITY: Use our scripting script instead
-    execfile(cfgname, false);
-#else
-    WorldSystem::runMapScript();
-#endif
+    if (ScriptEngineManager::hasEngine())
+    {
+        ScriptEngineManager::runFile("data/default_map_settings.js", false);
+        WorldSystem::runMapScript();
+    }
     overrideidents = false;
    
 #ifdef CLIENT // INTENSITY: Stop, finish loading later when we have all the entities

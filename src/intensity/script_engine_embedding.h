@@ -2618,3 +2618,36 @@ V8_FUNC_ds(__script__renderProgress, {
 V8_FUNC_NOPARAM(__script__getMapversion, {
     V8_RETURN_INT( mapversion );
 });
+
+// data/ directory embeds
+
+#ifdef CLIENT
+    extern void keymap(int *code, char *key);
+    extern void newfont(char *name, char *tex, int *defaultw, int *defaulth, int *offsetx, int *offsety, int *offsetw, int *offseth);
+    extern void fontoffset(char *c);
+    extern void fontchar(int *x, int *y, int *w, int *h);
+
+    V8_FUNC_is(__script__keymap, {
+    	keymap(&arg1, (char *)arg2);
+    });
+
+    V8_FUNC_si(__script__registerSound, {
+        std::string command = "registersound ";
+        command += arg1;
+        command += " ";
+        command += Utility::toString(arg2);
+        CSSUDO(command.c_str());
+    });
+
+    V8_FUNC_ssiiiiii(__script__font, {
+		newfont((char *)arg1, (char *)arg2, &arg3, &arg4, &arg5, &arg6, &arg7, &arg8);
+    });
+
+    V8_FUNC_s(__script__fontOffset, {
+		fontoffset((char *)arg1);
+    });
+
+    V8_FUNC_iiii(__script__fontChar, {
+		fontchar(&arg1, &arg2, &arg3, &arg4);
+    });
+#endif

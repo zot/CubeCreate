@@ -46,10 +46,6 @@ void fontchar(int *x, int *y, int *w, int *h)
     c.h = *h ? *h : fontdef->defaulth;
 }
 
-COMMANDN(font, newfont, "ssiiiiii");
-COMMAND(fontoffset, "s");
-COMMAND(fontchar, "iiii");
-
 bool setfont(const char *name)
 {
     font *f = fonts.access(name);

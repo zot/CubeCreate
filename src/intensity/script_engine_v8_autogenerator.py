@@ -15,7 +15,7 @@ strings = [
     'sdddi', 'sssdd', 'ddddi', 'sdddd', 'siidi', 'iiiss', 'iiisi', 'iiiii', 'idddd',
     'sdddii', 'dddddd', 'iidddi', 'iisddd', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddid', 'iiiiii',
     'sdddddd', 'ddddddd', 'iiiiddd', 'iiddddd', 'ssiiidi', 'iiiiiii', 'sddddid',
-    'ddddddii', 'ddddiiid', 'iidddddd',
+    'ddddddii', 'ddddiiid', 'iidddddd', 'ssiiiiii',
     'ddddddiii', 'oidddiiii', 'idddidddi', 'dddsiiidi', 'iiidddidii', 'ddddddiiid', 'dddiiiiii',
     'ddddddiiidi', 'osiddddddii', 'iiidddidiii', 'iissdddiiii', 'iiddddddidi', 'ddddddiiidii',
     'iiidddidiiibi', 'iiidddidiibibi', 'iiddddddidib', 'idddddddiiii', 'idddddiidddi',

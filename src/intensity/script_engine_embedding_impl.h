@@ -548,3 +548,13 @@ EMBED_CAPI_FUNC_STD(editing_getSelectedEntity, 0);
 EMBED_CAPI_FUNC_STD(renderProgress, 2);
 
 EMBED_CAPI_FUNC_STD(getMapversion, 0);
+
+// data/ directory embeds
+
+#ifdef CLIENT
+    EMBED_CAPI_FUNC_STD(keymap, 2);
+    EMBED_CAPI_FUNC_STD(registerSound, 2);
+    EMBED_CAPI_FUNC_STD(font, 8);
+    EMBED_CAPI_FUNC_STD(fontOffset, 1);
+    EMBED_CAPI_FUNC_STD(fontChar, 4);
+#endif

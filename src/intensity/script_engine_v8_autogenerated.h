@@ -616,6 +616,20 @@
         , wrapped_code);
 
 
+// ssiiiiii
+#define V8_FUNC_ssiiiiii(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        std::string _arg1 = *(v8::String::Utf8Value(args[0])); const char* arg1 = _arg1.c_str(); \
+        std::string _arg2 = *(v8::String::Utf8Value(args[1])); const char* arg2 = _arg2.c_str(); \
+        int arg3 = args[2]->IntegerValue(); \
+        int arg4 = args[3]->IntegerValue(); \
+        int arg5 = args[4]->IntegerValue(); \
+        int arg6 = args[5]->IntegerValue(); \
+        int arg7 = args[6]->IntegerValue(); \
+        int arg8 = args[7]->IntegerValue(); \
+        , wrapped_code);
+
+
 // ddddddiii
 #define V8_FUNC_ddddddiii(new_func, wrapped_code) \
     V8_FUNC_GEN(new_func, \

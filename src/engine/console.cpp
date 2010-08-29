@@ -189,8 +189,6 @@ void keymap(int *code, char *key)
     DELETEA(km.name);
     km.name = newstring(key);
 }
-    
-COMMAND(keymap, "is");
 
 keym *keypressed = NULL;
 char *keyaction = NULL;
