@@ -2471,8 +2471,8 @@ V8_FUNC_ddd(__script__physicsAddCapsule, {
 });
 
 #define GET_VEC(letter, v) \
-	scriptVec = scriptTris->getProperty(Utility::toString(i))->getProperty(letter); \
-	v = vec(scriptVec->getPropertyFloat("x"), scriptVec->getPropertyFloat("y"), scriptVec->getPropertyFloat("z"));
+    scriptVec = scriptTris->getProperty(Utility::toString(i))->getProperty(letter); \
+    v = vec(scriptVec->getPropertyFloat("x"), scriptVec->getPropertyFloat("y"), scriptVec->getPropertyFloat("z"));
 
 V8_FUNC_do(__script__physicsAddMesh, {
     ScriptValuePtr scriptTris(new V8Value(ScriptEngineManager::getEngine(), arg2));
@@ -2626,28 +2626,25 @@ V8_FUNC_NOPARAM(__script__getMapversion, {
     extern void newfont(char *name, char *tex, int *defaultw, int *defaulth, int *offsetx, int *offsety, int *offsetw, int *offseth);
     extern void fontoffset(char *c);
     extern void fontchar(int *x, int *y, int *w, int *h);
+    extern void registersound(char *name, int *vol);
 
     V8_FUNC_is(__script__keymap, {
-    	keymap(&arg1, (char *)arg2);
+        keymap(&arg1, (char *)arg2);
     });
 
     V8_FUNC_si(__script__registerSound, {
-        std::string command = "registersound ";
-        command += arg1;
-        command += " ";
-        command += Utility::toString(arg2);
-        CSSUDO(command.c_str());
+        registersound((char *)arg1, &arg2);
     });
 
     V8_FUNC_ssiiiiii(__script__font, {
-		newfont((char *)arg1, (char *)arg2, &arg3, &arg4, &arg5, &arg6, &arg7, &arg8);
+        newfont((char *)arg1, (char *)arg2, &arg3, &arg4, &arg5, &arg6, &arg7, &arg8);
     });
 
     V8_FUNC_s(__script__fontOffset, {
-		fontoffset((char *)arg1);
+        fontoffset((char *)arg1);
     });
 
     V8_FUNC_iiii(__script__fontChar, {
-		fontchar(&arg1, &arg2, &arg3, &arg4);
+        fontchar(&arg1, &arg2, &arg3, &arg4);
     });
 #endif

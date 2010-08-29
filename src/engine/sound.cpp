@@ -248,7 +248,6 @@ int addsound(const char *name, int vol, int maxuses, vector<soundslot> &sounds)
 
 int preload_sound(char *name, int vol); // INTENSITY
 void registersound(char *name, int *vol) { intret(preload_sound(name, *vol)); } // INTENSITY
-COMMAND(registersound, "si");
 
 void mapsound(char *name, int *vol, int *maxuses) { intret(addsound(name, *vol, *maxuses < 0 ? 0 : max(1, *maxuses), mapsounds)); }
 COMMAND(mapsound, "sii");
