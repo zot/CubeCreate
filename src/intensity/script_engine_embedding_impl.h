@@ -551,10 +551,13 @@ EMBED_CAPI_FUNC_STD(getMapversion, 0);
 
 // data/ directory embeds
 
-#ifdef CLIENT
-    EMBED_CAPI_FUNC_STD(keymap, 2);
-    EMBED_CAPI_FUNC_STD(registerSound, 2);
-    EMBED_CAPI_FUNC_STD(font, 8);
-    EMBED_CAPI_FUNC_STD(fontOffset, 1);
-    EMBED_CAPI_FUNC_STD(fontChar, 4);
-#endif
+EMBED_CAPI_FUNC_STD(keymap, 2);
+EMBED_CAPI_FUNC_STD(registerSound, 2);
+EMBED_CAPI_FUNC_STD(font, 8);
+EMBED_CAPI_FUNC_STD(fontOffset, 1);
+EMBED_CAPI_FUNC_STD(fontChar, 4);
+
+// variable manipulation
+
+EMBED_CAPI_FUNC_STD(getVariable, 1);
+EMBED_CAPI_FUNC_STD(setVariable, 2);

@@ -427,9 +427,9 @@ Texture *textureload(const char *name, int clamp, bool mipit, bool msg) { return
 void renderbackground(const char *caption, Texture *mapshot, const char *mapname, const char *mapinfo, bool restore, bool force) { };
 void loadpvs(gzFile f) { };
 void savepvs(gzFile f) { };
-void writecrosshairs(stream *f) { };
-void writebinds(stream *f) { };
-void writecompletions(stream *f) { };
+JSONObject writecrosshairs() { JSONObject dummy; return dummy; };
+JSONObject writebinds() { JSONObject dummy; return dummy; };
+JSONObject writecompletions() { JSONObject dummy; return dummy; };
 const char *addreleaseaction(const char *s) { return NULL; };
 void freesurfaces(cube &c) { };
 occludequery *newquery(void *owner) { return NULL; };

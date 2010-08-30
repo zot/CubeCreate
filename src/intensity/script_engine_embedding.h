@@ -2619,7 +2619,8 @@ V8_FUNC_NOPARAM(__script__getMapversion, {
     V8_RETURN_INT( mapversion );
 });
 
-// data/ directory embeds
+// data/ directory embeds, this is client-only, so we put it in ifdef. For server, they're just dummies
+// dummies are needed because we don't want to check further in CAPIExtras.
 
 #ifdef CLIENT
     extern void keymap(int *code, char *key);
@@ -2647,4 +2648,89 @@ V8_FUNC_NOPARAM(__script__getMapversion, {
     V8_FUNC_iiii(__script__fontChar, {
         fontchar(&arg1, &arg2, &arg3, &arg4);
     });
+#else
+    V8_FUNC_is(__script__keymap, {
+        arg1 = arg1;
+        arg2 = arg2;
+    });
+    V8_FUNC_si(__script__registerSound, {
+        arg1 = arg1;
+        arg2 = arg2;
+    });
+    V8_FUNC_ssiiiiii(__script__font, {
+        arg1 = arg1;
+        arg2 = arg2;
+        arg3 = arg3;
+        arg4 = arg4;
+        arg5 = arg5;
+        arg6 = arg6;
+        arg7 = arg7;
+        arg8 = arg8;
+    });
+    V8_FUNC_s(__script__fontOffset, {
+        arg1 = arg1;
+    });
+    V8_FUNC_iiii(__script__fontChar, {
+        arg1 = arg1;
+        arg2 = arg2;
+        arg3 = arg3;
+        arg4 = arg4;
+    });
 #endif
+
+// Variable manipulation, this is valid for BOTH client and server
+
+typedef hashtable<const char *, ident> identtable;
+extern identtable *idents; // we must extern out ident table.
+// Externing ident table is temporary till proper API is written
+// (which will be done after cubescript is completely out)
+
+// here we must also extern some setters
+extern void setvarchecked(ident *id, int val);
+extern void setfvarchecked(ident *id, float val);
+extern void setsvarchecked(ident *id, const char *val);
+extern void alias(const char *name, const char *action);
+
+V8_FUNC_s(__script__getVariable, {
+    ident *ident = idents->access(arg1);
+    if (ident)
+    {
+        switch(ident->type)
+        {
+            case ID_VAR:
+                V8_RETURN_INT(*ident->storage.i);
+                break;
+            case ID_FVAR:
+                V8_RETURN_DOUBLE(*ident->storage.f);
+                break;
+            case ID_SVAR:
+                V8_RETURN_STRING(*ident->storage.s);
+                break;
+            case ID_ALIAS:
+                V8_RETURN_STRING(ident->action);
+                break;
+        }
+    }
+});
+
+V8_FUNC_ss(__script__setVariable, {
+    ident *ident = idents->access(arg1);
+    if (ident)
+    {
+        switch(ident->type)
+        {
+            case ID_VAR:
+                setvarchecked(ident, atoi(arg2));
+                break;
+            case ID_FVAR:
+                setfvarchecked(ident, strtod(arg2, NULL));
+                break;
+            case ID_SVAR:
+                setsvarchecked(ident, arg2);
+                break;
+            case ID_ALIAS:
+                alias(ident->name, arg2);
+                break;
+        }
+    }
+});

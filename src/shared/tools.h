@@ -98,6 +98,21 @@ static inline T min(T a, T b)
 #define PATHDIV '/'
 #endif
 
+// Convert from std::string to std::wstring and reversed
+inline std::wstring towstring(std::string s)
+{
+	std::wstring w;
+	w.assign(s.begin(), s.end());
+	return w;
+}
+
+inline std::string fromwstring(std::wstring w)
+{
+	std::string s;
+	s.assign(w.begin(), w.end());
+	return s;
+}
+
 // easy safe strings
 
 #define MAXSTRLEN 260

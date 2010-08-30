@@ -115,27 +115,74 @@ VARF(vsync, -1, -1, 1, initwarning("vertical sync"));
 void writeinitcfg()
 {
     if(!restoredinits) return;
-    stream *f = openfile(path("init.cfg", true), "w"); // INTENSITY: Write init.cfg to the home dir
+    JSONObject root;
+    stream *f = openfile(path("init.json", true), "w");
     if(!f) return;
-    f->printf("// automatically written on exit, DO NOT MODIFY\n// modify settings in game\n");
+
     extern int fullscreen;
-    f->printf("fullscreen %d\n", fullscreen);
-    f->printf("scr_w %d\n", scr_w);
-    f->printf("scr_h %d\n", scr_h);
-    f->printf("colorbits %d\n", colorbits);
-    f->printf("depthbits %d\n", depthbits);
-    f->printf("stencilbits %d\n", stencilbits);
-    f->printf("fsaa %d\n", fsaa);
-    f->printf("vsync %d\n", vsync);
+    root[L"fullscreen"] = new JSONValue((double)fullscreen);
+    root[L"scr_w"] = new JSONValue((double)scr_w);
+    root[L"scr_h"] = new JSONValue((double)scr_h);
+    root[L"colorbits"] = new JSONValue((double)colorbits);
+    root[L"depthbits"] = new JSONValue((double)depthbits);
+    root[L"stencilbits"] = new JSONValue((double)stencilbits);
+    root[L"fsaa"] = new JSONValue((double)fsaa);
+    root[L"vsync"] = new JSONValue((double)vsync);
     extern int useshaders, shaderprecision, forceglsl;
-    f->printf("shaders %d\n", useshaders);
-    f->printf("shaderprecision %d\n", shaderprecision);
-    f->printf("forceglsl %d\n", forceglsl);
+    root[L"shaders"] = new JSONValue((double)useshaders);
+    root[L"shaderprecision"] = new JSONValue((double)shaderprecision);
+    root[L"forceglsl"] = new JSONValue((double)forceglsl);
     extern int soundchans, soundfreq, soundbufferlen;
-    f->printf("soundchans %d\n", soundchans);
-    f->printf("soundfreq %d\n", soundfreq);
-    f->printf("soundbufferlen %d\n", soundbufferlen);
+    root[L"soundchans"] = new JSONValue((double)soundchans);
+    root[L"soundfreq"] = new JSONValue((double)soundfreq);
+    root[L"soundbufferlen"] = new JSONValue((double)soundbufferlen);
+
+    JSONValue *value = new JSONValue(root, 0);
+    f->printf("%ls", value->Stringify().c_str());
+    delete value;
     delete f;
+}
+
+bool execinitcfg(const char *cfgfile, bool msg)
+{
+    string s;
+    copystring(s, cfgfile);
+    char *buf = loadfile(path(s), NULL);
+    if(!buf)
+    {
+        if(msg) conoutf(CON_ERROR, "could not read \"%s\"", s);
+        return false;
+    }
+    // let's parse!
+    JSONValue *value = JSON::Parse(buf);
+    // we can delete buf now. It's all safely stored in JSONValue.
+    delete[] buf;
+
+    if (value == NULL)
+    {
+        if(msg) conoutf(CON_ERROR, "could not load \"%s\"", s);
+        return false;
+    }
+    else
+    {
+        JSONObject root;
+        if (value->IsObject() == false)
+        {
+            if(msg) conoutf(CON_ERROR, "could not load JSON root object.");
+            return false;
+        }
+        else
+        {
+            root = value->AsObject();
+            for (JSONObject::const_iterator iter = root.begin(); iter != root.end(); ++iter)
+            {
+                defformatstring(cmd)("%s %i", fromwstring(iter->first).c_str(), (int)iter->second->AsNumber());
+                execute(cmd);
+            }
+        }
+    }
+    delete value;
+    return true;
 }
 
 COMMAND(quit, "");
@@ -590,7 +637,7 @@ int gamma = 100; // INTENSITY: Otherwise as a shared library the other way will 
 #else
 VARFP(gamma, 30, 100, 300,
 {
-	float f = gamma/100.0f;
+    float f = gamma/100.0f;
     if(SDL_SetGamma(f,f,f)==-1)
     {
         conoutf(CON_ERROR, "Could not set gamma (card/driver doesn't support it?)");
@@ -601,10 +648,10 @@ VARFP(gamma, 30, 100, 300,
 
 void resetgamma()
 {
-	float f = gamma/100.0f;
-	if(f==1) return;
-	SDL_SetGamma(1, 1, 1);
-	SDL_SetGamma(f, f, f);
+    float f = gamma/100.0f;
+    if(f==1) return;
+    SDL_SetGamma(1, 1, 1);
+    SDL_SetGamma(f, f, f);
 }
 
 VAR(dbgmodes, 0, 0, 1);
@@ -786,7 +833,7 @@ void resetgl()
     reloadfonts();
     inbetweenframes = true;
     renderbackground("initializing...");
-	resetgamma();
+    resetgamma();
     reloadshaders();
     reloadtextures();
     initlights();
@@ -1134,7 +1181,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
         {
             case 'q': printf("Using home directory: %s\n", &argv[i][2]); sethomedir(&argv[i][2]); break;
             case 'k': printf("Adding package directory: %s\n", &argv[i][2]); addpackagedir(&argv[i][2]); break;
-            case 'r': execfile(argv[i][2] ? &argv[i][2] : "init.cfg", false); restoredinits = true; break;
+            case 'r': execinitcfg(argv[i][2] ? &argv[i][2] : "init.json", false); restoredinits = true; break;
             case 'd': dedicated = atoi(&argv[i][2]); if(dedicated<=0) dedicated = 2; break;
             case 'w': scr_w = clamp(atoi(&argv[i][2]), SCR_MINW, SCR_MAXW); if(!findarg(argc, argv, "-h")) scr_h = -1; break;
             case 'h': scr_h = clamp(atoi(&argv[i][2]), SCR_MINH, SCR_MAXH); if(!findarg(argc, argv, "-w")) scr_w = -1; break;
@@ -1253,7 +1300,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     persistidents = true;
     
     initing = INIT_LOAD;
-    if(!execfile(game::savedconfig(), false)) 
+    if(!config_exec_json(game::savedconfig(), false)) 
     {
         execfile(game::defaultconfig());
         writecfg(game::restoreconfig());

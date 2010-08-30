@@ -17,6 +17,8 @@ endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 # now, include v8
 include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/v8/include)
+# include JSON.
+include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/json)
 # server def and executable build
 add_definitions(-DSERVER)
 set(SERVER_SOURCES
@@ -82,6 +84,7 @@ set(SERVER_LIBRARIES
     ${SDLSOUND_LIBRARY}
     ${ZLIB_LIBRARIES}
     ${UTIL}
+    json_${CC_BUILD_SUFFIX}
 )
 
 # additional libs on windows

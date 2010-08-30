@@ -17,7 +17,8 @@ endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 # now, include v8
 include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/v8/include)
-
+# include JSON.
+include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/json)
 # client def and executable build
 add_definitions(-DCLIENT)
 set(CLIENT_SOURCES
@@ -110,6 +111,7 @@ set(CLIENT_LIBRARIES
     ${OPENGL_LIBRARIES}
     ${ZLIB_LIBRARIES}
     ${UTIL}
+    json_${CC_BUILD_SUFFIX}
 )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")

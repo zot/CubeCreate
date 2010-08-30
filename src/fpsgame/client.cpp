@@ -38,9 +38,8 @@ namespace game
     {
     }
 
-    void writeclientinfo(stream *f)
-    {
-    }
+    // now, empty function, but for future, lets put JSON in arguments.
+    JSONObject writeclientinfo() { JSONObject dummy; return dummy; }
 
     int needclipboard = -1;
 

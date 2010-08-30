@@ -284,10 +284,10 @@ void pasteconsole()
     GlobalUnlock(cb);
     CloseClipboard();
     #elif defined(__APPLE__)
-	extern void mac_pasteconsole(char *commandbuf);
+    extern void mac_pasteconsole(char *commandbuf);
 
-	mac_pasteconsole(commandbuf);
-	#else
+    mac_pasteconsole(commandbuf);
+    #else
     SDL_SysWMinfo wminfo;
     SDL_VERSION(&wminfo.version); 
     wminfo.subsystem = SDL_SYSWM_X11;
@@ -577,10 +577,12 @@ static int sortbinds(keym **x, keym **y)
     return strcmp((*x)->name, (*y)->name);
 }
 
-void writebinds(stream *f)
+JSONObject writebinds()
 {
     static const char *cmds[3] = { "bind", "specbind", "editbind" };
     vector<keym *> binds;
+    JSONObject bs;
+    JSONObject it;
     enumerate(keyms, keym, km, binds.add(&km));
     binds.sort(sortbinds);
     loopj(3)
@@ -588,9 +590,23 @@ void writebinds(stream *f)
         loopv(binds)
         {
             keym &km = *binds[i];
-            if(*km.actions[j]) f->printf("%s \"%s\" [%s]\n", cmds[j], km.name, km.actions[j]);
+            if (*km.actions[j])
+            {
+                it[towstring(cmds[j])] = new JSONValue(towstring(km.actions[j]));
+                if (bs.find(towstring(km.name)) != bs.end() && bs[towstring(km.name)]->IsObject())
+                {
+                    JSONObject merge = bs[towstring(km.name)]->AsObject();
+                    for (JSONObject::const_iterator iter = merge.begin(); iter != merge.end(); ++iter)
+                        it[iter->first] = new JSONValue(iter->second->AsString());
+                    merge.clear();
+                    bs[towstring(km.name)] = new JSONValue(it, 2);
+                }
+                bs[towstring(km.name)] = new JSONValue(it, 2);
+                it.clear();
+            }
         }
     }
+    return bs;
 }
 
 // tab-completion of all idents and base maps
@@ -760,8 +776,10 @@ static int sortcompletions(char **x, char **y)
     return strcmp(*x, *y);
 }
 
-void writecompletions(stream *f)
+JSONObject writecompletions()
 {
+    JSONObject cs;
+    JSONArray marr;
     vector<char *> cmds;
     enumeratekt(completions, char *, k, filesval *, v, { if(v) cmds.add(k); });
     cmds.sort(sortcompletions);
@@ -769,8 +787,38 @@ void writecompletions(stream *f)
     {
         char *k = cmds[i];
         filesval *v = completions[k];
-        if(v->type==FILES_LIST) f->printf("listcomplete \"%s\" [%s]\n", k, v->dir);
-        else f->printf("complete \"%s\" \"%s\" \"%s\"\n", k, v->dir, v->ext ? v->ext : "*");
+        if (v->type==FILES_LIST)
+        {
+            JSONArray arr;
+            std::string list(v->dir);
+            std::string el = list.substr(0, list.find(' '));
+            while (list.find(' ') != std::string::npos)
+            {
+                arr.push_back(new JSONValue(towstring(el)));
+                list = list.substr(list.find(' ') + 1, list.length());
+                el = list.substr(0, list.find(' '));
+                if (list.find(' ') == std::string::npos) arr.push_back(new JSONValue(towstring(el)));
+            }
+
+            marr.push_back(new JSONValue(towstring(k)));
+            marr.push_back(new JSONValue(arr));
+            cs[L"listcomplete"] = new JSONValue(marr);
+            arr.clear();
+            marr.clear();
+        }
+        else
+        {
+            std::string vs;
+            vs = v->dir;
+            marr.push_back(new JSONValue(towstring(k)));
+            marr.push_back(new JSONValue(towstring(vs)));
+            if (v->ext) vs = v->ext;
+            else vs = "*";
+            marr.push_back(new JSONValue(towstring(vs)));
+            cs[L"complete"] = new JSONValue(marr);
+            marr.clear();
+        }
     }
+    return cs;
 }
 

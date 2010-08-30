@@ -2080,7 +2080,7 @@ static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL };
 void loadcrosshair(const char *name, int i)
 {
     if(i < 0 || i >= MAXCROSSHAIRS) return;
-	crosshairs[i] = name ? textureload(name, 3, true) : notexture;
+    crosshairs[i] = name ? textureload(name, 3, true) : notexture;
     if(crosshairs[i] == notexture) 
     {
         name = game::defaultcrosshair(i);
@@ -2091,16 +2091,19 @@ void loadcrosshair(const char *name, int i)
 
 void loadcrosshair_(const char *name, int *i)
 {
-	loadcrosshair(name, *i);
+    loadcrosshair(name, *i);
 }
 
 COMMANDN(loadcrosshair, loadcrosshair_, "si");
 
-void writecrosshairs(stream *f)
+JSONObject writecrosshairs()
 {
+    JSONObject ch;
     loopi(MAXCROSSHAIRS) if(crosshairs[i] && crosshairs[i]!=notexture)
-        f->printf("loadcrosshair \"%s\" %d\n", crosshairs[i]->name, i);
-    f->printf("\n");
+    {
+        ch[towstring(crosshairs[i]->name)] = new JSONValue((double)i);
+    }
+    return ch;
 }
 
 void drawcrosshair(int w, int h)

@@ -219,7 +219,7 @@ extern int pushscissor(float sx1, float sy1, float sx2, float sy2);
 extern void popscissor();
 extern void recomputecamera();
 extern void findorientation();
-extern void writecrosshairs(stream *f);
+extern JSONObject writecrosshairs();
 
 // renderextras
 extern void render3dbox(vec &o, float tofloor, float toceil, float xradius, float yradius = 0);
@@ -449,8 +449,8 @@ extern void resetcomplete();
 extern void complete(char *s);
 const char *getkeyname(int code);
 extern const char *addreleaseaction(const char *s);
-extern void writebinds(stream *f);
-extern void writecompletions(stream *f);
+extern JSONObject writebinds();
+extern JSONObject writecompletions();
 
 // main
 enum
