@@ -4,21 +4,23 @@
  *
  * Part of the MJPA JSON Library - http://mjpa.co.uk/blog/view/A-simple-C-JSON-library/
  *
- * License: http://mjpa.co.uk/licenses/GPLv2/
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
 
 #include <stdio.h>
@@ -35,6 +37,9 @@
 // Macros to free an array/object
 #define FREE_ARRAY(x) { JSONArray::iterator iter; for (iter = x.begin(); iter != x.end(); iter++) { delete *iter; } }
 #define FREE_OBJECT(x) { JSONObject::iterator iter; for (iter = x.begin(); iter != x.end(); iter++) { delete (*iter).second; } }
+
+// max indent indent for writer
+static int maxindent = 0;
 
 /**
  * Parses a JSON encoded value to a JSONValue object
@@ -155,7 +160,7 @@ JSONValue *JSONValue::Parse(const wchar_t **data)
 			if (object.size() == 0 && **data == L'}')
 			{
 				(*data)++;
-				return new JSONValue(object, 0);
+				return new JSONValue(object);
 			}
 			
 			// We want a string now...
@@ -211,7 +216,7 @@ JSONValue *JSONValue::Parse(const wchar_t **data)
 			if (**data == L'}')
 			{
 				(*data)++;
-				return new JSONValue(object, 0);
+				return new JSONValue(object);
 			}
 			
 			// Want a , now
@@ -380,13 +385,11 @@ JSONValue::JSONValue(JSONArray m_array_value)
  * @access public
  *
  * @param JSONObject m_object_value The JSONObject to use as the value
- * @param int m_level Indent level for contents of this object, 0 = base object.
  */
-JSONValue::JSONValue(JSONObject m_object_value, int m_level)
+JSONValue::JSONValue(JSONObject m_object_value)
 {
 	type = JSONType_Object;
 	object_value = m_object_value;
-	level = m_level;
 }
 
 /** 
@@ -588,7 +591,7 @@ std::wstring JSONValue::Stringify()
 			break;
 		}
 		
-		case JSONType_Array: // quaker66: add spaces to array.
+		case JSONType_Array:
 		{
 			ret_string = L"[ ";
 			JSONArray::iterator iter = array_value.begin();
@@ -604,25 +607,41 @@ std::wstring JSONValue::Stringify()
 			break;
 		}
 		
-		case JSONType_Object: // modified by quaker66 (formatting, newlines)
+		case JSONType_Object:
 		{
+			int indent = 0;
 			ret_string = L"{\n";
+			// here comes the indent getter - finally we'll get maximum indent level we can use
+			JSONObject obj = object_value;
+			JSONObject::iterator liter = obj.begin(); // we first set up iterator through object map
+			while (liter != obj.end()) // let it loop till it reaches end of object map
+			{
+				if (liter->second->IsObject()) // if we find object in the map,
+				{
+					obj = liter->second->AsObject(); // replace original obj with new object
+					liter = obj.begin(); // and reset iterator, make it use the newly found object
+					indent++; // since we found object, we must increase indent level
+				};
+				++liter; // go to next pair
+			}
+			// if newly found indent level is bigger than previous maximum indent, update the max indent
+			if (indent > maxindent) maxindent = indent;
 			JSONObject::iterator iter = object_value.begin();
 			while (iter != object_value.end())
 			{
-				for (int i = 0; i <= level; i++) ret_string += L"    ";
-				ret_string += StringifyString((*iter).first);
+				// because we don't want to add smaller indent when it's deeper, we must do maxindent - indent
+				for (int i = 0; i <= (maxindent - indent); i++) ret_string += L"\t";
+				ret_string += StringifyString(iter->first);
 				ret_string += L" : ";
-				ret_string += (*iter).second->Stringify();
+				ret_string += iter->second->Stringify();
 				
 				// Not at the end - add a separator
 				if (++iter != object_value.end())
 					ret_string += L",\n";
 			}
 			ret_string += L"\n";
-			for (int i = 0; i < level; i++) ret_string += L"    ";
+			for (int i = 0; i < (maxindent - indent); i++) ret_string += L"\t";
 			ret_string += L"}";
-			if (level <= 0) ret_string += L"\n";
 			break;
 		}
 	}

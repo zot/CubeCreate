@@ -137,7 +137,7 @@ void writeinitcfg()
     root[L"soundfreq"] = new JSONValue((double)soundfreq);
     root[L"soundbufferlen"] = new JSONValue((double)soundbufferlen);
 
-    JSONValue *value = new JSONValue(root, 0);
+    JSONValue *value = new JSONValue(root);
     f->printf("%ls", value->Stringify().c_str());
     delete value;
     delete f;

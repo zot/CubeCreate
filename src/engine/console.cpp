@@ -599,9 +599,8 @@ JSONObject writebinds()
                     for (JSONObject::const_iterator iter = merge.begin(); iter != merge.end(); ++iter)
                         it[iter->first] = new JSONValue(iter->second->AsString());
                     merge.clear();
-                    bs[towstring(km.name)] = new JSONValue(it, 2);
                 }
-                bs[towstring(km.name)] = new JSONValue(it, 2);
+                bs[towstring(km.name)] = new JSONValue(it);
                 it.clear();
             }
         }

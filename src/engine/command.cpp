@@ -880,10 +880,10 @@ void writecfg(const char *name)
     if(!f) return;
 
     //clientinfo = game::writeclientinfo();
-    // root[L"clientinfo"] = new JSONValue(clientinfo, 1);
+    // root[L"clientinfo"] = new JSONValue(clientinfo);
 
     crossh = writecrosshairs();
-    root[L"crosshairs"] = new JSONValue(crossh, 1);
+    root[L"crosshairs"] = new JSONValue(crossh);
 
     enumerate(*idents, ident, id, ids.add(&id));
     ids.sort(sortidents);
@@ -923,10 +923,10 @@ void writecfg(const char *name)
             }
         }
     }
-    root[L"variables"] = new JSONValue(vars, 1);
+    root[L"variables"] = new JSONValue(vars);
 
     bnds = writebinds();
-    root[L"binds"] = new JSONValue(bnds, 1);
+    root[L"binds"] = new JSONValue(bnds);
 
     loopv(ids)
     {
@@ -939,12 +939,12 @@ void writecfg(const char *name)
             aliases[towstring(id.name)] = new JSONValue(towstring(id.action));
         }
     }
-    root[L"aliases"] = new JSONValue(aliases, 1);
+    root[L"aliases"] = new JSONValue(aliases);
 
     complet = writecompletions();
-    root[L"completions"] = new JSONValue(complet, 1);
+    root[L"completions"] = new JSONValue(complet);
 
-    JSONValue *value = new JSONValue(root, 0);
+    JSONValue *value = new JSONValue(root);
     f->printf("%ls", value->Stringify().c_str());
     delete value;
     delete f;
