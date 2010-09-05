@@ -74,7 +74,7 @@ struct delayedupdate
         {
             case INT: return float(val.i);
             case FLOAT: return val.f;
-            case STRING: return float(atof(val.s));
+            case STRING: return float(parsefloat(val.s));
             default: return 0;
         }
     }
@@ -285,7 +285,7 @@ void guibar()
     if(cgui) cgui->separator();
 }
 
-void guistrut(int *strut, int *alt)
+void guistrut(float *strut, int *alt)
 {
 	if(cgui)
 	{
@@ -310,8 +310,8 @@ static int getval(char *var)
     {
         case ID_VAR: return *id->storage.i;
         case ID_FVAR: return int(*id->storage.f);
-        case ID_SVAR: return atoi(*id->storage.s);
-        case ID_ALIAS: return atoi(id->action);
+        case ID_SVAR: return parseint(*id->storage.s);
+        case ID_ALIAS: return parseint(id->action);
         default: return 0;
     }
 }
@@ -324,8 +324,8 @@ static float getfval(char *var)
     {
         case ID_VAR: return *id->storage.i;
         case ID_FVAR: return *id->storage.f;
-        case ID_SVAR: return atof(*id->storage.s);
-        case ID_ALIAS: return atof(id->action);
+        case ID_SVAR: return parsefloat(*id->storage.s);
+        case ID_ALIAS: return parsefloat(id->action);
         default: return 0;
     }
 }
@@ -359,7 +359,7 @@ void guilistslider(char *var, char *list, char *onchange)
     list += strspn(list, "\n\t ");
     while(*list)
     {
-        vals.add(atoi(list));
+        vals.add(parseint(list));
         list += strcspn(list, "\n\t \0");
         list += strspn(list, "\n\t ");
     }
@@ -378,7 +378,7 @@ void guinameslider(char *var, char *names, char *list, char *onchange)
     list += strspn(list, "\n\t ");
     while(*list)
     {
-        vals.add(atoi(list));
+        vals.add(parseint(list));
         list += strcspn(list, "\n\t \0");
         list += strspn(list, "\n\t ");
     }
@@ -396,7 +396,7 @@ void guicheckbox(char *name, char *var, float *on, float *off, char *onchange)
     bool enabled = getfval(var)!=*off;
     if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "checkbox_on" : "checkbox_off")&G3D_UP)
     {
-        updateval(var, enabled ? *off : (*on || *off ? *on : 1), onchange);
+        updateval(var, enabled ? *off : (*on || *off ? *on : 1.0f), onchange);
     }
 }
 
@@ -456,6 +456,14 @@ void guilist(char *contents)
     cgui->poplist();
 }
 
+void guialign(int *align, char *contents)
+{
+    if(!cgui) return;
+    cgui->pushlist(clamp(*align, -1, 1));
+    execute(contents);
+    cgui->poplist();
+}
+
 void newgui(char *name, char *contents, char *header)
 {
     menu *m = guis.access(name);
@@ -499,9 +507,10 @@ COMMAND(guistayopen, "s");
 COMMAND(guinoautotab, "s");
 
 COMMAND(guilist, "s");
+COMMAND(guialign, "is");
 COMMAND(guititle, "s");
 COMMAND(guibar,"");
-COMMAND(guistrut,"ii");
+COMMAND(guistrut,"fi");
 COMMAND(guiimage,"ssfis");
 COMMAND(guislider,"siis");
 COMMAND(guilistslider, "sss");

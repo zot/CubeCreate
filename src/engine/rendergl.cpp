@@ -231,6 +231,11 @@ void gl_checkextensions()
         if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_vertex_buffer_object extension.");
     }
     else conoutf(CON_WARN, "WARNING: No vertex_buffer_object extension! (geometry heavy maps will be SLOW)");
+#ifdef __APPLE__
+    /* VBOs over 256KB seem to destroy performance on 10.5, but not in 10.6 */
+    extern int maxvbosize;
+    if(osversion < 0x1060) maxvbosize = min(maxvbosize, 8192);  
+#endif
 
     if(strstr(exts, "GL_ARB_pixel_buffer_object"))
     {
@@ -2160,6 +2165,13 @@ void drawcrosshair(int w, int h)
     glEnd();
 }
 
+VARP(wallclock, 0, 0, 1);
+VARP(wallclock24, 0, 0, 1);
+VARP(wallclocksecs, 0, 0, 1);
+
+static time_t walltime = 0;
+
+VARP(showfps, 0, 1, 1);
 VARP(showfpsrange, 0, 0, 1);
 VAR(showeditstats, 0, 0, 1);
 VAR(statrate, 1, 200, 1000);
@@ -2231,18 +2243,42 @@ void gl_drawhud(int w, int h)
             glPushMatrix();
             glScalef(conscale, conscale, 1);
 
-            static int lastfps = 0, prevfps[3] = { 0, 0, 0 }, curfps[3] = { 0, 0, 0 };
-            if(totalmillis - lastfps >= statrate)
+            int roffset = 0;
+            if(showfps)
             {
-                memcpy(prevfps, curfps, sizeof(prevfps));
-                lastfps = totalmillis - (totalmillis%statrate);
+                static int lastfps = 0, prevfps[3] = { 0, 0, 0 }, curfps[3] = { 0, 0, 0 };
+                if(totalmillis - lastfps >= statrate)
+                {
+                    memcpy(prevfps, curfps, sizeof(prevfps));
+                    lastfps = totalmillis - (totalmillis%statrate);
+                }
+                int nextfps[3];
+                getfps(nextfps[0], nextfps[1], nextfps[2]);
+                loopi(3) if(prevfps[i]==curfps[i]) curfps[i] = nextfps[i];
+                if(showfpsrange) draw_textf("fps %d+%d-%d", conw-7*FONTH, conh-FONTH*3/2, curfps[0], curfps[1], curfps[2]);
+                else draw_textf("fps %d", conw-5*FONTH, conh-FONTH*3/2, curfps[0]);
+                roffset += FONTH;
             }
-            int nextfps[3];
-            getfps(nextfps[0], nextfps[1], nextfps[2]);
-            loopi(3) if(prevfps[i]==curfps[i]) curfps[i] = nextfps[i];
-            if(showfpsrange) draw_textf("fps %d+%d-%d", conw-7*FONTH, conh-FONTH*3/2, curfps[0], curfps[1], curfps[2]);
-            else draw_textf("fps %d", conw-5*FONTH, conh-100, curfps[0]);
 
+            if(wallclock)
+            {
+                if(!walltime) { walltime = time(NULL); walltime -= totalmillis/1000; if(!walltime) walltime++; }
+                time_t walloffset = walltime + totalmillis/1000;
+                struct tm *localvals = localtime(&walloffset);
+                static string buf;
+                if(localvals && strftime(buf, sizeof(buf), wallclocksecs ? (wallclock24 ? "%H:%M:%S" : "%I:%M:%S%p") : (wallclock24 ? "%H:%M" : "%I:%M%p"), localvals))
+                {
+                    // hack because not all platforms (windows) support %P lowercase option
+                    // also strip leading 0 from 12 hour time
+                    char *dst = buf;
+                    const char *src = &buf[!wallclock24 && buf[0]=='0' ? 1 : 0];
+                    while(*src) *dst++ = tolower(*src++);
+                    *dst++ = '\0'; 
+                    draw_text(buf, conw-5*FONTH, conh-FONTH*3/2-roffset);
+                    roffset += FONTH;
+                }
+            }
+                       
             if(editmode || showeditstats)
             {
                 static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
@@ -2283,7 +2319,17 @@ void gl_drawhud(int w, int h)
                     DELETEA(editinfo);
                 }
             }
-
+            else if(identexists("gamehud"))
+            {
+                char *gameinfo = executeret("gamehud");
+                if(gameinfo)
+                {
+                    draw_text(gameinfo, conw-max(5*FONTH, 2*FONTH+text_width(gameinfo)), conh-FONTH*3/2-roffset);
+                    DELETEA(gameinfo);
+                    roffset += FONTH;
+                }
+            } 
+            
             glPopMatrix();
         }
 
@@ -2302,7 +2348,7 @@ void gl_drawhud(int w, int h)
     glPushMatrix();
     glScalef(conscale, conscale, 1);
     abovehud -= rendercommand(FONTH/2, abovehud - FONTH/2, conw-FONTH);
-    extern bool fullconsole;
+    extern int fullconsole;
     if(!hidehud || fullconsole) renderconsole(conw, conh, abovehud - FONTH/2);
     glPopMatrix();
 

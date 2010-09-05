@@ -33,7 +33,7 @@ cube *newcubes(uint face)
         setfaces(*c, face);
         loopl(6)
         {
-            c->texture[l] = 2+l;
+            c->texture[l] = DEFAULT_GEOM;
         }
         c++;
     }
@@ -61,7 +61,7 @@ void freecubeext(cube &c)
     DELETEP(c.ext);
 }
 
-void discardchildren(cube &c)
+void discardchildren(cube &c, bool fixtex, int depth)
 {
     if(c.ext)
     {
@@ -78,8 +78,19 @@ void discardchildren(cube &c)
     }
     if(c.children)
     {
-        freeocta(c.children);
-        c.children = NULL;
+        uint filled = F_EMPTY;
+        loopi(8) 
+        {
+            discardchildren(c.children[i], fixtex, depth+1);
+            filled |= c.children[i].faces[0];
+        }
+        if(fixtex) 
+        {
+            loopi(6) c.texture[i] = getmippedtexture(c, i);
+            if(depth > 0 && filled != F_EMPTY) c.faces[0] = F_SOLID;
+        }
+        DELETEA(c.children);
+        allocnodes--;
     }
 }
 
@@ -153,7 +164,7 @@ void validatec(cube *c, int size)
             if(size<=1)
             {
                 solidfaces(c[i]);
-                discardchildren(c[i]);
+                discardchildren(c[i], true);
             }
             else validatec(c[i].children, size>>1);
         }
@@ -250,30 +261,24 @@ int getmippedtexture(cube &p, int orient)
     cube *c = p.children;
     int d = dimension(orient);
     int dc = dimcoord(orient);
-    int tex[4] = {-1,-1,-1,-1};
-    loop(x,2) loop(y,2)
+    int tex[4] = { -1, -1, -1, -1 };
+    loop(x, 2) loop(y, 2)
     {
         int n = octaindex(d, x, y, dc);
         if(isempty(c[n]))
+        {
             n = oppositeocta(d, n);
-        if(isempty(c[n]))
-            continue;
-
-        loopk(3)
-            if(tex[k] == c[n].texture[orient])
-                return tex[k];
-
-        if(c[n].texture[orient] != DEFAULT_SKY) // favour non-sky tex
-            tex[x*2+y] = c[n].texture[orient];
+            if(isempty(c[n]))
+                continue;
+        }
+        loopk(3) if(tex[k] == c[n].texture[orient]) return tex[k];
+        if(c[n].texture[orient] > DEFAULT_SKY) tex[x*2+y] = c[n].texture[orient];
     }
-
-    loopk(4)
-        if(tex[k] != DEFAULT_SKY) return tex[k];
-
-    return p.texture[orient];
+    loopk(4) if(tex[k] > DEFAULT_SKY) return tex[k];
+    return DEFAULT_GEOM;
 }
 
-void forcemip(cube &c)
+void forcemip(cube &c, bool fixtex)
 {
     cube *ch = c.children;
     emptyfaces(c);
@@ -291,7 +296,7 @@ void forcemip(cube &c)
         }
     }
 
-    loopj(6)
+    if(fixtex) loopj(6)
         c.texture[j] = getmippedtexture(c, j);
 }
 
@@ -934,8 +939,8 @@ bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat, 
     }
     else
     {
+        if(collapsedface(cfe) && flataxisface(c, orient)) return false;
         if(!touchingface(c, orient)) return true;
-        if(collapsedface(cfe)) return false;
     }
 
     ivec no;
@@ -971,6 +976,8 @@ bool visibleface(cube &c, int orient, int x, int y, int z, int size, uchar mat, 
 // more expensive version that checks both triangles of a face independently
 int visibletris(cube &c, int orient, int x, int y, int z, int size)
 {
+    if(collapsedface(faceedges(c, orient)) && flataxisface(c, orient)) return 0;
+
     int dim = dimension(orient), coord = dimcoord(orient);
     uint face = c.faces[dim];
     if(coord) face = (face&0xF0F0F0F0)^0x80808080;
@@ -982,8 +989,6 @@ int visibletris(cube &c, int orient, int x, int y, int z, int size)
     if(face&0xFF0000) notouch++;
     if(face&0xFF000000) notouch++;
     if(notouch>=2) return 3;
-
-    if(collapsedface(faceedges(c, orient))) return 0;
 
     ivec no;
     int nsize;

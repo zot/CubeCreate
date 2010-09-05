@@ -37,7 +37,7 @@ struct gui : g3d_gui
 {
     struct list
     {
-        int parent, w, h;
+        int parent, w, h, align;
     };
 
     int nextlist;
@@ -140,7 +140,7 @@ struct gui : g3d_gui
     bool ishorizontal() const { return curdepth&1; }
     bool isvertical() const { return !ishorizontal(); }
 
-    void pushlist()
+    void pushlist(int align = -1)
     {	
         if(layoutpass)
         {
@@ -151,14 +151,27 @@ struct gui : g3d_gui
             }
             list &l = lists.add();
             l.parent = curlist;
+            l.align = align;
             curlist = lists.length()-1;
             xsize = ysize = 0;
         }
         else
         {
+            int xpad = xsize, ypad = ysize;
             curlist = nextlist++;
             xsize = lists[curlist].w;
             ysize = lists[curlist].h;
+            switch(align)
+            {
+            case 0:
+                if(ishorizontal()) cury += max(ypad - ysize, 0)/2;
+                else curx += max(xpad - xsize, 0)/2;
+                break;
+            case 1:
+                if(ishorizontal()) cury += max(ypad - ysize, 0);
+                else curx += max(xpad - xsize, 0);
+                break;
+            }
         }
         curdepth++;	
     }
@@ -180,6 +193,17 @@ struct gui : g3d_gui
             if(ishorizontal()) cury -= l.h;
             else curx -= l.w;
             layout(l.w, l.h);
+            if(!layoutpass) switch(l.align)
+            {
+            case 0:
+                if(ishorizontal()) cury -= max(ysize - l.h, 0)/2;         
+                else curx -= max(xsize - l.w, 0)/2;
+                break;
+            case 1:
+                if(ishorizontal()) cury -= max(ysize - l.h, 0);
+                else curx -= max(xsize - l.h, 0);
+                break;
+            }
         }
     }
 
@@ -191,9 +215,9 @@ struct gui : g3d_gui
     void progress(float percent) { autotab(); line_(FONTH*2/5, percent); }
 
     //use to set min size (useful when you have progress bars)
-    void strut(int size) { layout(isvertical() ? size*FONTW : 0, isvertical() ? 0 : size*FONTH); }
+    void strut(float size) { layout(isvertical() ? int(size*FONTW) : 0, isvertical() ? 0 : int(size*FONTH)); }
     //add space between list items
-    void space(int size) { layout(isvertical() ? 0 : size*FONTW, isvertical() ? size*FONTH : 0); }
+    void space(float size) { layout(isvertical() ? 0 : int(size*FONTW), isvertical() ? int(size*FONTH) : 0); }
 
     int layout(int w, int h)
     {

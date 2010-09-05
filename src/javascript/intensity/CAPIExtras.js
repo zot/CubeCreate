@@ -96,7 +96,10 @@ Map = {
         CAPI.texture(type, _name, rot, xoffset, yoffset, scale);
     },
 
-    mapmodelReset: CAPI.mapmodelReset,
+    mapmodelReset: function(n) {
+        n = defaultValue(n, 0);
+        CAPI.mapmodelReset(n);
+    },
     mapmodel: CAPI.mapmodel,
 
     autograss: CAPI.autograss,
@@ -762,9 +765,9 @@ if (Global.CLIENT) {
         fontOffset: CAPI.fontOffset,
 
         fontChar: function(x, y, w, h) {
-			h = defaultValue(h, 0);
-			CAPI.fontChar(x, y, w, h);
-		},
+            h = defaultValue(h, 0);
+            CAPI.fontChar(x, y, w, h);
+        },
     };
 
 }

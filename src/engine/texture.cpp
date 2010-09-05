@@ -1045,12 +1045,29 @@ void clearslots()
     clonedvslots = 0;
 }
 
+static void assignvslot(VSlot &vs);
+
+static inline void assignvslotlayer(VSlot &vs)
+{
+    if(vs.layer && vslots.inrange(vs.layer))
+    {
+        VSlot &layer = *vslots[vs.layer];
+        if(layer.index < 0) assignvslot(layer);
+    }
+}
+
+static void assignvslot(VSlot &vs)
+{
+    vs.index = compactedvslots++;
+    assignvslotlayer(vs);
+}
+
 void compactvslot(int &index)
 {
     if(vslots.inrange(index))
     {
         VSlot &vs = *vslots[index];
-        if(vs.index < 0) vs.index = compactedvslots++;
+        if(vs.index < 0) assignvslot(vs);
         if(!markingvslots) index = vs.index;
     }
 }
@@ -1064,22 +1081,8 @@ void compactvslots(cube *c, int n)
         else loopj(6) if(vslots.inrange(c[i].texture[j]))
         {
             VSlot &vs = *vslots[c[i].texture[j]];
-            if(vs.index < 0) vs.index = compactedvslots++;
+            if(vs.index < 0) assignvslot(vs);
             if(!markingvslots) c[i].texture[j] = vs.index;
-        }
-    }
-}
-
-void compactvslotlayers()
-{
-    loopv(vslots)
-    {
-        VSlot &vs = *vslots[i];
-        if(vs.index >= 0 && vs.layer && vslots.inrange(vs.layer))
-        {
-            VSlot &layer = *vslots[vs.layer];
-            if(layer.index < 0) layer.index = compactedvslots++;
-            if(!markingvslots) vs.layer = layer.index;
         }
     }
 }
@@ -1092,16 +1095,15 @@ int compactvslots()
     compactvslotsprogress = 0;
     loopv(vslots) vslots[i]->index = -1;
     loopv(slots) slots[i]->variants->index = compactedvslots++;
+    loopv(slots) assignvslotlayer(*slots[i]->variants);
     loopv(vslots)
     {
         VSlot &vs = *vslots[i];
         if(!vs.changed && vs.index < 0) { markingvslots = true; break; }
     }
     compactvslots(worldroot);
-    compactvslotlayers();
     int total = compactedvslots;
     compacteditvslots();
-    compactvslotlayers();
     loopv(vslots)
     {
         VSlot *vs = vslots[i];
@@ -1133,12 +1135,15 @@ int compactvslots()
             }
         }
         compactvslots(worldroot);
-        compactvslotlayers();
         total = compactedvslots;
         compacteditvslots();
-        compactvslotlayers();
     }
     compactmruvslots();
+    loopv(vslots)
+    {
+        VSlot &vs = *vslots[i];
+        if(vs.index >= 0 && vs.layer && vslots.inrange(vs.layer)) vs.layer = vslots[vs.layer]->index;
+    }
     loopv(vslots) 
     {
         while(vslots[i]->index >= 0 && vslots[i]->index != i)     
@@ -1177,20 +1182,20 @@ static void clampvslotoffset(VSlot &dst, Slot *slot = NULL)
     }
 }
 
-static void propagatevslot(VSlot &dst, const VSlot &src, int diff)
+static void propagatevslot(VSlot &dst, const VSlot &src, int diff, bool edit = false)
 {
     if(diff & (1<<VSLOT_SHPARAM)) loopv(src.params) dst.params.add(src.params[i]);
     if(diff & (1<<VSLOT_SCALE)) dst.scale = src.scale;
     if(diff & (1<<VSLOT_ROTATION)) 
     {
         dst.rotation = src.rotation;
-        if(dst.xoffset || dst.yoffset) clampvslotoffset(dst);
+        if(edit && (dst.xoffset || dst.yoffset)) clampvslotoffset(dst);
     }
     if(diff & (1<<VSLOT_OFFSET))
     {
         dst.xoffset = src.xoffset;
         dst.yoffset = src.yoffset;
-        clampvslotoffset(dst);
+        if(edit) clampvslotoffset(dst);
     }
     if(diff & (1<<VSLOT_SCROLL))
     {
@@ -1326,7 +1331,7 @@ static VSlot *clonevslot(const VSlot &src, const VSlot &delta)
     VSlot *dst = vslots.add(new VSlot(src.slot, vslots.length()));
     dst->changed = src.changed | delta.changed;
     propagatevslot(*dst, src, ((1<<VSLOT_NUM)-1) & ~delta.changed);
-    propagatevslot(*dst, delta, delta.changed);
+    propagatevslot(*dst, delta, delta.changed, true);
     return dst;
 }
 
@@ -1349,6 +1354,25 @@ VSlot *editvslot(const VSlot &src, const VSlot &delta)
     }
     return clonevslot(src, delta);
 }
+
+static void fixinsidefaces(cube *c, const ivec &o, int size, int tex)
+{
+    loopi(8) 
+    {
+        ivec co(i, o.x, o.y, o.z, size);
+        if(c[i].children) fixinsidefaces(c[i].children, co, size>>1, tex);
+        else loopj(6) if(!visibletris(c[i], j, co.x, co.y, co.z, size))
+            c[i].texture[j] = tex;
+    }
+}
+
+ICOMMAND(fixinsidefaces, "i", (int *tex),
+{
+    extern int nompedit;
+    if(noedit(true) || (nompedit && multiplayer())) return;
+    fixinsidefaces(worldroot, ivec(0, 0, 0), worldsize>>1, *tex && vslots.inrange(*tex) ? *tex : DEFAULT_GEOM);
+    allchanged();
+});
 
 void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale, int *forcedindex) // INTENSITY: forcedindex
 {
@@ -1720,14 +1744,14 @@ MSlot &lookupmaterialslot(int index, bool load)
 #if 0 // INTENSITY: Replaced
 Slot &lookupslot(int index, bool load)
 {
-    Slot &s = slots.inrange(index) ? *slots[index] : (slots.length() ? *slots[0] : dummyslot);
+    Slot &s = slots.inrange(index) ? *slots[index] : (slots.inrange(DEFAULT_GEOM) ? *slots[DEFAULT_GEOM] : dummyslot);
     return s.loaded || !load ? s : loadslot(s, false);
 }
 #endif
 
 VSlot &lookupvslot(int index, bool load)
 {
-    VSlot &s = vslots.inrange(index) && vslots[index]->slot ? *vslots[index] : (vslots.length() && vslots[0]->slot ? *vslots[0] : dummyvslot);
+    VSlot &s = vslots.inrange(index) && vslots[index]->slot ? *vslots[index] : (slots.inrange(DEFAULT_GEOM) && slots[DEFAULT_GEOM]->variants ? *slots[DEFAULT_GEOM]->variants : dummyvslot);
     if(load && !s.linked)
     {
         if(!s.slot->loaded) loadslot(*s.slot, false);

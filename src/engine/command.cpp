@@ -553,9 +553,6 @@ static inline bool isinteger(char *c)
     return isdigit(c[0]) || ((c[0]=='+' || c[0]=='-' || c[0]=='.') && isdigit(c[1]));
 }
 
-#define parseint(s) (int(strtol((s), NULL, 0)))
-#define parsefloat(s) (float(atof(s)))
-
 char *commandret = NULL;
 
 char *executeret(const char *p)               // all evaluation happens here, recursively
@@ -1164,6 +1161,55 @@ void prettylist(const char *s, const char *conj)
 }
 COMMAND(prettylist, "ss");
 
+int listincludes(const char *list, const char *needle, int needlelen)
+{
+    const char *s = list;
+    whitespaceskip;
+    int offset = 0;
+    while(*s)
+    {
+        const char *elem = s;
+        elementskip;
+        int len = s-elem;
+        if(*elem=='"')
+        {
+            elem++;
+            len -= s[-1]=='"' ? 2 : 1;
+        }
+        if(needlelen == len && !strncmp(needle, elem, len)) return offset;
+        whitespaceskip;
+        offset++;
+    }
+    return -1;
+}
+    
+char *listdel(const char *s, const char *del)
+{
+    vector<char> p;
+    whitespaceskip;
+    while(*s)
+    {
+        const char *elem = s;
+        elementskip;
+        int len = s-elem;
+        if(*elem=='"')
+        {
+            elem++;
+            len -= s[-1]=='"' ? 2 : 1;
+        }
+        if(listincludes(del, elem, len) < 0)
+        {
+            if(!p.empty()) p.add(' ');
+            p.put(elem, len);
+        }
+        whitespaceskip;
+    }
+    p.add('\0');
+    return newstring(p.getbuf());
+}
+
+ICOMMAND(listdel, "ss", (char *list, char *del), commandret = listdel(list, del));
+ICOMMAND(indexof, "ss", (char *list, char *elem), intret(listincludes(list, elem, strlen(elem))));
 ICOMMAND(listfind, "sss", (char *var, char *list, char *body), looplist(var, list, body, true));
 ICOMMAND(looplist, "sss", (char *var, char *list, char *body), looplist(var, list, body, false));
 ICOMMAND(loopfiles, "ssss", (char *var, char *dir, char *ext, char *body),
@@ -1230,6 +1276,18 @@ ICOMMAND(div, "ii", (int *a, int *b), intret(*b ? *a / *b : 0));
 ICOMMAND(mod, "ii", (int *a, int *b), intret(*b ? *a % *b : 0));
 ICOMMAND(divf, "ff", (float *a, float *b), floatret(*b ? *a / *b : 0));
 ICOMMAND(modf, "ff", (float *a, float *b), floatret(*b ? fmod(*a, *b) : 0));
+ICOMMAND(sin, "f", (float *a), floatret(sin(*a*RAD)));
+ICOMMAND(cos, "f", (float *a), floatret(cos(*a*RAD)));
+ICOMMAND(tan, "f", (float *a), floatret(tan(*a*RAD)));
+ICOMMAND(asin, "f", (float *a), floatret(asin(*a)/RAD));
+ICOMMAND(acos, "f", (float *a), floatret(acos(*a)/RAD));
+ICOMMAND(atan, "f", (float *a), floatret(atan(*a)/RAD));
+ICOMMAND(sqrt, "f", (float *a), floatret(sqrt(*a)));
+ICOMMAND(pow, "ff", (float *a, float *b), floatret(pow(*a, *b)));
+ICOMMAND(loge, "f", (float *a), floatret(log(*a)));
+ICOMMAND(log2, "f", (float *a), floatret(log(*a)/M_LN2));
+ICOMMAND(log10, "f", (float *a), floatret(log10(*a)));
+ICOMMAND(exp, "f", (float *a), floatret(exp(*a)));
 ICOMMAND(min, "V", (char **args, int *numargs),
 {
     int val = *numargs > 0 ? parseint(args[*numargs - 1]) : 0;
@@ -1254,6 +1312,35 @@ ICOMMAND(maxf, "V", (char **args, int *numargs),
     loopi(*numargs - 1) val = max(val, parsefloat(args[i]));
     floatret(val);
 });
+
+ICOMMAND(cond, "V", (char **args, int *numargs),
+{
+    for(int i = 0; i < *numargs; i += 2)
+    {
+        if(execute(args[i]))
+        {
+            if(i+1 < *numargs) commandret = executeret(args[i+1]);
+            break;
+        }
+    }
+});
+#define CASECOMMAND(name, fmt, type, compare) \
+    ICOMMAND(name, fmt "V", (type *val, char **args, int *numargs), \
+    { \
+        int i; \
+        for(i = 1; i+1 < *numargs; i += 2) \
+        { \
+            if(compare) \
+            { \
+                commandret = executeret(args[i+1]); \
+                return; \
+            } \
+        } \
+        if(i < *numargs) commandret = executeret(args[i]); \
+    })
+CASECOMMAND(case, "i", int, parseint(args[i]) == *val);
+CASECOMMAND(casef, "f", float, parsefloat(args[i]) == *val);
+CASECOMMAND(cases, "s", char, !strcmp(args[i], val));
 
 ICOMMAND(rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
 ICOMMAND(strcmp, "ss", (char *a, char *b), intret(strcmp(a,b)==0));

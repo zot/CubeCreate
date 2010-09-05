@@ -167,7 +167,7 @@ EMBED_CAPI_FUNC("readFile", __script__readFile, 1);
 EMBED_CAPI_FUNC("textureReset", __script__textureReset, 0);
 EMBED_CAPI_FUNC("texture", __script__texture, 6);
 
-EMBED_CAPI_FUNC("mapmodelReset", __script__mapmodelReset, 0);
+EMBED_CAPI_FUNC("mapmodelReset", __script__mapmodelReset, 1);
 EMBED_CAPI_FUNC("mapmodel", __script__mapmodel, 1);
 
 EMBED_CAPI_FUNC("autograss", __script__autograss, 1);

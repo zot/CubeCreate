@@ -111,8 +111,6 @@ void cubecancel()
     forcenextundo();
 }
 
-extern void entcancel();
-
 void cancelsel()
 {
     cubecancel();
@@ -500,7 +498,7 @@ void readychanges(block3 &b, cube *c, const ivec &cor, int size)
             if(size<=1)
             {
                 solidfaces(c[i]);
-                discardchildren(c[i]);
+                discardchildren(c[i], true);
                 brightencube(c[i]);
             }
             else readychanges(b, c[i].children, o, size/2);
@@ -1055,8 +1053,8 @@ namespace hmap
         t[d] += dcr*f*gridsize;    
         if(t[d] > nz || t[d] < mz) return NULL;
         cube *c = &lookupcube(t.x, t.y, t.z, gridsize);
-        if(c->children) forcemip(*c);
-        discardchildren(*c);    
+        if(c->children) forcemip(*c, false);
+        discardchildren(*c, true);    
         if(!isheightmap(sel.orient, d, true, c)) return NULL;        
         if     (t.x < changes.o.x) changes.o.x = t.x;
         else if(t.x > changes.s.x) changes.s.x = t.x;
@@ -1393,7 +1391,7 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
     loopselxyz(
         if(c.children) solidfaces(c);
         uchar mat = getmaterial(c);
-        discardchildren(c);
+        discardchildren(c, true);
         if(mat!=MAT_AIR) ext(c).material = mat;
         if(mode==1) // fill command
         {
@@ -1402,7 +1400,7 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
                 solidfaces(c);
                 cube &o = blockcube(x, y, 1, sel, -sel.grid);
                 loopi(6)
-                    c.texture[i] = o.children ? 2+i : o.texture[i];
+                    c.texture[i] = o.children ? DEFAULT_GEOM : o.texture[i];
             }
             else
                 emptyfaces(c);
@@ -1476,7 +1474,7 @@ void pushsel(int *dir)
 void mpdelcube(selinfo &sel, bool local)
 {
     if(local) game::edittrigger(sel, EDIT_DELCUBE);
-    loopselxyz(discardchildren(c); emptyfaces(c));
+    loopselxyz(discardchildren(c, true); emptyfaces(c));
 }
 
 void delcube() 
@@ -2032,11 +2030,11 @@ void editmat(char *name, char *filtername)
 
 COMMAND(editmat, "ss");
 
-#define TEXGUI_WIDTH 10
-#define TEXGUI_HEIGHT 7
 extern int menudistance, menuautoclose;
 
-VARP(thumbtime, 0, 30, 1000);
+VARP(texguiwidth, 1, 12, 1000);
+VARP(texguiheight, 1, 8, 1000);
+VARP(texguitime, 0, 25, 1000);
 
 static int lastthumbnail = 0;
 
@@ -2052,19 +2050,19 @@ struct texturegui : g3d_callback
 
     void gui(g3d_gui &g, bool firstpass)
     {
-        int origtab = menutab, numtabs = max((slots.length() + TEXGUI_WIDTH*TEXGUI_HEIGHT - 1)/(TEXGUI_WIDTH*TEXGUI_HEIGHT), 1);
+        int origtab = menutab, numtabs = max((slots.length() + texguiwidth*texguiheight - 1)/(texguiwidth*texguiheight), 1);
         g.start(menustart, 0.04f, &menutab);
         loopi(numtabs)
         {   
             g.tab(!i ? "Textures" : NULL, 0xAAFFAA);
             if(i+1 != origtab) continue; //don't load textures on non-visible tabs!
-            loop(h, TEXGUI_HEIGHT) 
+            loop(h, texguiheight) 
             {
                 g.pushlist();
-                loop(w, TEXGUI_WIDTH) 
+                loop(w, texguiwidth) 
                 {
                     extern VSlot dummyvslot;
-                    int ti = (i*TEXGUI_HEIGHT+h)*TEXGUI_WIDTH+w;
+                    int ti = (i*texguiheight+h)*texguiwidth+w;
                     if(ti<slots.length()) 
                     {
                         Slot &slot = lookupslot(ti, false);
@@ -2072,7 +2070,7 @@ struct texturegui : g3d_callback
                         if(slot.sts.empty()) continue;
                         else if(!slot.loaded && !slot.thumbnail)
                         {
-                            if(totalmillis-lastthumbnail<thumbtime) 
+                            if(totalmillis-lastthumbnail<texguitime) 
                             {
                                 g.texture(dummyvslot, 1.0, false); //create an empty space
                                 continue; 
@@ -2099,7 +2097,7 @@ struct texturegui : g3d_callback
         if(on != menuon && (menuon = on)) 
         { 
             if(menustart <= lasttexmillis) 
-                menutab = 1+clamp(lookupvslot(lasttex, false).slot->index, 0, slots.length()-1)/(TEXGUI_WIDTH*TEXGUI_HEIGHT);
+                menutab = 1+clamp(lookupvslot(lasttex, false).slot->index, 0, slots.length()-1)/(texguiwidth*texguiheight);
             menupos = menuinfrontofplayer(); 
             menustart = starttime(); 
         }

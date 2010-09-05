@@ -255,7 +255,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
     }
     else if(lastupdate != lastmillis) lastupdate = lastmillis;
 
-    loopi(restore ? 1 : 2)
+    loopi(restore ? 1 : 3)
     {
         glColor3f(1, 1, 1);
         settexture("data/background.png", 0);
@@ -1259,7 +1259,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     sauerlog("gl");
     gl_checkextensions();
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
-    notexture = textureload("data/notexture.png");
+    notexture = textureload("packages/textures/notexture.png");
     if(!notexture) fatal("could not find core textures");
 
     sauerlog("js");

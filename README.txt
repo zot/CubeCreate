@@ -5,7 +5,7 @@ A new engine and gaming platform based on Syntensity. While Syntensity aims at s
 CubeCreate aims to create a modern engine and gaming platform, developed independently.
 For now, it's in sync with Sauerbraten and SauerEnhanced:
 
-Current Sauerbraten revision: 2940
+Current Sauerbraten revision: 3243
 Current Sauerbraten Enhanced revision: 288
 
 

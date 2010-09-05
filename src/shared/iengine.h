@@ -37,6 +37,10 @@ enum // cube empty-space materials
     MAT_ALPHA    = 4 << MATF_FLAG_SHIFT   // alpha blended
 };
 
+#define isliquid(mat) ((mat)==MAT_WATER || (mat)==MAT_LAVA)
+#define isclipped(mat) ((mat)==MAT_GLASS)
+#define isdeadly(mat) ((mat)==MAT_LAVA)
+
 extern void lightent(extentity &e, float height = 8.0f);
 extern void lightreaching(const vec &target, vec &color, vec &dir, bool fast = false, extentity *e = 0, float ambient = 0.4f);
 extern entity *brightestlight(const vec &target, const vec &dir);
@@ -139,6 +143,18 @@ extern int cleargui(int n = 0);
 
 // octa
 extern int lookupmaterial(const vec &o);
+
+static inline bool insideworld(const vec &o)
+{
+	extern int worldsize;
+    return o.x>=0 && o.x<worldsize && o.y>=0 && o.y<worldsize && o.z>=0 && o.z<worldsize;
+}
+
+static inline bool insideworld(const ivec &o)
+{
+	extern int worldsize;
+    return uint(o.x)<uint(worldsize) && uint(o.y)<uint(worldsize) && uint(o.z)<uint(worldsize);
+}
 
 // world
 extern bool emptymap(int factor, bool force, const char *mname = "", bool usecfg = true);
@@ -336,8 +352,8 @@ extern int maxclients;
 enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_PRIVATE, DISC_MAXCLIENTS, DISC_TIMEOUT, DISC_OVERFLOW, DISC_NUM };
 
 extern void *getclientinfo(int i);
-extern void sendf(int cn, int chan, const char *format, ...);
-extern void sendfile(int cn, int chan, stream *file, const char *format = "", ...);
+extern ENetPacket *sendf(int cn, int chan, const char *format, ...);
+extern ENetPacket *sendfile(int cn, int chan, stream *file, const char *format = "", ...);
 extern void sendpacket(int cn, int chan, ENetPacket *packet, int exclude = -1);
 extern void flushserver(bool force);
 extern int getnumclients();
@@ -415,22 +431,27 @@ struct g3d_gui
         defvformatstring(str, icon, fmt);
         return button(str, color, icon);
     }
+    virtual int title(const char *text, int color, const char *icon = NULL) = 0;
+    int titlef(const char *fmt, int color, const char *icon = NULL, ...)
+    {
+        defvformatstring(str, icon, fmt);
+        return title(str, color, icon);
+    }
     virtual void background(int color, int parentw = 0, int parenth = 0) = 0;
 
-    virtual void pushlist() {}
+    virtual void pushlist(int align = -1) {}
     virtual void poplist() {}
 
     virtual void allowautotab(bool on) = 0;
     virtual bool shouldtab() { return false; }
 	virtual void tab(const char *name = NULL, int color = 0) = 0;
-    virtual int title(const char *text, int color, const char *icon = NULL) = 0;
     virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
     virtual int texture(VSlot &vslot, float scale, bool overlaid = true) = 0;
     virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL) = 0;
     virtual void separator() = 0;
 	virtual void progress(float percent) = 0;
-	virtual void strut(int size) = 0;
-    virtual void space(int size) = 0;
+	virtual void strut(float size) = 0;
+    virtual void space(float size) = 0;
     virtual char *keyfield(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED) = 0;
     virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED, bool password=false) = 0; // INTENSITY: Added password
     virtual void textbox(const char *text, int width, int height, int color = 0xFFFFFF) = 0;

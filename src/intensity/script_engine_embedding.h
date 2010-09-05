@@ -608,9 +608,9 @@ V8_FUNC_ssiiidi(__script__texture, {
     texture((char*)arg1, (char*)arg2, &arg3, &arg4, &arg5, &arg6f, &arg7);
 });
 
-extern void mapmodelreset();
-V8_FUNC_NOPARAM(__script__mapmodelReset, {
-    mapmodelreset();
+extern void mapmodelreset(int *n);
+V8_FUNC_i(__script__mapmodelReset, {
+    mapmodelreset(&arg1);
 });
 
 extern void mmodel(char *name);

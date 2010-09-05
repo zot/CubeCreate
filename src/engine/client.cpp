@@ -83,6 +83,9 @@ void abortconnect()
     clienthost = NULL;
 }
 
+SVAR(connectname, "");
+VAR(connectport, 0, 0, 0xFFFF);
+
 void connectserv(const char *servername, int serverport, const char *serverpassword)
 {   
     if(connpeer)
@@ -98,7 +101,9 @@ void connectserv(const char *servername, int serverport, const char *serverpassw
 
     if(servername)
     {
-        addserver(servername, serverport, serverpassword[0] ? serverpassword : NULL); // INTENSITY: Remove?
+        if(strcmp(servername, connectname)) setsvar("connectname", servername);
+        if(serverport != connectport) setvar("connectport", serverport);
+        addserver(servername, serverport, serverpassword && serverpassword[0] ? serverpassword : NULL); // INTENSITY: Remove?
         conoutf("attempting to connect to %s:%d", servername, serverport);
         if(!resolverwait(servername, &address))
         {
@@ -108,6 +113,8 @@ void connectserv(const char *servername, int serverport, const char *serverpassw
     }
     else
     {
+        setsvar("connectname", "");
+        setvar("connectport", 0);
         conoutf("attempting to connect over LAN");
         address.host = ENET_HOST_BROADCAST;
     }

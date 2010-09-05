@@ -274,6 +274,14 @@ static void initdome(const bvec &color, float minalpha = 0.0f, float maxalpha = 
         }
         loopi(hres) genface(depth, 0, i+1, 1+(i+1)%hres);
     }
+    else if(clipz <= 0)
+    {
+        loopi(hres<<depth)
+        {
+            float angle = 2*M_PI*float(i)/(hres<<depth), x = cosf(angle), y = sinf(angle);
+            domeverts[domenumverts++] = domevert(vec(x, y, 0.0f), color, maxalpha);
+        }
+    }
     else
     {
         float clipxy = sqrtf(1 - clipz*clipz), xm = cosf(M_PI/hres), ym = sinf(M_PI/hres);
@@ -335,7 +343,7 @@ static void deletedome()
 FVARR(fogdomeheight, -1, -0.5f, 1); 
 FVARR(fogdomemin, 0, 0, 1);
 FVARR(fogdomemax, 0, 0, 1);
-VARR(fogdomecap, 0, 0, 1);
+VARR(fogdomecap, 0, 1, 1);
 FVARR(fogdomeclip, 0, 1, 1);
 bvec fogdomecolor(0, 0, 0);
 HVARFR(fogdomecolour, 0, 0, 0xFFFFFF,
@@ -431,6 +439,31 @@ void drawskyoutline()
 }
 
 VAR(clampsky, 0, 1, 1);
+
+VARR(fogdomeclouds, 0, 1, 1);
+
+static void drawfogdome(int farplane)
+{
+    notextureshader->set();
+    glDisable(GL_TEXTURE_2D);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glPushMatrix();
+    glLoadMatrixf(viewmatrix.v);
+    glRotatef(camera1->roll, 0, 1, 0);
+    glRotatef(camera1->pitch, -1, 0, 0);
+    glRotatef(camera1->yaw, 0, 0, -1);
+    if(reflecting) glScalef(1, 1, -1);
+    glTranslatef(0, 0, farplane*fogdomeheight*0.5f);
+    glScalef(farplane/2, farplane/2, farplane*(0.5f - fogdomeheight*0.5f));
+    drawdome();
+    glPopMatrix();
+
+    glDisable(GL_BLEND);
+    glEnable(GL_TEXTURE_2D);
+}
 
 static int yawskyfaces(int faces, int yaw, float spin = 0)
 {
@@ -574,6 +607,13 @@ void drawskybox(int farplane, bool limited)
         glDisable(GL_BLEND);
     }
 
+    if(!glaring && fogdomemax && !fogdomeclouds)
+    {
+        if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+        drawfogdome(farplane);
+        defaultshader->set();
+    }
+
     if(!glaring && cloudbox[0] && cloudboxalpha > 0.0f) // end INTENSITY
     {
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
@@ -642,26 +682,7 @@ void drawskybox(int farplane, bool limited)
 	if(!glaring && fogdomemax)
 	{
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
-
-        notextureshader->set();
-        glDisable(GL_TEXTURE_2D);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        glPushMatrix();
-        glLoadMatrixf(viewmatrix.v);
-        glRotatef(camera1->roll, 0, 1, 0);
-        glRotatef(camera1->pitch, -1, 0, 0);
-        glRotatef(camera1->yaw, 0, 0, -1);
-        if(reflecting) glScalef(1, 1, -1);
-        glTranslatef(0, 0, farplane*fogdomeheight*0.5f);
-        glScalef(farplane/2, farplane/2, farplane*(0.5f - fogdomeheight*0.5f));
-        drawdome();
-        glPopMatrix();
-
-        glDisable(GL_BLEND);
-		glEnable(GL_TEXTURE_2D);
+        drawfogdome(farplane);
 	}
 
     if(clampsky) glDepthRange(0, 1);

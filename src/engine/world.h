@@ -2,10 +2,7 @@
 enum                            // hardcoded texture numbers
 {
     DEFAULT_SKY = 0,
-    DEFAULT_LIQUID,
-    DEFAULT_WALL,
-    DEFAULT_FLOOR,
-    DEFAULT_CEIL
+    DEFAULT_GEOM
 };
 
 #define MAPVERSION 31           // bump if map format changes, see worldio.cpp
@@ -55,10 +52,6 @@ enum
     MATSURF_VISIBLE,
     MATSURF_EDIT_ONLY
 };
-
-#define isliquid(mat) ((mat)==MAT_WATER || (mat)==MAT_LAVA)
-#define isclipped(mat) ((mat)==MAT_GLASS)
-#define isdeadly(mat) ((mat)==MAT_LAVA)
 
 #define TEX_SCALE 8.0f
 

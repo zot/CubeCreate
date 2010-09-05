@@ -231,7 +231,7 @@ extern void getcubevector(cube &c, int d, int x, int y, int z, ivec &p);
 extern void setcubevector(cube &c, int d, int x, int y, int z, const ivec &p);
 extern int familysize(cube &c);
 extern void freeocta(cube *c);
-extern void discardchildren(cube &c);
+extern void discardchildren(cube &c, bool fixtex = false, int depth = 0);
 extern void optiface(uchar *p, cube &c);
 extern void validatec(cube *c, int size);
 extern bool isvalidcube(cube &c);
@@ -243,7 +243,8 @@ extern int neighbourdepth;
 extern cube &neighbourcube(cube &c, int orient, int x, int y, int z, int size, ivec &ro = lu, int &rsize = lusize);
 extern void newclipplanes(cube &c);
 extern void freeclipplanes(cube &c);
-extern void forcemip(cube &c);
+extern int getmippedtexture(cube &p, int orient);
+extern void forcemip(cube &c, bool fixtex = true);
 extern bool subdividecube(cube &c, bool fullcheck=true, bool brighten=true);
 extern void converttovectorworld();
 extern int faceverts(cube &c, int orient, int vert);
@@ -287,16 +288,6 @@ static inline uchar octantrectangleoverlap(const ivec &c, int size, const ivec &
     if(v.x <= o.x)     p &= 0xAA;
     if(v.x >= o.x+s.x) p &= 0x55;
     return p;
-}
-
-static inline bool insideworld(const vec &o)
-{
-    return o.x>=0 && o.x<worldsize && o.y>=0 && o.y<worldsize && o.z>=0 && o.z<worldsize;
-}
-
-static inline bool insideworld(const ivec &o)
-{
-    return uint(o.x)<uint(worldsize) && uint(o.y)<uint(worldsize) && uint(o.z)<uint(worldsize);
 }
 
 // ents
@@ -498,6 +489,7 @@ extern float shadowray(ShadowRayCache *cache, const vec &o, const vec &ray, floa
 // world
 extern vector<int> outsideents;
 
+extern void entcancel();
 extern void entitiesinoctanodes();
 extern void attachentities();
 extern void attachentity(extentity &e);

@@ -287,9 +287,9 @@ void rdjoint(int *n, int *t, char *v1, char *v2, char *v3)
     ragdollskel::joint &j = ragdoll->joints.add();
     j.bone = *n;
     j.tri = *t;
-    j.vert[0] = v1[0] ? atoi(v1) : -1;
-    j.vert[1] = v2[0] ? atoi(v2) : -1;
-    j.vert[2] = v3[0] ? atoi(v3) : -1;
+    j.vert[0] = v1[0] ? parseint(v1) : -1;
+    j.vert[1] = v2[0] ? parseint(v2) : -1;
+    j.vert[2] = v3[0] ? parseint(v3) : -1;
 }
 COMMAND(rdjoint, "iisss");
    
@@ -338,10 +338,10 @@ void mapmodelcompat(int *rad, int *h, int *tex, char *name, char *shadow)
     mmodel(name);
 }
 
-void mapmodelreset() 
+void mapmodelreset(int *n) 
 { 
     if(!overrideidents && !game::allowedittoggle()) return;
-    mapmodels.shrink(0); 
+    mapmodels.shrink(clamp(*n, 0, mapmodels.length())); 
 }
 
 mapmodelinfo &getmminfo(int i) { return /*mapmodels.inrange(i) ? mapmodels[i] :*/ *(mapmodelinfo *)0; } // INTENSITY
@@ -349,7 +349,7 @@ const char *mapmodelname(int i) { return /*mapmodels.inrange(i) ? mapmodels[i].n
 
 COMMAND(mmodel, "s");
 COMMANDN(mapmodel, mapmodelcompat, "iiiss");
-COMMAND(mapmodelreset, "");
+COMMAND(mapmodelreset, "i");
 ICOMMAND(mapmodelname, "i", (int *index), { result(mapmodels.inrange(*index) ? mapmodels[*index].name : ""); });
 ICOMMAND(nummapmodels, "", (), { intret(mapmodels.length()); });
 

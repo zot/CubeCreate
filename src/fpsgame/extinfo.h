@@ -3,7 +3,7 @@
 // This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
 #define EXT_ACK                         -1
-#define EXT_VERSION                     103
+#define EXT_VERSION                     105
 #define EXT_NO_ERROR                    0
 #define EXT_ERROR                       1
 #define EXT_PLAYERSTATS_RESP_IDS        -10
