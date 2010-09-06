@@ -875,7 +875,16 @@ static partrenderer *parts[] =
     new taperenderer("packages/particles/lightflare.png", PT_TAPE|PT_GLARE),
     new quadrenderer("<grey>packages/particles/bubble.jpg", PT_PART|PT_GLARE),
     new quadrenderer("packages/particles/explode.jpg", PT_PART|PT_GLARE),
-    new taperenderer("packages/particles/smoketrail.png", PT_TAPE|PT_GLARE) // must be done last // SAUER ENHANCED end - add new particles
+    new taperenderer("packages/particles/smoketrail.png", PT_TAPE|PT_GLARE), // SAUER ENHANCED end - add new particles
+    // here come editparticles, must be ALWAYS last.
+    new quadrenderer("packages/icons/edit_light.png", PT_PART),
+    new quadrenderer("packages/icons/edit_spotlight.png", PT_PART),
+    new quadrenderer("packages/icons/edit_envmap.png", PT_PART),
+    new quadrenderer("packages/icons/edit_sound.png", PT_PART),
+    new quadrenderer("packages/icons/edit_marker.png", PT_PART),
+    new quadrenderer("packages/icons/edit_mapmodel.png", PT_PART),
+    new quadrenderer("packages/icons/edit_particles.png", PT_PART),
+    new quadrenderer("packages/icons/edit_generic.png", PT_PART)
 };
 
 void finddepthfxranges()
@@ -1137,7 +1146,7 @@ static void splash(int type, int color, int radius, int num, int fade, const vec
                 while(x*x+y*y+z*z>radius*radius);
                 break;
         }
-    	vec tmp = vec((float)x, (float)y, (float)z);
+        vec tmp = vec((float)x, (float)y, (float)z);
         int f = (num < 10) ? (fmin + rnd(fmax)) : (fmax - (i*(fmax-fmin))/(num-1)); //help deallocater by using fade distribution rather than random
         particle *np = newparticle(p, tmp, regfade?fade:f, type, color, size, gravity);
         np->val = collidez;
@@ -1553,6 +1562,8 @@ void seedparticles()
     }
 }
 
+FVARFP(editpartsize, 0.0f, 2.0f, 100.0f, particleinit()); // quaker66: control size of editparticles
+
 void updateparticles()
 {
     if(regenemitters) addparticleemitters();
@@ -1598,22 +1609,77 @@ void updateparticles()
     if(editmode) // show sparkly thingies for map entities in edit mode
     {
         const vector<extentity *> &ents = entities::getents();
+        int editid = -1;
         // note: order matters in this case as particles of the same type are drawn in the reverse order that they are added
         loopv(entgroup)
         {
             extentity &e = *ents[entgroup[i]]; // INTENSITY: Made extentity
             if (!LogicSystem::getLogicEntity(e).get()) continue;
             std::string _class = '@' + LogicSystem::getLogicEntity(e).get()->getClass(); // INTENSITY
-            particle_textcopy(e.o, _class.c_str(), PART_TEXT, 1, 0xFF4B19, 2.0f); // INTENSITY: Use class
+            particle_textcopy(vec(e.o.x, e.o.y, e.o.z + int(editpartsize) * 2), _class.c_str(), PART_TEXT, 1, 0xFF4B19, editpartsize); // INTENSITY: Use class
+            switch (e.type)
+            {
+                case ET_LIGHT:
+                    newparticle(e.o, e.o, 1, PART_EDIT_LIGHT, 0xFF4B19, editpartsize);
+                    break;
+                case ET_SPOTLIGHT:
+                    newparticle(e.o, e.o, 1, PART_EDIT_SPOTLIGHT, 0xFF4B19, editpartsize);
+                    break;
+                case ET_ENVMAP:
+                    newparticle(e.o, e.o, 1, PART_EDIT_ENVMAP, 0xFF4B19, editpartsize);
+                    break;
+                case ET_SOUND:
+                    newparticle(e.o, e.o, 1, PART_EDIT_SOUND, 0xFF4B19, editpartsize);
+                    break;
+                case ET_PLAYERSTART:
+                    newparticle(e.o, e.o, 1, PART_EDIT_MARKER, 0xFF4B19, editpartsize);
+                    break;
+                case ET_MAPMODEL:
+                    newparticle(e.o, e.o, 1, PART_EDIT_MAPMODEL, 0xFF4B19, editpartsize);
+                    break;
+                case ET_PARTICLES:
+                    newparticle(e.o, e.o, 1, PART_EDIT_PARTICLES, 0xFF4B19, editpartsize);
+                    break;
+                default:
+                    newparticle(e.o, e.o, 1, PART_EDIT_GENERIC, 0xFF4B19, editpartsize);
+                    break;
+            }
+            editid = e.uniqueId;
         }
         loopv(ents)
         {
             extentity &e = *ents[i]; // INTENSITY: Made extentity
-            if(e.type==ET_EMPTY) continue;
+            if(e.type==ET_EMPTY || editid==e.uniqueId) continue;
             if (!LogicSystem::getLogicEntity(e).get()) continue;
             std::string _class = '@' + LogicSystem::getLogicEntity(e).get()->getClass(); // INTENSITY
-            particle_textcopy(e.o, _class.c_str(), PART_TEXT, 1, 0x1EC850, 2.0f); // INTENSITY: Use class
-            regular_particle_splash(PART_EDIT, 2, 40, e.o, 0x3232FF, 0.32f*particlesize/100.0f);
+            particle_textcopy(vec(e.o.x, e.o.y, e.o.z + int(editpartsize) * 2), _class.c_str(), PART_TEXT, 1, 0x1EC850, editpartsize); // INTENSITY: Use class
+            switch (e.type)
+            {
+                case ET_LIGHT:
+                    newparticle(e.o, e.o, 1, PART_EDIT_LIGHT, (e.attr2 || e.attr3 || e.attr4) ? (e.attr2<<16)+(e.attr3<<8)+e.attr4 : 0xFFFFFF, editpartsize);
+                    break;
+                case ET_SPOTLIGHT:
+                    newparticle(e.o, e.o, 1, PART_EDIT_SPOTLIGHT, 0xFFFFFF, editpartsize);
+                    break;
+                case ET_ENVMAP:
+                    newparticle(e.o, e.o, 1, PART_EDIT_ENVMAP, 0xFFFFFF, editpartsize);
+                    break;
+                case ET_SOUND:
+                    newparticle(e.o, e.o, 1, PART_EDIT_SOUND, 0xFFFFFF, editpartsize);
+                    break;
+                case ET_PLAYERSTART:
+                    newparticle(e.o, e.o, 1, PART_EDIT_MARKER, 0xFFFFFF, editpartsize);
+                    break;
+                case ET_MAPMODEL:
+                    newparticle(e.o, e.o, 1, PART_EDIT_MAPMODEL, 0xFFFFFF, editpartsize);
+                    break;
+                case ET_PARTICLES:
+                    newparticle(e.o, e.o, 1, PART_EDIT_PARTICLES, 0xFFFFFF, editpartsize);
+                    break;
+                default:
+                    newparticle(e.o, e.o, 1, PART_EDIT_GENERIC, 0xFFFFFF, editpartsize);
+                    break;
+            }
         }
     }
 }

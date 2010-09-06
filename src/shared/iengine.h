@@ -7,7 +7,7 @@ typedef class boost::shared_ptr<CLogicEntity> LogicEntityPtr;
 
 extern int curtime;                     // current frame time
 extern int lastmillis;                  // last time
-extern int skymillis;					// INTENSITY: SkyManager: for skies, this needs to be reset for proper sync'ing.
+extern int skymillis;                    // INTENSITY: SkyManager: for skies, this needs to be reset for proper sync'ing.
 extern int totalmillis;                 // total elapsed time
 extern int gamespeed, paused;
 
@@ -146,13 +146,13 @@ extern int lookupmaterial(const vec &o);
 
 static inline bool insideworld(const vec &o)
 {
-	extern int worldsize;
+    extern int worldsize;
     return o.x>=0 && o.x<worldsize && o.y>=0 && o.y<worldsize && o.z>=0 && o.z<worldsize;
 }
 
 static inline bool insideworld(const ivec &o)
 {
-	extern int worldsize;
+    extern int worldsize;
     return uint(o.x)<uint(worldsize) && uint(o.y)<uint(worldsize) && uint(o.z)<uint(worldsize);
 }
 
@@ -236,7 +236,16 @@ enum
     PART_LFLARE,
     PART_BUBBLE,
     PART_EXPLODE,
-    PART_SMOKETRAIL
+    PART_SMOKETRAIL,
+    // here come editmode particle images, they must ALWAYS be the last
+    PART_EDIT_LIGHT,
+    PART_EDIT_SPOTLIGHT,
+    PART_EDIT_ENVMAP,
+    PART_EDIT_SOUND,
+    PART_EDIT_MARKER,
+    PART_EDIT_MAPMODEL,
+    PART_EDIT_PARTICLES,
+    PART_EDIT_GENERIC
 };
 
 
@@ -444,13 +453,13 @@ struct g3d_gui
 
     virtual void allowautotab(bool on) = 0;
     virtual bool shouldtab() { return false; }
-	virtual void tab(const char *name = NULL, int color = 0) = 0;
+    virtual void tab(const char *name = NULL, int color = 0) = 0;
     virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
     virtual int texture(VSlot &vslot, float scale, bool overlaid = true) = 0;
     virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL) = 0;
     virtual void separator() = 0;
-	virtual void progress(float percent) = 0;
-	virtual void strut(float size) = 0;
+    virtual void progress(float percent) = 0;
+    virtual void strut(float size) = 0;
     virtual void space(float size) = 0;
     virtual char *keyfield(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED) = 0;
     virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED, bool password=false) = 0; // INTENSITY: Added password
