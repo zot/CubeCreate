@@ -275,3 +275,78 @@ gotosel
     gotosel
 
 Goes to the position of the currently selected cube or entity.
+
+Heightfield
+-----------
+
+Heightfields are very different than what most people are probably used to; they are just normal cubes and are NOT special meshes. Really, it's just another way of editing the same geometry. Editing this way is a bit different from normal editing, but just as easy. First, instead of selecting cubes, you select a brush (B+wheel) and textures (middle mouse button while in heightmap mode to toggle). Once this is done, you can apply the brush to all cubes that match the textures you've selected. Making hills and valleys can be quite fast when using this feature. By default all textures are automatically selected.
+
+hmapedit
+^^^^^^^^
+
+.. code-block :: text
+
+    hmapedit 0/1
+
+Set to 1 to turn on heightmap mode (default: hold LCTRL or use H to toggle on and off). In heightmap mode the cursor will turn bright green when hilighting heightmap cubes and the editface command will now use brushes to edit heightmap cubes. In order to avoid accidental edits only heightmap cubes are editable in this mode. If a cubic selection is present, then only cubes within the column of the selection will be modifiable.
+
+hmapselect
+^^^^^^^^^^
+
+.. code-block :: text
+
+    hmapselect
+
+Selects the texture and orientation of the hilighted cube (default: mouse buttons while in heightmap mode, or H key). If hmapselall is set to 1, then all textures are automatically selected, and this command will simply select the orientation. All cubes, of equal or larger size, that match the selection will be considered part of the heightmap.
+
+hmapcancel
+^^^^^^^^^^
+
+.. code-block :: text
+
+    hmapcancel
+
+Return the heightmap texture selection to default (ie: select all textures).
+
+selectbrush
+^^^^^^^^^^^
+
+.. code-block :: text
+
+    selectbrush D
+
+Switches between the various height map brushes (Default: hold B + wheel).
+
+clearbrush
+^^^^^^^^^^
+
+.. code-block :: text
+
+    clearbrush
+
+This resets the current brush that is used during heightmap mode editing.
+
+brushvert
+^^^^^^^^^
+
+.. code-block :: text
+
+    brushvert x y depth
+
+A brush is a 2D map that describes the depth that the editface commands should push into the cubes at various points. The first two parameters of brushvert are the X and Y coordinates, respectively, of a vert on this 2D map. The last parameter is used to set the depth. NOTE: if all of the brush verts are 0, then a smoothing filter will be applied instead of the brush. This filter will affect the same square sized region as the brush.
+
+brushx
+^^^^^^
+
+.. code-block :: text
+
+    brushx
+
+brushy
+^^^^^^
+
+.. code-block :: text
+
+    brushy
+
+Along with the 2D map, all brushes also have a handle. This handle is a reference point on the 2D map which defines where the brush is relative to the editing cursor. These two variables define the brush handle's coordinates.
