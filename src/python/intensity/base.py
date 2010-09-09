@@ -7,7 +7,7 @@ Some extremely basic things for our system. Among the first modules loaded, usef
 loading the others in fact.
 """
 
-import os, sys, __main__, ConfigParser, shutil
+import os, sys, __main__, json, shutil
 
 
 ## Base module - foundational stuff
@@ -178,11 +178,12 @@ def init_config(path, template):
 
     if not os.path.exists(CONFIG_FILE): # Create settings file, if none exists yet
         shutil.copyfile( template, CONFIG_FILE )
-        print "CONFIG FILE: created anew from template"
+        print "CONFIG FILE: created a new from template"
 
+    config_file = open(CONFIG_FILE);
     global configFile
-    configFile = ConfigParser.ConfigParser()
-    configFile.read(CONFIG_FILE)
+    configFile = json.loads(config_file.read())
+    config_file.close();
 
     # Apply changes based on commandline options
     MARKER = '-config:'
@@ -196,7 +197,7 @@ def init_config(path, template):
 def save_config():
     global CONFIG_FILE
     config_file = open(CONFIG_FILE, 'w')
-    configFile.write(config_file)
+    config_file.write(json.dumps(configFile, sort_keys=True, indent=4))
     config_file.flush()
     os.fsync(config_file.fileno())
     config_file.close()
@@ -207,10 +208,8 @@ def save_config():
 ## @param default The default value to return if there is no value for that section/option combination.
 def get_config(section, option, default):
     try:
-        return configFile.get(section, option)
-    except ConfigParser.NoSectionError:
-        return default
-    except ConfigParser.NoOptionError:
+        return configFile[section][option]
+    except:
         return default
 
 ## Set a value in our persistent config file.
@@ -219,10 +218,14 @@ def get_config(section, option, default):
 ## created.
 ## @param value The value to set for that section/option combination.
 def set_config(section, option, value):
-    if not configFile.has_section(section):
-        configFile.add_section(section)
-    configFile.set(section, option, value)
+    if not section in configFile:
+        configFile[section] = {}
+    try:
+        configFile[section][option].append(value)
+    except:
+        configFile[section][option] = value
     # TODO: Save the config file at this point?
+    return configFile[section][option]
 
 
 ### Components
@@ -230,7 +233,7 @@ def set_config(section, option, value):
 ## Loads the components in [Components]list. They should be normal python
 ## import paths, e.g., list=intensity.components.example_component,some.other.component
 def load_components():
-    components = get_config('Components', 'list', '').replace(' ', '').split(',')
+    components = get_config('Components', 'list', '')
 
     # Load additional commandline-specific components
     MARKER = '-component:'

@@ -1,0 +1,14 @@
+{
+    "Django": {
+        "settings": "settings"
+    }, 
+    "Instances": {
+        "force_asset_location": "", 
+        "let_anyone_edit": false
+    }, 
+    "Network": {
+        "address": "localhost", 
+        "auth": false, 
+        "port": 8080
+    }
+}

@@ -6,7 +6,7 @@
 Technical details and notes:
 
 * Add intensity.components.local_storage to the proper place ([Components]
-    list) in your settings.cfg, so the plugin will be loaded.
+    list) in your settings.json, so the plugin will be loaded.
 * In your scripts, do CAPI.signalComponent('LocalStorage', 'read|KEY'); to
     read the value for KEY. You will get in response a string (all output
     from signalComponent is in string form), so do eval() on that. The result

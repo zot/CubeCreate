@@ -38,9 +38,9 @@ try:
 except IndexError:
     print "Note: No home directory specified, so using default (which is tied to this operating-system level user)"
 if home_dir is not None:
-    if home_dir[-4:] == '.cfg':
-        # A home dir ending in cfg is HOME_DIR/CFG_NAME.cfg
-        # This lets us use the same home dir for the client and server, with a different cfg for each
+    if home_dir[-4:] == '.json':
+        # A home dir ending in json is HOME_DIR/JSON_NAME.json
+        # This lets us use the same home dir for the client and server, with a different json for each
         config_filename = home_dir.split(os.path.sep)[-1]
         home_dir = os.path.sep.join(home_dir.split(os.path.sep)[:-1])
     set_home_dir(home_dir)
@@ -50,17 +50,17 @@ if home_dir is not None:
 print "Initializing config"
 
 if config_filename is None:
-    config_filename = os.path.join( get_home_subdir(), 'settings.cfg' )
+    config_filename = os.path.join( get_home_subdir(), 'settings.json' )
 
 # Allow the server to run in the client home dir, to share the assets. This is done
-# by using settings_server.cfg instead of settings.cfg (which the client uses).
+# by using settings_server.json instead of settings.json (which the client uses).
 # This option is enabled if you do NOT provide a home dir, i.e., if you use the
 # default. In other words, the default is to share the home dir with the client
-# (but specifying that same home dir will not work, as both will use settings.cfg).
+# (but specifying that same home dir will not work, as both will use settings.json).
 if home_dir is None:
-    config_filename = os.path.join( get_home_subdir(), 'settings_server.cfg' )
+    config_filename = os.path.join( get_home_subdir(), 'settings_server.json' )
 
-template_filename = os.path.join( os.getcwd(), 'data', 'server_settings_template.cfg' )
+template_filename = os.path.join( os.getcwd(), 'data', 'server_settings_template.json' )
 
 # Offer an interactive setup wizard, if relevant
 import intensity.server.wizard as wizard

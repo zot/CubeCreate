@@ -2,7 +2,7 @@
 # Copyright 2010 Alon Zakai ('kripken'). All rights reserved.
 # This file is part of Syntensity/the Intensity Engine, an open source project. See COPYING.txt for licensing.
 
-import os, ConfigParser
+import os, json
 
 
 INTENSITY_HOME_DIR_LABEL = 'INTENSITY_HOME_DIR'
@@ -12,7 +12,7 @@ home_dir = os.path.dirname(__file__) # Default value, is the one used in testing
 
 def get(category, key, default=''):
     try:
-        return config.get(category, key)
+        return config[category][key]
     except:
         return default
 
@@ -31,9 +31,9 @@ def set_home_dir(_home_dir=None):
     global config, home_dir
     home_dir = _home_dir
     if config is None:
-        config_file = os.path.join(home_dir, 'settings.cfg')
-        config = ConfigParser.ConfigParser()
-        config.read( config_file )
+        config_file = open(os.path.join(home_dir, 'settings.json'))
+        config = json.loads(config_file.read())
+        config_file.close()
 
         import intensity.logging_system as intensity_logging
         intensity_logging.init(home_dir, get('Logging', 'level', 'INFO'))
@@ -47,7 +47,11 @@ def get_home_dir():
     return home_dir
 
 def set(category, key, value):
-    if not config.has_section(category):
-        config.add_section(category)
-    return config.set(category, key, value)
+    if not category in config:
+        config[category] = {}
+    try:
+        config[category][key].append(value)
+    except:
+        config[category][key] = value
+    return config[category][key]
 

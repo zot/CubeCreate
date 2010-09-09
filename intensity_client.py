@@ -35,8 +35,8 @@ if home_dir is not None:
 
 print "Initializing config"
 
-config_filename = os.path.join( get_home_subdir(), 'settings.cfg' )
-template_filename = os.path.join( os.getcwd(), 'data', 'client_settings_template.cfg' )
+config_filename = os.path.join( get_home_subdir(), 'settings.json' )
+template_filename = os.path.join( os.getcwd(), 'data', 'client_settings_template.json' )
 
 init_config(config_filename, template_filename)
 
@@ -78,34 +78,3 @@ if get_config('System', 'console', '') == '1':
 
 log(logging.DEBUG, "Running main()")
 CModule.main()
-
-
-#
-#
-##
-##
-###
-#### Legacy code from when server was C with embedded Python, instead of Python with embedded C like now.
-
-"""
-
-#!/bin/sh
-clear
-echo
-echo
-# SAUER_DIR should refer to the directory in which Sauerbraten is placed.
-#SAUER_DIR=~/sauerbraten
-#SAUER_DIR=/usr/local/sauerbraten
-SAUER_DIR=.
-
-# SAUER_OPTIONS contains any command line options you would like to start Sauerbraten with.
-#SAUER_OPTIONS="-f"
-SAUER_OPTIONS="-q${HOME}/.sauerbraten -r"
-
-##### KRIPKEN - this is for debugging only! TODO: Remove this!!
-rm $HOME/.sauerbraten/config.cfg
-##### END KRIPKEN
-
-cd ${SAUER_DIR}
-LD_LIBRARY_PATH=/usr/local/lib ${SAUER_DIR}/build/dungeonverse_client ${SAUER_OPTIONS} $@
-"""

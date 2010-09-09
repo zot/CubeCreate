@@ -127,16 +127,16 @@ class TestMaster(unittest.TestCase):
 
         self.master_dir = os.path.join(self.local_dir, 'master')
         os.makedirs(self.master_dir)
-        shutil.copyfile(os.path.join('local', 'master_server', 'settings.cfg'), os.path.join(self.master_dir, 'settings.cfg'))
+        shutil.copyfile(os.path.join('local', 'master_server', 'settings.json'), os.path.join(self.master_dir, 'settings.json'))
         shutil.copytree(os.path.join('local', 'master_server', 'templates'), os.path.join(self.master_dir, 'templates'))
 
         self.server_dir = os.path.join(self.local_dir, 'server')
         os.makedirs(self.server_dir)
-        shutil.copyfile(os.path.join('local', 'server', 'settings.cfg'), os.path.join(self.server_dir, 'settings.cfg'))
+        shutil.copyfile(os.path.join('local', 'server', 'settings.json'), os.path.join(self.server_dir, 'settings.json'))
 
         self.client_dir = os.path.join(self.local_dir, 'client')
         os.makedirs(self.client_dir)
-        shutil.copyfile(os.path.join('local', 'client', 'settings_console.cfg'), os.path.join(self.client_dir, 'settings.cfg')) # console
+        shutil.copyfile(os.path.join('local', 'client', 'settings_console.json'), os.path.join(self.client_dir, 'settings.json')) # console
 
     def tearDown(self):
         for proc in self.procs:

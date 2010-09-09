@@ -36,6 +36,6 @@ Troubleshooting
 
         SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
-    in settings.cfg, which will store sessions in the db
+    in settings.json, which will store sessions in the db
     (the default) rather than files, which are usually faster.
 

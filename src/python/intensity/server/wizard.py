@@ -4,7 +4,7 @@
 
 import os
 
-# Offer to interactively set up the settings.cfg
+# Offer to interactively set up the settings.json
 
 def run(config_filename, template_filename):
     print
@@ -13,15 +13,16 @@ def run(config_filename, template_filename):
     print '======================================'
     print
 
-    import ConfigParser, re
+    import json, re
 
     if config_filename == template_filename:
-        print 'Using default values from your existing settings.cfg. Delete it to use the engine defaults in this wizard.\n'
+        print 'Using default values from your existing settings.json. Delete it to use the engine defaults in this wizard.\n'
 
     # Load
 
-    template = ConfigParser.ConfigParser()
-    template.read(template_filename)
+    f = open(template_filename)
+    template = json.loads(f.read())
+    f.close()
 
     # Ask questions
 
@@ -38,10 +39,10 @@ def run(config_filename, template_filename):
 
         # Save them both
         section = 'Activity'
-        if not template.has_section(section):
-            template.add_section(section)
-        template.set(section, 'force_activity_id', activity_id)
-        template.set(section, 'force_map_asset_id', map_asset_id)
+        if not section in template:
+            template[section] = {}
+        template[section]['force_activity_id'] = activity_id
+        template[section]['force_map_asset_id'] = map_asset_id
 
     QUESTIONS = [
         (
@@ -82,15 +83,15 @@ def run(config_filename, template_filename):
         default = question[2]
         post = question[3] if len(question) >= 4 else None
         try:
-            default = template.get(section, option)
+            default = template[section][option]
         except:
             pass
         value = raw_input('%s [%s]: ' % (text, default))
         if post is None:
             if value == '': value = default
-            if not template.has_section(section):
-                template.add_section(section)
-            template.set(section, option, value)
+            if not section in template:
+                template[section] = {}
+            template[section][option] = value
         else:
             post(value, default)
 
@@ -99,11 +100,10 @@ def run(config_filename, template_filename):
     # Write
 
     config_file = open(config_filename, 'w')
-    template.write(config_file)
+    config_.write(json.dumps(template, sort_keys=True, indent=4))
     config_file.flush()
     os.fsync(config_file.fileno())
     config_file.close()
-
 
 def ask(config_filename, template_filename, args):
     show = False
