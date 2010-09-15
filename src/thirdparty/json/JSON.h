@@ -39,6 +39,21 @@
 #include <cstring>
 #include <cstdlib>
 
+// apple incompatibilities
+#if defined(__APPLE__)
+#include <wctype.h>
+#include <wchar.h>
+#include <algorithm>
+static inline int wcsncasecmp (const wchar_t *s1, const wchar_t *s2, size_t n)
+{
+	if (!wcsncmp(s1, s2, n)) return 0;
+	std::wstring ws(s1), wws(s2);
+	transform(ws.begin(), ws.end(), ws.begin(), towlower);
+	transform(wws.begin(), wws.end(), wws.begin(), towlower);
+	return wcsncmp(ws.c_str(), wws.c_str(), n);
+}
+#endif
+
 // Custom types
 class JSONValue;
 typedef std::vector<JSONValue*> JSONArray;
