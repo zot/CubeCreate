@@ -2,11 +2,9 @@
 Compiling CubeCreate
 ********************
 
-Officially supported platforms for CubeCreate (those which include binaries) are currently Linux and Windows.
+Officially supported platforms for CubeCreate (those which include binaries) are currently Linux, Windows and Mac OS X.
 
 It should work without problems also on Solaris, BSD and other UNIX-like or UNIX systems (official support will be added when we get bins).
-
-Mac OS X support should be present too, with possibility to generate xcode project from cmake or build directly. (untested yet)
 
 For different platforms, compilation instructions might differ a bit, so separate OSes will be explained separately.
 
@@ -25,6 +23,7 @@ For all OSes
 
    It assumes you have Git installed. (http://git-scm.com).
    If you're using Windows, you can use TortoiseGit GUI to make download easier.
+   On Mac, you can get packages for example here http://code.google.com/p/git-osx-installer/
 
 Linux, BSD, Solaris and other UNIX-like or UNIX systems (excluding Darwin)
 ==========================================================================
@@ -104,6 +103,9 @@ This is an easier and more straightforward version. Also, mingw build doesn't wo
    You'll see some variables in red. Set CMAKE_INSTALL_PREFIX to same value as "Where is source code" is.
    Hit Configure once again, and Generate.
 
+   Or instead of running GUI for CMake, open cmd, go into cbuild directory, and do "cmake .. -DCMAKE_INSTALL_PREFIX=. -G 'Visual Studio 9 2008'",
+   that will take care of both configuring and generating.
+
 3. Double-click CubeCreate.sln file in CCROOT\\cbuild, it'll open solution in MS Visual C++.
 
 4. Right-click solution CubeCreate, select Properties, if active Configuration is Debug,
@@ -139,6 +141,9 @@ Using MinGW and Code::Blocks
 
    Hit Configure once again, and Generate.
 
+   Or instead of running GUI for CMake, open cmd, go into cbuild directory, and do "cmake .. -DCMAKE_INSTALL_PREFIX=. -G 'MinGW Makefiles'",
+   that will take care of both configuring and generating.
+
 2. Run a command prompt, and "cd" into your CCROOT\\cbuild. Then run:
 
    .. code-block :: bash
@@ -173,6 +178,10 @@ Using MinGW and Code::Blocks
 
    Hit Configure once again, and Generate.
 
+   Or instead of running GUI for CMake, open cmd, go into cbuild directory, and do
+   "cmake .. -DCMAKE_INSTALL_PREFIX=. -DCMAKE_CODEBLOCKS_EXECUTABLE='C:\\Program Files\\CodeBlocks\\codeblocks.exe' -G 'CodeBlocks - MinGW Makefiles'",
+   that will take care of both configuring and generating (change path to codeblocks executable as needed).
+
 3. Navigate into CCROOT\\cbuild in your file manager, open the cbp file using Code::Blocks.
 
 4. Press CTRL+F9 in Code::Blocks to start build.
@@ -181,3 +190,41 @@ Using MinGW and Code::Blocks
 
    Then, you'll have binaries in CCROOT\\bin and libraries in CCROOT\\lib.
 
+Mac OS X (Darwin)
+=================
+
+1. You'll need to get some dependencies, first. (I assume you've got CC repository already downloaded)
+    1. The XCode developer DVD. I got it after registration on Mac developer portal, filename of xcode dvd i downloaded was "xcode322_2148_developerdvd.dmg"
+       at this URL http://connect.apple.com/cgi-bin/WebObjects/MemberSite.woa/wo/5.1.17.2.1.3.3.1.0.1.1.0.3.3.3.3.1
+    2. The needed SDL dmg files - http://www.libsdl.org/release/SDL-1.2.14.dmg , 
+       http://www.libsdl.org/projects/SDL_image/release/SDL_image-1.2.10.dmg , 
+       http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.11.dmg
+       
+       Put the SDL.framework, SDL_mixer.framework and SDL_image.framework from the dmgs to /Library/Frameworks
+    3. Get CMake here http://www.cmake.org/files/v2.8/cmake-2.8.2-Darwin-universal.dmg
+
+2. If you don't want to use xcode IDE, then simply go to "cbuild" directory in your CC tree in terminal and do
+
+   .. code-block :: bash
+
+       $ cmake ..
+       $ make -j3 install // you don't need to put the -j3 if you have single core CPU, for dualcore, put -j3, for quad, -j5 (numcores + 1)
+
+   If you want, you can run the CMake GUI from Applications instead and hit Configure, select Unix Makefiles generator and Generate,
+   and then do the "make -j3 install" from terminal - it has the same effect.
+
+   After everything goes OK, you should have binaries and you can launch (intensity_client.command file from Finder)
+
+3. If you want to use the xcode IDE, then it's as easy as first method. Simply go into "cbuild" dir in your CC tree in terminal and do
+
+   .. code-block :: bash
+
+       $ cmake .. -G Xcode
+
+   If you want, you can run the CMake GUI from Applications instead and hit Configure, select Xcode generator and Generate instead.
+
+   After having things generated, go to cbuild directory in Finder and open the xcodeproj file. In combobox on top left, set Active Configuration
+   to Release in order to get proper binaries. Then, in the tree on the left, open Targets tree, right-click ALL_BUILD, and select "Build ALL_BUILD".
+   Then wait some time and after it's built, right-click target "install" and select "Build install"
+
+   Then, you should have binaries in your bin/ and lib/ directories same as with normal "make" building. Then, just run CC.

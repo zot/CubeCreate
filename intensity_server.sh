@@ -10,7 +10,7 @@ os=$(uname -s)
 arch=$(uname -m)
 archp=$(uname -p)
 
-PREFIX="./cbuild/src/server"
+PREFIX="./bin"
 if [ -f ${PREFIX}/CC_Server_${os}-${arch} ]; then
     ${PREFIX}/CC_Server_${os}-${arch} $@ -r
 else
