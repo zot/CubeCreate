@@ -222,13 +222,13 @@ def read_file_safely(name):
 
 ## Returns the path to the map script. TODO: As an option, other map script names?
 def get_map_script_filename():
-    return get_mapfile_path('map.js')
+    return get_mapfile_path('map.lua')
 
 ## Runs the startup script for the current map. Called from worldio.loadworld
 def run_map_script():
     script = open( get_map_script_filename(), "r").read()
     log(logging.DEBUG, "Running map script...")
-    CModule.run_script(script, "Map script")
+    CModule.run_script(script)
     log(logging.DEBUG, "Running map script complete..")
 
 
@@ -303,7 +303,7 @@ def upload_map():
 def export_entities(filename):
     full_path = os.path.join(get_asset_dir(), get_curr_map_prefix(), filename)
 
-    data = CModule.run_script_string("saveEntities()", "export_entities")
+    data = CModule.run_script_string("saveEntities()")
 
     # Save backup, if needed
 

@@ -11,7 +11,7 @@ namespace NPC
     //! so as to enter the game.
     //! @param _class The class of the new NPC
     //! @return The newly created NPC entity
-    ScriptValuePtr add(std::string _class);
+    int add(std::string _class);
 
     //! Removes a single NPC XXX - should not be used
     void remove(int clientNumber);

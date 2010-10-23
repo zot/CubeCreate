@@ -120,7 +120,7 @@ struct gui : g3d_gui
             ysize = 0;
         }
         else 
-        {	
+        {    
             cury = -ysize;
             int h = FONTH-2*INSERT,
                 x1 = curx + tx,
@@ -141,7 +141,7 @@ struct gui : g3d_gui
     bool isvertical() const { return !ishorizontal(); }
 
     void pushlist(int align = -1)
-    {	
+    {    
         if(layoutpass)
         {
             if(curlist>=0)
@@ -173,7 +173,7 @@ struct gui : g3d_gui
                 break;
             }
         }
-        curdepth++;	
+        curdepth++;    
     }
 
     void poplist()
@@ -328,7 +328,7 @@ struct gui : g3d_gui
     }
 
     char *field_(const char *name, int color, int length, int height, const char *initval, int initmode, int fieldtype = FIELDEDIT, bool password=false) // INTENSITY: Password
-    {	
+    {    
         editor *e = useeditor(name, initmode, false, initval, password); // generate a new editor if necessary // INTENSITY: Password
         if(layoutpass)
         {
@@ -533,7 +533,7 @@ struct gui : g3d_gui
             glColor4f(0, 0, 0, 0.75f);
             rect_(x+SHADOW, y+SHADOW, xs, ys);
             glEnable(GL_TEXTURE_2D);
-            defaultshader->set();	
+            defaultshader->set();    
         }
         static Shader *rgbonlyshader = NULL;
         if(!rgbonlyshader) rgbonlyshader = lookupshaderbyname("rgbonly");
@@ -594,7 +594,7 @@ struct gui : g3d_gui
     }
 
     void line_(int size, float percent = 1.0f)
-    {		
+    {        
         if(visible())
         {
             if(!slidertex) slidertex = textureload("data/guislider.png", 3);
@@ -639,8 +639,8 @@ struct gui : g3d_gui
         if(visible())
         {
             bool hit = ishit(w, FONTH);
-            if(hit && clickable) color = 0xFF0000;	
-            int x = curx;	
+            if(hit && clickable) color = 0xFF0000;    
+            int x = curx;    
             if(isvertical() && center) x += (xsize-w)/2;
         
             if(icon)
@@ -667,7 +667,7 @@ struct gui : g3d_gui
         float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);
         
         loopj(passes)
-        {	
+        {    
             bool quads = false;
             if(passes>1) glDepthFunc(j ? GL_LEQUAL : GL_GREATER);
             glColor4f(j ? light.x : 1.0f, j ? light.y : 1.0f, j ? light.z : 1.0f, passes<=1 || j ? alpha : alpha/2); //ghost when its behind something in depth
@@ -763,7 +763,7 @@ struct gui : g3d_gui
     }
 
     void start(int starttime, float initscale, int *tab, bool allowinput)
-    {	
+    {    
         if(gui2d) 
         {
             initscale *= 0.025f; 
@@ -817,7 +817,7 @@ struct gui : g3d_gui
     void end()
     {
         if(layoutpass)
-        {	
+        {    
             xsize = max(tx, xsize);
             ysize = max(ty, ysize);
             ysize = max(ysize, (skiny[7]-skiny[6])*SKIN_SCALE);
@@ -866,7 +866,7 @@ Texture *gui::skintex = NULL, *gui::overlaytex = NULL, *gui::slidertex = NULL;
 const int gui::skiny[] = {0, 7, 21, 34, 43, 48, 56, 104, 111, 117, 128},
           gui::skinx[] = {0, 11, 23, 37, 105, 119, 137, 151, 215, 229, 246, 256};
 //Note: skinx[3]-skinx[2] = skinx[7]-skinx[6]
-//      skinx[5]-skinx[4] = skinx[9]-skinx[8]		 
+//      skinx[5]-skinx[4] = skinx[9]-skinx[8]         
 const gui::patch gui::patches[] = 
 { //arguably this data can be compressed - it depends on what else needs to be skinned in the future
     {1,2,3,6,  0},    // body

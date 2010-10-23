@@ -195,11 +195,11 @@ struct obj : vertmodel
     { 
         if(loaded) return true;
         formatstring(objdir)("packages/models/%s", loadname);
-        defformatstring(cfgname)("packages/models/%s/obj.js", loadname); // INTENSITY
+        defformatstring(cfgname)("packages/models/%s/obj.lua", loadname); // INTENSITY
 
         loadingobj = this;
         persistidents = false;
-        if(ScriptEngineManager::runFile(path(cfgname), false) && parts.length()) // INTENSITY configured obj, will call the obj* commands below
+        if(LuaEngine::runFile(std::string(path(cfgname))).empty() && parts.length()) // INTENSITY configured obj, will call the obj* commands below
         {
             persistidents = true;
             loadingobj = NULL;

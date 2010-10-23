@@ -429,8 +429,8 @@ void ragdolldata::move(dynent *pl, float ts)
     pl->inwater = water ? material&MATF_VOLUME : MAT_AIR;
    
     calcrotfriction(); 
-	float tsfric = timestep ? ts/timestep : 1,
-		  airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
+    float tsfric = timestep ? ts/timestep : 1,
+          airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
     collisions = 0;
     loopv(skel->verts)
     {

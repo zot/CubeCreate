@@ -8,7 +8,6 @@
 
 #include "message_system.h"
 #include "utility.h"
-#include "script_engine_manager.h"
 
 #include "world_system.h"
 
@@ -73,11 +72,16 @@ void WorldSystem::triggerCollide(LogicEntityPtr mapmodel, physent* d, bool ellip
         return; // Most likely a raycasting collision, or camera, etc. - not things we trigger events for
     }
 
+    LuaEngine::getRef(mapmodel.get()->luaRef);
     #ifdef SERVER
-        mapmodel.get()->scriptEntity->call("onCollision", colliderEntity.get()->scriptEntity );
-    #else // CLIENT
-        mapmodel.get()->scriptEntity->call("clientOnCollision", colliderEntity.get()->scriptEntity );
+        LuaEngine::getTableItem("onCollision");
+    #else
+        LuaEngine::getTableItem("clientOnCollision");
     #endif
+    LuaEngine::pushValueFromIndex(-2);
+    LuaEngine::getRef(colliderEntity.get()->luaRef);
+    LuaEngine::call(2, 0);
+    LuaEngine::pop(1);
 }
 
 int numExpectedEntities = 0;

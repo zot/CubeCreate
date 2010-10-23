@@ -5,7 +5,6 @@
 #include "engine.h"
 
 #include "utility.h"
-#include "script_engine_manager.h"
 
 #include "intensity_physics.h"
 #include "intensity_physics_realistic.h"
@@ -177,7 +176,7 @@ void finishWorldGeometryVerts()
                 std::vector<vec> vecs;
                 loopi(8) if(vertused&(1<<i))
                 {
-					vec t = verts[i].mul(8);
+                    vec t = verts[i].mul(8);
                     Logging::log(Logging::INFO, "vv: %f,%f,%f\r\n", t.x, t.y, t.z);
                     vecs.push_back(t);
                 }

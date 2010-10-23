@@ -4,7 +4,6 @@
 
 #include "client_engine_additions.h" // INTENSITY
 #include "targeting.h" // INTENSITY
-#include "script_engine_manager.h" // INTENSITY
 
 bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false, hasRN = false, hasPBO = false, hasFBB = false, hasUBO = false, hasBUE = false, hasFC = false, hasTEX = false;
 int hasstencil = 0;
@@ -873,18 +872,22 @@ void mousemove(int dx, int dy)
     cursens /= 33.0f*sensitivityscale;
 
     // INTENSITY: Let scripts customize mousemoving
-    if (ScriptEngineManager::hasEngine())
+    if (LuaEngine::exists())
     {
-        ScriptValuePtr scriptMovement = ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call(
-            "performMousemove",
-            ScriptValueArgs().append(dx*cursens).append(-dy*cursens*(invmouse ? -1 : 1))
-        );
+        LuaEngine::getGlobal("ApplicationManager");
+        LuaEngine::getTableItem("instance");
+        LuaEngine::getTableItem("performMousemove");
+        LuaEngine::pushValueFromIndex(-2);
+        LuaEngine::pushValue(dx * cursens);
+        LuaEngine::pushValue(-dy * cursens * (invmouse ? -1 : 1));
+        LuaEngine::call(3, 1);
 
-        if (scriptMovement->hasProperty("yaw"))
+        LuaEngine::getTableItem("yaw");
+        if (!LuaEngine::isNoneNil(-1))
         {
-            camera1->yaw += scriptMovement->getProperty("yaw")->getFloat();
-            camera1->pitch += scriptMovement->getProperty("pitch")->getFloat();
-            // INTENSITY: End
+            camera1->yaw += LuaEngine::getDouble(-1);
+            LuaEngine::pop(1);
+            camera1->pitch += LuaEngine::getTableDouble("pitch");
 
             fixcamerarange();
             if(camera1!=player && !detachedcamera)
@@ -893,6 +896,7 @@ void mousemove(int dx, int dy)
                 player->pitch = camera1->pitch;
             }
         }
+        LuaEngine::pop(3);
     }
 }
 
@@ -2129,8 +2133,16 @@ void drawcrosshair(int w, int h)
     else
     { 
         std::string crosshairName = ""; // INTENSITY: Start script-controlled crosshairs
-        if (ScriptEngineManager::hasEngine())
-            crosshairName = ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call("getCrosshair")->getString();
+        if (LuaEngine::exists())
+        {
+            LuaEngine::getGlobal("ApplicationManager");
+            LuaEngine::getTableItem("instance");
+            LuaEngine::getTableItem("getCrosshair");
+            LuaEngine::pushValueFromIndex(-2);
+            LuaEngine::call(1, 1);
+            crosshairName = LuaEngine::getString(-1, "data/crosshair.png");
+            LuaEngine::pop(3);
+        }
         crosshair = textureload(crosshairName.c_str(), 3, true, false);
         if (crosshair == notexture) return;
         #if 0

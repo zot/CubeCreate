@@ -11,7 +11,6 @@
 #include "world_system.h"
 #include "fpsserver_interface.h"
 #include "editing_system.h"
-#include "script_engine_manager.h"
 #include "utility.h"
 #include "client_engine_additions.h"
 #include "targeting.h"
@@ -69,10 +68,6 @@ std::string ClientSystem::getVisualPassword()
 
 void ClientSystem::connect(std::string host, int port)
 {
-//    // Tell scripting there is no player entity until we finish logging in
-//    ScriptEngineManager::getGlobal()->call("setPlayerUniqueId", ScriptEngineManager::getNull());
-
-
     editingAlone = false;
 
     currHost = host;
@@ -149,8 +144,13 @@ bool ClientSystem::scenarioStarted()
     // If not already started, test if indeed started
     if (_mapCompletelyReceived && !_scenarioStarted)
     {
-        if (ScriptEngineManager::hasEngine())
-            _scenarioStarted = ScriptEngineManager::getGlobal()->call("testScenarioStarted")->getBool();
+        if (LuaEngine::exists())
+        {
+            LuaEngine::getGlobal("testScenarioStarted");
+            LuaEngine::call(0, 1);
+            _scenarioStarted = LuaEngine::getBool(-1);
+            LuaEngine::pop(1);
+        }
     }
 
     return _mapCompletelyReceived && _scenarioStarted;
@@ -182,7 +182,7 @@ void ClientSystem::gotoLoginScreen()
     Logging::log(Logging::DEBUG, "Going to login screen\r\n");
     INDENT_LOG(Logging::DEBUG);
 
-    LogicSystem::init(); // This is also done later, but as the mainloop assumes there is always a ScriptEngine, we do it here as well
+    LogicSystem::init(); // This is also done later, but as the mainloop assumes there is always a LuaEngine, we do it here as well
 
     ClientSystem::onDisconnect(); // disconnect has several meanings...
 
@@ -343,7 +343,7 @@ void ClientSystem::drawHUD(int w, int h)
         glVertex2f(q.x2, q.y2);
         glEnd();
         glEnable(GL_TEXTURE_2D);
-        defaultshader->set();	
+        defaultshader->set();    
     }
 
     glPopMatrix();
@@ -593,12 +593,15 @@ void ClientSystem::handleConfigSettings()
 
 bool ClientSystem::isAdmin()
 {
-    if (!loggedIn) return false;
-    if (!playerLogicEntity.get()) return false;
+    bool isAdmin = false;
+    if (!loggedIn) return isAdmin;
+    if (!playerLogicEntity.get()) return isAdmin;
 
-    if ( !playerLogicEntity.get()->scriptEntity->hasProperty("_canEdit") ) return false;
+    LuaEngine::getRef(playerLogicEntity.get()->luaRef);
+    isAdmin = LuaEngine::getTableBool(-1);
+    LuaEngine::pop(1);
 
-    return playerLogicEntity.get()->scriptEntity->getPropertyBool("_canEdit");
+    return isAdmin;
 }
 
 
@@ -682,7 +685,7 @@ COMMAND(show_instances, "");
 bool checkCompile(std::string filename)
 {
     std::string script = Utility::readFile(filename);
-    std::string errors = ScriptEngineManager::compileScript(script);
+    std::string errors = LuaEngine::loadScript(script.c_str());
 
     if (errors != "")
     {

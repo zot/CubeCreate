@@ -106,8 +106,10 @@ struct model
                         // This is necessary because these are values cached from Scripting, unlike normal
                         // Sauer C++ variables that are managed in C++. Here, the *true* values are in Scripting
         {
-            width = entity->scriptEntity->getPropertyFloat("collisionRadiusWidth");
-            height = entity->scriptEntity->getPropertyFloat("collisionRadiusHeight");
+            LuaEngine::getRef(entity->luaRef);
+            width = LuaEngine::getTableDouble("collisionRadiusWidth");
+            height = LuaEngine::getTableDouble("collisionRadiusHeight");
+            LuaEngine::pop(1);
         }
 
         center[0] = center[1] = 0;

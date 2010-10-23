@@ -8,14 +8,13 @@
 
 #include "fpsserver_interface.h"
 #include "utility.h"
-#include "script_engine_manager.h"
 
 #include "NPC.h"
 
 namespace NPC
 {
 
-ScriptValuePtr add(std::string _class)
+int add(std::string _class)
 {
     int clientNumber = localconnect(); // Local connect to the server
 

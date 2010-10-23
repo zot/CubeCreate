@@ -20,13 +20,13 @@ struct CLogicEntity
 {
     enum { LE_NONE, LE_DYNAMIC, LE_STATIC, LE_NONSAUER}; //!< Possible types for a logic entity, correspond to Sauer types
 
-    ScriptValuePtr scriptEntity; //!< The Scripting logic entity parallel to this one. Set on registration.
-
     physent*   dynamicEntity;      //!< Only one of dynamicEntity and staticEntity should be not null, corresponding to the type
     extentity* staticEntity;       //!< Only one of dynamicEntity and staticEntity should be not null, corresponding to the type
 
     bool nonSauer; //!< Whether this is a Sauer (dynamic or static), or a non-Sauer (something non-Sauer related) entity
     int uniqueId; //!< Only used for nonSauer
+
+    int luaRef; //!< this is lua reference number for this logic entity
 
     //! Used by entities that have their own collision box sizes, i.e., do not use the model's.
     float collisionRadiusWidth;
@@ -191,13 +191,13 @@ struct LogicSystem
     //! Done only in initial preparation of an entity - never afterwards
     static void          setUniqueId(physent* dynamicEntity, int uniqueId);
 
-    static void setupExtent(ScriptValuePtr scriptEntity, int type, float x, float y, float z, int attr1, int attr2, int attr3, int attr4);
+    static void setupExtent(int ref, int type, float x, float y, float z, int attr1, int attr2, int attr3, int attr4);
 
-    static void setupCharacter(ScriptValuePtr scriptEntity);
+    static void setupCharacter(int ref);
 
-    static void setupNonSauer(ScriptValuePtr scriptEntity);
+    static void setupNonSauer(int ref);
 
-    static void dismantleExtent(ScriptValuePtr scriptEntity);
-    static void dismantleCharacter(ScriptValuePtr scriptEntity);
+    static void dismantleExtent(int ref);
+    static void dismantleCharacter(int ref);
 };
 

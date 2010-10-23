@@ -32,13 +32,13 @@ void CharacterRendering::render(fpsent* entity)
         return;
     }
 
-    ScriptValuePtr scriptEntity = logicEntity.get()->scriptEntity;
-
-    if ( !scriptEntity->getPropertyBool("initialized") )
+    LuaEngine::getRef(logicEntity.get()->luaRef);
+    if (!LuaEngine::getTableBool("initialized"))
     {
         Logging::log(Logging::INFO, "Not initialized, so not rendering\r\n");
         return;
     }
+    LuaEngine::pop(1);
 
     // Render client using model name, attachments, and animation information
 

@@ -12,11 +12,11 @@ Processes messages.template into messages.h, messages.cpp and messages.boost.
 import os, stat
 
 
-MESSAGE_TEMPLATE_FILE       = "src/intensity/messages.template"
+MESSAGE_TEMPLATE_FILE       = "intensity/messages.template"
 
-GENERATED_MESSAGES_H_FILE     = "src/intensity/messages.h"
-GENERATED_MESSAGES_CPP_FILE   = "src/intensity/messages.cpp"
-GENERATED_MESSAGES_BOOST_FILE = "src/intensity/messages_boost.cpp"
+GENERATED_MESSAGES_H_FILE     = "intensity/messages.h"
+GENERATED_MESSAGES_CPP_FILE   = "intensity/messages.cpp"
+GENERATED_MESSAGES_BOOST_FILE = "intensity/messages_boost.cpp"
 
 COPYRIGHT_AND_LICENSE = """
 
@@ -58,7 +58,6 @@ def generate_messages():
 #include "server_system.h"
 #include "message_system.h"
 #include "editing_system.h"
-#include "script_engine_manager.h"
 #include "utility.h"
 #include "world_system.h"
 

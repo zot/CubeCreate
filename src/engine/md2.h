@@ -267,11 +267,11 @@ struct md2 : vertmodel
         if(tex==notexture) conoutf("could not load model skin for %s", name1);
         loadingmd2 = this;
         persistidents = false;
-        defformatstring(name3)("packages/models/%s/md2.js", loadname); // INTENSITY
-        if(!ScriptEngineManager::runFile(path(name3), false)) // INTENSITY
+        defformatstring(name3)("packages/models/%s/md2.lua", loadname); // INTENSITY
+        if(!LuaEngine::runFile(std::string(path(name3))).empty()) // INTENSITY
         {
-            formatstring(name3)("packages/models/%s/md2.js", pname); // INTENSITY
-            ScriptEngineManager::runFile(path(name3), false); // INTENSITY
+            formatstring(name3)("packages/models/%s/md2.lua", pname); // INTENSITY
+            LuaEngine::runFile(std::string(path(name3))); // INTENSITY
         }
         persistidents = true;
         loadingmd2 = 0;

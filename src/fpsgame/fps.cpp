@@ -8,7 +8,6 @@
 
 #include "network_system.h"
 #include "intensity.h"
-#include "script_engine_manager.h"
 
 #ifdef CLIENT
     #include "client_system.h"
@@ -61,7 +60,7 @@ namespace game
         intret(f ? f->clientnum : -1);
     });
 
-	void follow(char *arg)
+    void follow(char *arg)
     {
         if(arg[0] ? player1->state==CS_SPECTATOR : following>=0)
         {
@@ -70,7 +69,7 @@ namespace game
             followdir = 0;
             conoutf("follow %s", following>=0 ? "on" : "off");
         }
-	}
+    }
 
     void nextfollow(int dir)
     {
@@ -271,11 +270,11 @@ namespace game
 
 #if (SERVER_DRIVEN_PLAYERS == 1)
             // Enable this to let server drive client movement
-            ScriptEngineManager::runScript(
-                "getEntity(" + Utility::toString(d->uniqueId) + ").position = [" +
+            LuaEngine::runScript(
+                "getEntity(" + Utility::toString(d->uniqueId) + ").position = {" +
                 "getEntity(" + Utility::toString(d->uniqueId) + ").position.x," +
                 "getEntity(" + Utility::toString(d->uniqueId) + ").position.y," +
-                "getEntity(" + Utility::toString(d->uniqueId) + ").position.z]"
+                "getEntity(" + Utility::toString(d->uniqueId) + ").position.z}"
             );
 #endif
         }
@@ -286,9 +285,8 @@ namespace game
 #ifdef CLIENT
         if ( ClientSystem::playerLogicEntity.get() )
         {
-            ClientSystem::playerLogicEntity.get()->scriptEntity->debugPrint();
-
-            if ( ClientSystem::playerLogicEntity.get()->scriptEntity->getPropertyBool("initialized") )
+            LuaEngine::getRef(ClientSystem::playerLogicEntity.get()->luaRef);
+            if (LuaEngine::getTableBool("initialized"))
             {
                 Logging::log(Logging::INFO, "Player %d (%lu) is initialized, run moveplayer(): %f,%f,%f.\r\n",
                     player1->uniqueId, (unsigned long)player1,
@@ -318,6 +316,8 @@ namespace game
                 entities::checkitems(player1);
             } else
                 Logging::log(Logging::INFO, "Player is not yet initialized, do not run moveplayer() etc.\r\n");
+
+            LuaEngine::pop(1);
         }
         else
             Logging::log(Logging::INFO, "Player does not yet exist, or scenario not started, do not run moveplayer() etc.\r\n");
@@ -373,7 +373,7 @@ namespace game
 #ifdef CLIENT
         bool runWorld = ClientSystem::scenarioStarted();
 #else
-        bool runWorld = ScriptEngineManager::hasEngine();
+        bool runWorld = LuaEngine::exists();
 #endif
         static Benchmarker physicsBenchmarker;
 
@@ -392,8 +392,9 @@ namespace game
                 //============================================
 
                 // If triggering collisions can be done by the scripting library code, use that
-                if (ScriptEngineManager::getGlobal()->hasProperty("manageTriggeringCollisions"))
-                    ScriptEngineManager::getGlobal()->call("manageTriggeringCollisions");
+
+                LuaEngine::getGlobal("manageTriggeringCollisions");
+                if (!LuaEngine::isNoneNil(-1)) LuaEngine::call(0, 0);
                 else
                 {
                     loopv(players)
@@ -421,7 +422,8 @@ namespace game
         actionsBenchmarker.start();
             if (runWorld)
             {
-                ScriptEngineManager::getGlobal()->call("startFrame");
+                LuaEngine::getGlobal("startFrame");
+                LuaEngine::call(0, 0);
 
                 LogicSystem::manageActions(curtime);
             }
@@ -636,10 +638,13 @@ namespace game
 
     std::string scriptname(fpsent *d)
     {
-        return ScriptEngineManager::getGlobal()->call(
-            "getEntity",
-            LogicSystem::getUniqueId(d)
-        )->getProperty("_name")->getString();
+        LuaEngine::getGlobal("getEntity");
+        LuaEngine::pushValue(LogicSystem::getUniqueId(d));
+        LuaEngine::call(1, 1);
+        // got class here
+        std::string ret = LuaEngine::getTableString("_name");
+        LuaEngine::pop(1);
+        return ret;
     }
 
     char *colorname(fpsent *d, char *name, const char *prefix)

@@ -8,7 +8,7 @@
 
     #include <string>
 
-    #include "script_engine.h"
+    #include "script_engine_lua.h"
     #include "engine_additions.h"
     #include "logging.h"
 

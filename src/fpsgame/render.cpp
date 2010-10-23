@@ -9,8 +9,6 @@
 #include "intensity.h"
 #include "character_render.h"
 #include "client_system.h"
-#include "script_engine_manager.h"
-
 
 namespace game
 {      
@@ -49,7 +47,9 @@ namespace game
 //        fpsent *exclude = isthirdperson() ? NULL : followingplayer(), *d; // XXX: Apply this!
 //        if(isthirdperson() && !followingplayer()) // XXX Apply this!
 
-        ScriptEngineManager::getGlobal()->call("renderDynamic", isthirdperson());
+        LuaEngine::getGlobal("renderDynamic");
+        LuaEngine::pushValue(isthirdperson());
+        LuaEngine::call(1, 0);
 #endif
 
 //        ExtraRendering::renderShadowingMapmodels(); // Kripken: Mapmodels with dynamic shadows, we draw them now
@@ -77,7 +77,8 @@ namespace game
 
     void renderavatar()
     {
-        ScriptEngineManager::getGlobal()->call("renderHUDModels");
+        LuaEngine::getGlobal("renderHUDModels");
+        LuaEngine::call(0, 0);
     }
 }
 

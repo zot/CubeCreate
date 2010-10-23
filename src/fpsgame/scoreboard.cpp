@@ -4,7 +4,6 @@
 #include "game.h"
 
 #include "network_system.h"
-#include "script_engine_manager.h"
 #include "utility.h"
 
 
@@ -26,15 +25,15 @@ namespace game
         g.pushlist(); // horizontal
             g.background(0x808080, 5);
 
-            ScriptValuePtr text = ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call("getScoreboardText");
-            int numLines = text->getPropertyInt("length");
-
-            for (int i = 0; i < numLines; i++)
-            {
-                ScriptValuePtr lineData = text->getProperty(Utility::toString(i));
-                int lineUniqueId = lineData->getPropertyInt("0");
-                std::string lineText = lineData->getPropertyString("1");
-
+            LuaEngine::getGlobal("ApplicationManager");
+            LuaEngine::getTableItem("instance");
+            LuaEngine::getTableItem("getScoreboardText");
+            LuaEngine::pushValueFromIndex(-2);
+            LuaEngine::call(1, 1);
+            // we get a table here
+            LUA_TABLE_LOOP({
+                int lineUniqueId = LuaEngine::getTableInteger(1);
+                std::string lineText = LuaEngine::getTableString(2);
                 if (lineUniqueId != -1)
                 {
                     LogicEntityPtr entity = LogicSystem::getLogicEntity(lineUniqueId);
@@ -56,9 +55,10 @@ namespace game
                             lineText += " p: " + Utility::toString(p->ping);
                     }
                 }
-
                 g.text(lineText.c_str(), 0xFFFFDD, NULL);
-            }
+            });
+            LuaEngine::pop(3);
+
         g.poplist();
         g.poplist();
 

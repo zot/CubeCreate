@@ -381,11 +381,11 @@ struct iqm : skelmodel
     {
         if(loaded) return true;
         formatstring(iqmdir)("packages/models/%s", loadname);
-        defformatstring(cfgname)("packages/models/%s/iqm.js", loadname); // INTENSITY
+        defformatstring(cfgname)("packages/models/%s/iqm.lua", loadname); // INTENSITY
 
         loadingiqm = this;
         persistidents = false;
-        if(ScriptEngineManager::runFile(path(cfgname), false) && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured iqm, will call the iqm* commands below
+        if (LuaEngine::runFile(std::string(path(cfgname))).empty() && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured iqm, will call the iqm* commands below
         {
             persistidents = true;
             loadingiqm = NULL;

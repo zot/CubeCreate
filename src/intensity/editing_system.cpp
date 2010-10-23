@@ -15,9 +15,6 @@
 #include "targeting.h"
 #include "client_system.h"
 #include "utility.h"
-#include "script_engine_manager.h"
-
-
 
 // Kripken:
 // sel.corner: The face corner the mouse pointer is closest to.
@@ -79,12 +76,14 @@ void prepareentityclasses()
 {
     entityClasses.clear();
 
-    ScriptValuePtr classes = ScriptEngineManager::runScript("listEntityClasses()");
+    LuaEngine::getGlobal("listEntityClasses");
+    LuaEngine::call(0, 1);
 
-    for (int i = 0; i < classes->getProperty("length")->getInt(); i++)
-    {
-        entityClasses.push_back(classes->getProperty( Utility::toString(i) )->getString());
-    }
+    LUA_TABLE_LOOP({
+        entityClasses.push_back(LuaEngine::getString(-1));
+    });
+
+    LuaEngine::pop(1);
 }
 
 COMMAND(prepareentityclasses, "");

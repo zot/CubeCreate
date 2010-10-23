@@ -7,7 +7,6 @@
 #include "game.h"
 
 #include "message_system.h"
-#include "script_engine_manager.h"
 #include "utility.h"
 
 #ifdef CLIENT
@@ -42,7 +41,7 @@ void SystemManager::init()
 
 void SystemManager::quit()
 {
-    ScriptEngineManager::destroyEngine();
+    LuaEngine::destroy();
 }
 
 // XXX Not used, deprecated

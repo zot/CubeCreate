@@ -9,14 +9,12 @@ if (WIN32 AND NOT MINGW)
     include_directories(${PLATFORM_SDK_A}/Include)
     include_directories(${PLATFORM_SDK_B}/Include)
 endif (WIN32 AND NOT MINGW)
-include_directories(${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH})
+include_directories(${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH} ${LUA_INCLUDE_DIR})
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux") # there is no LINUX variable declared
    add_definitions (-fsigned-char)
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-# now, include v8
-include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/v8/include)
 # include JSON.
 include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/json)
 # client def and executable build
@@ -83,9 +81,7 @@ set(CLIENT_SOURCES
     ../intensity/targeting
     ../intensity/steering
     ../intensity/network_system
-    ../intensity/script_engine_manager
-    ../intensity/script_engine
-    ../intensity/script_engine_v8
+    ../intensity/script_engine_lua
     ../intensity/fpsclient_interface
     ../intensity/fpsserver_interface
     ../intensity/master
@@ -101,7 +97,7 @@ set(CLIENT_SOURCES
 # link libs to executable
 set(CLIENT_LIBRARIES
     enet_${CC_BUILD_SUFFIX}
-    V8_${CC_BUILD_SUFFIX}
+    ${LUA_LIBRARIES}
     ${PYTHON_LIBRARIES}
     boost_python_${CC_BUILD_SUFFIX}
     ${SDL_LIBRARY}

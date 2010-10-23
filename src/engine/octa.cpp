@@ -324,10 +324,10 @@ bool subdividecube(cube &c, bool fullcheck, bool brighten)
 {
     if(c.children) return true;
     if(c.ext && c.ext->surfaces) freesurfaces(c);
-	if(isempty(c) || isentirelysolid(c))
+    if(isempty(c) || isentirelysolid(c))
     {
         int mat = c.ext ? c.ext->material : MAT_AIR;
-		c.children = newcubes(isempty(c) ? F_EMPTY : F_SOLID);
+        c.children = newcubes(isempty(c) ? F_EMPTY : F_SOLID);
         loopi(8)
         {
             loopl(6) c.children[i].texture[l] = c.texture[l];

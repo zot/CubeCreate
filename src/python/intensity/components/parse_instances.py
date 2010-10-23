@@ -42,8 +42,8 @@ def scraper():
         left = None
         right = None
 
-#    left = CModule.run_script_string('getEntity(80).position.toString()', 'parse_instances')[1:-1].split(',')
-#    right = CModule.run_script_string('getEntity(52).position.toString()', 'parse_instances')[1:-1].split(',')
+#    left = CModule.run_script_string('return tostring(getEntity(80).position)')[1:-1].split(',')
+#    right = CModule.run_script_string('return tostring(getEntity(52).position)')[1:-1].split(',')
 
     while True:
         if Clients.count() == 0:
@@ -60,8 +60,8 @@ def scraper():
             if not CModule.has_engine(): return
 
             if Markers.left is None:
-                Markers.left = CModule.run_script_string('getEntityByTag("portals_left").position.toString()', 'parse_instances')[1:-1].split(',')
-                Markers.right = CModule.run_script_string('getEntityByTag("portals_right").position.toString()', 'parse_instances')[1:-1].split(',')
+                Markers.left = CModule.run_script_string('return tostring(getEntityByTag("portals_left").position)')[1:-1].split(',')
+                Markers.right = CModule.run_script_string('return tostring(getEntityByTag("portals_right").position)')[1:-1].split(',')
                 Markers.left = map(float, Markers.left)
                 Markers.right = map(float, Markers.right)
                 Markers.diff = [Markers.right[0]-Markers.left[0], Markers.right[1]-Markers.left[1], Markers.right[2]-Markers.left[2]]

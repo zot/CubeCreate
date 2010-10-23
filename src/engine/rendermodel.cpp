@@ -5,8 +5,6 @@ VARP(animationinterpolationtime, 0, 150, 1000);
 
 model *loadingmodel = NULL;
 
-#include "script_engine_manager.h" // INTENSITY
-
 #include "ragdoll.h"
 #include "animmodel.h"
 #include "vertmodel.h"
@@ -569,11 +567,11 @@ void renderbatchedmodel(model *m, batchedmodel &b)
     }
 
     if(modeltweaks) { // INTENSITY: SkyManager: do modeltweaks
-        if (!b.d) m->setambient(tweakmodelambient);	// t7g; This is how we adjust ambient and related for all models at once.
+        if (!b.d) m->setambient(tweakmodelambient);    // t7g; This is how we adjust ambient and related for all models at once.
         else m->setambient(tweakmodelambient / 10.0f);
         m->setglow(tweakmodelglow);
-	    m->setspec(tweakmodelspec);
-	    m->setglare(tweakmodelspecglare, tweakmodelglowglare);
+        m->setspec(tweakmodelspec);
+        m->setglare(tweakmodelspecglare, tweakmodelglowglare);
     }
 
     m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir, b.transparent, b.rotation); // INTENSITY: roll, rotation
@@ -922,7 +920,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
         if((flags&MDL_CULL_VFC) && refracting<0 && center.z-radius>=reflectz) return;
     }
 
-	//m->setambient(mdlambienttweak); // INTENSITY: SkyManager
+    //m->setambient(mdlambienttweak); // INTENSITY: SkyManager
 
     m->startrender();
 

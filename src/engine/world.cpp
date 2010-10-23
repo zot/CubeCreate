@@ -4,7 +4,6 @@
 
 #include "utility.h" // INTENSITY
 #include "editing_system.h" // INTENSITY
-#include "script_engine_manager.h" // INTENSITY
 #include "message_system.h" // INTENSITY
 
 
@@ -427,8 +426,8 @@ undoblock *copyundoents(undoblock *u)
     loopi(u->numents)
         entadd(e[i].i);
     undoblock *c = newundoent();
-   	loopi(u->numents) if(e[i].e.type==ET_EMPTY)
-		entgroup.removeobj(e[i].i);
+       loopi(u->numents) if(e[i].e.type==ET_EMPTY)
+        entgroup.removeobj(e[i].i);
     return c;
 }
 
@@ -977,17 +976,24 @@ void entpaste()
         LogicEntityPtr entity = LogicSystem::getLogicEntity(c);
         std::string _class = entity->getClass();
 
-        ScriptEngineManager::getGlobal()->setProperty(
-            "__intensityentcopy__TEMP",
-            entity->scriptEntity->call("createStateDataDict")
-        );
-        ScriptEngineManager::runScript("__intensityentcopy__TEMP.position = '[" +
+        LuaEngine::getRef(entity->luaRef);
+        LuaEngine::getTableItem("createStateDataDict");
+        LuaEngine::pushValueFromIndex(-2);
+        LuaEngine::call(1, 1);
+        LuaEngine::pushValue("__intensityentcopy__TEMP");
+        LuaEngine::shift();
+        LuaEngine::setGlobal();
+        LuaEngine::pop(1);
+
+        LuaEngine::runScript("__intensityentcopy__TEMP.position = '[" +
             Utility::toString(o.x) + "|" + Utility::toString(o.y) + "|" + Utility::toString(o.z) +
-        "]';"); // Fix position
-        std::string stateData = ScriptEngineManager::getGlobal()->call(
-            "serializeJSON",
-            ScriptEngineManager::getGlobal()->getProperty("__intensityentcopy__TEMP")
-        )->getString();
+        "]'"); // Fix position
+
+        LuaEngine::getGlobal("encodeJSON");
+        LuaEngine::getGlobal("___intensityentcopy__TEMP");
+        LuaEngine::call(1, 1);
+        std::string stateData = LuaEngine::getString(-1, "{}");
+        LuaEngine::pop(1);
 
         EditingSystem::newEntity(_class, stateData);
         // INTENSITY: end Create entity using new system
@@ -1078,16 +1084,25 @@ void intensityentcopy() // INTENSITY
     extentity& e = *(entities::getents()[efocus]);
     LogicEntityPtr entity = LogicSystem::getLogicEntity(e);
     intensityCopiedClass = entity->getClass();
-    ScriptEngineManager::getGlobal()->setProperty(
-        "__intensityentcopy__TEMP",
-        entity->scriptEntity->call("createStateDataDict")
-    );
-    ScriptEngineManager::runScript("delete __intensityentcopy__TEMP.position;"); // Position is determined at paste time
-    intensityCopiedStateData = ScriptEngineManager::getGlobal()->call(
-        "serializeJSON",
-        ScriptEngineManager::getGlobal()->getProperty("__intensityentcopy__TEMP")
-    )->getString();
-    ScriptEngineManager::runScript("delete __intensityentcopy__TEMP;"); // Clean up
+
+    LuaEngine::getRef(entity->luaRef);
+    LuaEngine::getTableItem("createStateDataDict");
+    LuaEngine::pushValueFromIndex(-2);
+    LuaEngine::call(1, 1);
+    LuaEngine::pushValue("__intensityentcopy__TEMP");
+    LuaEngine::shift();
+    LuaEngine::setGlobal();
+    LuaEngine::pop(1);
+
+    LuaEngine::runScript("__intensityentcopy__TEMP.position = nil"); // Position is determined at paste time
+
+    LuaEngine::getGlobal("encodeJSON");
+    LuaEngine::getGlobal("___intensityentcopy__TEMP");
+    LuaEngine::call(1, 1);
+    intensityCopiedStateData = LuaEngine::getString(-1, "{}");
+    LuaEngine::pop(1);
+
+    LuaEngine::runScript("__intensityentcopy__TEMP = nil");
 }
 COMMAND(intensityentcopy, ""); // INTENSITY
 
@@ -1216,7 +1231,7 @@ bool emptymap(int scale, bool force, const char *mname, bool usecfg)    // main 
     if (usecfg)
     {
         overrideidents = true;
-        if (ScriptEngineManager::hasEngine()) ScriptEngineManager::runFile("data/default_map_settings.js", false);
+        if (LuaEngine::exists()) LuaEngine::runFile("data/default_map_settings.lua");
         overrideidents = false;
     }
 
@@ -1344,21 +1359,10 @@ int getmapversion() { return mapversion; }
 void finish_dragging()
 {
     groupeditpure(
-        ScriptEngineManager::runScript(
+        LuaEngine::runScript(
             "getEntity(" + Utility::toString(LogicSystem::getUniqueId(&e)) + ").position = " +
-            "[" + Utility::toString(e.o[0]) + "," + Utility::toString(e.o[1]) + "," + Utility::toString(e.o[2]) + "];"
+            "{" + Utility::toString(e.o[0]) + "," + Utility::toString(e.o[1]) + "," + Utility::toString(e.o[2]) + "}"
         );
-/*
-        ScriptValuePtr position = ScriptEngineManager::createScriptObject();
-
-        position->setProperty("0", e.o[0]);
-        position->setProperty("1", e.o[1]);
-        position->setProperty("2", e.o[2]);
-
-        ScriptValuePtr scriptEntity = LogicSystem::getLogicEntity(e).get()->scriptEntity;
-
-        scriptEntity->setProperty("position", position);
-*/
     );
 }
 

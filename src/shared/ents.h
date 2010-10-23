@@ -92,7 +92,7 @@ struct physent                                  // base entity type, can be affe
 
     virtual void reset() // INTENSITY: Made virtual
     {
-    	inwater = 0;
+        inwater = 0;
         timeinair = 0;
         strafe = move = 0;
         physstate = PHYS_FALL;

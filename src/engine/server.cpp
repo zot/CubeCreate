@@ -10,7 +10,6 @@
 #include "fpsclient_interface.h"
 #include "utility.h"
 #include "system_manager.h"
-#include "script_engine_manager.h"
 
 
 #ifdef STANDALONE

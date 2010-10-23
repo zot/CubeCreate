@@ -438,11 +438,11 @@ struct md5 : skelmodel
     {
         if(loaded) return true;
         formatstring(md5dir)("packages/models/%s", loadname);
-        defformatstring(cfgname)("packages/models/%s/md5.js", loadname); // INTENSITY
+        defformatstring(cfgname)("packages/models/%s/md5.lua", loadname); // INTENSITY
 
         loadingmd5 = this;
         persistidents = false;
-        if(ScriptEngineManager::runFile(path(cfgname), false) && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured md5, will call the md5* commands below
+        if(LuaEngine::runFile(std::string(path(cfgname))).empty() && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured md5, will call the md5* commands below
         {
             persistidents = true;
             loadingmd5 = NULL;

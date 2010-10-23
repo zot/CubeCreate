@@ -108,6 +108,7 @@ find_package(SDL REQUIRED)
 find_package(SDL_mixer REQUIRED)
 find_package(SDL_image REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(Lua51 REQUIRED)
 
 # PROCEED TO NEXT DIR
 add_subdirectory(src)

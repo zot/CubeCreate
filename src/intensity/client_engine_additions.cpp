@@ -7,7 +7,6 @@
 #include "game.h"
 
 #include "client_system.h"
-#include "script_engine_manager.h"
 #include "client_engine_additions.h"
 #include "utility.h"
 #include "targeting.h"
@@ -30,8 +29,12 @@ void CameraControl::incrementCameraDist(int inc_dir)
 
     cam_dist += (inc_dir * CameraControl::cameraMoveDist);
 
-    if (ScriptEngineManager::hasEngine())
-        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("cameraDistance", cam_dist);
+    if (LuaEngine::exists())
+    {
+        LuaEngine::getGlobal("Global");
+        LuaEngine::setTable("cameraDistance", cam_dist);
+        LuaEngine::pop(1);
+    }
 }
 
 void inc_camera()
@@ -168,10 +171,12 @@ void CameraControl::positionCamera(physent* camera1)
 
     // Sync camera height to scripts, if necessary
     static float lastCameraHeight = -1;
-    if (ScriptEngineManager::hasEngine() && lastCameraHeight != cameraheight)
+    if (LuaEngine::exists() && lastCameraHeight != cameraheight)
     {
         lastCameraHeight = cameraheight;
-        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("cameraHeight", cameraheight);
+        LuaEngine::getGlobal("Global");
+        LuaEngine::setTable("cameraHeight", cameraheight);
+        LuaEngine::pop(1);
     }
 
     // If we just left forced camera mode, restore thirdperson state
@@ -350,24 +355,39 @@ void prepare_entity_gui()
     }
 
     int uniqueId = GuiControl::EditedEntity::currEntity->getUniqueId();
-    ScriptValuePtr stateData = ScriptEngineManager::runScript(
-        "getEntity(" + Utility::toString(uniqueId) + ").createStateDataDict()"
-    );
 
-    ScriptValuePtr keys = ScriptEngineManager::getGlobal()->call("keys", stateData);
+    // we get this beforehand because of further re-use
+    LuaEngine::getGlobal("getEntity");
+    LuaEngine::pushValue(uniqueId);
+    LuaEngine::call(1, 1);
+    // we've got the entity here now (popping getEntity out)
+    LuaEngine::getTableItem("createStateDataDict");
+    LuaEngine::pushValueFromIndex(-2); // let's push first argument as self
+    LuaEngine::call(1, 1);
+    // ok, state data are on stack, popping createStateDataDict out, let's ref it so we can easily get it later
+    int _tempRef = LuaEngine::ref();
+    LuaEngine::pop(1);
 
-    num_entity_gui_fields = keys->getPropertyInt("length");
+    LuaEngine::getGlobal("table");
+    // we've got "table" on stack
+    LuaEngine::getTableItem("keys");
+    // we've got "keys" on stack, now we push a copy of state data as argument
+    LuaEngine::getRef(_tempRef);
+    // we call the keys function with stateData copy as argument, the call pops the stateData out
+    LuaEngine::call(1, 1);
+    // we've got keys on stack. let's loop the table now.
+    LUA_TABLE_LOOP({
+        std::string key = LuaEngine::getString(-1);
+        LuaEngine::getGlobal("__getVariableGuiName");
+        LuaEngine::pushValue(uniqueId);
+        LuaEngine::pushValue(key);
+        LuaEngine::call(2, 1);
+        std::string guiName = LuaEngine::getString(-1);
+        LuaEngine::pop(1);
 
-    // Save the stateData, to see what changed and what didn't
-    for (int i = 0; i < num_entity_gui_fields; i++)
-    {
-        std::string key = keys->getPropertyString( Utility::toString(i) );
-        std::string guiName = ScriptEngineManager::getGlobal()->call(
-            "__getVariableGuiName",
-            ScriptValueArgs().append(uniqueId).append(key)
-        )->getString();
-
-        std::string value = stateData->getPropertyString(key);
+        LuaEngine::getRef(_tempRef);
+        std::string value = LuaEngine::getTableString(key);
+        LuaEngine::pop(1);
 
         GuiControl::EditedEntity::stateData.insert(
             GuiControl::EditedEntity::StateDataMap::value_type(
@@ -379,11 +399,12 @@ void prepare_entity_gui()
             )
         );
 
-//        std::string a = python::extract<std::string>( keys[i] );
-//        std::string b = python::extract<std::string>( pythonStateData[keys[i]] );
-
         GuiControl::EditedEntity::sortedKeys.push_back( key );
-    }
+        num_entity_gui_fields++; // increment for later loop
+    });
+
+    LuaEngine::pop(2);
+    LuaEngine::unref(_tempRef);
 
     sort( GuiControl::EditedEntity::sortedKeys.begin(), GuiControl::EditedEntity::sortedKeys.end() ); // So order is always the same
 
@@ -401,7 +422,12 @@ void prepare_entity_gui()
     }
 
     // Title
-    std::string title = GuiControl::EditedEntity::currEntity->scriptEntity->getPropertyString("_class");
+    std::string title;
+    LuaEngine::getGlobal("tostring");
+    LuaEngine::getRef(GuiControl::EditedEntity::currEntity->luaRef);
+    LuaEngine::call(1, 1);
+    title = LuaEngine::getString(-1, "Unknown");
+    LuaEngine::pop(1);
     title = Utility::toString(uniqueId) + ": " + title;
 
     setsvar((char*)"entity_gui_title", (char*)title.c_str());
@@ -473,27 +499,30 @@ void set_entity_gui_value(int *index, char *newValue)
         GuiControl::EditedEntity::stateData[key].second = newValue;
 
         int uniqueId = GuiControl::EditedEntity::currEntity->getUniqueId();
-        std::string naturalValue = ScriptEngineManager::getGlobal()->call("serializeJSON",
-            ScriptEngineManager::getGlobal()->call("__getVariable",
-                ScriptValueArgs().append(uniqueId).append(key)
-            )->call("fromData", newValue)
-        )->getString();
+        // getting args for future encodeJSON first
+        LuaEngine::getGlobal("__getVariable");
+        // __getVariable on stack
+        LuaEngine::pushValue(uniqueId);
+        LuaEngine::pushValue(key);
+        // call it with those arguments
+        LuaEngine::call(2, 1);
+        // the variable on stack now, call its fromData
+        LuaEngine::getTableItem("fromData");
+        // fromData on stack
+        LuaEngine::pushValueFromIndex(-2); // self argument
+        LuaEngine::pushValue(std::string(newValue)); // value argument
+        // call it
+        LuaEngine::call(2, 1);
+        // value here on stack. It's an argument of encodeJSON. now get encodeJSON and shift the values.
+        LuaEngine::getGlobal("encodeJSON");
+        LuaEngine::shift();
+        // call encodeJSON finally.
+        LuaEngine::call(1, 1);
+        // string on stack now
+        std::string naturalValue = LuaEngine::getString(-1, "[]");
+        LuaEngine::pop(2); // return stack into original state - get rid of the string and the variable.
 
-        ScriptEngineManager::runScript("getEntity(" + Utility::toString(uniqueId) + ")." + key + " = (" + naturalValue + ");");
-
-/* Old hackish way
-        std::string _class = GuiControl::EditedEntity::currEntity.get()->scriptEntity->getPropertyString("_class");
-
-        int protocolId = ScriptEngineManager::getGlobal()->getProperty("MessageSystem")->call("toProtocolId",
-            ScriptValueArgs().append(_class).append(key)
-        )->getInt();
-
-        MessageSystem::send_StateDataChangeRequest(
-            GuiControl::EditedEntity::currEntity.get()->getUniqueId(),
-            protocolId,
-            newValue // XXX This assumes toWire and toData are the same!
-        );
-*/
+        LuaEngine::runScript("getEntity(" + Utility::toString(uniqueId) + ")." + key + " = (" + naturalValue + ")");
     }
 }
 
@@ -529,10 +558,14 @@ dir(look_up,   look_updown_move, +1, k_look_up,   k_look_down);
     { \
         PlayerControl::flushActions(); /* Stop current actions */         \
         s = *down!=0;                                                \
-        ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call( \
-            #v, \
-            ScriptValueArgs().append(s ? d : (os ? -(d) : 0)).append(s) \
-        );  \
+        LuaEngine::getGlobal("ApplicationManager"); \
+        LuaEngine::getTableItem("instance"); \
+        LuaEngine::getTableItem(#v); \
+        LuaEngine::pushValueFromIndex(-2); \
+        LuaEngine::pushValue(s ? d : (os ? -(d) : 0)); \
+        LuaEngine::pushValue(s); \
+        LuaEngine::call(3, 0); \
+        LuaEngine::pop(2); \
     } \
 );
 
@@ -551,8 +584,14 @@ script_dir(right,    performStrafe,   -1, player->k_right, player->k_left);
 ICOMMAND(jump, "D", (int *down), {
   if (ClientSystem::scenarioStarted())
   {
-    PlayerControl::flushActions(); /* Stop current actions */         \
-    ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call("performJump", *down);
+    PlayerControl::flushActions(); /* Stop current actions */
+    LuaEngine::getGlobal("ApplicationManager");
+    LuaEngine::getTableItem("instance");
+    LuaEngine::getTableItem("performJump");
+    LuaEngine::pushValueFromIndex(-2);
+    LuaEngine::pushValue((bool)*down);
+    LuaEngine::call(2, 0);
+    LuaEngine::pop(2);
   }
 });
 
@@ -580,19 +619,20 @@ void PlayerControl::handleExtraPlayerMovements(int millis)
 
     fpsent* fpsPlayer = dynamic_cast<fpsent*>(player);
 
+    LuaEngine::getRef(ClientSystem::playerLogicEntity.get()->luaRef);
+    float _facingSpeed = LuaEngine::getTableDouble("facingSpeed");
+
     if (fpsPlayer->turn_move || fabs(x - 0.5) > 0.45)
-        mover->yaw +=
-            ClientSystem::playerLogicEntity.get()->scriptEntity->getPropertyFloat("facingSpeed")
-            * (
+        mover->yaw += _facingSpeed * (
                 fpsPlayer->turn_move ? fpsPlayer->turn_move : (x > 0.5 ? 1 : -1)
             ) * delta;
 
     if (fpsPlayer->look_updown_move || fabs(y - 0.5) > 0.45)
-        mover->pitch += 
-            ClientSystem::playerLogicEntity.get()->scriptEntity->getPropertyFloat("facingSpeed")
-            * (
+        mover->pitch += _facingSpeed * (
                 fpsPlayer->look_updown_move ? fpsPlayer->look_updown_move : (y > 0.5 ? -1 : 1)
             ) * delta;
+
+    LuaEngine::pop(1);
 
     extern void fixcamerarange();
     fixcamerarange(); // Normalize and limit the yaw and pitch values to appropriate ranges
@@ -602,89 +642,27 @@ bool PlayerControl::handleKeypress(SDLKey sym, int unicode, bool isdown)
 {
     assert(0);
     return false;
-#if 0
-    return IntensityCEGUI::handleKeypress(sym, unicode, isdown);
-#endif
 }
 
 bool PlayerControl::handleClick(int button, bool up)
 {
     assert(0);
     return false;
-#if 0
-    // Start with CEGUI
-    if (up ? IntensityCEGUI::handleMousebuttonupEvent(button) : IntensityCEGUI::handleMousebuttondownEvent(button))
-        return true;
-
-    // In edit mode, aside from CEGUI, we let Sauer do everything.
-    if (editmode)
-        return false;
-
-    // Then do our own stuff TODO: Make more generic and modifiable
-    switch (button)
-    {
-        case 4 : // Hack, but there is no SDL notation for this! (Mousewheel up) TODO: Use the sauer keybindings for this
-        {
-            dec_camera();
-            return true;
-            break; // ha ha
-        }
-        case 5 : // Hack, but there is no SDL notation for this! (Mousewheel down)
-        {
-            inc_camera();
-            return true;
-            break; // ha ha
-        }
-        case SDL_BUTTON_LEFT:
-        case SDL_BUTTON_MIDDLE:
-        case SDL_BUTTON_RIGHT:
-        {
-            if (!TargetingControl::targetLogicEntity.get()->isNone())
-            {
-                Logging::log(Logging::DEBUG, "Clicked on entity: %d, %ld\r\n",
-                                             TargetingControl::targetLogicEntity.get()->getUniqueId(),
-                                             (long)TargetingControl::targetLogicEntity.get());
-
-                // If a click has just completed, and there is a click action for the target, queue it for the player to perform
-                if (up) {
-                    TargetingControl::targetLogicEntity.get()->scriptEntity->call("performClick", button);
-                }
-            } else {
-                if (up)
-                {
-                    ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call("performClick",
-                        ScriptValueArgs().
-                            append(button).
-                            append( Utility::toString(TargetingControl::worldPosition.x) ).
-                            append( Utility::toString(TargetingControl::worldPosition.y) ).
-                            append( Utility::toString(TargetingControl::worldPosition.z) )
-                    );
-                }
-            }
-
-            return true; // NEW: We handle all clicks that are not in edit mode and are a button we recognize
-                         // OLD: We 'handle' the click even if is just the down part - we don't want Sauer getting that,
-                         // at least if this is the _start_ of a real click, i.e., is on an entity.
-
-            break; // ha ha
-        }
-    }
-
-    return false;
-#endif
 }
 
 void PlayerControl::flushActions()
 {
-    ClientSystem::playerLogicEntity.get()->scriptEntity->getProperty("actionSystem")->call("clear");
+    LuaEngine::getRef(ClientSystem::playerLogicEntity.get()->luaRef);
+    LuaEngine::getTableItem("actionSystem");
+    LuaEngine::getTableItem("clear");
+    LuaEngine::pushValueFromIndex(-2);
+    LuaEngine::call(1, 0);
+    LuaEngine::pop(2);
 }
 
 void PlayerControl::toggleMainMenu()
 {
     assert(0);
-#if 0
-    IntensityCEGUI::toggleMainMenu();
-#endif
 }
 
 
@@ -829,30 +807,37 @@ void mouseclick(int button, bool down)
 {
     Logging::log(Logging::INFO, "mouse click: %d (down: %d)\r\n", button, down);
 
-    if (! (ScriptEngineManager::hasEngine() && ClientSystem::scenarioStarted()) )
+    if (! (LuaEngine::exists() && ClientSystem::scenarioStarted()) )
         return;
 
     TargetingControl::determineMouseTarget(true); // A click forces us to check for clicking on entities
 
     vec pos = TargetingControl::targetPosition;
-    ScriptValuePtr position = ScriptEngineManager::getGlobal()->call("__new__",
-        ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector3"))
-            .append(pos.x)
-            .append(pos.y)
-            .append(pos.z)
-    );
 
-    ScriptValueArgs args;
-    args.append(button).append(down).append(position);
+    LuaEngine::getGlobal("ApplicationManager");
+    LuaEngine::getTableItem("instance");
+    LuaEngine::getTableItem("performClick");
+    LuaEngine::pushValueFromIndex(-2); // self argument
+    // pushing arguments themselves
+    LuaEngine::pushValue(button);
+    LuaEngine::pushValue(down);
+    LuaEngine::getGlobal("Vector3");
+    LuaEngine::pushValue(pos.x);
+    LuaEngine::pushValue(pos.y);
+    LuaEngine::pushValue(pos.z);
+    // after call, vec is on stack
+    LuaEngine::call(3, 1);
     if (TargetingControl::targetLogicEntity.get() && !TargetingControl::targetLogicEntity->isNone())
-        args.append(TargetingControl::targetLogicEntity->scriptEntity);
+        LuaEngine::getRef(TargetingControl::targetLogicEntity->luaRef);
     else
-        args.append(ScriptEngineManager::getNull());
+        LuaEngine::pushValue();
     float x, y;
     g3d_cursorpos(x, y);
-    args.append(x).append(y);
-
-    ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call("performClick", args);
+    LuaEngine::pushValue(x);
+    LuaEngine::pushValue(y);
+    // call now
+    LuaEngine::call(7, 0);
+    LuaEngine::pop(2);
 }
 
 ICOMMAND(mouse1click, "D", (int *down), { mouseclick(1, *down!=0); });
@@ -865,12 +850,18 @@ ICOMMAND(mouse3click, "D", (int *down), { mouseclick(3, *down!=0); });
 
 void actionKey(int index, bool down)
 {
-    if (ScriptEngineManager::hasEngine())
+    if (LuaEngine::exists())
     {
-        ScriptValueArgs args;
-        args.append(index).append(down);
-
-        ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call("actionKey", args);
+        LuaEngine::getGlobal("ApplicationManager");
+        LuaEngine::getTableItem("instance");
+        LuaEngine::getTableItem("actionKey");
+        LuaEngine::pushValueFromIndex(-2); // self argument
+        // pushing arguments themselves
+        LuaEngine::pushValue(index);
+        LuaEngine::pushValue(down);
+        // call now
+        LuaEngine::call(3, 0);
+        LuaEngine::pop(2);
     }
 }
 

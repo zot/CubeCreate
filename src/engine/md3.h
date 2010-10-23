@@ -204,11 +204,11 @@ struct md3 : vertmodel
     {
         if(loaded) return true;
         formatstring(md3dir)("packages/models/%s", loadname);
-        defformatstring(cfgname)("packages/models/%s/md3.js", loadname); // INTENSITY
+        defformatstring(cfgname)("packages/models/%s/md3.lua", loadname); // INTENSITY
 
         loadingmd3 = this;
         persistidents = false;
-        if(ScriptEngineManager::runFile(path(cfgname), false) && parts.length()) // INTENSITY configured md3, will call the md3* commands below
+        if(LuaEngine::runFile(std::string(path(cfgname))).empty() && parts.length()) // INTENSITY configured md3, will call the md3* commands below
         {
             persistidents = true;
             loadingmd3 = NULL;

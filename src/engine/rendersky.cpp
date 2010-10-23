@@ -198,17 +198,17 @@ static struct domevert
     vec pos;
     uchar color[4];
 
-	domevert() {}
-	domevert(const vec &pos, const bvec &fcolor, float alpha) : pos(pos)
-	{
-		memcpy(color, fcolor.v, 3);
-		color[3] = uchar(alpha*255);
-	}
-	domevert(const domevert &v0, const domevert &v1) : pos(vec(v0.pos).add(v1.pos).normalize())
-	{
+    domevert() {}
+    domevert(const vec &pos, const bvec &fcolor, float alpha) : pos(pos)
+    {
+        memcpy(color, fcolor.v, 3);
+        color[3] = uchar(alpha*255);
+    }
+    domevert(const domevert &v0, const domevert &v1) : pos(vec(v0.pos).add(v1.pos).normalize())
+    {
         memcpy(color, v0.color, 4);
         if(v0.pos.z != v1.pos.z) color[3] += uchar((v1.color[3] - v0.color[3]) * (pos.z - v0.pos.z) / (v1.pos.z - v0.pos.z));
-	}
+    }
 } *domeverts = NULL;
 static GLushort *domeindices = NULL;
 static int domenumverts = 0, domenumindices = 0, domecapindices = 0;
@@ -333,7 +333,7 @@ static void initdome(const bvec &color, float minalpha = 0.0f, float maxalpha = 
 
 static void deletedome()
 {
-	domenumverts = domenumindices = 0;
+    domenumverts = domenumindices = 0;
     if(domevbuf) { glDeleteBuffers_(1, &domevbuf); domevbuf = 0; }
     if(domeebuf) { glDeleteBuffers_(1, &domeebuf); domeebuf = 0; }
     DELETEA(domeverts);
@@ -679,11 +679,11 @@ void drawskybox(int farplane, bool limited)
         glEnable(GL_CULL_FACE);
     } // end INTENSITY
 
-	if(!glaring && fogdomemax)
-	{
+    if(!glaring && fogdomemax)
+    {
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
         drawfogdome(farplane);
-	}
+    }
 
     if(clampsky) glDepthRange(0, 1);
 

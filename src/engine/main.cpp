@@ -6,7 +6,6 @@
 #include "system_manager.h" // INTENSITY
 #include "client_system.h" // INTENSITY
 #include "intensity_gui.h" // INTENSITY
-#include "script_engine_manager.h" // INTENSITY
 
 void cleanup()
 {
@@ -34,6 +33,7 @@ void quit()                     // normal exit
 void force_quit() // INTENSITY - change quit to force_quit
 {
     SystemManager::quit(); // INTENSITY
+    LuaEngine::destroy();
 
     extern void writeinitcfg();
     writeinitcfg();
@@ -595,14 +595,16 @@ VARF(fullscreen, 0, 0, 1, setfullscreen(fullscreen!=0)); // INTENSITY: To be saf
 
 void setScreenScriptValues() // INTENSITY: New function
 {
-    if (ScriptEngineManager::hasEngine())
+    if (LuaEngine::exists())
     {
-        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("aspectRatio", float(scr_w)/float(scr_h));
-        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("screenWidth", scr_w);
-        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("screenHeight", scr_h);
-        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("fontHeight", FONTH);
-        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("cameraDistance", getvar("cam_dist"));
-        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("cameraHeight", getvar("cameraheight"));
+        LuaEngine::getGlobal("Global");
+        LuaEngine::setTable("aspectRatio", float(scr_w)/float(scr_h));
+        LuaEngine::setTable("screenWidth", scr_w);
+        LuaEngine::setTable("screenHeight", scr_h);
+        LuaEngine::setTable("fontHeight", FONTH);
+        LuaEngine::setTable("cameraDistance", getvar("cam_dist"));
+        LuaEngine::setTable("cameraHeight", getvar("cameraheight"));
+        LuaEngine::pop(1);
     }
 }
 
@@ -1262,14 +1264,14 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     notexture = textureload("packages/textures/notexture.png");
     if(!notexture) fatal("could not find core textures");
 
-    sauerlog("js");
-    ScriptEngineManager::createEngine();
-    if (!ScriptEngineManager::hasEngine()) fatal("failed to spawn script engine.");
+    sauerlog("lua");
+    LuaEngine::create();
+    if (!LuaEngine::exists()) fatal("cannot initialize lua script engine");
 
     sauerlog("console");
     persistidents = false;
     if(!execfile("data/stdlib.cfg", false)) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
-    if(!ScriptEngineManager::runFile("data/font.js", false)) fatal("cannot find font definitions");
+    if(!LuaEngine::runFile("data/font.lua").empty()) fatal("cannot find font definitions");
     if(!setfont("default")) fatal("no default font specified");
 
     inbetweenframes = true;
@@ -1289,8 +1291,8 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     sauerlog("cfg");
 
-    ScriptEngineManager::runFile("data/keymap.js", false);
-    ScriptEngineManager::runFile("data/sounds.js", false);
+    LuaEngine::runFile("data/keymap.lua");
+    LuaEngine::runFile("data/sounds.lua");
     execfile("data/stdedit.cfg");
     execfile("data/menus.cfg");
     execfile("data/brush.cfg");
@@ -1311,9 +1313,6 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     persistidents = false;
 
     game::loadconfigs();
-
-    sauerlog("destroying JS ...");
-    ScriptEngineManager::destroyEngine();
 
     persistidents = true;
 

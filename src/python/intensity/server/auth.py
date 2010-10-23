@@ -30,13 +30,13 @@ class InstanceStatus:
 
 
 def get_instance_id():
-    return get_config("Network", "instance_id", '')
+    return str(get_config("Network", "instance_id", ''))
 
 def get_instance_validation():
-    return get_config('Network', 'instance_validation', '')
+    return str(get_config('Network', 'instance_validation', ''))
 
 def get_instance_address():
-    return get_config('Network', 'address', 'localhost')
+    return str(get_config('Network', 'address', 'localhost'))
 
 def check_local_mode():
     InstanceStatus.local_mode = (get_instance_address() == 'localhost')
@@ -52,8 +52,8 @@ def update_master(params={}, act=True):
         try:
             params.update({
                 'version': INTENSITY_VERSION_STRING,
-                'user_interface': get_instance_address() + ':' + get_config('Network', 'port', '28787'),
-                'admin_interface': get_instance_address() + ':' + get_config('Network', 'admin_port', '28789'),
+                'user_interface': get_instance_address() + ':' + str(get_config('Network', 'port', '28787')),
+                'admin_interface': get_instance_address() + ':' + str(get_config('Network', 'admin_port', '28789')),
     #            'instance_id': get_instance_id(),
                 'activity_id': get_curr_activity_id(),
                 'map_asset_id': get_curr_map_asset_id(),

@@ -440,21 +440,21 @@ void pushshadowmap()
     glClientActiveTexture_(GL_TEXTURE0_ARB);
 
     float r, g, b;
-	if(!shadowmapambient)
-	{
-		if(skylightcolor[0] || skylightcolor[1] || skylightcolor[2])
-		{
-			r = max(25.0f, 0.4f*ambientcolor[0] + 0.6f*max(ambientcolor[0], skylightcolor[0]));
-			g = max(25.0f, 0.4f*ambientcolor[1] + 0.6f*max(ambientcolor[1], skylightcolor[1]));
-			b = max(25.0f, 0.4f*ambientcolor[2] + 0.6f*max(ambientcolor[2], skylightcolor[2]));
-		}
-		else 
+    if(!shadowmapambient)
+    {
+        if(skylightcolor[0] || skylightcolor[1] || skylightcolor[2])
+        {
+            r = max(25.0f, 0.4f*ambientcolor[0] + 0.6f*max(ambientcolor[0], skylightcolor[0]));
+            g = max(25.0f, 0.4f*ambientcolor[1] + 0.6f*max(ambientcolor[1], skylightcolor[1]));
+            b = max(25.0f, 0.4f*ambientcolor[2] + 0.6f*max(ambientcolor[2], skylightcolor[2]));
+        }
+        else 
         {
             r = max(25.0f, 2.0f*ambientcolor[0]);
             g = max(25.0f, 2.0f*ambientcolor[1]);
             b = max(25.0f, 2.0f*ambientcolor[2]);
         }
-	}
+    }
     else { r = shadowmapambientcolor[0]; g = shadowmapambientcolor[1]; b = shadowmapambientcolor[2]; }
     setenvparamf("shadowmapambient", SHPARAM_PIXEL, 7, r/255.0f, g/255.0f, b/255.0f);
 }

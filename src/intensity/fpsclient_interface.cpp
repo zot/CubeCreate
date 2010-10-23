@@ -45,7 +45,7 @@ dynent* FPSClientInterface::getClientPlayer()
     return game::player1;
 #else
     assert(0);
-	return NULL;
+    return NULL;
 #endif
 }
 

@@ -726,29 +726,29 @@ void makeundo()                        // stores state of selected cubes before 
 void swapundo(undolist &a, undolist &b, const char *s)
 {
     if(noedit() || (nompedit && multiplayer())) return;
-    if(a.empty()) { conoutf(CON_WARN, "nothing more to %s", s); return; }	
-	int ts = a.last->timestamp;
+    if(a.empty()) { conoutf(CON_WARN, "nothing more to %s", s); return; }    
+    int ts = a.last->timestamp;
     selinfo l = sel;
-	while(!a.empty() && ts==a.last->timestamp)
-	{
-		undoblock *u = a.poplast(), *r;
+    while(!a.empty() && ts==a.last->timestamp)
+    {
+        undoblock *u = a.poplast(), *r;
         if(u->numents) r = copyundoents(u);
-		else
-		{
+        else
+        {
             block3 *ub = u->block();
-			l.o = ub->o;
-			l.s = ub->s;
-			l.grid = ub->grid;
-			l.orient = ub->orient;
+            l.o = ub->o;
+            l.s = ub->s;
+            l.grid = ub->grid;
+            l.orient = ub->orient;
             r = newundocube(l);
-		}
+        }
         r->size = u->size;
         r->timestamp = totalmillis;
         b.add(r);
-		pasteundo(u);
-		if(!u->numents) changed(l, false);
-		freeundo(u);
-	}
+        pasteundo(u);
+        if(!u->numents) changed(l, false);
+        freeundo(u);
+    }
     commitchanges();
     if(!hmapsel) 
     {
@@ -932,7 +932,7 @@ void copy()
 void pastehilite()
 {
     if(!localedit) return;
-	sel.s = localedit->copy->s;
+    sel.s = localedit->copy->s;
     reorient();
     havesel = true;
 }

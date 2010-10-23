@@ -11,8 +11,6 @@
     #include "client_system.h"
 #endif
 #include "intensity_physics.h"
-#include "script_engine_manager.h"
-
 
 void backup(char *name, char *backupname)
 {
@@ -78,7 +76,7 @@ void mapcfgname()
 
     string pakname, mapname, mcfgname;
     getmapfilenames(mname, NULL, pakname, mapname, mcfgname);
-    defformatstring(cfgname)("packages/%s/%s.js", pakname, mcfgname); // INTENSITY: Switched to .js TODO: More files
+    defformatstring(cfgname)("packages/%s/%s.lua", pakname, mcfgname);
     path(cfgname);
     result(cfgname);
 }
@@ -553,19 +551,19 @@ static uint mapcrc = 0;
 uint getmapcrc() { return mapcrc; }
 
 static void swapXZ(cube *c)
-{	
-	loopi(8) 
-	{
-		swap(c[i].faces[0],   c[i].faces[2]);
-		swap(c[i].texture[0], c[i].texture[4]);
-		swap(c[i].texture[1], c[i].texture[5]);
-		if(c[i].ext && c[i].ext->surfaces)
-		{
-			swap(c[i].ext->surfaces[0], c[i].ext->surfaces[4]);
-			swap(c[i].ext->surfaces[1], c[i].ext->surfaces[5]);
-		}
-		if(c[i].children) swapXZ(c[i].children);
-	}
+{    
+    loopi(8) 
+    {
+        swap(c[i].faces[0],   c[i].faces[2]);
+        swap(c[i].texture[0], c[i].texture[4]);
+        swap(c[i].texture[1], c[i].texture[5]);
+        if(c[i].ext && c[i].ext->surfaces)
+        {
+            swap(c[i].ext->surfaces[0], c[i].ext->surfaces[4]);
+            swap(c[i].ext->surfaces[1], c[i].ext->surfaces[5]);
+        }
+        if(c[i].children) swapXZ(c[i].children);
+    }
 }
 
 static void fixoversizedcubes(cube *c, int size)
@@ -975,8 +973,8 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     renderprogress(0, "loading octree...");
     worldroot = loadchildren(f);
 
-	if(hdr.version <= 11)
-		swapXZ(worldroot);
+    if(hdr.version <= 11)
+        swapXZ(worldroot);
 
     if(hdr.version <= 8)
         converttovectorworld();
@@ -1023,9 +1021,9 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     clearmainmenu();
 
     overrideidents = true;
-    if (ScriptEngineManager::hasEngine())
+    if (LuaEngine::exists())
     {
-        ScriptEngineManager::runFile("data/default_map_settings.js", false);
+        LuaEngine::runFile("data/default_map_settings.lua");
         WorldSystem::runMapScript();
     }
     overrideidents = false;

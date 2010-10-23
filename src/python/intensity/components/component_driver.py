@@ -77,7 +77,7 @@ class ComponentDriver:
 
             if response_type == ComponentDriver.RESPONSE.Callback:
                 callback, param = data
-                CModule.run_script('Tools.callbacks.tryCall("%s", "%s")' % (callback, param), 'component %s callback' % self.name)
+                CModule.run_script('Tools.callbacks.tryCall("%s", "%s")' % (callback, param))
             elif response_type == ComponentDriver.RESPONSE.Error:
                 CModule.show_message('Error', 'Component %s: %s' % (self.name, data))
 

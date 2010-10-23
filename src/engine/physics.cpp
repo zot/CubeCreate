@@ -9,7 +9,6 @@
 
 #include "world_system.h" // INTENSITY
 #include "targeting.h" // INTENSITY
-#include "script_engine_manager.h"
 #ifdef CLIENT
     #include "client_engine_additions.h" // INTENSITY
 #endif
@@ -1894,16 +1893,17 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 #else
     if (pl->o.z < 0)
     {
-        ScriptValuePtr scriptEntity = LogicSystem::getLogicEntity((dynent*)pl).get()->scriptEntity;
-
-        ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call(
-#ifdef CLIENT // INTENSITY
-                "clientOnEntityOffMap",
-#else // SERVER
-                "onEntityOffMap",
+        LuaEngine::getGlobal("ApplicationManager");
+        LuaEngine::getTableItem("instance");
+#ifdef CLIENT
+        LuaEngine::getTableItem("clientOnEntityOffMap");
+#else
+        LuaEngine::getTableItem("onEntityOffMap");
 #endif
-            scriptEntity
-        );
+        LuaEngine::pushValueFromIndex(-2);
+        LuaEngine::getRef(LogicSystem::getLogicEntity((dynent*)pl).get()->luaRef);
+        LuaEngine::call(2, 0);
+        LuaEngine::pop(2);
     }
 #endif
 

@@ -37,7 +37,7 @@ Basic Commands:
                        (if not given, delay is equal to 2.0)
                        If already running, another call to autostats() will stop autostat
 
-    CModule.run_script(script) - Run a JavaScript command in the scripting engine
+    CModule.run_script(script) - Run a Lua command in the scripting engine
 
     quit() - Shut down the server (hotkey: %s)""" % (hotkey)
         return ""

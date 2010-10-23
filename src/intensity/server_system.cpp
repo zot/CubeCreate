@@ -10,7 +10,6 @@
 #include "server_system.h"
 #include "world_system.h"
 #include "editing_system.h"
-#include "script_engine_manager.h"
 #include "utility.h"
 
 #include "shared_module_members_boost.h"
@@ -477,9 +476,9 @@ Slot &lookupslot(int index, bool load)
 
 VSlot &lookupvslot(int index, bool load)
 {
-	static VSlot vsl;
-	static Slot sl = lookupslot(0, 0);
-	vsl.slot = &sl;
+    static VSlot vsl;
+    static Slot sl = lookupslot(0, 0);
+    vsl.slot = &sl;
     return vsl;
 }
 
@@ -555,15 +554,15 @@ void glMaterialfv(GLenum face, GLenum pname, const GLfloat * params) { };
 void glTexGeni( GLenum coord, GLenum pname, GLint param) { };
 void glBindTexture(GLenum target, GLuint texture) { };
 void glTexGenfv( GLenum coord, GLenum pname, const GLfloat *params ) { };
-void glLightfv(	GLenum  	light, GLenum  	pname, const GLfloat *  	params) { };
+void glLightfv(    GLenum      light, GLenum      pname, const GLfloat *      params) { };
 void glBlendFunc( GLenum sfactor, GLenum dfactor ) { };
 void glAlphaFunc( GLenum func, GLclampf ref ) { };
 void glMatrixMode( GLenum mode ) { };
 void glPushMatrix( void ) { };
 void glTranslatef( GLfloat x, GLfloat y, GLfloat z ) { };
 void glDrawElements( GLenum mode, GLsizei count, GLenum type, const GLvoid *indices ) { };
-void glPopMatrix(	  	void) { };
-void glLightModelfv(	GLenum  	pname, const GLfloat *  	params) { }
+void glPopMatrix(          void) { };
+void glLightModelfv(    GLenum      pname, const GLfloat *      params) { }
 void glMultMatrixf( const GLfloat *m ) { };
 void glScalef( GLfloat x, GLfloat y, GLfloat z ) { };
 void glLoadMatrixf( const GLfloat *m ) { };

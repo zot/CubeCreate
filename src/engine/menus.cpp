@@ -287,12 +287,12 @@ void guibar()
 
 void guistrut(float *strut, int *alt)
 {
-	if(cgui)
-	{
-		if(!*alt) cgui->pushlist();
-		cgui->strut(*strut);
-		if(!*alt) cgui->poplist();
-	}
+    if(cgui)
+    {
+        if(!*alt) cgui->pushlist();
+        cgui->strut(*strut);
+        if(!*alt) cgui->poplist();
+    }
 }
 
 template<class T> static void updateval(char *var, T val, char *onchange)
@@ -346,7 +346,7 @@ static const char *getsval(char *var)
 
 void guislider(char *var, int *min, int *max, char *onchange)
 {
-	if(!cgui) return;
+    if(!cgui) return;
     int oldval = getval(var), val = oldval, vmin = *max ? *min : getvarmin(var), vmax = *max ? *max : getvarmax(var);
     cgui->slider(val, vmin, vmax, GUI_TITLE_COLOR);
     if(val != oldval) updateval(var, val, onchange);
@@ -424,7 +424,7 @@ void guifield(char *var, int *maxlength, char *onchange, int *password) // INTEN
 {   
     if(!cgui) return;
     const char *initval = getsval(var);
-	char *result = cgui->field(var, GUI_BUTTON_COLOR, *maxlength ? *maxlength : 12, 0, initval, EDITORFOCUSED, password ? *password : false); // INTENSITY: password, and the default value before it - EDITORFOCUSED - also, as it is needed now
+    char *result = cgui->field(var, GUI_BUTTON_COLOR, *maxlength ? *maxlength : 12, 0, initval, EDITORFOCUSED, password ? *password : false); // INTENSITY: password, and the default value before it - EDITORFOCUSED - also, as it is needed now
     if(result) updateval(var, result, onchange);
 }
 

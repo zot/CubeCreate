@@ -21,7 +21,6 @@
 #include "server_system.h"
 #include "message_system.h"
 #include "editing_system.h"
-#include "script_engine_manager.h"
 #include "utility.h"
 #include "world_system.h"
 
@@ -520,7 +519,11 @@ namespace MessageSystem
         // Add entity
         Logging::log(Logging::DEBUG, "Creating new entity, %s   %f,%f,%f   %s\r\n", _class.c_str(), x, y, z, stateData.c_str());
         if ( !server::isRunningCurrentScenario(sender) ) return; // Silently ignore info from previous scenario
-        std::string sauerType = ScriptEngineManager::getGlobal()->call("getEntitySauerType", _class)->getString();
+        LuaEngine::getGlobal("getEntitySauerType");
+        LuaEngine::pushValue(_class);
+        LuaEngine::call(1, 1);
+        std::string sauerType = LuaEngine::getString(-1, "extent");
+        LuaEngine::pop(1);
         Logging::log(Logging::DEBUG, "Sauer type: %s\r\n", sauerType.c_str());
         python::list params;
         if (sauerType != "dynent")
@@ -529,17 +532,18 @@ namespace MessageSystem
         params.append(y);
         params.append(z);
         // Create
-        ScriptValuePtr kwargs = ScriptEngineManager::createScriptObject();
-        ScriptValuePtr position = ScriptEngineManager::createScriptObject();
-        kwargs->setProperty("position", position);
-        position->setProperty("x", x);
-        position->setProperty("y", y);
-        position->setProperty("z", z);
-        kwargs->setProperty("stateData", stateData);
-        ScriptValuePtr scriptEntity = ScriptEngineManager::getGlobal()->call("newEntity",
-            ScriptValueArgs().append(_class).append(kwargs)
-        );
-        int newUniqueId = scriptEntity->getPropertyInt("uniqueId");
+        LuaEngine::getGlobal("newEntity");
+        LuaEngine::pushValue(_class);
+        LuaEngine::newTable();
+        LuaEngine::pushValue("position");
+        LuaEngine::newTable();
+        LuaEngine::setTable("x", x);
+        LuaEngine::setTable("y", y);
+        LuaEngine::setTable("z", z);
+        LuaEngine::setTableIndex();
+        LuaEngine::setTable("stateData", stateData);
+        LuaEngine::call(2, 1);
+        int newUniqueId = LuaEngine::getTableInteger("uniqueId");
         Logging::log(Logging::DEBUG, "Created Entity: %d - %s  (%f,%f,%f) \r\n",
                                       newUniqueId, _class.c_str(), x, y, z);
     }
@@ -623,12 +627,14 @@ namespace MessageSystem
                 \
                 Logging::log(Logging::DEBUG, "StateDataUpdate: %d, %d, %s \r\n", uniqueId, keyProtocolId, value.c_str()); \
                 \
-                if (!ScriptEngineManager::hasEngine()) \
+                if (!LuaEngine::exists()) \
                     return; \
                 \
-                ScriptEngineManager::getGlobal()->call("setStateDatum", \
-                    ScriptValueArgs().append(uniqueId).append(keyProtocolId).append(value) \
-                );
+                LuaEngine::getGlobal("setStateDatum"); \
+                LuaEngine::pushValue(uniqueId); \
+                LuaEngine::pushValue(keyProtocolId); \
+                LuaEngine::pushValue(value); \
+                LuaEngine::call(3, 0);
         #endif
         STATE_DATA_UPDATE
     }
@@ -672,9 +678,12 @@ namespace MessageSystem
         \
         if ( !server::isRunningCurrentScenario(sender) ) return; /* Silently ignore info from previous scenario */ \
         \
-        ScriptEngineManager::getGlobal()->call("setStateDatum", \
-            ScriptValueArgs().append(uniqueId).append(keyProtocolId).append(value).append(actorUniqueId) \
-        );
+        LuaEngine::getGlobal("setStateDatum"); \
+        LuaEngine::pushValue(uniqueId); \
+        LuaEngine::pushValue(keyProtocolId); \
+        LuaEngine::pushValue(value); \
+        LuaEngine::pushValue(actorUniqueId); \
+        LuaEngine::call(4, 0);
         STATE_DATA_REQUEST
     }
 #endif
@@ -926,12 +935,19 @@ namespace MessageSystem
                 send_PersonalServerMessage(sender, -1, "Invalid scenario", "An error occured in synchronizing scenarios");
                 return;
             }
-            ScriptEngineManager::getGlobal()->call("sendEntities", sender);
+            LuaEngine::getGlobal("sendEntities");
+            LuaEngine::pushValue(sender);
+            LuaEngine::call(1, 0);
             MessageSystem::send_AllActiveEntitiesSent(sender);
-            ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call(
-                "onPlayerLogin",
-                ScriptEngineManager::getGlobal()->call("getEntity", FPSServerInterface::getUniqueId(sender))
-            );
+            LuaEngine::getGlobal("ApplicationManager");
+            LuaEngine::getTableItem("instance");
+            LuaEngine::getTableItem("onPlayerLogin");
+            LuaEngine::pushValueFromIndex(-2); // first argument - self
+            LuaEngine::getGlobal("getEntity");
+            LuaEngine::pushValue(FPSServerInterface::getUniqueId(sender));
+            LuaEngine::call(1, 1); // second argument - entity
+            LuaEngine::call(2, 0);
+            LuaEngine::pop(2);
         #else // CLIENT
             // Send just enough info for the player's LE
             send_LogicEntityCompleteNotification( sender,
@@ -1014,7 +1030,7 @@ namespace MessageSystem
             return; // We do send this to the NPCs sometimes, as it is sent during their creation (before they are fully
                     // registered even). But we have no need to process it on the server.
         #endif
-        if (!ScriptEngineManager::hasEngine())
+        if (!LuaEngine::exists())
             return;
         Logging::log(Logging::DEBUG, "RECEIVING LE: %d,%d,%s\r\n", otherClientNumber, otherUniqueId, otherClass.c_str());
         INDENT_LOG(Logging::DEBUG);
@@ -1023,7 +1039,10 @@ namespace MessageSystem
         if (entity.get() == NULL)
         {
             Logging::log(Logging::DEBUG, "Creating new active LogicEntity\r\n");
-            ScriptValuePtr kwargs = ScriptEngineManager::createScriptObject();
+            LuaEngine::getGlobal("addEntity");
+            LuaEngine::pushValue(otherClass);
+            LuaEngine::pushValue(otherUniqueId);
+            LuaEngine::newTable();
             if (otherClientNumber >= 0) // If this is another client, NPC, etc., then send the clientnumber, critical for setup
             {
                 #ifdef CLIENT
@@ -1035,11 +1054,9 @@ namespace MessageSystem
                         assert(otherClientNumber == ClientSystem::playerNumber);
                     }
                 #endif
-                kwargs->setProperty("clientNumber", otherClientNumber);
+                LuaEngine::setTable("clientNumber", otherClientNumber);
             }
-            ScriptEngineManager::getGlobal()->call("addEntity",
-                ScriptValueArgs().append(otherClass).append(otherUniqueId).append(kwargs)
-            );
+            LuaEngine::call(3, 0);
             entity = LogicSystem::getLogicEntity(otherUniqueId);
             if (!entity.get())
             {
@@ -1052,8 +1069,12 @@ namespace MessageSystem
         // A logic entity now exists (either one did before, or we created one), we now update the stateData, if we
         // are remotely connected (TODO: make this not segfault for localconnect)
         Logging::log(Logging::DEBUG, "Updating stateData with: %s\r\n", stateData.c_str());
-        ScriptValuePtr sd = ScriptEngineManager::createScriptValue(stateData);
-        entity.get()->scriptEntity->call("_updateCompleteStateData", sd);
+        LuaEngine::getRef(entity.get()->luaRef);
+        LuaEngine::getTableItem("_updateCompleteStateData");
+        LuaEngine::pushValueFromIndex(-2);
+        LuaEngine::pushValue(stateData);
+        LuaEngine::call(2, 0);
+        LuaEngine::pop(1);
         #ifdef CLIENT
             // If this new entity is in fact the Player's entity, then we finally have the player's LE, and can link to it.
             if (otherUniqueId == ClientSystem::uniqueId)
@@ -1062,7 +1083,9 @@ namespace MessageSystem
                 // Note in C++
                 ClientSystem::playerLogicEntity = LogicSystem::getLogicEntity(ClientSystem::uniqueId);
                 // Note in Scripting
-                ScriptEngineManager::getGlobal()->call("setPlayerUniqueId",ClientSystem::uniqueId);
+                LuaEngine::getGlobal("setPlayerUniqueId");
+                LuaEngine::pushValue(ClientSystem::uniqueId);
+                LuaEngine::call(1, 0);
             }
         #endif
         // Events post-reception
@@ -1096,7 +1119,9 @@ namespace MessageSystem
             return;
         }
         if ( !server::isRunningCurrentScenario(sender) ) return; // Silently ignore info from previous scenario
-        ScriptEngineManager::getGlobal()->call("removeEntity", uniqueId);
+        LuaEngine::getGlobal("removeEntity");
+        LuaEngine::pushValue(uniqueId);
+        LuaEngine::call(1, 0);
     }
 #endif
 
@@ -1156,9 +1181,11 @@ namespace MessageSystem
 
         int uniqueId = getint(p);
 
-        if (!ScriptEngineManager::hasEngine())
+        if (!LuaEngine::exists())
             return;
-        ScriptEngineManager::getGlobal()->call("removeEntity", uniqueId);
+        LuaEngine::getGlobal("removeEntity");
+        LuaEngine::pushValue(uniqueId);
+        LuaEngine::call(1, 0);
     }
 #endif
 
@@ -1232,7 +1259,7 @@ namespace MessageSystem
         int attr3 = getint(p);
         int attr4 = getint(p);
 
-        if (!ScriptEngineManager::hasEngine())
+        if (!LuaEngine::exists())
             return;
         #if 0
         Something like this:
@@ -1253,19 +1280,24 @@ namespace MessageSystem
         if (entity.get() == NULL)
         {
             Logging::log(Logging::DEBUG, "Creating new active LogicEntity\r\n");
-            std::string sauerType = ScriptEngineManager::getGlobal()->call("getEntitySauerType", otherClass)->getString();
-            ScriptValuePtr kwargs = ScriptEngineManager::createScriptObject();
-            kwargs->setProperty("_type", findtype((char*)sauerType.c_str()));
-            kwargs->setProperty("x", x);
-            kwargs->setProperty("y", y);
-            kwargs->setProperty("z", z);
-            kwargs->setProperty("attr1", attr1);
-            kwargs->setProperty("attr2", attr2);
-            kwargs->setProperty("attr3", attr3);
-            kwargs->setProperty("attr4", attr4);
-            ScriptEngineManager::getGlobal()->call("addEntity",
-                    ScriptValueArgs().append(otherClass).append(otherUniqueId).append(kwargs)
-            );
+            LuaEngine::getGlobal("getEntitySauerType");
+            LuaEngine::pushValue(otherClass);
+            LuaEngine::call(1, 1);
+            std::string sauerType = LuaEngine::getString(-1, "extent");
+            LuaEngine::pop(1);
+            LuaEngine::getGlobal("addEntity");
+            LuaEngine::pushValue(otherClass);
+            LuaEngine::pushValue(otherUniqueId);
+            LuaEngine::newTable();
+            LuaEngine::setTable("_type", findtype((char*)sauerType.c_str()));
+            LuaEngine::setTable("x", x);
+            LuaEngine::setTable("y", y);
+            LuaEngine::setTable("z", z);
+            LuaEngine::setTable("attr1", attr1);
+            LuaEngine::setTable("attr2", attr2);
+            LuaEngine::setTable("attr3", attr3);
+            LuaEngine::setTable("attr4", attr4);
+            LuaEngine::call(3, 0);
             entity = LogicSystem::getLogicEntity(otherUniqueId);
             assert(entity.get() != NULL);
         } else
@@ -1274,8 +1306,12 @@ namespace MessageSystem
         // A logic entity now exists (either one did before, or we created one), we now update the stateData, if we
         // are remotely connected (TODO: make this not segfault for localconnect)
         Logging::log(Logging::DEBUG, "Updating stateData\r\n");
-        ScriptValuePtr sd = ScriptEngineManager::createScriptValue(stateData);
-        entity.get()->scriptEntity->call("_updateCompleteStateData", sd);
+        LuaEngine::getRef(entity.get()->luaRef);
+        LuaEngine::getTableItem("_updateCompleteStateData");
+        LuaEngine::pushValueFromIndex(-2);
+        LuaEngine::pushValue(stateData);
+        LuaEngine::call(2, 0);
+        LuaEngine::pop(1);
         // Events post-reception
         WorldSystem::triggerReceivedEntity();
     }
@@ -1942,24 +1978,31 @@ namespace MessageSystem
 
         if (!ServerSystem::isRunningMap()) return;
         if ( !server::isRunningCurrentScenario(sender) ) return; // Silently ignore info from previous scenario
-        ScriptValuePtr position = ScriptEngineManager::runScript(
-            "new Vector3(" + 
-                Utility::toString(x) + "," + 
-                Utility::toString(y) + "," + 
-                Utility::toString(z) +
-            ")"
-        );
-        ScriptValueArgs args;
-        args.append(button).append(down).append(position);
+        LuaEngine::getGlobal("ApplicationManager");
+        LuaEngine::getTableItem("instance");
+        LuaEngine::getTableItem("click");
+        LuaEngine::pushValueFromIndex(-2);
+        LuaEngine::pushValue(button);
+        LuaEngine::pushValue(down);
+        LuaEngine::getGlobal("Vector3");
+        LuaEngine::pushValue(x);
+        LuaEngine::pushValue(y);
+        LuaEngine::pushValue(z);
+        // after call, vec is on stack
+        LuaEngine::call(3, 1);
+        int numargs = 4;
         if (uniqueId != -1)
         {
             LogicEntityPtr entity = LogicSystem::getLogicEntity(uniqueId);
             if (entity.get())
-                args.append(entity->scriptEntity);
-            else
-                return; // No need to do a click that was on an entity that vanished meanwhile/does not yet exist!
+            {
+                LuaEngine::getRef(entity->luaRef);
+                numargs++;
+            }
+            else return; // No need to do a click that was on an entity that vanished meanwhile/does not yet exist!
         }
-        ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call("click", args);
+        LuaEngine::call(numargs, 0);
+        LuaEngine::pop(2);
     }
 #endif
 

@@ -10,7 +10,6 @@
 #include "client_system.h"
 #include "fpsserver_interface.h"
 #include "world_system.h"
-#include "script_engine_manager.h"
 #include "utility.h"
 #include "fpsclient_interface.h"
 #include "NPC.h"
@@ -127,10 +126,10 @@ float CLogicEntity::getRadius()
 
 void CLogicEntity::setOrigin(vec &newOrigin)
 {
-    ScriptEngineManager::runScript("getEntity(" + Utility::toString(getUniqueId()) + ").position = [" +
+    LuaEngine::runScript("getEntity(" + Utility::toString(getUniqueId()) + ").position = {" +
         Utility::toString(newOrigin.x) + "," +
         Utility::toString(newOrigin.y) + "," +
-        Utility::toString(newOrigin.z) + "]"
+        Utility::toString(newOrigin.z) + "}"
     );
 }
 
@@ -159,7 +158,13 @@ int CLogicEntity::getAnimationFrame()
 
 std::string CLogicEntity::getClass()
 {
-    return scriptEntity->getPropertyString("_class");
+    std::string _class;
+    LuaEngine::getGlobal("tostring");
+    LuaEngine::getRef(luaRef);
+    LuaEngine::call(1, 1);
+    _class = LuaEngine::getString(-1, "Unknown");
+    LuaEngine::pop(1);
+    return _class;
 }
 
 model* CLogicEntity::getModel()
@@ -369,10 +374,10 @@ void LogicSystem::clear()
     Logging::log(Logging::DEBUG, "clear()ing LogicSystem\r\n");
     INDENT_LOG(Logging::DEBUG);
 
-    // Removes existing logic entities, which also removes them from C++
-    if (ScriptEngineManager::hasEngine())
+    if (LuaEngine::exists())
     {
-        ScriptEngineManager::getGlobal()->call("removeAllEntities");
+        LuaEngine::getGlobal("removeAllEntities");
+        LuaEngine::call(0, 0);
         assert(logicEntities.size() == 0);
 
         // For client, remove player logic entity
@@ -380,8 +385,7 @@ void LogicSystem::clear()
             ClientSystem::clearPlayerEntity();
         #endif
 
-        // Destroy the scripting engine, for a blank slate
-        ScriptEngineManager::destroyEngine();
+        LuaEngine::destroy();
     }
 
     PhysicsManager::destroyEngine();
@@ -391,7 +395,7 @@ void LogicSystem::init()
 {
     clear();
 
-    ScriptEngineManager::createEngine();
+    LuaEngine::create();
 
     PhysicsManager::createEngine();
 }
@@ -405,12 +409,14 @@ void LogicSystem::registerLogicEntity(LogicEntityPtr newEntity)
     assert(logicEntities.find(uniqueId) == logicEntities.end());
     logicEntities.insert( LogicEntityMap::value_type( uniqueId, newEntity ) );
 
-    newEntity.get()->scriptEntity = ScriptEngineManager::getGlobal()->call("getEntity", uniqueId);
+    LuaEngine::getGlobal("getEntity");
+    LuaEngine::pushValue(uniqueId);
+    LuaEngine::call(1, 1);
 
-    assert(newEntity.get()->scriptEntity.get()); // Cannot be NULL
-    assert( ! ( newEntity.get()->scriptEntity->compare(ScriptEngineManager::getNull()) ) ); // Cannot be NULL
+    newEntity.get()->luaRef = LuaEngine::ref();
+    LuaEngine::pop(1);
 
-    newEntity.get()->scriptEntity->debugPrint();
+    assert(newEntity.get()->luaRef >= 0);
 
     Logging::log(Logging::DEBUG, "C registerLogicEntity completes\r\n");
 }
@@ -472,10 +478,8 @@ void LogicSystem::unregisterLogicEntity(LogicEntityPtr entity)
 
     logicEntities.erase(uniqueId);
 
-// TODO: Cleanup
-//    if (newEntity.get()->scriptEntity) {
-//        delete newEntity.get()->scriptEntity;
-//    }
+    if (entity.get()->luaRef >= 0)
+        LuaEngine::unref(entity.get()->luaRef);
 }
 
 void LogicSystem::unregisterLogicEntityByUniqueId(int uniqueId)
@@ -489,10 +493,13 @@ void LogicSystem::manageActions(long millis)
     Logging::log(Logging::INFO, "manageActions: %d\r\n", millis);
     INDENT_LOG(Logging::INFO);
 
-    if (ScriptEngineManager::hasEngine())
-        ScriptEngineManager::getGlobal()->call("manageActions",
-            ScriptValueArgs().append(double(millis)/1000.0f).append(lastmillis)
-        );
+    if (LuaEngine::exists())
+    {
+        LuaEngine::getGlobal("manageActions");
+        LuaEngine::pushValue(double(millis) / 1000.0f);
+        LuaEngine::pushValue(lastmillis);
+        LuaEngine::call(2, 0);
+    }
 
     Logging::log(Logging::INFO, "manageActions complete\r\n");
 }
@@ -562,9 +569,11 @@ void LogicSystem::setUniqueId(physent* dynamicEntity, int uniqueId)
     dynamic_cast<fpsent*>(dynamicEntity)->uniqueId = uniqueId;
 }
 
-void LogicSystem::setupExtent(ScriptValuePtr scriptEntity, int type, float x, float y, float z, int attr1, int attr2, int attr3, int attr4)
+void LogicSystem::setupExtent(int ref, int type, float x, float y, float z, int attr1, int attr2, int attr3, int attr4)
 {
-    int uniqueId = scriptEntity->getPropertyInt("uniqueId");
+    LuaEngine::getRef(ref);
+    int uniqueId = LuaEngine::getTableInteger("uniqueId", -1);
+    LuaEngine::pop(1);
 
     Logging::log(Logging::DEBUG, "setupExtent: %d,  %d : %f,%f,%f : %d,%d,%d,%d\r\n", uniqueId, type, x, y, z, attr1, attr2, attr3, attr4);
     INDENT_LOG(Logging::DEBUG);
@@ -596,30 +605,31 @@ void LogicSystem::setupExtent(ScriptValuePtr scriptEntity, int type, float x, fl
     LogicSystem::registerLogicEntity(&e);
 }
 
-void LogicSystem::setupCharacter(ScriptValuePtr scriptEntity)
+void LogicSystem::setupCharacter(int ref)
 {
 //    #ifdef CLIENT
 //        assert(0); // until we figure this out
 //    #endif
 
-    int uniqueId = scriptEntity->getPropertyInt("uniqueId");
+    LuaEngine::getRef(ref);
+    int uniqueId = LuaEngine::getTableInteger("uniqueId", -1);
 
     Logging::log(Logging::DEBUG, "setupCharacter: %d\r\n", uniqueId);
     INDENT_LOG(Logging::DEBUG);
 
     fpsent* fpsEntity;
 
-    int clientNumber = scriptEntity->getPropertyInt("clientNumber");
+    int clientNumber = LuaEngine::getTableInteger("clientNumber", -1);
     Logging::log(Logging::DEBUG, "(a) clientNumber: %d\r\n", clientNumber);
 
     #ifdef CLIENT
         Logging::log(Logging::DEBUG, "client numbers: %d, %d\r\n", ClientSystem::playerNumber, clientNumber);
 
-        if (uniqueId == ClientSystem::uniqueId)
-        {
-            scriptEntity->setProperty("clientNumber", ClientSystem::playerNumber);
-        }
+        if (uniqueId == ClientSystem::uniqueId) LuaEngine::setTable("clientNumber", ClientSystem::playerNumber);
     #endif
+
+    // nothing else will happen with lua table got from ref, so let's pop it out
+    LuaEngine::pop(1);
 
     Logging::log(Logging::DEBUG, "(b) clientNumber: %d\r\n", clientNumber);
 
@@ -654,9 +664,11 @@ void LogicSystem::setupCharacter(ScriptValuePtr scriptEntity)
     LogicSystem::registerLogicEntity(fpsEntity);
 }
 
-void LogicSystem::setupNonSauer(ScriptValuePtr scriptEntity)
+void LogicSystem::setupNonSauer(int ref)
 {
-    int uniqueId = scriptEntity->getPropertyInt("uniqueId");
+    LuaEngine::getRef(ref);
+    int uniqueId = LuaEngine::getTableInteger("uniqueId", -1);
+    LuaEngine::pop(1);
 
     Logging::log(Logging::DEBUG, "setupNonSauer: %d\r\n", uniqueId);
     INDENT_LOG(Logging::DEBUG);
@@ -664,9 +676,11 @@ void LogicSystem::setupNonSauer(ScriptValuePtr scriptEntity)
     LogicSystem::registerLogicEntityNonSauer(uniqueId);
 }
 
-void LogicSystem::dismantleExtent(ScriptValuePtr scriptEntity)
+void LogicSystem::dismantleExtent(int ref)
 {
-    int uniqueId = scriptEntity->getPropertyInt("uniqueId");
+    LuaEngine::getRef(ref);
+    int uniqueId = LuaEngine::getTableInteger("uniqueId", -1);
+    LuaEngine::pop(1);
 
     Logging::log(Logging::DEBUG, "Dismantle extent: %d\r\n", uniqueId);
 
@@ -681,9 +695,11 @@ void LogicSystem::dismantleExtent(ScriptValuePtr scriptEntity)
                                                      // in clearents() in the next load_world.
 }
 
-void LogicSystem::dismantleCharacter(ScriptValuePtr scriptEntity)
+void LogicSystem::dismantleCharacter(int ref)
 {
-    int clientNumber = scriptEntity->getPropertyInt("clientNumber");
+    LuaEngine::getRef(ref);
+    int clientNumber = LuaEngine::getTableInteger("clientNumber", -1);
+    LuaEngine::pop(1);
     #ifdef CLIENT
     if (clientNumber == ClientSystem::playerNumber)
         Logging::log(Logging::DEBUG, "Not dismantling own client\r\n", clientNumber);
