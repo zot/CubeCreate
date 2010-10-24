@@ -42,7 +42,7 @@ std::string LuaEngine::scriptDir = "src/lua/";
 std::string LuaEngine::version   = "0.0";
 bool        LuaEngine::hasState  = false;
 lua_State  *LuaEngine::L         = NULL;
-bool        LuaEngine::runTests  = false; // change to true to run tests
+bool        LuaEngine::runTests  = false; // later set (when setting up embedding)
 
 /////////////////////
 // PRIVATE METHODS //
@@ -68,6 +68,10 @@ void LuaEngine::setupEmbedding()
 {
     if (!exists()) return;
 
+    runTests = Utility::Config::getInt("Logging", "scripting_tests", 1);
+
+    if (runTests) runFile(scriptDir + "__TestingEnvironment.lua");
+
     // setup logging outside CAPI, into its own "namespace".
     // the "namespace" is actually left on stack.
     luaL_register(L, "Logging", (luaL_Reg[]){ { "log", __script__log }, { 0, 0 } });
@@ -82,7 +86,6 @@ void LuaEngine::setupEmbedding()
     pop(1);
 
     // General modules, not relating directly to CubeCreate.
-    setupModule("Exceptions");
     setupModule("LoggingExtras");
     setupModule("Class");
     setupModule("JSON");
@@ -108,6 +111,20 @@ void LuaEngine::setupEmbedding()
     pop(1);
 
     setupModule("engine/CAPIExtras"); // this also sets up other core modules
+    setupModule("engine/Utilities");
+    setupModule("engine/Actions");
+    setupModule("engine/Variables");
+    setupModule("engine/LogicEntity");
+    setupModule("engine/MessageSystem");
+    setupModule("engine/LogicEntityClasses");
+    setupModule("engine/LogicEntityStore");
+    setupModule("engine/ModelAttachments");
+    setupModule("engine/Animatable");
+    setupModule("engine/Character");
+    setupModule("engine/StaticEntity");
+    setupModule("engine/Sound");
+    setupModule("engine/Application");
+    setupModule("engine/Effects");
 }
 
 //////////////////////////////

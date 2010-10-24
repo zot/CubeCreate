@@ -843,20 +843,3 @@ Engine = {
 	getVariable = CAPI.getVariable,
 	setVariable = CAPI.setVariable
 }
-
--- Load rest of core
-
-loadfile("./src/lua/engine/Utilities.lua")()
-loadfile("./src/lua/engine/Actions.lua")()
-loadfile("./src/lua/engine/Variables.lua")()
-loadfile("./src/lua/engine/LogicEntity.lua")()
-loadfile("./src/lua/engine/MessageSystem.lua")()
-loadfile("./src/lua/engine/LogicEntityClasses.lua")()
-loadfile("./src/lua/engine/LogicEntityStore.lua")()
-loadfile("./src/lua/engine/ModelAttachments.lua")()
-loadfile("./src/lua/engine/Animatable.lua")()
-loadfile("./src/lua/engine/Character.lua")()
-loadfile("./src/lua/engine/StaticEntity.lua")()
-loadfile("./src/lua/engine/Sound.lua")()
-loadfile("./src/lua/engine/Application.lua")()
-loadfile("./src/lua/engine/Effects.lua")()
