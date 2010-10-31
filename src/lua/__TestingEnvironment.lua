@@ -115,7 +115,7 @@ Testing.replaceEnvironment = function ()
 	}
 
 	if MessageSystem then
-		saveMessageSystem = MessageSyste
+		saveMessageSystem = MessageSystem
 	else
 		saveMessageSystem = nil
 	end

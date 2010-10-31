@@ -111,7 +111,7 @@ __DummyApplication = class(Application)
 
 function __DummyApplication:init ()
 	log(WARNING, "(init) ApplicationManager.setApplicationClass was not called, this is the DummyApplication running.")
-	self.__parent.init(self)
+	self[Application].init(self)
 end
 
 function __DummyApplication:getPcClass ()
@@ -121,42 +121,42 @@ end
 
 function __DummyApplication:clientOnDisconnect ()
 	log(WARNING, "(clientOnDisconnect) ApplicationManager.setApplicationClass was not called, this is the DummyApplication running.")
-	self.__parent.clientOnDisconnect(self)
+	self[Application].clientOnDisconnect(self)
 end
 
 function __DummyApplication:onEntityOffMap (entity)
 	log(WARNING, "(onEntityOffMap) ApplicationManager.setApplicationClass was not called, this is the DummyApplication running.")
-	self.__parent.onEntityOffMap(self, entity)
+	self[Application].onEntityOffMap(self, entity)
 end
 
 function __DummyApplication:clientOnEntityOffMap (entity)
 	log(WARNING, "(clientOnEntityOffMap) ApplicationManager.setApplicationClass was not called, this is the DummyApplication running.")
-	self.__parent.clientOnEntityOffMap(self, entity)
+	self[Application].clientOnEntityOffMap(self, entity)
 end
 
 function __DummyApplication:onPlayerLogin (player)
 	log(WARNING, "(onPlayerLogin) ApplicationManager.setApplicationClass was not called, this is the DummyApplication running.")
-	self.__parent.onPlayerLogin(self, player)
+	self[Application].onPlayerLogin(self, player)
 end
 
 function __DummyApplication:performClick (...)
 	log(WARNING, "(performClick) ApplicationManager.setApplicationClass was not called, this is the DummyApplication running.")
-	self.__parent.performClick(self, ...)
+	self[Application].performClick(self, ...)
 end
 
 function __DummyApplication:clientClick (...)
 	log(WARNING, "(clientClick) ApplicationManager.setApplicationClass was not called, this is the DummyApplication running.")
-	self.__parent.clientClick(self, ...)
+	self[Application].clientClick(self, ...)
 end
 
 function __DummyApplication:click (...)
 	log(WARNING, "(click) ApplicationManager.setApplicationClass was not called, this is the DummyApplication running.")
-	self.__parent.click(self, ...)
+	self[Application].click(self, ...)
 end
 
 function __DummyApplication:actionKey (index, down)
 	log(WARNING, "(actionKey) ApplicationManager.setApplicationClass was not called, this is the DummyApplication running.")
-	self.__parent.actionKey(self, index, down)
+	self[Application].actionKey(self, index, down)
 end
 
 log(DEBUG, "Setting dummy application")

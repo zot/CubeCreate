@@ -23,7 +23,7 @@ AnimatableLogicEntity.modelName = WrappedCInteger({ cSetter = "CAPI.setModelName
 AnimatableLogicEntity.attachments = WrappedCArray({ cSetter = "CAPI.setAttachments" })
 
 function AnimatableLogicEntity:init (uniqueId, kwargs)
-	self.__parent.init(self, uniqueId, kwargs)
+	if self[LogicEntity].init then self[LogicEntity].init(self, uniqueId, kwargs) end
 	self._attachmentsDict = {}
 	self.modelName = ""
 	self.attachments = {}
@@ -33,7 +33,7 @@ end
 
 function AnimatableLogicEntity:activate (kwargs)
 	log(DEBUG, "Animatable.activate:")
-	self.__parent.activate(self, kwargs)
+	self[LogicEntity].activate(self, kwargs)
 	log(DEBUG, "Animatable.activate (2)")
 	self.modelName = self.modelName -- Workaround
 	log(DEBUG, "Animatable.activate complete")
@@ -70,7 +70,7 @@ function AnimatableLogicEntity:setLocalModelName (modelName)
 end
 
 function AnimatableLogicEntity:_generalSetup (...)
-	self.__parent._generalSetup(self, ...)
+	self[LogicEntity]._generalSetup(self, ...)
 	self.getters['center'] = self.getCenter
 end
 

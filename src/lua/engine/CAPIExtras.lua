@@ -494,11 +494,6 @@ function math.round (num)
 	return math.floor(tonumber(num) + 0.5)
 end
 
--- Lua extensions
-Lua = {
-	getFuncName = CAPI.getFuncName
-}
-
 -- Convert function to callable table.
 function tocalltable (func)
 	return setmetatable({}, { __call = func })

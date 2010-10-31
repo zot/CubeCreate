@@ -11,8 +11,6 @@ luaL_Reg CAPI[] = {
     STDREG(rsh),
     STDREG(bor),
     STDREG(band),
-    // Lua extensions
-    STDREG(getFuncName),
     // Entity management
     STDREG(unregisterLogicEntity),
     STDREG(placeInWorld),

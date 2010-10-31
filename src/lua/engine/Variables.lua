@@ -12,19 +12,7 @@ function Variable:__toString ()
 end
 
 function isVariable (v)
-	if not v.__parent then
-		return (tostring(v) == "Variable")
-	else
-		local orig = v.__parent
-		while orig do
-			if not orig.__parent then
-				return (orig == Variable)
-			else
-				orig = orig.__parent
-			end
-		end
-	end
-	return false
+	return is_a(v, Variable)
 end
 
 ------------------------------------------------
@@ -486,11 +474,11 @@ WrappedCVariable = {
 		kwargs.cGetter = nil
 		kwargs.cSetter = nil
 
-		self.__parent.__user_init(self, kwargs)
+		self[StateVariable].__user_init(self, kwargs)
 	end,
 
 	_register = function (self, _name, parent)
-		self.__parent._register(self, _name, parent)
+		self[StateVariable]._register(self, name, parent)
 
 		self.cGetter = self.cGetterRaw
 		self.cSetter = self.cSetterRaw
@@ -542,7 +530,7 @@ WrappedCVariable = {
 			return value
 		else
 			log(INFO, "WCV getter: fallback to stateData since " .. tostring(variable.cGetter))
-			return self.__parent.getter(self, variable)
+			return self[StateVariable].getter(self, variable)
 		end
 	end
 }
@@ -615,7 +603,7 @@ Vector3Surrogate.setters = {
 }
 
 function Vector3Surrogate:__init (entity, variable)
-	self.__parent.__user_init(self, entity, variable)
+	self[ArraySurrogate].__user_init(self, entity, variable)
 
 	self.entity = entity
 	self.variable = variable

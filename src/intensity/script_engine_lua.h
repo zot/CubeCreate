@@ -135,14 +135,6 @@ class LuaEngine
      */
     static std::string getString(int idx, std::string def = std::string());
     /**
-     * @brief Get name of function on stack.
-     * @param idx The position of function on stack.
-     * @return The string containing name of function present on stack in @p idx.
-     * 
-     * Gets name of function present on stack in @p idx, returning it as string.
-     */
-    static std::string getName(int idx);
-    /**
      * @brief Get item from stack.
      * @param idx The position of item on stack.
      * @return The CLogicEntity pointer based on its scripting equivalent on stack in @p idx.
@@ -634,8 +626,9 @@ class LuaEngine
     /* Setup a library module
      * 
      * Executes a file being a "module" for lua base library from scriptDir.
+     * Optionally, you can specify if to run tests for the module.
      */
-    static void setupModule(std::string file);
+    static void setupModule(std::string file, bool noTests = false);
     /* Setup script embedding
      * 
      * Exposes functions into Lua and initializes base library modules.

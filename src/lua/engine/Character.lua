@@ -60,7 +60,7 @@ end
 function Character:init (uniqueId, kwargs)
 	log(DEBUG, "Character.init")
 
-	self.__parent.init(self, uniqueId, kwargs)
+	self[AnimatableLogicEntity].init(self, uniqueId, kwargs)
 
 	self._name = "-?-"
 
@@ -84,7 +84,7 @@ function Character:activate (kwargs)
 
 	CAPI.setupCharacter(self)
 
-	self.__parent.activate(self, kwargs)
+	self[AnimatableLogicEntity].activate(self, kwargs)
 
 	self:_flushQueuedStateVariableChanges()
 
@@ -92,7 +92,7 @@ function Character:activate (kwargs)
 end
 
 function Character:clientActivate (kwargs)
-	self.__parent.clientActivate(self, kwargs)
+	self[AnimatableLogicEntity].clientActivate(self, kwargs)
 
 	self.clientNumber = sif(kwargs, sif(kwargs.clientNumber, kwargs.clientNumber, -1), -1)
 
@@ -103,19 +103,19 @@ end
 
 function Character:deactivate ()
 	CAPI.dismantleCharacter(self)
-	self.__parent.deactivate(self)
+	self[AnimatableLogicEntity].deactivate(self)
 end
 
 function Character:clientDeactivate ()
 	CAPI.dismantleCharacter(self)
-	self.__parent.clientDeactivate(self)
+	self[AnimatableLogicEntity].clientDeactivate(self)
 end
 
 function Character:act (seconds)
 	if self.actionSystem:isEmpty() then
 		self:defaultAction(seconds)
 	else
-		self.__parent.act(self, seconds)
+		self[AnimatableLogicEntity].act(self, seconds)
 	end
 end
 
@@ -243,14 +243,14 @@ Player.HUDModelName = StateString()
 
 function Player:init (uniqueId, kwargs)
 	log(DEBUG, "Player.init")
-	self.__parent.init(self, uniqueId, kwargs)
+	self[Character].init(self, uniqueId, kwargs)
 
 	self._canEdit = false
 	self.HUDModelName = ""
 end
 
 function Player:clientActivate (kwargs)
-	self.__parent.clientActivate (self, kwargs)
+	self[Character].clientActivate (self, kwargs)
 end
 
 ------------------------------------------------

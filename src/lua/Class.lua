@@ -1,5 +1,5 @@
 -- Class implementation taken from here http://luaforge.net/projects/luamiclasses/
--- added easy parents by CubeCreate
+-- with modifications by CubeCreate devs
 -- Public domain
 --
 -- unclasslib.lua 2.03
@@ -261,16 +261,25 @@ function class_mt:is_a(class)
 end
 
 --[[
-	Factory-supplied constructor, calls the user-supplied constructor if any,
-	then calls the constructors of the bases to initialize those that were
-	not initialized before. Objects are initialized exactly once.
+	Factory-supplied constructor, modified for CubeCreate needs
+	If it finds user constructor for class, run it. If not, run the one of base class
+	If base class doesn't have one, run one from base class of base class
+	Check that way till we go to original class. If even original class doesn't have
+	a contructor, then run none.
 ]]
 
 function class_mt:__init(...)
 	if self.__initialized then return end
-	if self.__user_init then self:__user_init(...) end
-	for i, base in ipairs(self.__bases) do
-		self[base]:__init(...)
+	if self.__user_init then
+		self:__user_init(...)
+	else
+		local base = self.__bases[1]
+		while base and not base.__user_init do
+			base = base.__bases[1]
+		end
+		if base and base.__user_init then
+			base.__user_init(self, ...)
+		end
 	end
 	self.__initialized = true
 end
@@ -318,22 +327,6 @@ function class(...)
 	}
 	c.__class = c
 	c.__index = c
-
-	-- CubeCreate: set __parent for easy getting :)
-	if arg[1] then
-		if arg[1].__type == "share" then
-			c.__parent = arg[1].__class
-		else
-			c.__parent = arg[1]
-		end
-	else
-		c.__parent = nil
-	end
-
-	-- CubeCreate: set __user_init to the one from parent (if exists)
-	if c.__parent and c.__parent.__user_init then
-		class_mt.__user_init = c.__parent.__user_init
-	end
 
 	-- Repository of inherited attributes
 	local inherited = {}
@@ -439,15 +432,14 @@ function shared(class)
 end
 
 --[[
-	CubeCreate - loop parents and run function for every parent
+	CubeCreate - loop bases and run function for every base
 	unless conditional function returns something
 ]]
 
-function loopParents(class, func, cond)
-	local parent = class.__parent()
-
-	while not cond(parent) do
-		func(parent)
-		parent = parent.__parent()
+function loopBases(class, func, cond)
+	local base = class.__bases[1]
+	while base and not cond(base) do
+		func(base)
+		base = base.__bases[1]
 	end
 end

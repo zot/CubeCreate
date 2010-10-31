@@ -31,7 +31,7 @@ MessageSystem = {
 
 		if server then table.insert(args, 1, clientNumber) end
 
-		log(DEBUG, string.format("Scripting MessageSystem: Sending %s with [%s]", sif(Lua.getFuncName(messageType), Lua.getFuncName(messageType), "unknown"), table.concat(args, ",")))
+		log(DEBUG, string.format("Scripting MessageSystem: Sending %s with [%s]", tostring(messageType), table.concat(args, ",")))
 
 		messageType(unpack(args))
 	end,

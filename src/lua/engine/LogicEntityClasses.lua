@@ -5,7 +5,7 @@ function registerEntityClass (_class, sauerType)
 	log(DEBUG, string.format("Registering LE class: %s", _className))
 
 	if not sauerType then
-		loopParents(
+		loopBases(
 			_class,
 			function (parentClass)
 				local parentClassName = tostring(parentClass)

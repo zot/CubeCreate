@@ -23,7 +23,7 @@ function StaticEntity:init (uniqueId, kwargs)
 	kwargs = defaultValue(kwargs, {})
 	kwargs._persistent = true
 
-	self.__parent.init(self, uniqueId, kwargs)
+	self[AnimatableLogicEntity].init(self, uniqueId, kwargs)
 
 	if not kwargs or not kwargs.position then
 		self.position = { 511, 512, 513 }
@@ -39,9 +39,9 @@ end
 function StaticEntity:activate (kwargs)
 	kwargs = defaultValue(kwargs, {})
 
-	log(DEBUG, string.format("%i SE: self.__parent.activate() %s", self.uniqueId, encodeJSON(kwargs)))
+	log(DEBUG, string.format("%i SE: self[AnimatableLogicEntity].activate() %s", self.uniqueId, encodeJSON(kwargs)))
 
-	self.__parent.activate(self, kwargs)
+	self[AnimatableLogicEntity].activate(self, kwargs)
 
 	if not kwargs._type then
 		kwargs._type = self._sauerTypeIndex
@@ -80,7 +80,7 @@ end
 
 function StaticEntity:deactivate ()
 	CAPI.dismantleExtent(self)
-	self.__parent.deactivate(self)
+	self[AnimatableLogicEntity].deactivate(self)
 end
 
 function StaticEntity:clientActivate (kwargs)
@@ -96,12 +96,12 @@ function StaticEntity:clientActivate (kwargs)
 	end
 
 	CAPI.setupExtent(self, kwargs._type, kwargs.x, kwargs.y, kwargs.z, kwargs.attr1, kwargs.attr2, kwargs.attr3, kwargs.attr4)
-	self.__parent.clientActivate(self, kwargs)
+	self[AnimatableLogicEntity].clientActivate(self, kwargs)
 end
 
 function StaticEntity:clientDeactivate ()
 	CAPI.dismantleExtent(self)
-	self.__parent.clientDeactivate(self)
+	self[AnimatableLogicEntity].clientDeactivate(self)
 end
 
 function StaticEntity:sendCompleteNotification (clientNumber)
@@ -149,7 +149,7 @@ Light.green = VariableAlias("attr3")
 Light.blue = VariableAlias("attr4")
 
 function Light:init (uniqueId, kwargs)
-	self.__parent.init(self, uniqueId, kwargs)
+	self[StaticEntity].init(self, uniqueId, kwargs)
 
 	self.radius = 100
 	self.red = 128
@@ -170,7 +170,7 @@ Spotlight.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.s
 Spotlight.radius = VariableAlias("attr1")
 
 function Spotlight:init (uniqueId, kwargs)
-	self.__parent.init(self, uniqueId, kwargs)
+	self[StaticEntity].init(self, uniqueId, kwargs)
 	self.radius = 90
 end
 
@@ -187,7 +187,7 @@ Envmap.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setA
 Envmap.radius = VariableAlias("attr1")
 
 function Envmap:init (uniqueId, kwargs)
-	self.__parent.init(self, uniqueId, kwargs)
+	self[StaticEntity].init(self, uniqueId, kwargs)
 	self.radius = 128
 end
 
@@ -212,7 +212,7 @@ SoundEffect.size = VariableAlias("attr3")
 SoundEffect.volume = VariableAlias("attr4")
 
 function SoundEffect:init (uniqueId, kwargs)
-	self.__parent.init(self, uniqueId, kwargs)
+	self[StaticEntity].init(self, uniqueId, kwargs)
 
 	self.attr1 = -1
 	self.radius = 100
@@ -242,7 +242,7 @@ ParticleEffect.value2 = VariableAlias("attr3")
 ParticleEffect.value3 = VariableAlias("attr4")
 
 function ParticleEffect:init (uniqueId, kwargs)
-	self.__parent.init(self, uniqueId, kwargs)
+	self[StaticEntity].init(self, uniqueId, kwargs)
 
 	self.particleType = 0
 	self.value1 = 0
@@ -269,7 +269,7 @@ Mapmodel.collisionRadiusHeight = WrappedCInteger({ cGetter = "CAPI.getCollisionR
 function Mapmodel:init (uniqueId, kwargs)
 	log(DEBUG, "Mapmodel.init")
 
-	self.__parent.init(self, uniqueId, kwargs)
+	self[StaticEntity].init(self, uniqueId, kwargs)
 
 	self.attr2 = -1
 	self.yaw = 0
@@ -281,7 +281,7 @@ function Mapmodel:init (uniqueId, kwargs)
 end
 
 function Mapmodel:clientActivate (kwargs)
-	self.__parent.clientActivate (self, kwargs)
+	self[StaticEntity].clientActivate (self, kwargs)
 	self.defaultAnimation = CMath.bor(ANIM_TRIGGER, ANIM_START)
 end
 
@@ -297,7 +297,7 @@ function Mapmodel:getCenter ()
 		ret.z = ret.z + self.collisionRadiusHeight
 		return ret
 	else
-		return self.__parent.getCenter(self)
+		return self[StaticEntity].getCenter(self)
 	end
 end
 
@@ -312,7 +312,7 @@ end
 AreaTrigger.scriptToRun = StateString()
 
 function AreaTrigger:init (uniqueId, kwargs)
-	self.__parent.init(self, uniqueId, kwargs)
+	self[Mapmodel].init(self, uniqueId, kwargs)
 
 	self.scriptToRun = ""
 	self.collisionRadiusWidth = 10
@@ -338,12 +338,12 @@ function ResettableAreaTrigger:__tostring ()
 end
 
 function ResettableAreaTrigger:activate (kwargs)
-	self.__parent.activate(self, kwargs)
+	self[AreaTrigger].activate(self, kwargs)
 	self:reset()
 end
 
 function ResettableAreaTrigger:clientActivate (kwargs)
-	self.__parent.clientActivate(self, kwargs)
+	self[AreaTrigger].clientActivate(self, kwargs)
 	self:reset()
 end
 
@@ -351,7 +351,7 @@ function ResettableAreaTrigger:onCollision (collider)
 	if self.readyToTrigger then
 		self.readyToTrigger = false
 		if self.scriptToRun ~= "" then
-			self.__parent.onCollision(self, collider)
+			self[AreaTrigger].onCollision(self, collider)
 		else
 			self:onTrigger(collider)
 		end
@@ -362,7 +362,7 @@ function ResettableAreaTrigger:clientOnCollision (collider)
 	if self.readyToTrigger then
 		self.readyToTrigger = false
 		if self.scriptToRun ~= "" then
-			self.__parent.clientOnCollision(self, collider)
+			self[AreaTrigger].clientOnCollision(self, collider)
 		else
 			self:clientOnTrigger(collider)
 		end
@@ -395,7 +395,7 @@ end
 TrigerredAction = class(Action)
 
 function TrigerredAction:init (_reverse)
-	self.__parent.init(self, _reverse)
+	self[Action].init(self, _reverse)
 
 	self.secondsLeft = 1.0
 	if _reverse then

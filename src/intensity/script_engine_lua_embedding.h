@@ -75,12 +75,6 @@ LUA_EMBED_NOPARAM(band, 1, {
     LuaEngine::pushValue(out);
 });
 
-// Lua extensions
-LUA_EMBED_NOPARAM(getFuncName, 1, {
-    if (!LuaEngine::getName(1).empty()) LuaEngine::pushValue(LuaEngine::getName(1));
-    else LuaEngine::pushValue();
-});
-
 // Entity management
 
 //LUA_EMBED_i(registerLogicEntityNonSauer, 0, {

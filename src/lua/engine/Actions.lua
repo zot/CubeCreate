@@ -173,7 +173,7 @@ TargetedAction = class(Action)
 TargetedAction._name = "TargetedAction"
 
 function TargetedAction:__init (target, kwargs)
-	self.__parent.__user_init(self, kwargs)
+	self[Action].__user_init(self, kwargs)
 	self.target = target
 end
 
@@ -183,7 +183,7 @@ SingleCommandAction = class(Action)
 SingleCommandAction._name = "SingleCommandAction"
 
 function SingleCommandAction:__init (command, kwargs)
-	self.__parent.__user_init(self, kwargs)
+	self[Action].__user_init(self, kwargs)
 	self.command = command
 end
 

@@ -58,10 +58,10 @@ void LuaEngine::initLibs()
     luaopen_math(L);
 }
 
-void LuaEngine::setupModule(std::string file)
+void LuaEngine::setupModule(std::string file, bool noTests)
 {
     runFile(scriptDir + file + ".lua");
-    if (runTests) runFile(scriptDir + file + "__test.lua");
+    if (runTests && !noTests) runFile(scriptDir + file + "__test.lua");
 }
 
 void LuaEngine::setupEmbedding()
@@ -110,7 +110,7 @@ void LuaEngine::setupEmbedding()
     luaL_register(L, "CAPI", CAPI);
     pop(1);
 
-    setupModule("engine/CAPIExtras"); // this also sets up other core modules
+    setupModule("engine/CAPIExtras", true); // this also sets up other core modules
     setupModule("engine/Utilities");
     setupModule("engine/Actions");
     setupModule("engine/Variables");
@@ -229,19 +229,6 @@ std::string LuaEngine::getString(int idx, std::string def)
 {
     if (!exists()) return std::string();
     return std::string(luaL_optstring(L, idx, def.c_str()));
-}
-
-// TODO: finish this
-std::string LuaEngine::getName(int idx)
-{
-    if (!exists()) return std::string();
-    lua_Debug ar;
-    if (lua_getstack(L, 0, &ar))
-    {
-        lua_getinfo(L, "n", &ar);
-        if (ar.name) return std::string(ar.name);
-    }
-    return std::string();
 }
 
 LogicEntityPtr LuaEngine::getCLogicEntity(int idx)
@@ -413,22 +400,11 @@ void LuaEngine::typerror(int narg, std::string tname)
     error(std::string(buf));
 }
 
-// TODO: finish this
 std::string LuaEngine::getError()
 {
-    if (!exists()) return std::string();
-    lua_Debug ar;
-    if (lua_getstack(L, 0, &ar))
-    {
-        lua_getinfo(L, "Snl", &ar);
-        if (ar.currentline > 0)
-        {
-            defformatstring(buf)("%s:%s:%d: ERROR in %s (%s)", ar.what, ar.short_src, ar.currentline, ar.name, ar.namewhat);
-            return std::string(buf);
-        }
-        return "unknown error";
-    }
-    return "unknown error";
+    std::string err = getString(-1);
+    if (err.empty()) return "Unknown error from Lua";
+    else return err;
 }
 
 int LuaEngine::gettop()
