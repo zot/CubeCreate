@@ -6,11 +6,7 @@ Testing = {}
 Testing.replaceEnvironment = function ()
 	__entitiesStore = {}
 
-	if CAPI then
-		saveCAPI = CAPI
-	else
-		saveCAPI = nil
-	end
+	saveCAPI = CAPI
 
 	CAPI = {
 		feedback = {},
@@ -114,11 +110,7 @@ Testing.replaceEnvironment = function ()
 		end
 	}
 
-	if MessageSystem then
-		saveMessageSystem = MessageSystem
-	else
-		saveMessageSystem = nil
-	end
+	saveMessageSystem = MessageSystem
 
 	MessageSystem = {
 		feedback = {},

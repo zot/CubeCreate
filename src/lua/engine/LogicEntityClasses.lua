@@ -1,7 +1,7 @@
 _logicEntityClasses = {}
 
 function registerEntityClass (_class, sauerType)
-	local _className = tostring(_class)
+	local _className = _class:__tostring()
 	log(DEBUG, string.format("Registering LE class: %s", _className))
 
 	if not sauerType then
@@ -26,7 +26,7 @@ function registerEntityClass (_class, sauerType)
 	local stateVariableNames = {}
 
 	local inst = _class()
-	local _names = table.keys(inst)
+	local _names = table.keys(_class)
 	for i = 1, table.maxn(_names) do
 		local variable = inst[ _names[i] ]
 		log(INFO, string.format("Considering %s -- %s", _names[i], type(variable)))
@@ -36,7 +36,7 @@ function registerEntityClass (_class, sauerType)
 		end
 	end
 
-	log(DEBUG, string.format("Generating protocol data for %s", tostring(stateVariableNames)))
+	log(DEBUG, string.format("Generating protocol data for %s", table.concat(stateVariableNames, ",")))
 
 	MessageSystem.generateProtocolData(_className, stateVariableNames)
 

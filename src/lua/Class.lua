@@ -419,6 +419,15 @@ function class(...)
 	c.__inherited = inherited
 	c.__from = from
 
+	-- CubeCreate: copy over contents of the base
+	if c.__bases[1] then
+		for k, v in pairs(c.__bases[1]) do
+			if type(v) == "function" and k ~= "__user_init" and k ~= "__tostring" then
+				c[k] = v
+			end
+		end
+	end
+
 	return c
 end
 

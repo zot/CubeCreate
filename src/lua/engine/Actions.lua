@@ -50,7 +50,7 @@ ANIM_RAGDOLL = CMath.lsh(1, 27)
 -------------------------------------------
 
 Action = class()
-Action._name = "OVERRIDETHIS"
+function Action:__tostring () return "OVERRIDETHIS" end
 
 function Action:__init (kwargs)
 	if not kwargs then
@@ -76,13 +76,13 @@ function Action:__init (kwargs)
 	end
 
 	if not self.parallelTo then
-		self.parallelTo = defaultValue(kwargs, parallelTo, nil)
+		self.parallelTo = defaultValue(kwargs.parallelTo, nil)
 	end
 end
 
 function Action:start ()
 	self.begun = true
-	self.doStart()
+	self:doStart()
 end
 
 function Action:doStart ()
@@ -90,12 +90,12 @@ end
 
 function Action:execute (seconds)
 	if self.actor and self.actor.deactivated then
-		self.finish()
+		self:finish()
 		return true
 	end
 
 	if not self.begun then
-		self.start()
+		self:start()
 
 		if self.animation then
 			self.lastAnimation = self.actor.animation
@@ -106,12 +106,12 @@ function Action:execute (seconds)
 	end
 
 	if not self.parallelTo then
-		log(INFO, string.format("Executing action %s", self._name))
+		log(INFO, string.format("Executing action %s", tostring(self)))
 
-		local finished = self.doExecute(seconds)
+		local finished = self:doExecute(seconds)
 		assert(finished == true or finished == false)
 		if finished then
-			self.finish()
+			self:finish()
 		end
 
 		log(INFO, string.format("				   ...finished: %s", tostring(finished)))
@@ -120,7 +120,7 @@ function Action:execute (seconds)
 	else
 		if self.parallelTo.finished then
 			self.parallelTo = nil
-			self.finish()
+			self:finish()
 			return true
 		else
 			return false
@@ -146,7 +146,7 @@ function Action:finish ()
 		end
 	end
 
-	self.doFinish()
+	self:doFinish()
 end
 
 function Action:doFinish ()
@@ -154,14 +154,14 @@ end
 
 function Action:cancel ()
 	if self.canBeCancelled then
-		self.finish()
+		self:finish()
 	end
 end
 
 -------------------------------------------
 
 NeverEndingAction = class(Action)
-NeverEndingAction._name = "NeverEndingAction"
+function NeverEndingAction:__tostring () return "NeverEndingAction" end
 
 function NeverEndingAction:doExecute (seconds)
 	return false
@@ -170,7 +170,7 @@ end
 -------------------------------------------
 
 TargetedAction = class(Action)
-TargetedAction._name = "TargetedAction"
+function TargetedAction:__tostring () return "TargetedAction" end
 
 function TargetedAction:__init (target, kwargs)
 	self[Action].__user_init(self, kwargs)
@@ -180,7 +180,7 @@ end
 -------------------------------------------
 
 SingleCommandAction = class(Action)
-SingleCommandAction._name = "SingleCommandAction"
+function SingleCommandAction:__tostring () return "SingleCommandAction" end
 
 function SingleCommandAction:__init (command, kwargs)
 	self[Action].__user_init(self, kwargs)
@@ -188,7 +188,7 @@ function SingleCommandAction:__init (command, kwargs)
 end
 
 function SingleCommandAction:doExecute (seconds)
-	self.command()
+	self:command()
 	return true
 end
 
@@ -217,8 +217,8 @@ function ActionSystem:manageActions (seconds)
 		self.actionList = tempList
 
 		if table.maxn(self.actionList) > 0 then
-			log(INFO, string.format("Executing %s", self.actionList[1]._name))
-			if self.actionList[1].execute(seconds) then
+			log(INFO, string.format("Executing %s", tostring(self.actionList[1])))
+			if self.actionList[1]:execute(seconds) then
 				table.remove(self.actionList, 1)
 			end
 		end
@@ -227,7 +227,7 @@ end
 
 function ActionSystem:clear ()
 	for i = 1, table.maxn(self.actionList) do
-		self.actionList[i].cancel()
+		self.actionList[i]:cancel()
 	end
 end
 
@@ -236,8 +236,8 @@ function ActionSystem:queue (action)
 		local multiple = false
 
 		for i = 1, table.maxn(self.actionList) do
-			if self.actionList[i]._name == action._name then
-				log(WARNING, string.format("Trying to multiply queue %s, but that isn't allowed\r\n", action._name))
+			if tostring(self.actionList[i]) == tostring(action) then
+				log(WARNING, string.format("Trying to multiply queue %s, but that isn't allowed\r\n", tostring(action)))
 				multiple = true
 				break
 			end
@@ -256,6 +256,6 @@ function ActionSystem:getAnimationFrame ()
 	if table.maxn(self.actionList) == 0 then
 		return 0
 	else
-		return self.actionList[1].getAnimationFrame()
+		return self.actionList[1]:getAnimationFrame()
 	end
 end
