@@ -71,7 +71,7 @@ end
 
 function AnimatableLogicEntity:_generalSetup (...)
 	self[LogicEntity]._generalSetup(self, ...)
-	self.getters['center'] = self.getCenter
+	self:__defineGetter("center", self.getCenter)
 end
 
 LocalAnimationAction = class(Action)

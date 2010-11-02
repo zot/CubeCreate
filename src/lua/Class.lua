@@ -312,6 +312,7 @@ end
 --[[
 	Create a class by calling class(...). 
 	Arguments are the classes or shared classes to be derived from.
+	Modified by CubeCreate
 ]]
 
 function class(...)
@@ -319,11 +320,16 @@ function class(...)
 	local arg = {...}
 
 	-- Create a new class
+	-- CubeCreate: add a few more tables
 	local c =
 	{
 		__type = 'class',
 		__bases = {},
-		__shared = {}
+		__shared = {},
+		__getters = {},
+		__setters = {},
+		__gselfs = {},
+		__sselfs = {},
 	}
 	c.__class = c
 	c.__index = c
@@ -419,10 +425,61 @@ function class(...)
 	c.__inherited = inherited
 	c.__from = from
 
+	-- CubeCreate: add default __get, __set, methods for defining getters and setters
+	-- They get overrided from base class if possible
+	-- __itemConditional is used to limit getters and setters - it gets current key of
+	-- item to set or get; and if function returns true, it passes, otherwise it doesn't.
+	function c:__itemConditional (i) return true end
+
+	function c:__get (i)
+		if not self:__itemConditional(i) then return nil end
+		if self.__getters[i] then
+			if self.__gselfs[i] then
+				return self.__getters[i](self.__gselfs[i])
+			else
+				return self.__getters[i](self)
+			end
+		end
+
+		return nil
+	end
+
+	function c:__set (i, v)
+		if not self:__itemConditional(i) then return true end
+		if self.__setters[i] then
+			if self.__sselfs[i] then
+				return self.__setters[i](self.__sselfs[i], v)
+			else
+				return self.__setters[i](self, v)
+			end
+		else
+			rawset(self, i, v) -- set all normally when it's standard item
+		end
+
+		return true -- always return true, don't care about what's set
+	end
+
+	function c:__defineGetter(k, v, o)
+		self.__getters[k] = v
+		if o then self.__gselfs[k] = o end
+	end
+
+	function c:__defineSetter(k, v, o)
+		self.__setters[k] = v
+		if o then self.__sselfs[k] = o end
+	end
+
 	-- CubeCreate: copy over contents of the base
 	if c.__bases[1] then
 		for k, v in pairs(c.__bases[1]) do
-			if type(v) == "function" and k ~= "__user_init" and k ~= "__tostring" then
+			if type(v) == "function" and
+				k ~= "__user_init" and
+				k ~= "__tostring" and
+				k ~= "__defineGetter" and
+				k ~= "__defineSetter" and
+				k ~= "__index" and
+				k ~= "__newindex"
+			then
 				c[k] = v
 			end
 		end

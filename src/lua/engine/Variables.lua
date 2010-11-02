@@ -72,16 +72,12 @@ function StateVariable:_register (_name, parent)
 	log(INFO, string.format("Setting up setter/getter for %s", _name))
 	assert(self.getter)
 	assert(self.setter)
-	parent.getters[_name] = self.getter
-	parent.setters[_name] = self.setter
-	parent.getterself[_name] = self
-	parent.setterself[_name] = self
+	self:__defineGetter(_name, self.getter, self)
+	self:__defineSetter(_name, self.getter, self)
 	if self.altName then
 		parent[__SV_PREFIX .. self.altName] = self
-		parent.getters[self.altName] = self.getter
-		parent.setters[self.altName] = self.setter
-		parent.getterself[self.altName] = self
-		parent.setterself[self.altName] = self
+		self:__defineGetter(self.altName, self.getter, self)
+		self:__defineSetter(self.altName, self.getter, self)
 	end
 end
 
@@ -454,10 +450,8 @@ function VariableAlias:_register (_name, parent)
 	local target = parent[__SV_PREFIX .. self.targetName]
 	parent[__SV_PREFIX .. _name] = target
 
-	parent.getters[_name] = target.getter
-	parent.setters[_name] = target.setter
-	parent.getterself[_name] = target
-	parent.setterself[_name] = target
+	self:__defineGetter(_name, target.getter, target)
+	self:__defineSetter(_name, target.getter, target)
 
 	assert(not self.altName)
 end
@@ -591,18 +585,15 @@ table.merge(WrappedCArray, {
 ------------------------------------------------
 
 local Vector3Surrogate = class(ArraySurrogate)
-Vector3Surrogate.getters = {
-	x = function() return self:get(1) end,
-	y = function() return self:get(2) end,
-	z = function() return self:get(3) end
-}
-Vector3Surrogate.setters = {
-	x = function(v) self:set(1, v) return true end,
-	y = function(v) self:set(2, v) return true end,
-	z = function(v) self:set(3, v) return true end
-}
 
 function Vector3Surrogate:__init (entity, variable)
+	self:__defineGetter("x", function(self) return self:get(1) end)
+	self:__defineGetter("y", function(self) return self:get(2) end)
+	self:__defineGetter("z", function(self) return self:get(3) end)
+	self:__defineSetter("x", function(self, v) self:set(1, v) return true end)
+	self:__defineSetter("y", function(self, v) self:set(2, v) return true end)
+	self:__defineSetter("z", function(self, v) self:set(3, v) return true end)
+
 	self[ArraySurrogate].__user_init(self, entity, variable)
 
 	self.entity = entity
@@ -612,22 +603,6 @@ end
 
 function Vector3Surrogate:__tostring ()
 	return "Vector3Surrogate"
-end
-
-function Vector3Surrogate:__get (i)
-	if self.getters[i] then
-		return self.getters[i]()
-	end
-
-	return nil
-end
-
-function Vector3Surrogate:__set (i, v)
-	if self.setters[i] then
-		return self.setters[i](v)
-	end
-
-	return true -- always return true, don't care about what's set
 end
 
 function Vector3Surrogate:length ()

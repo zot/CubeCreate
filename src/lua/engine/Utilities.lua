@@ -38,35 +38,17 @@ end
 -------------------------------
 
 Vector3 = class()
-Vector3.storage = { 0, 0, 0 }
 
 function Vector3:__tostring ()
 	return "Vector3"
 end
 
-function Vector3:__get (i)
-	if i == "x" or i == 1 then
-		return self.storage[1]
-	elseif i == "y" or i == 2 then
-		return self.storage[2]
-	elseif i == "z" or i == 3 then
-		return self.storage[3]
-	elseif i == "length" then
-		return 3
+function Vector3:__itemConditional(key)
+	if key == "x" or key == "y" or key == "z" or key == "length" then
+		return true
 	else
-		return nil
+		return false
 	end
-end
-
-function Vector3:__set (i, v)
-	if i == "x" or i == 1 then
-		self.storage[1] = v
-	elseif i == "y" or i == 2 then
-		self.storage[2] = v
-	elseif i == "z" or i == 3 then
-		self.storage[3] = v
-	end
-	return true -- always return true
 end
 
 function Vector3:__init (x, y, z)
@@ -86,6 +68,7 @@ function Vector3:__init (x, y, z)
 		self.y = tonumber(y)
 		self.z = tonumber(z)
 	end
+	self.length = 3
 end
 
 function Vector3:magnitude ()
@@ -218,39 +201,17 @@ Vector3.zero = Vector3(0, 0, 0)
 -------------------------------
 
 Vector4 = class(Vector3)
-Vector4.storage = { 0, 0, 0, 0 }
 
 function Vector4:__tostring ()
 	return "Vector4"
 end
 
-function Vector4:__get (i)
-	if i == "x" or i == 1 then
-		return self.storage[1]
-	elseif i == "y" or i == 2 then
-		return self.storage[2]
-	elseif i == "z" or i == 3 then
-		return self.storage[3]
-	elseif i == "w" or i == 4 then
-		return self.storage[4]
-	elseif i == "length" then
-		return 4
+function Vector4:__itemConditional(key)
+	if key == "x" or key == "y" or key == "z" or key == "w" or key == "length" then
+		return true
 	else
-		return nil
+		return false
 	end
-end
-
-function Vector4:__set (i, v)
-	if i == "x" or i == 1 then
-		self.storage[1] = v
-	elseif i == "y" or i == 2 then
-		self.storage[2] = v
-	elseif i == "z" or i == 3 then
-		self.storage[3] = v
-	elseif i == "w" or i == 4 then
-		self.storage[4] = v
-	end
-	return true -- always return true
 end
 
 function Vector4:__init (x, y, z, w)
@@ -274,6 +235,7 @@ function Vector4:__init (x, y, z, w)
 		self.z = tonumber(z)
 		self.w = tonumber(w)
 	end
+	self.length = 4
 end
 
 function Vector4:toString ()

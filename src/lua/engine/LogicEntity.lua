@@ -4,11 +4,6 @@ log(DEBUG, string.format("Generating LogicEntity system with CLIENT = %s", tostr
 
 RootLogicEntity = class()
 
-RootLogicEntity.getters = {}
-RootLogicEntity.setters = {}
-RootLogicEntity.getterself = {}
-RootLogicEntity.setterself = {}
-
 function RootLogicEntity:__tostring()
 	return "LogicEntity"
 end
@@ -16,30 +11,6 @@ end
 RootLogicEntity.shouldAct = true
 RootLogicEntity.tags = StateArray()
 RootLogicEntity._persistent = StateBoolean()
-
-function RootLogicEntity:__get (i)
-	if self.getters[i] then
-		if self.getterself[i] then
-			return self.getters[i](self.getterself)
-		else
-			return self.getters[i](self)
-		end
-	end
-
-	return nil
-end
-
-function RootLogicEntity:__set (i, v)
-	if self.setters[i] then
-		if self.setterself[i] then
-			return self.setters[i](self.setterself, v)
-		else
-			return self.setters[i](self, v)
-		end
-	end
-
-	return true -- always return true, don't care about what's set
-end
 
 function RootLogicEntity:_generalSetup ()
 	log(DEBUG, "RootLogicEntity._generalSetup")
