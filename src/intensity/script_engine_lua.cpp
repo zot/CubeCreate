@@ -113,11 +113,11 @@ void LuaEngine::setupEmbedding()
     setupModule("engine/CAPIExtras", true); // this also sets up other core modules
     setupModule("engine/Utilities");
     setupModule("engine/Actions");
+    setupModule("engine/LogicEntityStore");
     setupModule("engine/Variables");
     setupModule("engine/LogicEntity");
     setupModule("engine/MessageSystem");
     setupModule("engine/LogicEntityClasses");
-    setupModule("engine/LogicEntityStore");
     setupModule("engine/ModelAttachments");
     setupModule("engine/Animatable");
     setupModule("engine/Character");

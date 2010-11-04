@@ -72,12 +72,12 @@ function StateVariable:_register (_name, parent)
 	log(INFO, string.format("Setting up setter/getter for %s", _name))
 	assert(self.getter)
 	assert(self.setter)
-	self:__defineGetter(_name, self.getter, self)
-	self:__defineSetter(_name, self.getter, self)
+	parent:__defineGetter(_name, self.getter, self)
+	parent:__defineSetter(_name, self.setter, self)
 	if self.altName then
 		parent[__SV_PREFIX .. self.altName] = self
-		self:__defineGetter(self.altName, self.getter, self)
-		self:__defineSetter(self.altName, self.getter, self)
+		parent:__defineGetter(self.altName, self.getter, self)
+		parent:__defineSetter(self.altName, self.setter, self)
 	end
 end
 
@@ -101,7 +101,8 @@ function StateVariable:writeTests (entity)
 end
 
 function StateVariable:getter (variable)
-	log(INFO, "getter.readtests: " .. tostring(variable:readTests(self)))
+	log(INFO, "getter.readtests...")
+	variable:readTests(self)
 	return self.stateVariableValues[variable._name]
 end
 
@@ -177,16 +178,17 @@ StateInteger.toWire = selftostring
 StateInteger.fromWire = selftointeger
 StateInteger.toData = selftostring
 StateInteger.fromData = selftointeger
-
+function StateInteger:__tostring () return "StateInteger" end
 
 function decimal2 (self, x)
+	if not x then x = self end
 	if math.abs(x) < 0.01 then return '0' end
 	local ret = tostring(x)
 	local spl = string.split(ret, '.')
 	if not spl[2] then
-		return {ret, "0"}
+		return ret
 	else
-		return spl
+		return spl[1] .. "." .. string.sub(spl[2], 1, 2)
 	end
 end
 
@@ -195,42 +197,44 @@ StateFloat.toWire = decimal2
 StateFloat.fromWire = selftodouble
 StateFloat.toData = decimal2
 StateFloat.fromData = selftodouble
+function StateFloat:__tostring () return "StateFloat" end
 
 StateEnum = class(StateInteger)
+function StateEnum:__tostring () return "StateEnum" end
 
 StateBoolean = class(StateVariable)
 StateBoolean.toWire = selftostring
 StateBoolean.fromWire = selftoboolean
 StateBoolean.toData = selftostring
 StateBoolean.fromData = selftoboolean
+function StateBoolean:__tostring () return "StateBoolean" end
 
 StateString = class(StateVariable)
 StateString.toWire = selftostring
 StateString.fromWire = selftostring
 StateString.toData = selftostring
 StateString.fromData = selftostring
+function StateString:__tostring () return "StateString" end
 
 ------------------------------------------------
 
-local ArraySurrogate = class()
+ArraySurrogate = class()
 
 function ArraySurrogate:__init (entity, variable)
 	log(INFO, "Setting up ArraySurrogate")
 
 	self.entity = entity
 	self.variable = variable
+
+	self:__defineGetter("length", function (self) return self.variable:getLength(self.entity) end)
 end
 
 function ArraySurrogate:__tostring ()
 	return "ArraySurrogate"
 end
 
-function ArraySurrogate:length ()
-	return self.variable:getLength(self.entity)
-end
-
 function ArraySurrogate:push (value)
-	self:set(self:length(), value)
+	self:set(self.length + 1, value)
 end
 
 function ArraySurrogate:get (index)
@@ -245,7 +249,7 @@ function ArraySurrogate:asArray ()
 	log(INFO, "asArray: " .. tostring(self))
 
 	local ret = {}
-	for i = 1, self:length() do
+	for i = 1, self.length do
 		log(INFO, string.format("asArray(%i)", i))
 		table.insert(ret, self:get(i))
 	end
@@ -268,7 +272,8 @@ function StateArray:emptyValue ()
 end
 
 function StateArray:getter (variable)
-	log(INFO, "StateArray.getter " .. tostring(variable:readTests(self)))
+	log(INFO, "StateArray.getter.readtests...")
+	variable:readTests(self)
 
 	if not variable:getRaw(self) then
 		return nil
@@ -288,7 +293,7 @@ function StateArray:setter (variable, value)
 	if value.x then
 		log(INFO, string.format("StateArray.setter: %f, %f, %f", value.x, value.y, value.z))
 	end
-	if value:get(1) then
+	if value.get then
 		log(INFO, string.format("StateArray.setter: %f, %f, %f", value:get(1), value:get(2), value:get(3)))
 	end
 
@@ -300,7 +305,7 @@ function StateArray:setter (variable, value)
 		data = {}
 		local val
 		if tostring(value) == "ArraySurrogate" then
-			for i = 1, value.length() do
+			for i = 1, value.length do
 				val = value:get(i)
 				table.insert(data, val)
 			end
@@ -334,7 +339,7 @@ function StateArray:fromWire (value)
 	if value == "{}" then
 		return {}
 	else
-		return string.split(table.map(value, self.fromWireItem), self.separator)
+		return table.map(string.split(string.gsub(value, "[{}]", ""), self.separator), self.fromWireItem)
 	end
 end
 
@@ -356,11 +361,12 @@ end
 StateArray.fromDataItem = selftostring
 
 function StateArray:fromData (value)
-	log(DEBUG, string.format("StateArray.fromData %s::%s", self._name, tostring(value)))
+	log(DEBUG, string.format("StateArray.fromData %s::%s", tostring(self._name), tostring(value)))
+
 	if value == "{}" then
 		return {}
 	else
-		return string.split(table.map(value, self.fromDataItem), self.separator)
+		return table.map(string.split(string.gsub(value, "[{}]", ""), self.separator), self.fromDataItem)
 	end
 end
 
@@ -450,8 +456,8 @@ function VariableAlias:_register (_name, parent)
 	local target = parent[__SV_PREFIX .. self.targetName]
 	parent[__SV_PREFIX .. _name] = target
 
-	self:__defineGetter(_name, target.getter, target)
-	self:__defineSetter(_name, target.getter, target)
+	parent:__defineGetter(_name, target.getter, target)
+	parent:__defineSetter(_name, target.setter, target)
 
 	assert(not self.altName)
 end
@@ -472,7 +478,7 @@ WrappedCVariable = {
 	end,
 
 	_register = function (self, _name, parent)
-		self[StateVariable]._register(self, name, parent)
+		self[StateVariable]._register(self, _name, parent)
 
 		self.cGetter = self.cGetterRaw
 		self.cSetter = self.cSetterRaw
@@ -487,7 +493,7 @@ WrappedCVariable = {
 
 		if self.cSetter then
 			local prefix = getOnModifyPrefix()
-			parent.connect(prefix .. _name, function (value)
+			parent:connect(prefix .. _name, function (value)
 				if Global.CLIENT or parent:canCallCFuncs() then
 					log(INFO, string.format("Calling cSetter for %s, with %s (%s)", self._name, tostring(value), type(value)))
 					self:cSetter(parent, value)
@@ -504,7 +510,8 @@ WrappedCVariable = {
 	end,
 
 	getter = function (self, variable)
-		log(INFO, "WCV getter readtests " .. tostring(variable:readTests(self)))
+		log(INFO, "WCV getter.readtests...")
+		variable:readTests(self)
 
 		local cachedTimestamp = self.stateVariableValueTimestamps[variable._name]
 		if cachedTimestamp == Global.currTimestamp then
@@ -533,18 +540,23 @@ WrappedCVariable = {
 
 WrappedCInteger = class(StateInteger)
 table.merge(WrappedCInteger, WrappedCVariable)
+function WrappedCInteger:__tostring () return "WrappedCInteger" end
 
 WrappedCFloat = class(StateFloat)
 table.merge(WrappedCFloat, WrappedCVariable)
+function WrappedCFloat:__tostring () return "WrappedCFloat" end
 
 WrappedCEnum = class(StateEnum)
 table.merge(WrappedCEnum, WrappedCVariable)
+function WrappedCEnum:__tostring () return "WrappedCEnum" end
 
 WrappedCBoolean = class(StateBoolean)
 table.merge(WrappedCBoolean, WrappedCVariable)
+function WrappedCBoolean:__tostring () return "WrappedCBoolean" end
 
 WrappedCString = class(StateString)
 table.merge(WrappedCString, WrappedCVariable)
+function WrappedCString:__tostring () return "WrappedCString" end
 
 ------------------------------------------------
 
@@ -585,6 +597,13 @@ table.merge(WrappedCArray, {
 ------------------------------------------------
 
 local Vector3Surrogate = class(ArraySurrogate)
+table.merge(Vector3Surrogate, table.filter(Vector3, function (k, v)
+	if not is_reserved(k) and not is_extra(k) then
+		return true
+	else
+		return false
+	end
+end))
 
 function Vector3Surrogate:__init (entity, variable)
 	self:__defineGetter("x", function(self) return self:get(1) end)
@@ -593,6 +612,7 @@ function Vector3Surrogate:__init (entity, variable)
 	self:__defineSetter("x", function(self, v) self:set(1, v) return true end)
 	self:__defineSetter("y", function(self, v) self:set(2, v) return true end)
 	self:__defineSetter("z", function(self, v) self:set(3, v) return true end)
+	self:__defineGetter("length", function(self) return 3 end)
 
 	self[ArraySurrogate].__user_init(self, entity, variable)
 
@@ -605,11 +625,42 @@ function Vector3Surrogate:__tostring ()
 	return "Vector3Surrogate"
 end
 
-function Vector3Surrogate:length ()
-	return 3
+function Vector3Surrogate:push (value)
+	assert(false) -- no need for push here
 end
 
-function Vector3Surrogate:push (value)
+local Vector4Surrogate = class(ArraySurrogate)
+table.merge(Vector4Surrogate, table.filter(Vector4, function (k, v)
+	if not is_reserved(k) and not is_extra(k) then
+		return true
+	else
+		return false
+	end
+end))
+
+function Vector4Surrogate:__init (entity, variable)
+	self:__defineGetter("x", function(self) return self:get(1) end)
+	self:__defineGetter("y", function(self) return self:get(2) end)
+	self:__defineGetter("z", function(self) return self:get(3) end)
+	self:__defineGetter("w", function(self) return self:get(4) end)
+	self:__defineSetter("x", function(self, v) self:set(1, v) return true end)
+	self:__defineSetter("y", function(self, v) self:set(2, v) return true end)
+	self:__defineSetter("z", function(self, v) self:set(3, v) return true end)
+	self:__defineSetter("w", function(self, v) self:set(4, v) return true end)
+	self:__defineGetter("length", function(self) return 4 end)
+
+	self[ArraySurrogate].__user_init(self, entity, variable)
+
+	self.entity = entity
+	self.variable = variable
+	
+end
+
+function Vector4Surrogate:__tostring ()
+	return "Vector4Surrogate"
+end
+
+function Vector4Surrogate:push (value)
 	assert(false) -- no need for push here
 end
 
@@ -674,6 +725,7 @@ StateJSON.toWire = selftojson
 StateJSON.fromWire = selffromjson
 StateJSON.toData = selftojson
 StateJSON.fromData = selffromjson
+function StateJSON:__tostring () return "StateJSON" end
 
 -- TODO: equivalent in lua
 --registerJSON("LogicEntity", function(val) { return val.uniqueId !== undefined; }, function(val) { return val.uniqueId; }, true);

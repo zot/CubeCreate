@@ -17,10 +17,13 @@ function AnimatableLogicEntity:__tostring ()
 	return "AnimatableLogicEntity"
 end
 
-AnimatableLogicEntity.animation = WrappedCInteger({ cSetter = "CAPI.setAnimation", clientSet = true })
-AnimatableLogicEntity.startTime = WrappedCInteger({ cGetter = "CAPI.getStartTime" })
-AnimatableLogicEntity.modelName = WrappedCInteger({ cSetter = "CAPI.setModelName" })
-AnimatableLogicEntity.attachments = WrappedCArray({ cSetter = "CAPI.setAttachments" })
+function AnimatableLogicEntity:__init ()
+	self[RootLogicEntity].__user_init(self)
+	self.animation = WrappedCInteger({ cSetter = "CAPI.setAnimation", clientSet = true })
+	self.startTime = WrappedCInteger({ cGetter = "CAPI.getStartTime" })
+	self.modelName = WrappedCInteger({ cSetter = "CAPI.setModelName" })
+	self.attachments = WrappedCArray({ cSetter = "CAPI.setAttachments" })
+end
 
 function AnimatableLogicEntity:init (uniqueId, kwargs)
 	if self[LogicEntity].init then self[LogicEntity].init(self, uniqueId, kwargs) end
@@ -75,7 +78,7 @@ function AnimatableLogicEntity:_generalSetup (...)
 end
 
 LocalAnimationAction = class(Action)
-LocalAnimationAction._name = "LocalAnimationAction"
+function LocalAnimationAction:__tostring () return "LocalAnimationAction" end
 
 function LocalAnimationAction:doStart ()
 	self.oldAnimation = self.actor.animation

@@ -9,13 +9,17 @@ StaticEntity.useRenderDynamicTest = true
 StaticEntity._sauerType = "extent"
 StaticEntity._sauerTypeIndex = 0
 
-StaticEntity.position = WrappedCVector3({ cGetter = "CAPI.getExtent0", cSetter = "CAPI.setExtent0" })
-StaticEntity.radius = StateFloat()
+function StaticEntity:__init ()
+	self[AnimatableLogicEntity].__user_init(self)
 
-StaticEntity.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1" })
-StaticEntity.attr2 = WrappedCInteger({ cGetter = "CAPI.getAttr2", cSetter = "CAPI.setAttr2" })
-StaticEntity.attr3 = WrappedCInteger({ cGetter = "CAPI.getAttr3", cSetter = "CAPI.setAttr3" })
-StaticEntity.attr4 = WrappedCInteger({ cGetter = "CAPI.getAttr4", cSetter = "CAPI.setAttr4" })
+	self.position = WrappedCVector3({ cGetter = "CAPI.getExtent0", cSetter = "CAPI.setExtent0" })
+	self.radius = StateFloat()
+
+	self.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1" })
+	self.attr2 = WrappedCInteger({ cGetter = "CAPI.getAttr2", cSetter = "CAPI.setAttr2" })
+	self.attr3 = WrappedCInteger({ cGetter = "CAPI.getAttr3", cSetter = "CAPI.setAttr3" })
+	self.attr4 = WrappedCInteger({ cGetter = "CAPI.getAttr4", cSetter = "CAPI.setAttr4" })
+end
 
 function StaticEntity:init (uniqueId, kwargs)
 	log(DEBUG, "StaticEntity.init")
@@ -138,15 +142,20 @@ function Light:__tostring ()
 end
 
 Light._sauerTypeIndex = 1
-Light.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "radius", altName = "radius" })
-Light.attr2 = WrappedCInteger({ cGetter = "CAPI.getAttr2", cSetter = "CAPI.setAttr2", guiName = "red", altName = "red" })
-Light.attr3 = WrappedCInteger({ cGetter = "CAPI.getAttr3", cSetter = "CAPI.setAttr3", guiName = "green", altName = "green" })
-Light.attr4 = WrappedCInteger({ cGetter = "CAPI.getAttr4", cSetter = "CAPI.setAttr4", guiName = "blue", altName = "blue" })
 
-Light.radius = VariableAlias("attr1")
-Light.red = VariableAlias("attr2")
-Light.green = VariableAlias("attr3")
-Light.blue = VariableAlias("attr4")
+function Light:__init ()
+	self[StaticEntity].__user_init(self)
+
+	self.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "radius", altName = "radius" })
+	self.attr2 = WrappedCInteger({ cGetter = "CAPI.getAttr2", cSetter = "CAPI.setAttr2", guiName = "red", altName = "red" })
+	self.attr3 = WrappedCInteger({ cGetter = "CAPI.getAttr3", cSetter = "CAPI.setAttr3", guiName = "green", altName = "green" })
+	self.attr4 = WrappedCInteger({ cGetter = "CAPI.getAttr4", cSetter = "CAPI.setAttr4", guiName = "blue", altName = "blue" })
+
+	self.radius = VariableAlias("attr1")
+	self.red = VariableAlias("attr2")
+	self.green = VariableAlias("attr3")
+	self.blue = VariableAlias("attr4")
+end
 
 function Light:init (uniqueId, kwargs)
 	self[StaticEntity].init(self, uniqueId, kwargs)
@@ -166,8 +175,13 @@ function Spotlight:__tostring ()
 end
 
 Spotlight._sauerTypeIndex = 7
-Spotlight.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "radius", altName = "radius" })
-Spotlight.radius = VariableAlias("attr1")
+
+function Spotlight:__init ()
+	self[StaticEntity].__user_init(self)
+
+	self.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "radius", altName = "radius" })
+	self.radius = VariableAlias("attr1")
+end
 
 function Spotlight:init (uniqueId, kwargs)
 	self[StaticEntity].init(self, uniqueId, kwargs)
@@ -183,8 +197,13 @@ function Envmap:__tostring ()
 end
 
 Envmap._sauerTypeIndex = 4
-Envmap.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "radius", altName = "radius" })
-Envmap.radius = VariableAlias("attr1")
+
+function Envmap:__init ()
+	self[StaticEntity].__user_init(self)
+
+	self.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "radius", altName = "radius" })
+	self.radius = VariableAlias("attr1")
+end
 
 function Envmap:init (uniqueId, kwargs)
 	self[StaticEntity].init(self, uniqueId, kwargs)
@@ -201,15 +220,19 @@ end
 
 SoundEffect._sauerTypeIndex = 6
 
-SoundEffect.attr2 = WrappedCInteger({ cGetter = "CAPI.getAttr2", cSetter = "CAPI.setAttr2", guiName = "radius", altName = "radius" })
-SoundEffect.attr3 = WrappedCInteger({ cGetter = "CAPI.getAttr3", cSetter = "CAPI.setAttr3", guiName = "size", altName = "size" })
-SoundEffect.attr4 = WrappedCInteger({ cGetter = "CAPI.getAttr4", cSetter = "CAPI.setAttr4", guiName = "volume", altName = "volume" })
+function SoundEffect:__init ()
+	self[StaticEntity].__user_init(self)
 
-SoundEffect.soundName = WrappedCString({ cSetter = "CAPI.setSoundName" })
+	self.attr2 = WrappedCInteger({ cGetter = "CAPI.getAttr2", cSetter = "CAPI.setAttr2", guiName = "radius", altName = "radius" })
+	self.attr3 = WrappedCInteger({ cGetter = "CAPI.getAttr3", cSetter = "CAPI.setAttr3", guiName = "size", altName = "size" })
+	self.attr4 = WrappedCInteger({ cGetter = "CAPI.getAttr4", cSetter = "CAPI.setAttr4", guiName = "volume", altName = "volume" })
 
-SoundEffect.radius = VariableAlias("attr2")
-SoundEffect.size = VariableAlias("attr3")
-SoundEffect.volume = VariableAlias("attr4")
+	self.soundName = WrappedCString({ cSetter = "CAPI.setSoundName" })
+
+	self.radius = VariableAlias("attr2")
+	self.size = VariableAlias("attr3")
+	self.volume = VariableAlias("attr4")
+end
 
 function SoundEffect:init (uniqueId, kwargs)
 	self[StaticEntity].init(self, uniqueId, kwargs)
@@ -231,15 +254,19 @@ end
 
 ParticleEffect._sauerTypeIndex = 5
 
-ParticleEffect.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "particle_type", altName = "particle_type" })
-ParticleEffect.attr2 = WrappedCInteger({ cGetter = "CAPI.getAttr2", cSetter = "CAPI.setAttr2", guiName = "value1", altName = "value1" })
-ParticleEffect.attr3 = WrappedCInteger({ cGetter = "CAPI.getAttr3", cSetter = "CAPI.setAttr3", guiName = "value2", altName = "value2" })
-ParticleEffect.attr4 = WrappedCInteger({ cGetter = "CAPI.getAttr4", cSetter = "CAPI.setAttr4", guiName = "value3", altName = "value3" })
+function ParticleEffect:__init ()
+	self[StaticEntity].__user_init (self)
 
-ParticleEffect.particleType = VariableAlias("attr1")
-ParticleEffect.value1 = VariableAlias("attr2")
-ParticleEffect.value2 = VariableAlias("attr3")
-ParticleEffect.value3 = VariableAlias("attr4")
+	self.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "particle_type", altName = "particle_type" })
+	self.attr2 = WrappedCInteger({ cGetter = "CAPI.getAttr2", cSetter = "CAPI.setAttr2", guiName = "value1", altName = "value1" })
+	self.attr3 = WrappedCInteger({ cGetter = "CAPI.getAttr3", cSetter = "CAPI.setAttr3", guiName = "value2", altName = "value2" })
+	self.attr4 = WrappedCInteger({ cGetter = "CAPI.getAttr4", cSetter = "CAPI.setAttr4", guiName = "value3", altName = "value3" })
+
+	self.particleType = VariableAlias("attr1")
+	self.value1 = VariableAlias("attr2")
+	self.value2 = VariableAlias("attr3")
+	self.value3 = VariableAlias("attr4")
+end
 
 function ParticleEffect:init (uniqueId, kwargs)
 	self[StaticEntity].init(self, uniqueId, kwargs)
@@ -260,11 +287,15 @@ end
 
 Mapmodel._sauerTypeIndex = 2
 
-Mapmodel.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "yaw", altName = "yaw" })
-Mapmodel.yaw = VariableAlias("attr1")
+function Mapmodel:__init ()
+	self[StaticEntity].__user_init (self)
 
-Mapmodel.collisionRadiusWidth = WrappedCInteger({ cGetter = "CAPI.getCollisionRadiusWidth", cSetter = "CAPI.setCollisionRadiusWidth" })
-Mapmodel.collisionRadiusHeight = WrappedCInteger({ cGetter = "CAPI.getCollisionRadiusHeight", cSetter = "CAPI.setCollisionRadiusHeight" })
+	self.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "yaw", altName = "yaw" })
+	self.yaw = VariableAlias("attr1")
+
+	self.collisionRadiusWidth = WrappedCInteger({ cGetter = "CAPI.getCollisionRadiusWidth", cSetter = "CAPI.setCollisionRadiusWidth" })
+	self.collisionRadiusHeight = WrappedCInteger({ cGetter = "CAPI.getCollisionRadiusHeight", cSetter = "CAPI.setCollisionRadiusHeight" })
+end
 
 function Mapmodel:init (uniqueId, kwargs)
 	log(DEBUG, "Mapmodel.init")
@@ -309,7 +340,10 @@ function AreaTrigger:__tostring ()
 	return "AreaTrigger"
 end
 
-AreaTrigger.scriptToRun = StateString()
+function AreaTrigger:__init ()
+	self[Mapmodel].__user_init(self)
+	self.scriptToRun = StateString()
+end
 
 function AreaTrigger:init (uniqueId, kwargs)
 	self[Mapmodel].init(self, uniqueId, kwargs)
@@ -421,10 +455,14 @@ function WorldMarker:__tostring ()
 	return "WorldMarker"
 end
 
-WorldMarker.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "yaw", altName = "yaw" })
-WorldMarker.yaw = VariableAlias("attr1")
-
 WorldMarker._sauerTypeIndex = 3
+
+function WorldMarker:__init ()
+	self[StaticEntity].__user_init(self)
+
+	self.attr1 = WrappedCInteger({ cGetter = "CAPI.getAttr1", cSetter = "CAPI.setAttr1", guiName = "yaw", altName = "yaw" })
+	self.yaw = VariableAlias("attr1")
+end
 
 function WorldMarker:placeEntity (entity)
 	entity.position = self.position

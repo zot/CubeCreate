@@ -500,8 +500,8 @@ function tocalltable (func)
 end
 
 -- Lua string extensions, split taken from here http://lua-users.org/wiki/SplitJoin
-function string.split(str, delim)
-	local sep = sep or ','
+function string.split(str, sep)
+	sep = defaultValue(sep, ",")
 	local ret = {}
 	local pat = string.format("([^%s]+)", sep)
 	string.gsub(str, pat, function (c) ret[#ret+1] = c end)
@@ -515,10 +515,11 @@ end
 
 -- Remap table to different type
 function table.map(tbl, func)
+	local ret = {}
 	for i = 1, table.maxn(tbl) do
-		tbl[i] = func(tbl[i])
+		ret[i] = func(tbl[i])
 	end
-	return tbl
+	return ret
 end
 
 -- Merge tables

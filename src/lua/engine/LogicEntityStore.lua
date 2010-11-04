@@ -178,7 +178,7 @@ function removeAllEntities ()
 end
 
 currTimestamp = 0
-Global.currTimestamp = currTimestmap
+Global.currTimestamp = currTimestamp
 
 function startFrame ()
 	currTimestamp = currTimestamp + 1

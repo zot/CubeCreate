@@ -26,7 +26,7 @@ function registerEntityClass (_class, sauerType)
 	local stateVariableNames = {}
 
 	local inst = _class()
-	local _names = table.keys(_class)
+	local _names = table.keys(inst)
 	for i = 1, table.maxn(_names) do
 		local variable = inst[ _names[i] ]
 		log(INFO, string.format("Considering %s -- %s", _names[i], type(variable)))

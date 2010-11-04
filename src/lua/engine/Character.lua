@@ -25,33 +25,37 @@ function Character:__tostring ()
 end
 
 Character._sauerType = "fpsent"
-Character._name = StateString()
-Character.facingSpeed = StateInteger()
-Character.movementSpeed = WrappedCFloat({ cGetter = "CAPI.getMaxSpeed", cSetter = "CAPI.setMaxSpeed" })
-Character.yaw = WrappedCFloat({ cGetter = "CAPI.getYaw", cSetter = "CAPI.setYaw", customSynch = true })
-Character.pitch = WrappedCFloat({ cGetter = "CAPI.getPitch", cSetter = "CAPI.setPitch", customSynch = true })
 
-Character.move = WrappedCInteger({ cGetter = "CAPI.getMove", cSetter = "CAPI.setMove", customSynch = true })
-Character.strafe = WrappedCInteger({ cGetter = "CAPI.getStrafe", cSetter = "CAPI.setStrafe", customSynch = true })
-Character.yawing = WrappedCInteger({ cGetter = "CAPI.getYawing", cSetter = "CAPI.setYawing", customSynch = true })
-Character.pitching = WrappedCInteger({ cGetter = "CAPI.getPitching", cSetter = "CAPI.setPitching", customSynch = true })
+function Character:__init ()
+	self[AnimatableLogicEntity].__user_init(self)
+	self._name = StateString()
+	self.facingSpeed = StateInteger()
+	self.movementSpeed = WrappedCFloat({ cGetter = "CAPI.getMaxSpeed", cSetter = "CAPI.setMaxSpeed" })
+	self.yaw = WrappedCFloat({ cGetter = "CAPI.getYaw", cSetter = "CAPI.setYaw", customSynch = true })
+	self.pitch = WrappedCFloat({ cGetter = "CAPI.getPitch", cSetter = "CAPI.setPitch", customSynch = true })
 
-Character.position = WrappedCVector3({ cGetter = "CAPI.getDynent0", cSetter = "CAPI.setDynent0", customSynch = true })
-Character.velocity = WrappedCVector3({ cGetter = "CAPI.getDynentVel", cSetter = "CAPI.setDynentVel", customSynch = true })
-Character.falling = WrappedCVector3({ cGetter = "CAPI.getDynentFalling", cSetter = "CAPI.setDynentFalling", customSynch = true })
+	self.move = WrappedCInteger({ cGetter = "CAPI.getMove", cSetter = "CAPI.setMove", customSynch = true })
+	self.strafe = WrappedCInteger({ cGetter = "CAPI.getStrafe", cSetter = "CAPI.setStrafe", customSynch = true })
+	self.yawing = WrappedCInteger({ cGetter = "CAPI.getYawing", cSetter = "CAPI.setYawing", customSynch = true })
+	self.pitching = WrappedCInteger({ cGetter = "CAPI.getPitching", cSetter = "CAPI.setPitching", customSynch = true })
 
-Character.radius = WrappedCFloat({ cGetter = "CAPI.getRadius", cSetter = "CAPI.setRadius" })
-Character.aboveEye = WrappedCFloat({ cGetter = "CAPI.getAboveeye", cSetter = "CAPI.setAboveeye" })
-Character.eyeHeight = WrappedCFloat({ cGetter = "CAPI.getEyeHeight", cSetter = "CAPI.setEyeHeight" })
+	self.position = WrappedCVector3({ cGetter = "CAPI.getDynent0", cSetter = "CAPI.setDynent0", customSynch = true })
+	self.velocity = WrappedCVector3({ cGetter = "CAPI.getDynentVel", cSetter = "CAPI.setDynentVel", customSynch = true })
+	self.falling = WrappedCVector3({ cGetter = "CAPI.getDynentFalling", cSetter = "CAPI.setDynentFalling", customSynch = true })
 
-Character.blocked = WrappedCBoolean({ cGetter = "CAPI.getBlocked", cSetter = "CAPI.setBlocked" })
-Character.canMove = WrappedCBoolean({ cSetter = "CAPI.setCanMove", clientSet = true })
+	self.radius = WrappedCFloat({ cGetter = "CAPI.getRadius", cSetter = "CAPI.setRadius" })
+	self.aboveEye = WrappedCFloat({ cGetter = "CAPI.getAboveeye", cSetter = "CAPI.setAboveeye" })
+	self.eyeHeight = WrappedCFloat({ cGetter = "CAPI.getEyeHeight", cSetter = "CAPI.setEyeHeight" })
 
-Character.mapDefinedPositionData = WrappedCInteger({ cGetter = "CAPI.getMapDefinedPositionData", cSetter = "CAPI.setMapDefinedPositionData", customSynch = true })
-Character.clientState = WrappedCInteger({ cGetter = "CAPI.getClientState", cSetter = "CAPI.setClientState", customSynch = true })
-Character.physicalState = WrappedCInteger({ cGetter = "CAPI.getPhysicalState", cSetter = "CAPI.setPhysicalState", customSynch = true })
-Character.inWater = WrappedCInteger({ cGetter = "CAPI.getInWater", cSetter = "CAPI.setInWater", customSynch = true })
-Character.timeInAir = WrappedCInteger({ cGetter = "CAPI.getTimeInAir", cSetter = "CAPI.setTimeInAir", customSynch = true })
+	self.blocked = WrappedCBoolean({ cGetter = "CAPI.getBlocked", cSetter = "CAPI.setBlocked" })
+	self.canMove = WrappedCBoolean({ cSetter = "CAPI.setCanMove", clientSet = true })
+
+	self.mapDefinedPositionData = WrappedCInteger({ cGetter = "CAPI.getMapDefinedPositionData", cSetter = "CAPI.setMapDefinedPositionData", customSynch = true })
+	self.clientState = WrappedCInteger({ cGetter = "CAPI.getClientState", cSetter = "CAPI.setClientState", customSynch = true })
+	self.physicalState = WrappedCInteger({ cGetter = "CAPI.getPhysicalState", cSetter = "CAPI.setPhysicalState", customSynch = true })
+	self.inWater = WrappedCInteger({ cGetter = "CAPI.getInWater", cSetter = "CAPI.setInWater", customSynch = true })
+	self.timeInAir = WrappedCInteger({ cGetter = "CAPI.getTimeInAir", cSetter = "CAPI.setTimeInAir", customSynch = true })
+end
 
 function Character:jump ()
 	CAPI.setJumping(self, true)
@@ -238,8 +242,11 @@ function Player:__tostring ()
 	return "Player"
 end
 
-Player._canEdit = StateBoolean()
-Player.HUDModelName = StateString()
+function Player:__init ()
+	self[Character].__user_init(self)
+	self._canEdit = StateBoolean()
+	self.HUDModelName = StateString()
+end
 
 function Player:init (uniqueId, kwargs)
 	log(DEBUG, "Player.init")

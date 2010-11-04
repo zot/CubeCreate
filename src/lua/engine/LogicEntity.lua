@@ -4,13 +4,16 @@ log(DEBUG, string.format("Generating LogicEntity system with CLIENT = %s", tostr
 
 RootLogicEntity = class()
 
-function RootLogicEntity:__tostring()
+function RootLogicEntity:__tostring ()
 	return "LogicEntity"
 end
 
 RootLogicEntity.shouldAct = true
-RootLogicEntity.tags = StateArray()
-RootLogicEntity._persistent = StateBoolean()
+
+function RootLogicEntity:__init ()
+	self.tags = StateArray()
+	self._persistent = StateBoolean()
+end
 
 function RootLogicEntity:_generalSetup ()
 	log(DEBUG, "RootLogicEntity._generalSetup")
@@ -98,7 +101,7 @@ function RootLogicEntity:createStateDataDict (targetClientNumber, kwargs)
 	local _names = table.keys(self)
 	for i = 1, table.maxn(_names) do
 		local variable = self[ _names[i] ]
-		if isVaraible(variable) and variable.hasHistory then
+		if isVariable(variable) and variable.hasHistory then
 			if targetClientNumber >= 0 and not variable:shouldSend(self, targetClientNumber) then return nil end
 
 			local value = self[variable._name]

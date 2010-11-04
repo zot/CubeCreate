@@ -63,20 +63,38 @@ end
 
 --[[
 	Reserved attribute names.
+	Added __defineSetter and __defineGetter by CubeCreate.
 ]]
 
 local reserved =
 {
-	__index			= true,
-	__newindex		= true,
-	__type			= true,
-	__class			= true,
-	__bases			= true,
-	__inherited		= true,
-	__from			= true,
-	__shared		= true,
-	__user_init		= true,
-	__initialized	= true
+	__index				= true,
+	__newindex			= true,
+	__type				= true,
+	__class				= true,
+	__bases				= true,
+	__inherited			= true,
+	__from				= true,
+	__shared			= true,
+	__user_init			= true,
+	__initialized		= true,
+	__defineGetter  	= true,
+	__defineSetter		= true,
+	__itemConditional	= true
+}
+
+--[[
+	CubeCreate: extra functions (those marked with __ on the beginning, except the ones in reserved)
+]]
+
+local extra =
+{
+	__user_get			= true,
+	__user_set			= true,
+	__getters			= true,
+	__setters			= true,
+	__sselfs			= true,
+	__gselfs			= true
 }
 
 --[[
@@ -119,9 +137,15 @@ function class_mt:__newindex(name, value)
 	-- __user_get() needs an __index() handler
 	if name == '__user_get' then
 		self.__index = value and function(obj, k)
-			local v = self[k]
-			if v == nil and not reserved[k] then v = value(obj, k) end
-			return v
+			-- CubeCreate: check for getter; if exists, then just return from the getter -
+			-- don't bother with trying to get the element
+			if self.__getters[k] then
+				return value(obj, k)
+			else
+				local v = self[k]
+				if v == nil and not reserved[k] then v = value(obj, k) end
+				return v
+			end
 		end or self
 
 	-- __user_set() needs a __newindex() handler
@@ -309,6 +333,18 @@ function is_a(value, class)
 	return classof(value) and value:is_a(class) or false
 end
 
+-- CubeCreate: check if something is reserved
+function is_reserved(value)
+	if reserved[value] then return true
+	else return false end
+end
+
+-- CubeCreate: see is_reserved
+function is_extra(value)
+	if extra[value] then return true
+	else return false end
+end
+
 --[[
 	Create a class by calling class(...). 
 	Arguments are the classes or shared classes to be derived from.
@@ -435,7 +471,7 @@ function class(...)
 		if not self:__itemConditional(i) then return nil end
 		if self.__getters[i] then
 			if self.__gselfs[i] then
-				return self.__getters[i](self.__gselfs[i])
+				return self.__getters[i](self, self.__gselfs[i])
 			else
 				return self.__getters[i](self)
 			end
@@ -448,9 +484,9 @@ function class(...)
 		if not self:__itemConditional(i) then return true end
 		if self.__setters[i] then
 			if self.__sselfs[i] then
-				return self.__setters[i](self.__sselfs[i], v)
+				self.__setters[i](self, self.__sselfs[i], v)
 			else
-				return self.__setters[i](self, v)
+				self.__setters[i](self, v)
 			end
 		else
 			rawset(self, i, v) -- set all normally when it's standard item
@@ -472,14 +508,7 @@ function class(...)
 	-- CubeCreate: copy over contents of the base
 	if c.__bases[1] then
 		for k, v in pairs(c.__bases[1]) do
-			if type(v) == "function" and
-				k ~= "__user_init" and
-				k ~= "__tostring" and
-				k ~= "__defineGetter" and
-				k ~= "__defineSetter" and
-				k ~= "__index" and
-				k ~= "__newindex"
-			then
+			if not reserved[k] then
 				c[k] = v
 			end
 		end
