@@ -56,7 +56,7 @@ function Vector3:__init (x, y, z)
 		self.x = tonumber(x.x)
 		self.y = tonumber(x.y)
 		self.z = tonumber(x.z)
-	elseif type(x) == "table" and table.maxn(x) == 3 then
+	elseif type(x) == "table" and #x == 3 then
 		self.x = tonumber(x[1])
 		self.y = tonumber(x[2])
 		self.z = tonumber(x[3])
@@ -220,7 +220,7 @@ function Vector4:__init (x, y, z, w)
 		self.y = tonumber(x.y)
 		self.z = tonumber(x.z)
 		self.w = tonumber(x.w)
-	elseif type(x) == "table" and table.maxn(x) == 4 then
+	elseif type(x) == "table" and #x == 4 then
 		self.x = tonumber(x[1])
 		self.y = tonumber(x[2])
 		self.z = tonumber(x[3])
@@ -440,8 +440,8 @@ function highestFloorDistance (origin, distance, radius)
 	local ret = floorDistance(origin, distance)
 
 	local tbl = { -(radius) / 2, 0, radius / 2 }
-	for x = 1,table.maxn(tbl) do
-		for y = 1, table.maxn(tbl) do
+	for x = 1, #tbl do
+		for y = 1, #tbl do
 			ret = math.min(ret, floorDistance(origin + Vector3(tbl[x], tbl[y], 0), distance))
 		end
 	end
@@ -453,8 +453,8 @@ function lowestFloorDistance (origin, distance, radius)
 	local ret = floorDistance(origin, distance)
 
 	local tbl = { -(radius) / 2, 0, radius / 2 }
-	for x = 1,table.maxn(tbl) do
-		for y = 1, table.maxn(tbl) do
+	for x = 1, #tbl do
+		for y = 1, #tbl do
 			ret = math.max(ret, floorDistance(origin + Vector3(tbl[x], tbl[y], 0), distance))
 		end
 	end

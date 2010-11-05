@@ -75,7 +75,7 @@ end
 function RootLogicEntity:_setupHandlers (handlerNames)
 	local prefix = onModifyPrefix()
 
-	for i = 1, table.maxn(handlerNames) do
+	for i = 1, #handlerNames do
 		self.connect(prefix .. handlerNames[i], self[ "_set_" .. handlerNames[i] ])
 	end
 end
@@ -83,7 +83,7 @@ end
 function RootLogicEntity:_setupVariables ()
 	local _names = table.keys(self)
 
-	for i = 1, table.maxn(_names) do
+	for i = 1, #_names do
 		local variable = self[ _names[i] ]
 		if isVariable(variable) then
 			variable:_register(_names[i], self)
@@ -99,7 +99,7 @@ function RootLogicEntity:createStateDataDict (targetClientNumber, kwargs)
 
 	local ret = {}
 	local _names = table.keys(self)
-	for i = 1, table.maxn(_names) do
+	for i = 1, #_names do
 		local variable = self[ _names[i] ]
 		if isVariable(variable) and variable.hasHistory then
 			if targetClientNumber >= 0 and not variable:shouldSend(self, targetClientNumber) then return nil end
@@ -121,7 +121,7 @@ function RootLogicEntity:createStateDataDict (targetClientNumber, kwargs)
 	end
 
 	_names = table.keys(ret)
-	for i = 1, table.maxn(_names) do
+	for i = 1, #_names do
 		if ret[ _names[i] ] and ret[ _names[i] ] ~= "" then
 			ret[ _names[i] ] = tonumber(ret[ _names[i] ])
 		end
@@ -138,7 +138,7 @@ function RootLogicEntity:createStateDataDict (targetClientNumber, kwargs)
 		function (data) local ret = string.gsub(data, ":\"(%d+)%.(%d+)\"", ":\"%1\".\"%2\"") return ret end,
 		function (data) local ret = string.gsub(data, ", ", ",") return ret end
 	}
-	for i = 1, table.maxn(tmp) do
+	for i = 1, #tmp do
 		local nextel = tmp[i](ret)
 		if string.len(nextel) < string.len(ret) and encodeJSON(decodeJSON(nextel)) == encodeJSON(decodeJSON(ret)) then
 			ret = nextel
@@ -278,7 +278,7 @@ function ServerLogicEntity:sendCompleteNotification (clientNumber)
 
 	log(DEBUG, string.format("LE.sendCompleteNotification: %i, %i", self.clientNumber, self.uniqueId))
 
-	for i = 1, table.maxn(clientNumbers) do
+	for i = 1, #clientNumbers do
 		MessageSystem.send(
 			clientNumbers[i],
 			CAPI.LogicEntityCompleteNotification,
@@ -371,7 +371,7 @@ function ServerLogicEntity:_setStateDatum (key, value, actorUniqueId, internalOp
 			}
 
 			local _clientNumbers = getClientNumbers()
-			for i = 1, table.maxn(_clientNumbers) do
+			for i = 1, #_clientNumbers do
 				if not variable:shouldSend(self, _clientNumbers[i]) then return nil end
 				args[1] = clientNumber
 				MessageSystem.send(unpack(args))
@@ -400,7 +400,7 @@ function ServerLogicEntity:_flushQueuedStateVariableChanges ()
 	assert(self:canCallCFuncs())
 
 	local _names = table.keys(changes)
-	for i = 1, table.maxn(_names) do
+	for i = 1, #_names do
 		local value = changes[ _names[i] ]
 		local variable = self[ __SV_PREFIX .. _names[i] ]
 		log(DEBUG, string.format("(A) Flushing queued SV change: %s - %s (real: %s)", key, tostring(value), tostring(self.stateVariableValues[key])))

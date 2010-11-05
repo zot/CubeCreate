@@ -310,7 +310,7 @@ function StateArray:setter (variable, value)
 				table.insert(data, val)
 			end
 		else
-			for i = 1, table.maxn(value) do
+			for i = 1, #value do
 				val = value[i]
 				table.insert(data, val)
 			end
@@ -404,7 +404,7 @@ function StateArray:getLength (entity)
 	if not array then
 		assert(false)
 	end
-	return table.maxn(array)
+	return #array
 end
 
 ------------------------------------------------

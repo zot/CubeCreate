@@ -27,7 +27,7 @@ end
 function getEntitiesByTag (withTag)
 	local ret = {}
 	local _values = table.values(__entitiesStore)
-	for i = 1, table.maxn(_values) do
+	for i = 1, #_values do
 		if _values[i]:hasTag(withTag) then
 			table.insert(ret, _values[i])
 		end
@@ -37,9 +37,9 @@ end
 
 function getEntityByTag (withTag)
 	local ret = getEntitiesByTag(withTag)
-	if table.maxn(ret) == 1 then
+	if #ret == 1 then
 		return ret[1]
-	elseif table.maxn(ret) > 1 then
+	elseif #ret > 1 then
 		log(WARNING, string.format("Attempting to get a single entity with tag '%s', but several exist", withTag))
 		return nil
 	else
@@ -79,7 +79,7 @@ function getCloseEntities (origin, maxDistance, _class, withTag, unsorted)
 	local ret = {}
 	local entities = sif(_class, getEntitiesByClass(_class), table.values(__entitiesStore))
 
-	for i = 1, table.maxn(entities) do
+	for i = 1, #entities do
 		local otherEntity = entities[i]
 		if not (withTag and not entity:hasTag(withTag)) or otherEntity.position then
 			local distance = origin:subNew(otherEntity.position):magnitude()
@@ -172,7 +172,7 @@ end
 
 function removeAllEntities ()
 	local _keys = table.keys(__entitiesStore)
-	for i = 1, table.maxn(_keys) do
+	for i = 1, #_keys do
 		removeEntity(_keys[i])
 	end
 end
@@ -196,7 +196,7 @@ function manageActions (seconds, lastmillis)
 
 	local currentActions = Global.queuedActions
 	Global.queuedActions = {}
-	for i = 1, table.maxn(currentActions) do
+	for i = 1, #currentActions do
 		currentActions[i]()
 	end
 
@@ -221,7 +221,7 @@ function manageActions (seconds, lastmillis)
 	local ltime
 
 	local entities = table.values(__entitiesStore)
-	for i = 1, table.maxn(entities) do
+	for i = 1, #entities do
 		local entity = entities[i]
 		if not entity.deactivated and entity.shouldAct == true and
 			(entity.shouldAct ~= true and (
@@ -251,7 +251,7 @@ function manageActions (seconds, lastmillis)
 		log(ERROR, "---------------profiling (time per second)---------------")
 		local sortedKeys = table.keys(Global.profiling.data)
 		table.sort(sortedKeys, function (a, b) return (Global.profiling.data[b] < Global.profiling.data[a]) end)
-		for i = 1, table.maxn(sortedKeys) do
+		for i = 1, #sortedKeys do
 			log(ERROR, string.format("profiling: %s: %i", sortedKeys[i], (Global.profiling.data[ sortedKeys[i] ] / (1000 * Global.profiling.interval))))
 		end
 		log(ERROR, "---------------profiling (time per second)---------------")
@@ -267,9 +267,9 @@ manageTriggeringCollisions = cacheByTimeDelay(tocalltable(function ()
 	local entities = getEntitiesByClass("AreaTrigger")
 
 	local _clientents = getClientEntities()
-	for i = 1, table.maxn(_clientents) do
+	for i = 1, #_clientents do
 		if isPlayerEditing(_clientents[i]) then return nil end
-		for j = 1, table.maxn(entities) do
+		for j = 1, #entities do
 			local entity = entities[j]
 			if World.isPlayerCollidingEntity(_clientents[i], entity) then
 				if Global.CLIENT then
@@ -299,7 +299,7 @@ function renderDynamic (thirdperson)
 	if not player then return nil end
 
 	local entities = table.values(__entitiesStore)
-	for i = 1, table.maxn(entities) do
+	for i = 1, #entities do
 		local entity = entities[i]
 		log(INFO, string.format("renderDynamic for: %i", entity.uniqueId))
 
@@ -383,7 +383,7 @@ if Global.CLIENT then
 
 		log(INFO, "...player entity unique ID-ed")
 		local _values = table.values(__entitiesStore)
-		for i = 1, table.maxn(_values) do
+		for i = 1, #_values do
 			if not _values[i].initialized then
 				log(INFO, string.format("...no, %i is not initialized", _values[i].uniqueId))
 				return false
@@ -399,7 +399,7 @@ if Global.SERVER then
 	function getNewUniqueId ()
 		local ret = 0
 		local _keys = table.keys(__entitiesStore)
-		for i = 1, table.maxn(_keys) do
+		for i = 1, #_keys do
 			ret = math.max(ret, _keys[i])
 		end
 		ret = ret + 1
@@ -435,13 +435,13 @@ if Global.SERVER then
 
 	function sendEntities (clientNumber)
 		log(DEBUG, string.format("Sending active logic entities to %i", clientNumber))
-		local numEntities = table.maxn(__entitiesStore)
+		local numEntities = #__entitiesStore
 
 		MessageSystem.send(clientNumber, CAPI.NotifyNumEntities, numEntities)
 
 		local ids = table.keys(__entitiesStore)
 		table.sort(ids)
-		for i = 1, table.maxn(ids) do
+		for i = 1, #ids do
 			__entitiesStore[ ids[i] ]:sendCompleteNotification(clientNumber)
 		end
 	end
@@ -458,7 +458,7 @@ if Global.SERVER then
 		log(DEBUG, string.format("Loading entities... %s %s", tostring(serializedEntities), type(serializedEntities)))
 
 		local entities = decodeJSON(serializedEntities)
-		for i = 1, table.maxn(entities) do
+		for i = 1, #entities do
 			log(DEBUG, string.format("loadEntities: %s", encodeJSON(entities[i])))
 			local uniqueId = entities[i][1]
 			local _class = entities[i][2]
@@ -485,7 +485,7 @@ function saveEntities ()
 
 	log(DEBUG, "Saving entities...:")
 	local _values = table.values(__entitiesStore)
-	for i = 1, table.maxn(_values) do
+	for i = 1, #_values do
 		if _values[i].persistent then
 			log(DEBUG, string.format("Saving entity %i", _values[i].uniqueId))
 			local uniqueId = _values[i].uniqueId

@@ -114,7 +114,7 @@ function StaticEntity:sendCompleteNotification (clientNumber)
 
 	log(DEBUG, "StaticE.sendCompleteNotification:")
 
-	for i = 1, table.maxn(clientNumbers) do
+	for i = 1, #clientNumbers do
 		MessageSystem.send( currClientNumber,
 							CAPI.ExtentCompleteNotification,
 							self.uniqueId,

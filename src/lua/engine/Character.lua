@@ -351,7 +351,7 @@ Character.plugins = {
 			if isPlayerEditing(self) then return nil end
 
 			local baseHeight = self.position.z
-			for i = 1, table.maxn(self.footsteps.tags) do
+			for i = 1, #self.footsteps.tags do
 				local footHeight = CAPI.getAttachmentPosition(self, self.footsteps.tags[i]).z - baseHeight
 				if self.footsteps.delays[i] == 0 then
 					if footHeight <= self.footsteps.floorHeight then

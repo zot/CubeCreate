@@ -516,7 +516,7 @@ end
 -- Remap table to different type
 function table.map(tbl, func)
 	local ret = {}
-	for i = 1, table.maxn(tbl) do
+	for i = 1, #tbl do
 		ret[i] = func(tbl[i])
 	end
 	return ret
@@ -542,7 +542,7 @@ end
 -- Copy arrays
 function table.copyarray(tbl)
 	local ret = {}
-	for i = 1, table.maxn(tbl) do
+	for i = 1, #tbl do
 		ret[i] = tbl[i]
 	end
 	return ret
@@ -563,7 +563,7 @@ end
 function table.filterarray(tbl, func)
 	local ret = {}
 	local a = 1
-	for i = 1, table.maxn(tbl) do
+	for i = 1, #tbl do
 		if func(tbl[i]) then
 			ret[a] = tbl[i]
 			a = a + 1
@@ -584,7 +584,7 @@ end
 
 -- find index in array
 function table.findarray(tbl, val)
-	for i = 1, table.maxn(tbl) do
+	for i = 1, #tbl do
 		if tbl[i] == val then
 			return i
 		end

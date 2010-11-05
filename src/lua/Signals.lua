@@ -27,7 +27,7 @@ end
 function _disconnect (self, id)
 	if self._signalConncetions then
 		local i
-		local length = table.maxn(self._signalConnections)
+		local length = #self._signalConnections
 		for i = 1,length do
 			local connection = self._signalConnections[i]
 			if connection.id == id then
@@ -45,8 +45,8 @@ end
 
 function _disconnectAll (self)
 	if self._signalConncetions then
-		while table.maxn(self._signalConnections.length) > 0 do
-			_disconnect(self, self._signalConnections[0].id)
+		while #self._signalConnections > 0 do
+			_disconnect(self, self._signalConnections[1].id)
 		end
 	end
 end
@@ -56,7 +56,7 @@ function _emit (self, name, ...)
 
 	local args = {...}
 	local handlers = {}
-	local length = table.maxn(self._signalConnections)
+	local length = #self._signalConnections
 
 	for i = 1, length do
 		local connection = self._signalConnections[i]
@@ -64,14 +64,14 @@ function _emit (self, name, ...)
 	end
 
 	local arg_array = {}
-	length = table.maxn(args)
+	length = #args
 	for i = 1, length do
 		table.insert(arg_array, args[i])
 	end
 
 	table.insert(__postEmitEventsStack, {})
 
-	length = table.maxn(handlers)
+	length = #handlers
 	for i = 1, length do
 		local connection = handlers[i]
 		if not connection.disconnected then
@@ -80,17 +80,17 @@ function _emit (self, name, ...)
 		end
 	end
 
-	local events = __postEmitEventsStack[table.maxn(__postEmitEventsStack)]
+	local events = __postEmitEventsStack[#__postEmitEventsStack]
 	table.remove(__postEmitEventsStack)
-	length = table.maxn(events)
+	length = #events
 	while length > 0 do
 		table.insert(__postEmitEventsStack, {})
-		for i = 1, table.maxn(events) do
+		for i = 1, #events do
 			events[i](self)
 		end
-		events = __postEmitEventsStack[table.maxn(__postEmitEventsStack)]
+		events = __postEmitEventsStack[#__postEmitEventsStack]
 		table.remove(__postEmitEventsStack)
-		length = table.maxn(events)
+		length = #events
 	end
 
 end
@@ -103,5 +103,5 @@ function addSignalMethods (self)
 end
 
 function addPostEmitEvent (event)
-	table.insert(__postEmitEventsStack[table.maxn(__postEmitEventsStack)], event)
+	table.insert(__postEmitEventsStack[#__postEmitEventsStack], event)
 end

@@ -203,20 +203,20 @@ function ActionSystem:__init (parent)
 end
 
 function ActionSystem:isEmpty ()
-	return (table.maxn(self.actionList) == 0)
+	return (#self.actionList == 0)
 end
 
 function ActionSystem:manageActions (seconds)
-	if table.maxn(self.actionList) > 0 then
+	if #self.actionList > 0 then
 		local tempList = {}
-		for i = 1, table.maxn(self.actionList) do
+		for i = 1, #self.actionList do
 			if not self.actionList[i].finished then
 				table.insert(tempList, self.actionList[i])
 			end
 		end
 		self.actionList = tempList
 
-		if table.maxn(self.actionList) > 0 then
+		if #self.actionList > 0 then
 			log(INFO, string.format("Executing %s", tostring(self.actionList[1])))
 			if self.actionList[1]:execute(seconds) then
 				table.remove(self.actionList, 1)
@@ -226,7 +226,7 @@ function ActionSystem:manageActions (seconds)
 end
 
 function ActionSystem:clear ()
-	for i = 1, table.maxn(self.actionList) do
+	for i = 1, #self.actionList do
 		self.actionList[i]:cancel()
 	end
 end
@@ -235,7 +235,7 @@ function ActionSystem:queue (action)
 	if not action.canMultiplyQueue then
 		local multiple = false
 
-		for i = 1, table.maxn(self.actionList) do
+		for i = 1, #self.actionList do
 			if tostring(self.actionList[i]) == tostring(action) then
 				log(WARNING, string.format("Trying to multiply queue %s, but that isn't allowed\r\n", tostring(action)))
 				multiple = true
@@ -253,7 +253,7 @@ function ActionSystem:queue (action)
 end
 
 function ActionSystem:getAnimationFrame ()
-	if table.maxn(self.actionList) == 0 then
+	if #self.actionList == 0 then
 		return 0
 	else
 		return self.actionList[1]:getAnimationFrame()

@@ -43,7 +43,7 @@ MessageSystem = {
 
 		local namesToIds = {}
 		local idsToNames = {}
-		for i = 1,table.maxn(stateVariableNames) do
+		for i = 1, #stateVariableNames do
 			namesToIds[stateVariableNames[i]] = i
 			idsToNames[i] = stateVariableNames[i]
 		end
