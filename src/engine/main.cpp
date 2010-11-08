@@ -1173,8 +1173,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     int dedicated = 0;
     char *load = NULL, *initscript = NULL;
 
-    // INTENSITY: Renamed sauerlog, to not get in the way of our Logging::log
-    #define sauerlog(s) puts("init: " s)
+    #define initlog(s) Logging::log_noformat(Logging::INIT, s)
 
     initing = INIT_RESET;
     for(int i = 1; i<argc; i++)
@@ -1219,7 +1218,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     if(dedicated <= 1)
     {
-        sauerlog("sdl");
+        initlog("sdl");
 
         int par = 0;
         #ifdef _DEBUG
@@ -1232,18 +1231,18 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
         if(SDL_Init(SDL_INIT_TIMER|SDL_INIT_VIDEO|SDL_INIT_AUDIO|par)<0) fatal("Unable to initialize SDL: %s", SDL_GetError());
     }
 
-    sauerlog("net");
+    initlog("net");
     if(enet_initialize()<0) fatal("Unable to initialise network module");
     atexit(enet_deinitialize);
     enet_time_set(0);
 
-    sauerlog("game");
+    initlog("game");
     game::parseoptions(gameargs);
     initserver(dedicated>0, dedicated>1);  // never returns if dedicated
     ASSERT(dedicated <= 1);
     game::initclient();
 
-    sauerlog("video: mode");
+    initlog("video: mode");
     const SDL_VideoInfo *video = SDL_GetVideoInfo();
     if(video) 
     {
@@ -1253,22 +1252,22 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     int usedcolorbits = 0, useddepthbits = 0, usedfsaa = 0;
     setupscreen(usedcolorbits, useddepthbits, usedfsaa);
 
-    sauerlog("video: misc");
+    initlog("video: misc");
     SDL_WM_SetCaption("CubeCreate", NULL); // INTENSITY
     keyrepeat(false);
     SDL_ShowCursor(0);
 
-    sauerlog("gl");
+    initlog("gl");
     gl_checkextensions();
     gl_init(scr_w, scr_h, usedcolorbits, useddepthbits, usedfsaa);
     notexture = textureload("packages/textures/notexture.png");
     if(!notexture) fatal("could not find core textures");
 
-    sauerlog("lua");
+    initlog("lua");
     LuaEngine::create();
     if (!LuaEngine::exists()) fatal("cannot initialize lua script engine");
 
-    sauerlog("console");
+    initlog("console");
     persistidents = false;
     if(!execfile("data/stdlib.cfg", false)) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
     if(!LuaEngine::runFile("data/font.lua").empty()) fatal("cannot find font definitions");
@@ -1277,19 +1276,19 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     inbetweenframes = true;
     renderbackground("initializing...");
 
-    sauerlog("gl: effects");
+    initlog("gl: effects");
     loadshaders();
     particleinit();
     initdecals();
 
-    sauerlog("world");
+    initlog("world");
     camera1 = player = game::iterdynents(0);
     emptymap(0, true, NULL, false);
 
-    sauerlog("sound");
+    initlog("sound");
     initsound();
 
-    sauerlog("cfg");
+    initlog("cfg");
 
     LuaEngine::runFile("data/keymap.lua");
     LuaEngine::runFile("data/sounds.lua");
@@ -1316,19 +1315,19 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     persistidents = true;
 
-    sauerlog("Intensity Engine System Initialization");
+    initlog("Intensity Engine System Initialization");
     SystemManager::init(); // INTENSITY
 
     if(load)
     {
-        sauerlog("localconnect");
+        initlog("localconnect");
         //localconnect();
         game::changemap(load);
     }
 
     if(initscript) execute(initscript);
 
-    sauerlog("mainloop");
+    initlog("mainloop");
 
     initmumble();
     resetfpshistory();

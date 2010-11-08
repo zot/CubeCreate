@@ -439,10 +439,8 @@ if Global.SERVER then
 
 		MessageSystem.send(clientNumber, CAPI.NotifyNumEntities, numEntities)
 
-		local ids = table.keys(__entitiesStore)
-		table.sort(ids)
-		for i = 1, #ids do
-			__entitiesStore[ ids[i] ]:sendCompleteNotification(clientNumber)
+		for k, v in pairs(__entitiesStore) do
+			v:sendCompleteNotification(clientNumber)
 		end
 	end
 

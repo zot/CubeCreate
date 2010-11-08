@@ -72,6 +72,7 @@ function StateVariable:_register (_name, parent)
 	log(INFO, string.format("Setting up setter/getter for %s", _name))
 	assert(self.getter)
 	assert(self.setter)
+	log(DEBUG, "Defining some setter and getter for " .. _name)
 	parent:__defineGetter(_name, self.getter, self)
 	parent:__defineSetter(_name, self.setter, self)
 	if self.altName then
@@ -107,7 +108,7 @@ function StateVariable:getter (variable)
 end
 
 function StateVariable:setter (variable, value)
---	log(INFO, "StateVariable::setter")
+	log(INFO, "StateVariable::setter")
 
 	variable:writeTests(self)
 	self:_setStateDatum(variable._name, value, nil)
@@ -531,7 +532,7 @@ WrappedCVariable = {
 			return value
 		else
 			log(INFO, "WCV getter: fallback to stateData since " .. tostring(variable.cGetter))
-			return self[StateVariable].getter(self, variable)
+			return variable[StateVariable].getter(self, variable)
 		end
 	end
 }
@@ -727,5 +728,4 @@ StateJSON.toData = selftojson
 StateJSON.fromData = selffromjson
 function StateJSON:__tostring () return "StateJSON" end
 
--- TODO: equivalent in lua
---registerJSON("LogicEntity", function(val) { return val.uniqueId !== undefined; }, function(val) { return val.uniqueId; }, true);
+registerJSON(function (val) return (type(val) == "table" and val.uniqueId ~= nil) end, function (val) return val.uniqueId end)

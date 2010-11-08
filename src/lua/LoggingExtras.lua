@@ -7,7 +7,6 @@ INFO = Logging.INFO
 DEBUG = Logging.DEBUG
 WARNING = Logging.WARNING
 ERROR = Logging.ERROR
-OFF = Logging.OFF
 
 -- We also do our own asserts
 

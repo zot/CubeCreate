@@ -353,7 +353,7 @@ struct hline
             alias("commandbuf", buf);
             execute(action);
         }
-        else if(buf[0]=='/') execute(buf+1);
+        else if(buf[0]=='/') LuaEngine::runScript(buf+1);
         else game::toserver(buf);
     }
 };

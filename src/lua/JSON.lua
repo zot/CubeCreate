@@ -24,6 +24,10 @@ local encodeString
 local isArray
 local isEncodable
 
+-- CubeCreate content
+--- Public table storing information about simplification registers.
+JSONRegisterStorage = {}
+
 -----------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
 -----------------------------------------------------------------------------
@@ -36,29 +40,38 @@ function encodeJSON (v)
     return "null"
   end
   
-  local vtype = type(v)  
+  local enc = v
+
+  -- CubeCreate - make use of register storage
+  for i, t in ipairs(JSONRegisterStorage) do
+	if t[1](enc) then
+		enc = t[2](enc)
+	end
+  end
+
+  local vtype = type(enc)
 
   -- Handle strings
   if vtype=='string' then    
-    return '"' .. encodeString(v) .. '"'	    -- Need to handle encoding in string
+    return '"' .. encodeString(enc) .. '"'	    -- Need to handle encoding in string
   end
   
   -- Handle booleans
   if vtype=='number' or vtype=='boolean' then
-    return tostring(v)
+    return tostring(enc)
   end
   
   -- Handle tables
   if vtype=='table' then
     local rval = {}
     -- Consider arrays separately
-    local bArray, maxCount = isArray(v)
+    local bArray, maxCount = isArray(enc)
     if bArray then
       for i = 1,maxCount do
-        table.insert(rval, encodeJSON(v[i]))
+        table.insert(rval, encodeJSON(enc[i]))
       end
     else	-- An object, not an array
-      for i,j in pairs(v) do
+      for i,j in pairs(enc) do
         if isEncodable(i) and isEncodable(j) then
           table.insert(rval, '"' .. encodeString(i) .. '":' .. encodeJSON(j))
         end
@@ -76,9 +89,16 @@ function encodeJSON (v)
     return 'null'
   end
   
-  assert(false,'encode attempt to encode unsupported type ' .. vtype .. ':' .. tostring(v))
+  assert(false,'encode attempt to encode unsupported type ' .. vtype .. ':' .. tostring(enc))
 end
 
+-- CubeCreate content
+--- register a simplifier function for encoding
+-- @param check Function that returns true if argument passed to it can be simplified
+-- @param simplifier Function to call when @p check returns true
+function registerJSON(check, simplifier)
+	table.insert(JSONRegisterStorage, { check, simplifier })
+end
 
 --- Decodes a JSON string and returns the decoded value as a Lua data structure / value.
 -- @param s The string to scan.
