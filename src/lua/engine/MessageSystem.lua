@@ -14,10 +14,10 @@ MessageSystem = {
 		local server
 		local clientNumber
 
-		if tostring(args[1]) == "LogicEntity" then
+		if is_a(args[1], LogicEntity) then
 			server = true
 			clientNumber = args[1].clientNumber
-		elseif typeof(args[1]) == "number" then
+		elseif type(args[1]) == "number" then
 			server = true
 			clientNumber = args[1]
 		else
@@ -31,7 +31,7 @@ MessageSystem = {
 
 		if server then table.insert(args, 1, clientNumber) end
 
-		log(DEBUG, string.format("Scripting MessageSystem: Sending %s with [%s]", tostring(messageType), table.concat(args, ",")))
+		log(DEBUG, string.format("Scripting MessageSystem: Sending %s with [%s]", tostring(messageType), table.concat(table.map(args, function (x) return tostring(x) end), ",")))
 
 		messageType(unpack(args))
 	end,

@@ -16,7 +16,7 @@ namespace Logging
     //! WARNING: possible problems
     //! ERROR: problems, that generally imply we cannot recover
     //! OFF: no logging will be done
-    enum Level { INFO, DEBUG, WARNING, ERROR, OFF };
+    enum Level { INFO, DEBUG, WARNING, ERROR, INIT, OFF };
 
     //! Sets the current debugging level
     void setCurrLevel(Level level);

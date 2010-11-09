@@ -19,7 +19,7 @@ function getEntity (uniqueId)
 		log(INFO, string.format("getEntity found entity %i (%i)", uniqueId, ret.uniqueId))
 		return ret
 	else
-		log(INFO, string.format("getEntity could not find entity %i", uniqueId))
+		log(INFO, string.format("getEntity could not find entity %s", tostring(uniqueId)))
 		return nil
 	end
 end
@@ -142,6 +142,7 @@ function addEntity (_className, uniqueId, kwargs, _new)
 end
 
 function removeEntity (uniqueId)
+	uniqueId = tonumber(uniqueId)
 	log(DEBUG, string.format("Removing Scripting LogicEntity: %i", uniqueId))
 
 	if not __entitiesStore[uniqueId] then
@@ -171,6 +172,7 @@ function removeEntity (uniqueId)
 end
 
 function removeAllEntities ()
+	log(DEBUG, "Clearing up logic entities")
 	local _keys = table.keys(__entitiesStore)
 	for i = 1, #_keys do
 		removeEntity(_keys[i])

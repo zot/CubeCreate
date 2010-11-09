@@ -204,7 +204,7 @@ EXTENT_LE_ACCESSORS(getCollisionRadiusHeight, setCollisionRadiusHeight, collisio
 //Add 'FAST' versions of accessors - no addeneity/removeentity. Good to change e.g. particle parameters
 
 
-LUA_EMBED_T(getExtentO_raw, 1, i, {
+LUA_EMBED_T(getExtent0_raw, 1, i, {
     extentity* e = self.get()->staticEntity;
     assert(e);
     assert(arg2 >= 0 && arg2 <= 2);
@@ -214,7 +214,7 @@ LUA_EMBED_T(getExtentO_raw, 1, i, {
     LuaEngine::pushValue(e->o[arg2]);
 });
 
-LUA_EMBED_T(setExtentO_raw, 0, ddd, {
+LUA_EMBED_T(setExtent0_raw, 0, ddd, {
     extentity* e = self.get()->staticEntity;
     assert(e);
 
@@ -263,7 +263,7 @@ DYNENT_ACCESSORS(getTimeInAir, setTimeInAir, i, int, timeinair);
 // For dynents, 'o' is at their head, not their feet like static entities. We make this uniform by
 // letting scripting specify a feet position, and we work relative to their height - add to
 // assignments, subtract from readings
-LUA_EMBED_T(getDynentO_raw, 1, i, {
+LUA_EMBED_T(getDynent0_raw, 1, i, {
     fpsent* d = dynamic_cast<fpsent*>(self.get()->dynamicEntity);
     assert(d);
     assert(arg2 >= 0 && arg2 <= 2);
@@ -275,7 +275,7 @@ LUA_EMBED_T(getDynentO_raw, 1, i, {
     }
 });
 
-LUA_EMBED_T(setDynentO_raw, 0, ddd, {
+LUA_EMBED_T(setDynent0_raw, 0, ddd, {
     fpsent* d = dynamic_cast<fpsent*>(self.get()->dynamicEntity);
     assert(d);
 
@@ -420,12 +420,11 @@ LUA_EMBED_sss(combineImages, 0, {
 #endif
 
 #ifdef CLIENT
-// TODO:: MUSIC
 LUA_EMBED_s(music, 0, {
     assert( Utility::validateAlphaNumeric(arg1, "._/") );
     std::string command = "music \"";
     command += arg1;
-    command += "\" [ run_lua \"Sound.musicCallback()\" ]";
+    command += "\" [ run_script \"Sound.musicCallback()\" ]";
     CSSUDO(command.c_str());
 });
 #else
@@ -489,16 +488,16 @@ LUA_EMBED_i(playSound, 0, {
         adddecal(arg1, center, surface, arg8, color, arg12);
     });
 
-    VARP(lblood, 0, 1, 1); // FIXME: remove "l"
+    VARP(blood, 0, 1, 1);
 
     LUA_EMBED_iiidddidiibibi(particleSplash, 0, {
-        if (arg1 == PART_BLOOD && !lblood) return 0;
+        if (arg1 == PART_BLOOD && !blood) return 0;
         vec p(arg4, arg5, arg6);
         particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
     });
 
     LUA_EMBED_iiidddidiiibi(particleSplashRegular, 0, {
-        if (arg1 == PART_BLOOD && !lblood) return 0;
+        if (arg1 == PART_BLOOD && !blood) return 0;
         vec p(arg4, arg5, arg6);
         regular_particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
     });
@@ -2156,10 +2155,10 @@ LUA_EMBED_s(reloadModel, 0, {
 
 // Rendering
 
-    VARP(ragdolll, 0, 1, 1);
+    VARP(ragdoll, 0, 1, 1);
     static int oldThirdperson = -1;
 
-    void prepareRagdollLua(int& anim, LogicEntityPtr self)
+    void prepareRagdoll(int& anim, LogicEntityPtr self)
     {
         if (anim&ANIM_RAGDOLL)
         {
@@ -2176,7 +2175,7 @@ LUA_EMBED_s(reloadModel, 0, {
                 }
             }
 
-            if (fpsEntity->ragdoll || !ragdolll || !PhysicsManager::getEngine()->prepareRagdoll(self))
+            if (fpsEntity->ragdoll || !ragdoll || !PhysicsManager::getEngine()->prepareRagdoll(self))
             {
                 anim &= ~ANIM_RAGDOLL;
                 LuaEngine::getRef(self->luaRef);
@@ -2233,7 +2232,7 @@ LUA_EMBED_s(reloadModel, 0, {
 
     #define PREP_RENDER_MODEL \
         int anim = arg3; \
-        prepareRagdollLua(anim, self); \
+        prepareRagdoll(anim, self); \
         vec o(arg4, arg5, arg6); \
         fpsent *fpsEntity = NULL; \
         if (self->dynamicEntity) \

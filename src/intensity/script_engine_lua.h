@@ -618,6 +618,8 @@ class LuaEngine
     static lua_State *L;
     // do we run tests? if true, then yes.
     static bool runTests;
+    // were tests ran already? if yes, don't run them again
+    static bool ranTests;
     /* Initialize base lua lubraries
      * 
      * Initializes base Lua libraries, like math, table, string and stuff.

@@ -106,10 +106,10 @@ function RootLogicEntity:createStateDataDict (targetClientNumber, kwargs)
 
 			local value = self[variable._name]
 			if value then
-				log(DEBUG, string.format("createStateDataDict() addding %s:%s", variable._name, encodeJSON(value)))
+				log(INFO, string.format("createStateDataDict() addding %s:%s", variable._name, encodeJSON(value)))
 				ret[sif(not kwargs.compressed, variable._name, MessageSystem.toProtocolId(tostring(self), variable._name))] = variable:toData(value)
-				log(DEBUG, "createStateDataDict() currently...")
-				log(DEBUG, string.format("createStateDataDict() currently: %s", encodeJSON(ret)))
+				log(INFO, "createStateDataDict() currently...")
+				log(INFO, string.format("createStateDataDict() currently: %s", encodeJSON(ret)))
 			end
 		end
 	end
@@ -361,19 +361,24 @@ function ServerLogicEntity:_setStateDatum (key, value, actorUniqueId, internalOp
 				return nil
 			end
 
+			local cn = -1
+			if variable.clientSet and actorUniqueId then cn = getEntity(actorUniqueId).clientNumber end
+			local rel = CAPI.UnreliableStateDataUpdate
+			if variable.reliable then rel = CAPI.StateDataUpdate end
+
 			local args = {
 				nil,
-				sif(variable.reliable, CAPI.StateDataUpdate, CAPI.UnrealiableStateDataUpdate),
+				rel,
 				self.uniqueId,
 				MessageSystem.toProtocolId(_class, key),
 				variable:toWire(value),
-				sif(variable.clientSet and actorUniqueId, getEntity(actorUniqueId).clientNumber, -1)
+				cn
 			}
 
 			local _clientNumbers = getClientNumbers()
 			for i = 1, #_clientNumbers do
 				if not variable:shouldSend(self, _clientNumbers[i]) then return nil end
-				args[1] = clientNumber
+				args[1] = _clientNumbers[i]
 				MessageSystem.send(unpack(args))
 			end
 		end
@@ -403,9 +408,9 @@ function ServerLogicEntity:_flushQueuedStateVariableChanges ()
 	for i = 1, #_names do
 		local value = changes[ _names[i] ]
 		local variable = self[ __SV_PREFIX .. _names[i] ]
-		log(DEBUG, string.format("(A) Flushing queued SV change: %s - %s (real: %s)", key, tostring(value), tostring(self.stateVariableValues[key])))
-		self[key] = self.stateVariableValues[key]
-		log(DEBUG, string.format("(B) Flushing of %s - ok", key))
+		log(DEBUG, string.format("(A) Flushing queued SV change: %s - %s (real: %s)", _names[i], tostring(value), tostring(self.stateVariableValues[key])))
+		self[ _names[i] ] = self.stateVariableValues[ _names[i] ]
+		log(DEBUG, string.format("(B) Flushing of %s - ok", _names[i]))
 	end
 
 	self._queuedStateVariableChangesComplete = true

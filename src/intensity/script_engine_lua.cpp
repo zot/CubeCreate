@@ -43,6 +43,7 @@ std::string LuaEngine::version   = "0.0";
 bool        LuaEngine::hasState  = false;
 lua_State  *LuaEngine::L         = NULL;
 bool        LuaEngine::runTests  = false; // later set (when setting up embedding)
+bool        LuaEngine::ranTests  = false;
 
 /////////////////////
 // PRIVATE METHODS //
@@ -71,6 +72,7 @@ void LuaEngine::setupEmbedding()
     runTests = Utility::Config::getInt("Logging", "scripting_tests", 1);
 
     if (runTests) runFile(scriptDir + "__TestingEnvironment.lua");
+    if (ranTests) runTests = false;
 
     // setup logging outside CAPI, into its own "namespace".
     // the "namespace" is actually left on stack.
@@ -82,7 +84,6 @@ void LuaEngine::setupEmbedding()
     PUSHLEVEL(DEBUG)
     PUSHLEVEL(WARNING)
     PUSHLEVEL(ERROR)
-    PUSHLEVEL(OFF)
     pop(1);
 
     // General modules, not relating directly to CubeCreate.
@@ -125,6 +126,14 @@ void LuaEngine::setupEmbedding()
     setupModule("engine/Sound");
     setupModule("engine/Application");
     setupModule("engine/Effects");
+
+    // If tests were run, restart the engine after running them. Mainly to make sure everything is back as needed
+    if (runTests)
+    {
+        destroy();
+        ranTests = true;
+        create();
+    }
 }
 
 //////////////////////////////

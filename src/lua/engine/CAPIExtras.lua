@@ -67,7 +67,7 @@ end
 
 local oldSetModelName = CAPI.setModelName
 function CAPI.setModelName (self, model)
-	log(DEBUG, "CAPI.setModelName: " .. model .. "(" .. type(model) .. "), self=" .. self)
+	log(DEBUG, "CAPI.setModelName: " .. model .. "(" .. type(model) .. "), self=" .. tostring(self))
 	oldSetModelName(self, model)
 end
 

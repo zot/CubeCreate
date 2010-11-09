@@ -17,10 +17,10 @@ Level currLevel;
 
 int currIndent = 0;
 
-#define NUM_LEVELS 5
+#define NUM_LEVELS 6
 
-std::string    levelNames[NUM_LEVELS] = { "INFO",        "DEBUG",        "WARNING",        "ERROR",        "OFF"        };
-Level levelEnums[NUM_LEVELS] = { INFO, DEBUG, WARNING, ERROR, OFF };
+std::string    levelNames[NUM_LEVELS] = { "INFO", "DEBUG", "WARNING", "ERROR", "INIT", "OFF" };
+Level levelEnums[NUM_LEVELS] = { INFO, DEBUG, WARNING, ERROR, INIT, OFF };
 
 Level levelNameToEnum(std::string levelName)
 {
@@ -72,6 +72,7 @@ void log(Level level, const char *fmt, ...)
             case DEBUG  : levelString = "DEBUG"  ; break;
             case WARNING: levelString = "WARNING"; break;
             case ERROR  : levelString = "ERROR"  ; break;
+            case INIT   : levelString = "INIT"   ; break;
             case OFF    : levelString = "OFF"    ; break;
         }
 

@@ -72,7 +72,6 @@ function StateVariable:_register (_name, parent)
 	log(INFO, string.format("Setting up setter/getter for %s", _name))
 	assert(self.getter)
 	assert(self.setter)
-	log(DEBUG, "Defining some setter and getter for " .. _name)
 	parent:__defineGetter(_name, self.getter, self)
 	parent:__defineSetter(_name, self.setter, self)
 	if self.altName then
@@ -108,7 +107,7 @@ function StateVariable:getter (variable)
 end
 
 function StateVariable:setter (variable, value)
-	log(INFO, "StateVariable::setter")
+--	log(INFO, "StateVariable::setter")
 
 	variable:writeTests(self)
 	self:_setStateDatum(variable._name, value, nil)
@@ -494,10 +493,11 @@ WrappedCVariable = {
 
 		if self.cSetter then
 			local prefix = getOnModifyPrefix()
-			parent:connect(prefix .. _name, function (value)
+			local variable = self
+			parent:connect(prefix .. _name, function (entity, value)
 				if Global.CLIENT or parent:canCallCFuncs() then
 					log(INFO, string.format("Calling cSetter for %s, with %s (%s)", self._name, tostring(value), type(value)))
-					self:cSetter(parent, value)
+					variable.cSetter(parent, value)
 
 					parent.stateVariableValues[self._name] = value
 					parent.stateVariableValueTimestamps[self._name] = Global.currTimestamp
@@ -522,7 +522,7 @@ WrappedCVariable = {
 		log(INFO, "WCV getter " .. variable._name)
 		if variable.cGetter and (Global.CLIENT or self:canCallCFuncs()) then
 			log(INFO, "WCV getter: call C")
-			local value = variable:cGetter(self)
+			local value = variable.cGetter(self)
 
 			if Global.CLIENT or self._queuedStateVariableChangesComplete then
 				self.stateVariableValues[variable._name] = value
@@ -580,7 +580,7 @@ table.merge(WrappedCArray, {
 
 			log(INFO, "WCA.getRaw: call C")
 
-			local value = self:cGetter(entity)
+			local value = self.cGetter(entity)
 			if Global.CLIENT or entity._queuedStateVariableChangesComplete then
 				entity.stateVariableValues[self._name] = value
 				entity.stateVariableValueTimestamps[self._name] = Global.currTimestamp
