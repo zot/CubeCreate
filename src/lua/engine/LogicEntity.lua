@@ -107,7 +107,11 @@ function RootLogicEntity:createStateDataDict (targetClientNumber, kwargs)
 			local value = self[variable._name]
 			if value then
 				log(INFO, string.format("createStateDataDict() addding %s:%s", variable._name, encodeJSON(value)))
-				ret[sif(not kwargs.compressed, variable._name, MessageSystem.toProtocolId(tostring(self), variable._name))] = variable:toData(value)
+				local _key = variable._name
+				if kwargs.compressed then
+					_key = MessageSystem.toProtocolId(tostring(self), variable._name)
+				end
+				ret[tostring(_key)] = variable:toData(value)
 				log(INFO, "createStateDataDict() currently...")
 				log(INFO, string.format("createStateDataDict() currently: %s", encodeJSON(ret)))
 			end

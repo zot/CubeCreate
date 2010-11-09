@@ -160,12 +160,11 @@ function Character:renderDynamic (HUDPass, needHUD)
 		self.renderingArgs = self:createRenderingArgs(mdlname, anim, o, yaw, pitch, flags, basetime)
 		self.renderingArgsTimestamp = currTimestamp
 	end
-
-	self:getRenderModelFunc()(self, self.renderingArgs)
+	self:getRenderModelFunc()(unpack(table.values(self.renderingArgs)))
 end
 
 function Character:getRenderModelFunc ()
-	return CAPI.renderModel
+	return CAPI.renderModel2
 end
 
 function Character:createRenderingArgs (mdlname, anim, o, yaw, pitch, flags, basetime)
@@ -185,7 +184,7 @@ function Character:decideAnimation (state, physstate, move, strafe, vel, falling
 
 	if state == CLIENTSTATE.EDITING or state == CLIENTSTATE.SPECTATOR then
 		anim = CMath.bor(ANIM_EDIT, ANIM_LOOP)
-	elseif state == CLIENSTATE.LAGGED then
+	elseif state == CLIENTSTATE.LAGGED then
 		anim = CMath.bor(ANIM_LAG, ANIM_LOOP)
 	else
 		if inwater and physstate <= PHYSICALSTATE.FALL then

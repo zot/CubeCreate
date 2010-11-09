@@ -22,10 +22,10 @@ log(DEBUG, "Generic array tests:")
 
 local dummy = StateArray()
 
-assert(dummy:toWire({1}) == "{1}")
-assert(dummy:toData({1}) == "{1}")
-assert(table.concat(dummy:fromWire("{1|2}")) == "12")
-assert(table.concat(dummy:fromData("{1|2}")) == "12")
+assert(dummy:toWire({1}) == "[1]")
+assert(dummy:toData({1}) == "[1]")
+assert(table.concat(dummy:fromWire("[1|2]")) == "12")
+assert(table.concat(dummy:fromData("[1|2]")) == "12")
 
 local x = { "a", "4" }
 assert(type(dummy:toWire(x)) == "string")
@@ -157,7 +157,7 @@ log(DEBUG, "Array tests:")
 
 test.arr1:_register("arr1", test)
 test.arr1 = {'a', 'bcd'}
-assert(test[__SV_PREFIX .. "arr1"]:toData(test.stateVariableValues["arr1"]) == "{a|bcd}")
+assert(test[__SV_PREFIX .. "arr1"]:toData(test.stateVariableValues["arr1"]) == "[a|bcd]")
 assert(table.concat(test.stateVariableValues["arr1"]) == "abcd")
 assert(table.concat(test.arr1:asArray()) == "abcd")
 
@@ -167,17 +167,17 @@ assert(table.concat(test.arr1:asArray()) == "abcd")
 
 test.arr2:_register("arr2", test)
 test.arr2 = {'a', 'b', 'cd', 'ë́'}
-assert(test[__SV_PREFIX .. "arr2"]:toData(test.stateVariableValues["arr2"]) == "{a|b|cd|ë́}")
+assert(test[__SV_PREFIX .. "arr2"]:toData(test.stateVariableValues["arr2"]) == "[a|b|cd|ë́]")
 assert(table.concat(test.stateVariableValues["arr2"]) == "abcdë́")
 assert(table.concat(test.arr2:asArray()) == "abcdë́")
 test.arr2:set(3, "firgl")
-assert(test[__SV_PREFIX .. "arr2"]:toData(test.stateVariableValues["arr2"]) == "{a|b|firgl|ë́}")
+assert(test[__SV_PREFIX .. "arr2"]:toData(test.stateVariableValues["arr2"]) == "[a|b|firgl|ë́]")
 assert(table.concat(test.arr2:asArray()) == "abfirglë́")
 test.arr2:push("xor")
-assert(test[__SV_PREFIX .. "arr2"]:toData(test.stateVariableValues["arr2"]) == "{a|b|firgl|ë́|xor}")
+assert(test[__SV_PREFIX .. "arr2"]:toData(test.stateVariableValues["arr2"]) == "[a|b|firgl|ë́|xor]")
 assert(table.concat(test.arr2:asArray()) == "abfirglë́xor")
 
-assert(test[__SV_PREFIX .. "arr1"]:toData(test.stateVariableValues["arr1"]) == "{a|bcd}") -- Ensure that first array is untouched
+assert(test[__SV_PREFIX .. "arr1"]:toData(test.stateVariableValues["arr1"]) == "[a|bcd]") -- Ensure that first array is untouched
 assert(table.concat(test.stateVariableValues["arr1"]) == "abcd")
 assert(table.concat(test.arr1:asArray()) == "abcd")
 
@@ -186,7 +186,7 @@ log(DEBUG, "ArrayFloat tests:")
 test.farr1:_register("farr1", test)
 test.farr1 = {1, 7.56}
 assert(type(test.farr1:get(1)) == "number")
-assert(test[__SV_PREFIX .. "farr1"]:toData(test.stateVariableValues["farr1"]) == "{1|7.56}")
+assert(test[__SV_PREFIX .. "farr1"]:toData(test.stateVariableValues["farr1"]) == "[1|7.56]")
 assert(table.concat(test.farr1:asArray()) == "17.56")
 
 -- Subclasses, aliases, etc
@@ -233,29 +233,29 @@ assert(test.int1 == 18)
 
 log(DEBUG, "Wrapping tests:")
 
-local testGetter = function (self, entity)
+local testGetter = function (entity)
 	return entity.uniqueId + 1
 end
 
-local testGetter2 = function (self, entity)
+local testGetter2 = function (entity)
 	return entity.uniqueId + 2
 end
 
 local VALS = {}
 
-local testSetter = function (self, entity, value)
+local testSetter = function (entity, value)
 	VALS[entity.uniqueId] = value + 1
 end
 
-local testSetter2 = function (self, entity, value)
+local testSetter2 = function (entity, value)
 	VALS[entity.uniqueId] = value + 2
 end
 
-local testVecGetter = function (self, entity)
+local testVecGetter = function (entity)
 	return {entity.uniqueId + 1, entity.uniqueId + 3, entity.uniqueId + 2}
 end
 
-local testVecSetter = function (self, entity, value)
+local testVecSetter = function (entity, value)
 	log(DEBUG, "testVecSetter: " .. tostring(entity.uniqueId) .. "," .. tostring(value))
 	VALS[entity.uniqueId] = value
 end
@@ -305,7 +305,7 @@ assert(table.concat(wrap.wrapvec3:asArray()), "133113331332")
 wrap.wrapvec3 = {4,1,6}
 
 log(DEBUG, "Final variables test: " .. wrap[__SV_PREFIX .. "wrapvec3"]:toData(wrap.stateVariableValues["wrapvec3"]))
-assert(wrap[__SV_PREFIX .. "wrapvec3"]:toData(wrap.stateVariableValues["wrapvec3"]) == "{4|1|6}")
+assert(wrap[__SV_PREFIX .. "wrapvec3"]:toData(wrap.stateVariableValues["wrapvec3"]) == "[4|1|6]")
 
 assert(table.concat(wrap.wrapvec3:asArray()) == sif(Global.CLIENT, "416", "133113331332"))
 assert(wrap.wrapvec3.x == sif(Global.CLIENT, 4, 1331))

@@ -152,7 +152,7 @@ LUA_EMBED_T(getAttachmentPosition, 1, s, {
     RETURN_VECTOR3(vposition);
 });
 
-LUA_EMBED_T(setCanMove, 0, i, {
+LUA_EMBED_T(setCanMove, 0, b, {
     self.get()->setCanMove(arg2);
 });
 

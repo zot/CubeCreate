@@ -328,7 +328,7 @@ function StateArray:toWire (value)
 		value = value:asArray()
 	end
 
-	return '{' .. table.concat(table.map(value, self.toWireItem), self.separator) .. '}'
+	return '[' .. table.concat(table.map(value, self.toWireItem), self.separator) .. ']'
 end
 
 StateArray.fromWireItem = selftostring
@@ -336,10 +336,10 @@ StateArray.fromWireItem = selftostring
 function StateArray:fromWire (value)
 	log(DEBUG, "fromWire of StateArray: " .. encodeJSON(value))
 
-	if value == "{}" then
+	if value == "[]" then
 		return {}
 	else
-		return table.map(string.split(string.gsub(value, "[{}]", ""), self.separator), self.fromWireItem)
+		return table.map(string.split(string.gsub(value, "[%[%]]", ""), self.separator), self.fromWireItem)
 	end
 end
 
@@ -355,7 +355,7 @@ function StateArray:toData (value)
 
 	log(INFO, string.format("(2) StateArray.toData: %s %s %s", tostring(value), type(value), encodeJSON(value)))
 
-	return '{' .. table.concat(table.map(value, self.toDataItem), self.separator) .. '}'
+	return '[' .. table.concat(table.map(value, self.toDataItem), self.separator) .. ']'
 end
 
 StateArray.fromDataItem = selftostring
@@ -363,10 +363,10 @@ StateArray.fromDataItem = selftostring
 function StateArray:fromData (value)
 	log(DEBUG, string.format("StateArray.fromData %s::%s", tostring(self._name), tostring(value)))
 
-	if value == "{}" then
+	if value == "[]" then
 		return {}
 	else
-		return table.map(string.split(string.gsub(value, "[{}]", ""), self.separator), self.fromDataItem)
+		return table.map(string.split(string.gsub(value, "[%[%]]", ""), self.separator), self.fromDataItem)
 	end
 end
 

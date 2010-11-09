@@ -17,7 +17,7 @@ function CAPI.setExtent0 (self, vec)
 end
 
 function CAPI.setDynent0 (self, vec)
-	log(DEBUG, string.format("CAPI.setDynent0: %f,%f,%f", vec.x, vec.y, vec.z))
+	log(DEBUG, string.format("CAPI.setDynent0: %s,%s,%s", tostring(vec.x), tostring(vec.y), tostring(vec.z)))
 	CAPI.setDynent0_raw(self, vec.x, vec.y, vec.z)
 end
 
@@ -240,9 +240,9 @@ Library = {
 
 	include = function (_name, force)
 		if string.sub(_name, string.len(_name)) == "/" then
-			local _name = _name .. "Package.js"
-		elseif string.sub(_name, string.len(_name) - 2) ~= ".js" then
-			local _name = _name .. ".js"
+			_name = _name .. "Package.lua"
+		elseif string.sub(_name, string.len(_name) - 3) ~= ".lua" then
+			_name = _name .. ".lua"
 		end
 
 		if force or not Library.loadedModules[_name] then
