@@ -57,6 +57,10 @@ void LuaEngine::initLibs()
     luaopen_table(L);
     luaopen_string(L);
     luaopen_math(L);
+
+    // hacky way to make luaopen_package work, when it doesn't itself.
+    lua_pushcfunction(L, luaopen_package);
+    lua_call(L, 0, 0);
 }
 
 void LuaEngine::setupModule(std::string file, bool noTests)
@@ -68,6 +72,8 @@ void LuaEngine::setupModule(std::string file, bool noTests)
 void LuaEngine::setupEmbedding()
 {
     if (!exists()) return;
+
+    Logging::log(Logging::DEBUG, "Setting up embedding");
 
     runTests = Utility::Config::getInt("Logging", "scripting_tests", 1);
 
@@ -111,7 +117,8 @@ void LuaEngine::setupEmbedding()
     luaL_register(L, "CAPI", CAPI);
     pop(1);
 
-    setupModule("engine/CAPIExtras", true); // this also sets up other core modules
+    setupModule("LuaExtensions", true); // set up lua extensions right after we have CAPI
+    setupModule("engine/CAPIExtras", true);
     setupModule("engine/Utilities");
     setupModule("engine/Actions");
     setupModule("engine/LogicEntityStore");

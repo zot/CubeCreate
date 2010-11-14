@@ -275,7 +275,7 @@ end
 local wrap = WrappedClass()
 wrap.uniqueId = 1330
 
-addSignalMethods(wrap)
+Signals.addMethods(wrap)
 
 log(DEBUG, "Wrapped ints")
 
@@ -289,14 +289,14 @@ assert(not wrap.stateVariableValues["wrapint1"])
 assert(wrap.wrapint1 == 1331)
 wrap.wrapint1 = 2112
 assert(wrap.stateVariableValues["wrapint1"] == 2112)
-assert(wrap.wrapint1 == sif(Global.CLIENT, 2112, 1331)) -- when testing on client, stuff is not yet set
+assert(wrap.wrapint1 == Global.CLIENT and 2112 or 1331) -- when testing on client, stuff is not yet set
 
 wrap.wrapint2:_register("wrapint2", wrap)
 assert(not wrap.stateVariableValues["wrapint2"])
 assert(wrap.wrapint2 == 1332)
 wrap.wrapint2 = 444
 assert(wrap.stateVariableValues["wrapint2"] == 444)
-assert(wrap.wrapint2 == sif(Global.CLIENT, 444, 1332))
+assert(wrap.wrapint2 == Global.CLIENT and 444 or 1332)
 
 log(DEBUG, "Wrapped vecs")
 
@@ -307,26 +307,26 @@ wrap.wrapvec3 = {4,1,6}
 log(DEBUG, "Final variables test: " .. wrap[__SV_PREFIX .. "wrapvec3"]:toData(wrap.stateVariableValues["wrapvec3"]))
 assert(wrap[__SV_PREFIX .. "wrapvec3"]:toData(wrap.stateVariableValues["wrapvec3"]) == "[4|1|6]")
 
-assert(table.concat(wrap.wrapvec3:asArray()) == sif(Global.CLIENT, "416", "133113331332"))
-assert(wrap.wrapvec3.x == sif(Global.CLIENT, 4, 1331))
-assert(wrap.wrapvec3.y == sif(Global.CLIENT, 1, 1333))
-assert(wrap.wrapvec3.z == sif(Global.CLIENT, 6, 1332))
+assert(table.concat(wrap.wrapvec3:asArray()) == Global.CLIENT and "416" or "133113331332")
+assert(wrap.wrapvec3.x == Global.CLIENT and 4 or 1331)
+assert(wrap.wrapvec3.y == Global.CLIENT and 1 or 1333)
+assert(wrap.wrapvec3.z == Global.CLIENT and 6 or 1332)
 
 log(DEBUG, "Vector3 functions in WrappedCVector3/Vector3Surrogate:")
 
 local w = wrap.wrapvec3
-assert(w.x == sif(Global.CLIENT, 4, 1331))
-assert(w.y == sif(Global.CLIENT, 1, 1333))
-assert(w.z == sif(Global.CLIENT, 6, 1332))
+assert(w.x == Global.CLIENT and 4 or 1331)
+assert(w.y == Global.CLIENT and 1 or 1333)
+assert(w.z == Global.CLIENT and 6 or 1332)
 
 w = wrap.wrapvec3:copy()
-assert(w.x == sif(Global.CLIENT, 4, 1331))
-assert(w.y == sif(Global.CLIENT, 1, 1333))
-assert(w.z == sif(Global.CLIENT, 6, 1332))
+assert(w.x == Global.CLIENT and 4 or 1331)
+assert(w.y == Global.CLIENT and 1 or 1333)
+assert(w.z == Global.CLIENT and 6 or 1332)
 
 w.x = 17
 assert(w.x == 17)
-assert(w.y == sif(Global.CLIENT, 1, 1333))
-assert(w.z == sif(Global.CLIENT, 6, 1332))
+assert(w.y == Global.CLIENT and 1 or 1333)
+assert(w.z == Global.CLIENT and 6 or 1332)
 
 log(DEBUG, "---- VARIABLES TEST END ----")

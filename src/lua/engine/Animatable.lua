@@ -1,14 +1,14 @@
 MODEL = {
-	CULL_VFC = CMath.lsh(1, 0),
-	CULL_DIST = CMath.lsh(1, 1),
-	CULL_OCCLUDED = CMath.lsh(1, 2),
-	CULL_QUERY = CMath.lsh(1, 3),
-	SHADOW = CMath.lsh(1, 4),
-	DYNSHADOW = CMath.lsh(1, 5),
-	LIGHT = CMath.lsh(1, 6),
-	DYNLIGHT = CMath.lsh(1, 7),
-	FULLBRIGHT = CMath.lsh(1, 8),
-	NORENDER = CMath.lsh(1, 9)
+	CULL_VFC = math.lsh(1, 0),
+	CULL_DIST = math.lsh(1, 1),
+	CULL_OCCLUDED = math.lsh(1, 2),
+	CULL_QUERY = math.lsh(1, 3),
+	SHADOW = math.lsh(1, 4),
+	DYNSHADOW = math.lsh(1, 5),
+	LIGHT = math.lsh(1, 6),
+	DYNLIGHT = math.lsh(1, 7),
+	FULLBRIGHT = math.lsh(1, 8),
+	NORENDER = math.lsh(1, 9)
 }
 
 AnimatableLogicEntity = class(LogicEntity)
@@ -30,7 +30,7 @@ function AnimatableLogicEntity:init (uniqueId, kwargs)
 	self._attachmentsDict = {}
 	self.modelName = ""
 	self.attachments = {}
-	self.animation = CMath.bor(ANIM_IDLE, ANIM_LOOP)
+	self.animation = math.bor(ANIM_IDLE, ANIM_LOOP)
 	log(DEBUG, "Animatable.init done")
 end
 

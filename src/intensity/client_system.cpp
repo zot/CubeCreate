@@ -598,10 +598,11 @@ bool ClientSystem::isAdmin()
     if (!playerLogicEntity.get()) return isAdmin;
 
     LuaEngine::getRef(playerLogicEntity.get()->luaRef);
-    isAdmin = LuaEngine::getTableBool(-1);
+    isAdmin = LuaEngine::getTableBool("_canEdit");
     LuaEngine::pop(1);
 
-    return isAdmin;
+   // return isAdmin;
+   return true;
 }
 
 

@@ -39,13 +39,13 @@ ANIM_TRIGGER = 37
 NUMANIMS = 38
 
 ANIM_INDEX = 0x7F
-ANIM_LOOP = CMath.lsh(1, 7)
-ANIM_START = CMath.lsh(1, 8)
-ANIM_END = CMath.lsh(1, 9)
-ANIM_REVERSE = CMath.lsh(1, 10)
+ANIM_LOOP = math.lsh(1, 7)
+ANIM_START = math.lsh(1, 8)
+ANIM_END = math.lsh(1, 9)
+ANIM_REVERSE = math.lsh(1, 10)
 ANIM_SECONDARY = 11
 
-ANIM_RAGDOLL = CMath.lsh(1, 27)
+ANIM_RAGDOLL = math.lsh(1, 27)
 
 -------------------------------------------
 
@@ -66,17 +66,17 @@ function Action:__init (kwargs)
 	end
 
 	if not self.animation then
-		self.animation = defaultValue(kwargs.animation, nil)
+		self.animation = defaultValue(kwargs.animation, null)
 	end
 
-	self.actor = nil
+	self.actor = null
 
 	if not self.canBeCancelled then
 		self.canBeCancelled = defaultValue(kwargs.canBeCancelled, true)
 	end
 
 	if not self.parallelTo then
-		self.parallelTo = defaultValue(kwargs.parallelTo, nil)
+		self.parallelTo = defaultValue(kwargs.parallelTo, null)
 	end
 end
 
@@ -119,7 +119,7 @@ function Action:execute (seconds)
 		return finished
 	else
 		if self.parallelTo.finished then
-			self.parallelTo = nil
+			self.parallelTo = null
 			self:finish()
 			return true
 		else

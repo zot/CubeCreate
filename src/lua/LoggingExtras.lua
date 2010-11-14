@@ -1,25 +1,26 @@
--- Logging extras module for CubeCreate's lua.
--- Exports logging as globals so it's not needed to always call Logging.st.
+-------------------------------------------------------------------------------
+-- Logging extras for CubeCreate.
+-- Globalizes log function and its levels.
+-- Licensed under MIT/X11 (see the COPYING.txt).
+--
+-- @author q66 (quaker66@gmail.com)
+--
+-- @copyright 2010 CubeCreate project
+-------------------------------------------------------------------------------
 
+--- Logs a message into C++ logging system.<br/>
+-- There are several logging levels:<br/><br/>
+-- <strong>ERROR</strong> - Logs message as error, prints into console.<br/>
+-- <strong>WARNING</strong> - Logs message as warning, prints into terminal.<br/>
+-- <strong>DEBUG</strong> - Logs message as debug, doesn't print into terminal unless you've got your loglevel set to DEBUG.<br/>
+-- <strong>INFO</strong> - Use this when you want to log a message repeating i.e. every frame.<br/>
+-- @param level The logging level to use for the message
+-- @param message The message itself. Use string.format if you want to format it.
+-- @class function
+-- @name log
 log = Logging.log
 
 INFO = Logging.INFO
 DEBUG = Logging.DEBUG
 WARNING = Logging.WARNING
 ERROR = Logging.ERROR
-
--- We also do our own asserts
-
-assert_lua = assert
-function assert(expression, msg)
-	local ret = pcall(assert_lua, expression)
-	if not ret then
-		if msg then
-			log(ERROR, "<<SCRIPT>> Assertion failed: " .. msg)
-			assert_lua(expression, msg)
-		else
-			log(ERROR, "<<SCRIPT>> Assertion failed!")
-			assert_lua(expression)
-		end
-	end
-end

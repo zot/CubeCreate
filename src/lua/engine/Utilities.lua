@@ -141,13 +141,13 @@ function Vector3:asArray ()
 end
 
 function Vector3:fromYawPitch (yaw, pitch)
-	self.x = -math.sin(RAD * yaw)
-	self.y = math.cos(RAD * yaw)
+	self.x = -math.sin(math.RAD * yaw)
+	self.y = math.cos(math.RAD * yaw)
 
 	if pitch ~= 0 then
-		self.x = self.x * math.cos(RAD * pitch)
-		self.y = self.y * math.cos(RAD * pitch)
-		self.z = math.sin(RAD * pitch)
+		self.x = self.x * math.cos(math.RAD * pitch)
+		self.y = self.y * math.cos(math.RAD * pitch)
+		self.z = math.sin(math.RAD * pitch)
 	else
 		self.z = 0
 	end
@@ -161,8 +161,8 @@ function Vector3:toYawPitch ()
 		return { yaw = 0, pitch = 0 }
 	end
 	return {
-		yaw = -math.atan2(self.x, self.y) / RAD,
-		pitch = math.asin(self.z / size) / RAD
+		yaw = -math.atan2(self.x, self.y) / math.RAD,
+		pitch = math.asin(self.z / size) / math.RAD
 	}
 end
 
@@ -247,7 +247,7 @@ function Vector4:asArray ()
 end
 
 function Vector4:quatFromAxisAngle (axis, angle)
-	angle = angle * RAD
+	angle = angle * math.RAD
 	self.w = math.cos(angle / 2)
 	local s = math.sin(angle / 2)
 	self.x = s * axis.x
@@ -264,12 +264,12 @@ function Vector4:toYawPitchRoll ()
 
 	if math.abs(self.z) < 0.99 then
 		local ret = self:toYawPitch()
-		ret.roll = self.w / RAD
+		ret.roll = self.w / math.RAD
 		return ret
 	else
 		return {
-			yaw = self.w / RAD * sif(self.z < 0, 1, -1),
-			pitch = sif(self.z > 0, -90, 90),
+			yaw = self.w / math.RAD * (self.z < 0 and 1 or -1),
+			pitch = self.z > 0 and -90 or 90,
 			roll = 0
 		}
 	end
@@ -388,7 +388,7 @@ end
 function yawTo (origin, target, _reverse)
 	_reverse = defaultValue(_reverse, false)
 	if not _reverse then
-		return (-(math.atan2(target.x - origin.x, target.y - origin.y)) / RAD)
+		return (-(math.atan2(target.x - origin.x, target.y - origin.y)) / math.RAD)
 	else
 		return yawTo (target, origin)
 	end

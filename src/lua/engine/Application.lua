@@ -45,7 +45,7 @@ function Application:performStrafe (strafe, down)
 end
 
 function Application:performJump (down)
-	if down then getPlayerEntity().jump() end
+	if down then getPlayerEntity():jump() end
 end
 
 function Application:performYaw (yaw, down)
@@ -100,7 +100,7 @@ function Application:handleTextMessage (uniqueId, text)
 	return false
 end
 
-addSignalMethods(Application)
+Signals.addMethods(Application)
 
 
 ---------------------------------

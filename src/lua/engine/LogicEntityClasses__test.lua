@@ -21,7 +21,7 @@ registerEntityClass(tc1, "nada")
 assert(getEntityClass("tc1") == tc1)
 assert(getEntitySauerType("tc1") == "nada")
 
-log(DEBUG, "MI: " .. encodeJSON(MessageSystem.feedback))
+log(DEBUG, "MI: " .. JSON.encode(MessageSystem.feedback))
 
 log(DEBUG, "tc2")
 registerEntityClass(tc2, "wak")

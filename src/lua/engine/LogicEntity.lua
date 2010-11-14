@@ -20,7 +20,7 @@ function RootLogicEntity:_generalSetup ()
 
 	if self._generalSetupComplete then return nil end
 
-	addSignalMethods(self)
+	Signals.addMethods(self)
 
 	self.actionSystem = ActionSystem(self)
 
@@ -68,7 +68,7 @@ function RootLogicEntity:removeTag (tag)
 end
 
 function RootLogicEntity:hasTag (tag)
-	log(INFO, string.format("I can has %s, looking in %s", tostring(tag), encodeJSON(self.tags)))
+	log(INFO, string.format("I can has %s, looking in %s", tostring(tag), JSON.encode(self.tags)))
 	return (table.findarray(self.tags:asArray(), tag) >= 0)
 end
 
@@ -106,19 +106,19 @@ function RootLogicEntity:createStateDataDict (targetClientNumber, kwargs)
 
 			local value = self[variable._name]
 			if value then
-				log(INFO, string.format("createStateDataDict() addding %s:%s", variable._name, encodeJSON(value)))
+				log(INFO, string.format("createStateDataDict() addding %s:%s", variable._name, JSON.encode(value)))
 				local _key = variable._name
 				if kwargs.compressed then
 					_key = MessageSystem.toProtocolId(tostring(self), variable._name)
 				end
 				ret[tostring(_key)] = variable:toData(value)
 				log(INFO, "createStateDataDict() currently...")
-				log(INFO, string.format("createStateDataDict() currently: %s", encodeJSON(ret)))
+				log(INFO, string.format("createStateDataDict() currently: %s", JSON.encode(ret)))
 			end
 		end
 	end
 
-	log(DEBUG, string.format("createStateDataDict() returns: %s", encodeJSON(ret)))
+	log(DEBUG, string.format("createStateDataDict() returns: %s", JSON.encode(ret)))
 
 	if not kwargs.compressed then
 		return ret
@@ -127,11 +127,15 @@ function RootLogicEntity:createStateDataDict (targetClientNumber, kwargs)
 	_names = table.keys(ret)
 	for i = 1, #_names do
 		if ret[ _names[i] ] and ret[ _names[i] ] ~= "" then
-			ret[ _names[i] ] = tonumber(ret[ _names[i] ])
+			if tonumber(ret[ _names[i] ]) then
+				ret[ _names[i] ] = tonumber(ret[ _names[i] ])
+			elseif ret[ _names[i] ] == "[]" then
+				ret[ _names[i] ] = nil
+			end
 		end
 	end
 
-	ret = encodeJSON(ret)
+	ret = JSON.encode(ret)
 	log(DEBUG, string.format("pre-compression: %s", ret))
 
 	local tmp = {
@@ -144,7 +148,7 @@ function RootLogicEntity:createStateDataDict (targetClientNumber, kwargs)
 	}
 	for i = 1, #tmp do
 		local nextel = tmp[i](ret)
-		if string.len(nextel) < string.len(ret) and encodeJSON(decodeJSON(nextel)) == encodeJSON(decodeJSON(ret)) then
+		if string.len(nextel) < string.len(ret) and JSON.encode(JSON.decode(nextel)) == JSON.encode(JSON.decode(ret)) then
 			ret = nextel
 		end
 	end
@@ -161,7 +165,7 @@ function RootLogicEntity:_updateCompleteStateData (stateData)
 		stateData = "{" .. stateData .. "}"
 	end
 
-	local newStateData = decodeJSON(stateData)
+	local newStateData = JSON.decode(stateData)
 
 	assert(type(newStateData) == "table")
 
@@ -171,10 +175,10 @@ function RootLogicEntity:_updateCompleteStateData (stateData)
 		local key = a
 		local val = b
 		if key then
-			key = MessageSystem.fromProtocolId(tostring(self), key)
+			key = MessageSystem.fromProtocolId(tostring(self), tonumber(key))
 		end
 
-		log(DEBUG, string.format("update of complete state datum: %s = %s", key, tostring(val)))
+		log(DEBUG, string.format("update of complete state datum: %s = %s", tostring(key), tostring(val)))
 		self:_setStateDatum(key, val, nil, true)
 		log(DEBUG, "update of complete state datum ok")
 	end
@@ -200,29 +204,29 @@ function ClientLogicEntity:clientDeactivate ()
 end
 
 function ClientLogicEntity:_setStateDatum (key, value, actorUniqueId)
-	log(DEBUG, string.format("Setting state datum: %s = %s for %i", key, encodeJSON(value), self.uniqueId))
+	log(DEBUG, string.format("Setting state datum: %s = %s for %i", tostring(key), JSON.encode(value), self.uniqueId))
 
 	local variable = self[__SV_PREFIX .. key]
 
 	local customSynchFromHere = variable.customSynch and self._controlledHere
 	local clientSet = variable.clientSet
 
-	if not actorUniqueId and not customSynchFromHere then
+	if actorUniqueId == null and not customSynchFromHere then -- hacky checking for "definition" via string .. FIXME
 		log(DEBUG, "Sending request/notification to server")
 	
-		MessageSystem.send(sif(variable.reliable, CAPI.StateDataChangeRequest, CAPI.UnreliableStateDataChangeRequest),
+		MessageSystem.send(variable.reliable and CAPI.StateDataChangeRequest or CAPI.UnreliableStateDataChangeRequest,
 						   self.uniqueId,
 						   MessageSystem.toProtocolId(tostring(self), variable._name),
 						   variable:toWire(value))
 	end
 
-	if actorUniqueId or clientSet or customSynchFromHere then
+	if actorUniqueId ~= null or clientSet or customSynchFromHere then
 		log(INFO, "Updating locally")
-		if actorUniqueId then
+		if actorUniqueId ~= null then
 			value = variable:fromWire(value)
 		end
 		assert(variable:validate(value))
-		self:emit("client_onModify_" .. key, value, actorUniqueId ~= nil)
+		self:emit("client_onModify_" .. key, value, actorUniqueId ~= null)
 		self.stateVariableValues[key] = value
 	end
 end
@@ -232,7 +236,7 @@ function ClientLogicEntity:clientAct (seconds)
 	self.actionSystem:manageActions(seconds)
 end
 
-ClientLogicEntity.renderDynamic = nil
+ClientLogicEntity.renderDynamic = null
 
 -----------------------------------------------------------------------------
 
@@ -278,7 +282,7 @@ end
 
 function ServerLogicEntity:sendCompleteNotification (clientNumber)
 	clientNumber = defaultValue(clientNumber, MessageSystem.ALL_CLIENTS)
-	local clientNumbers = sif(clientNumber == MessageSystem.ALL_CLIENTS, getClientNumbers(), {clientNumber})
+	local clientNumbers = clientNumber == MessageSystem.ALL_CLIENTS and getClientNumbers() or { clientNumber }
 
 	log(DEBUG, string.format("LE.sendCompleteNotification: %i, %i", self.clientNumber, self.uniqueId))
 
@@ -286,7 +290,7 @@ function ServerLogicEntity:sendCompleteNotification (clientNumber)
 		MessageSystem.send(
 			clientNumbers[i],
 			CAPI.LogicEntityCompleteNotification,
-			sif(self.clientNumber, self.clientNumber, -1),
+			self.clientNumber and self.clientNumber or -1,
 			self.uniqueId,
 			tostring(self),
 			self:createStateDataDict(currClientNumber, { compressed = true }))
@@ -320,7 +324,7 @@ function ServerLogicEntity:click (button, clicker)
 end
 
 function ServerLogicEntity:_setStateDatum (key, value, actorUniqueId, internalOp)
-	log(INFO, string.format("Setting state datum: %s = %s (%s) : %s", key, tostring(value), type(value), encodeJSON(value)))
+	log(INFO, string.format("Setting state datum: %s = %s (%s) : %s", key, tostring(value), type(value), JSON.encode(value)))
 
 	local _class = tostring(self)
 
@@ -341,16 +345,14 @@ function ServerLogicEntity:_setStateDatum (key, value, actorUniqueId, internalOp
 		value = variable:fromData(value)
 	end
 
-	log(DEBUG, string.format("Translated value: %s = %s (%s) : %s", key, tostring(value), type(value), encodeJSON(value)))
+	log(DEBUG, string.format("Translated value: %s = %s (%s) : %s", key, tostring(value), type(value), JSON.encode(value)))
 
-	self:emit("onModify_" .. key, value, actorUniqueId) -- TODO: proper throw system
-	if signalEmitReturnValue then
-		if signalEmitReturnValue == "CancelStateDataUpdate" then
-			signalEmitReturnValue = nil
+	local ret = self:emit("onModify_" .. key, value, actorUniqueId)
+	if ret then
+		if ret == "CancelStateDataUpdate" then
 			return nil
 		else
-			signalEmitReturnValue = nil
-			error(signalEmitReturnValue)
+			error(ret)
 		end
 	end
 
@@ -371,7 +373,7 @@ function ServerLogicEntity:_setStateDatum (key, value, actorUniqueId, internalOp
 			if variable.reliable then rel = CAPI.StateDataUpdate end
 
 			local args = {
-				nil,
+				null,
 				rel,
 				self.uniqueId,
 				MessageSystem.toProtocolId(_class, key),
@@ -396,7 +398,7 @@ function ServerLogicEntity:_queueStateVariableChange (key, value)
 end
 
 function ServerLogicEntity:canCallCFuncs ()
-	return (not self._queuedStateVariableChanges)
+	return (self._queuedStateVariableChanges == null)
 end
 
 function ServerLogicEntity:_flushQueuedStateVariableChanges ()
@@ -405,7 +407,7 @@ function ServerLogicEntity:_flushQueuedStateVariableChanges ()
 	if self:canCallCFuncs() then return nil end
 
 	local changes = self._queuedStateVariableChanges
-	self._queuedStateVariableChanges = nil
+	self._queuedStateVariableChanges = null
 	assert(self:canCallCFuncs())
 
 	local _names = table.keys(changes)

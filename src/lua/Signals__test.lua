@@ -1,13 +1,13 @@
 log(DEBUG, "---- SIGNALS TEST BEGIN ----")
 
 local test = {}
-addSignalMethods(test)
+Signals.addMethods(test)
 assert(type(test.emit) == "function")
 
 log(DEBUG, "Running a callback:")
 
 local test2 = {}
-addSignalMethods(test2)
+Signals.addMethods(test2)
 
 local xy = 0
 local fc = function (self, v)

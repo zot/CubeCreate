@@ -47,7 +47,7 @@ end
 
 function StateVariable:__init (kwargs)
 	log(INFO, "StateVariable.create")
-	self._name = nil
+	self._name = null
 
 	if not kwargs then
 		kwargs = {}
@@ -110,7 +110,7 @@ function StateVariable:setter (variable, value)
 --	log(INFO, "StateVariable::setter")
 
 	variable:writeTests(self)
-	self:_setStateDatum(variable._name, value, nil)
+	self:_setStateDatum(variable._name, value, null)
 end
 
 function StateVariable:validate (value)
@@ -151,25 +151,35 @@ end
 
 function selftoboolean (self, val)
 	if not val then
-		return toboolean(self)
+		if type(self) == "string" then
+			if self == "true" then return true
+			else return false end
+		else
+			return toboolean(self)
+		end
 	else
-		return toboolean(val)
+		if type(val) == "string" then
+			if val == "true" then return true
+			else return false end
+		else
+			return toboolean(val)
+		end
 	end
 end
 
 function selftojson (self, val)
 	if not val then
-		return encodeJSON(self)
+		return JSON.encode(self)
 	else
-		return encodeJSON(val)
+		return JSON.encode(val)
 	end
 end
 
 function selffromjson (self, val)
 	if not val then
-		return decodeJSON(self)
+		return JSON.decode(self)
 	else
-		return decodeJSON(val)
+		return JSON.decode(val)
 	end
 end
 
@@ -289,7 +299,7 @@ function StateArray:getter (variable)
 end
 
 function StateArray:setter (variable, value)
-	log(INFO, "StateArray.setter: " .. encodeJSON(value))
+	log(INFO, "StateArray.setter: " .. JSON.encode(value))
 	if value.x then
 		log(INFO, string.format("StateArray.setter: %f, %f, %f", value.x, value.y, value.z))
 	end
@@ -317,13 +327,13 @@ function StateArray:setter (variable, value)
 		end
 	end
 
-	self:_setStateDatum(variable._name, data, nil)
+	self:_setStateDatum(variable._name, data, null)
 end
 
 StateArray.toWireItem = selftostring
 
 function StateArray:toWire (value)
-	log(INFO, "toWire of StateArray: " .. encodeJSON(value))
+	log(INFO, "toWire of StateArray: " .. JSON.encode(value))
 	if value.asArray then
 		value = value:asArray()
 	end
@@ -334,7 +344,8 @@ end
 StateArray.fromWireItem = selftostring
 
 function StateArray:fromWire (value)
-	log(DEBUG, "fromWire of StateArray: " .. encodeJSON(value))
+	log(DEBUG, "fromWire of StateArray: " .. JSON.encode(value))
+	if type(value) == "table" then return value end -- return value if nothing to convert
 
 	if value == "[]" then
 		return {}
@@ -346,14 +357,14 @@ end
 StateArray.toDataItem = selftostring
 
 function StateArray:toData (value)
-	log(INFO, string.format("(1) StateArray.toData: %s %s %s", tostring(value), type(value), encodeJSON(value)))
+	log(INFO, string.format("(1) StateArray.toData: %s %s %s", tostring(value), type(value), JSON.encode(value)))
 
 	if value.asArray then
 		log(INFO, "(1.5) StateArray.toData: using asArray")
 		value = value:asArray()
 	end
 
-	log(INFO, string.format("(2) StateArray.toData: %s %s %s", tostring(value), type(value), encodeJSON(value)))
+	log(INFO, string.format("(2) StateArray.toData: %s %s %s", tostring(value), type(value), JSON.encode(value)))
 
 	return '[' .. table.concat(table.map(value, self.toDataItem), self.separator) .. ']'
 end
@@ -362,6 +373,7 @@ StateArray.fromDataItem = selftostring
 
 function StateArray:fromData (value)
 	log(DEBUG, string.format("StateArray.fromData %s::%s", tostring(self._name), tostring(value)))
+	if type(value) == "table" then return value end -- return value if nothing to convert
 
 	if value == "[]" then
 		return {}
@@ -372,7 +384,7 @@ end
 
 function StateArray:getRaw (entity)
 	log(INFO, "getRaw: " .. tostring(self))
-	log(INFO, encodeJSON(entity.stateVariableValues))
+	log(INFO, JSON.encode(entity.stateVariableValues))
 	local value = entity.stateVariableValues[self._name]
 
 	if not value then
@@ -382,20 +394,20 @@ function StateArray:getRaw (entity)
 end
 
 function StateArray:setItem (entity, i, value)
-	log(INFO, string.format("setItem: %i : %s", i, encodeJSON(value)))
+	log(INFO, string.format("setItem: %i : %s", i, JSON.encode(value)))
 	local array = self:getRaw(entity)
-	log(INFO, string.format("gotraw: %s", encodeJSON(array)))
+	log(INFO, string.format("gotraw: %s", JSON.encode(array)))
 	if type(value) == "string" then
 		assert(not string.find(value, "|"))
 	end
 	array[i] = value
-	entity:_setStateDatum(self._name, array, nil)
+	entity:_setStateDatum(self._name, array, null)
 end
 
 function StateArray:getItem (entity, i)
 	log(INFO, string.format("StateArray.getItem for %i", i))
 	local array = self:getRaw(entity)
-	log(INFO, string.format("StateArray.getItem %s ==> %s", encodeJSON(array), tostring(array[i])))
+	log(INFO, string.format("StateArray.getItem %s ==> %s", JSON.encode(array), tostring(array[i])))
 	return array[i]
 end
 
@@ -728,4 +740,4 @@ StateJSON.toData = selftojson
 StateJSON.fromData = selffromjson
 function StateJSON:__tostring () return "StateJSON" end
 
-registerJSON(function (val) return (type(val) == "table" and val.uniqueId ~= nil) end, function (val) return val.uniqueId end)
+JSON.register(function (val) return (type(val) == "table" and val.uniqueId ~= nil) end, function (val) return val.uniqueId end)

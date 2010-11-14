@@ -68,7 +68,7 @@ function Character:init (uniqueId, kwargs)
 
 	self._name = "-?-"
 
-	self.clientNumber = sif(kwargs, sif(kwargs.clientNumber, kwargs.clientNumber, -1), -1)
+	self.clientNumber = kwargs and (kwargs.clientNumber and kwargs.clientNumber or -1) or -1
 
 	self.modelName = "stromar"
 	self.eyeHeight = 14
@@ -83,7 +83,7 @@ end
 function Character:activate (kwargs)
 	log(DEBUG, "Character.activate")
 
-	self.clientNumber = sif(kwargs, sif(kwargs.clientNumber, kwargs.clientNumber, -1), -1)
+	self.clientNumber = kwargs and (kwargs.clientNumber and kwargs.clientNumber or -1) or -1
 	assert(self.clientNumber >= 0)
 
 	CAPI.setupCharacter(self)
@@ -98,7 +98,7 @@ end
 function Character:clientActivate (kwargs)
 	self[AnimatableLogicEntity].clientActivate(self, kwargs)
 
-	self.clientNumber = sif(kwargs, sif(kwargs.clientNumber, kwargs.clientNumber, -1), -1)
+	self.clientNumber = kwargs and (kwargs.clientNumber and kwargs.clientNumber or -1) or -1
 
 	CAPI.setupCharacter(self)
 
@@ -141,7 +141,10 @@ function Character:renderDynamic (HUDPass, needHUD)
 			return nil
 		end
 
-		local mdlname = sif(HUDPass and needHUD, self.HUDModelName, self.modelName)
+		local mdlname = self.modelName
+		if HUDPass and needHUD then
+			mdlname = self.HUDModelName
+		end
 		local yaw = self.yaw + 90
 		local pitch = self.pitch
 		local o = self.position:copy()
@@ -160,7 +163,7 @@ function Character:renderDynamic (HUDPass, needHUD)
 		self.renderingArgs = self:createRenderingArgs(mdlname, anim, o, yaw, pitch, flags, basetime)
 		self.renderingArgsTimestamp = currTimestamp
 	end
-	self:getRenderModelFunc()(unpack(table.values(self.renderingArgs)))
+	self:getRenderModelFunc()(unpack(self.renderingArgs))
 end
 
 function Character:getRenderModelFunc ()
@@ -172,9 +175,9 @@ function Character:createRenderingArgs (mdlname, anim, o, yaw, pitch, flags, bas
 end
 
 function Character:getRenderingFlags ()
-	local flags = CMath.bor(MODEL.LIGHT, MODEL.DYNSHADOW)
+	local flags = math.bor(MODEL.LIGHT, MODEL.DYNSHADOW)
 	if self ~= getPlayerEntity() then
-		flags = CMath.bor(flags, MODEL.CULL_VFC, MODEL.CULL_OCCLUDED, MODEL.CULL_QUERY)
+		flags = math.bor(flags, MODEL.CULL_VFC, MODEL.CULL_OCCLUDED, MODEL.CULL_QUERY)
 	end
 	return flags
 end
@@ -183,31 +186,31 @@ function Character:decideAnimation (state, physstate, move, strafe, vel, falling
 	local anim = self:decideActionAnimation()
 
 	if state == CLIENTSTATE.EDITING or state == CLIENTSTATE.SPECTATOR then
-		anim = CMath.bor(ANIM_EDIT, ANIM_LOOP)
+		anim = math.bor(ANIM_EDIT, ANIM_LOOP)
 	elseif state == CLIENTSTATE.LAGGED then
-		anim = CMath.bor(ANIM_LAG, ANIM_LOOP)
+		anim = math.bor(ANIM_LAG, ANIM_LOOP)
 	else
 		if inwater and physstate <= PHYSICALSTATE.FALL then
-			anim = CMath.bor(anim, CMath.lsh(CMath.bor(sif((move or strafe) or (vel.z + falling.z) > 0, ANIM_SWIM, ANIM_SINK), ANIM_LOOP), ANIM_SECONDARY))
+			anim = math.bor(anim, math.lsh(math.bor(((move or strafe) or (vel.z + falling.z) > 0) and ANIM_SWIM or ANIM_SINK, ANIM_LOOP), ANIM_SECONDARY))
 		elseif timeinair > 250 then
-			anim = CMath.bor(anim, CMath.lsh(CMath.bor(ANIM_JUMP, ANIM_END), ANIM_SECONDARY))
+			anim = math.bor(anim, math.lsh(math.bor(ANIM_JUMP, ANIM_END), ANIM_SECONDARY))
 		elseif move or strafe then
 			if move > 0 then
-				anim = CMath.bor(anim, CMath.lsh(CMath.bor(ANIM_FORWARD, ANIM_LOOP), ANIM_SECONDARY))
+				anim = math.bor(anim, math.lsh(math.bor(ANIM_FORWARD, ANIM_LOOP), ANIM_SECONDARY))
 			elseif strafe then
-				anim = CMath.bor(anim, CMath.lsh(CMath.bor(sif(strafe > 0, ANIM_LEFT, ANIM_RIGHT), ANIM_LOOP), ANIM_SECONDARY))
+				anim = math.bor(anim, math.lsh(math.bor(strafe > 0 and ANIM_LEFT or ANIM_RIGHT, ANIM_LOOP), ANIM_SECONDARY))
 			elseif move < 0 then
-				anim = CMath.bor(anim, CMath.lsh(CMath.bor(ANIM_BACKWARD, ANIM_LOOP), ANIM_SECONDARY))
+				anim = math.bor(anim, math.lsh(math.bor(ANIM_BACKWARD, ANIM_LOOP), ANIM_SECONDARY))
 			end
 		end
 
-		if CMath.band(anim, ANIM_INDEX) == ANIM_IDLE and CMath.band(CMath.rsh(anim, ANIM_SECONDARY), ANIM_INDEX) then
-			anim = CMath.rsh(anim, ANIM_SECONDARY)
+		if math.band(anim, ANIM_INDEX) == ANIM_IDLE and math.band(math.rsh(anim, ANIM_SECONDARY), ANIM_INDEX) then
+			anim = math.rsh(anim, ANIM_SECONDARY)
 		end
 	end
 
-	if not CMath.band(CMath.rsh(anim, ANIM_SECONDARY), ANIM_INDEX) then
-		anim = CMath.bor(anim, CMath.lsh(CMath.bor(ANIM_IDLE, ANIM_LOOP), ANIM_SECONDARY))
+	if not math.band(math.rsh(anim, ANIM_SECONDARY), ANIM_INDEX) then
+		anim = math.bor(anim, math.lsh(math.bor(ANIM_IDLE, ANIM_LOOP), ANIM_SECONDARY))
 	end
 
 	return anim
@@ -278,7 +281,7 @@ Character.plugins = {
 
 		clientAct = function (self, seconds)
 			if self == getPlayerEntity() and self.effectiveCameraHeightTimer:tick(seconds) and not isPlayerEditing(self) then
-				if math.abs(math.cos(self.pitch * RAD)) < 0.05 then return nil end
+				if math.abs(math.cos(self.pitch * math.RAD)) < 0.05 then return nil end
 
 				local target = CAPI.getTargetPosition()
 				local xyDist = 0
@@ -290,7 +293,7 @@ Character.plugins = {
 				xyDist = xyDist + tempDist * tempDist
 				xyDist = math.sqrt(xyDist)
 
-				local upperHeight = math.tan(-(self.pitch) * RAD) * xyDist
+				local upperHeight = math.tan(-(self.pitch) * math.RAD) * xyDist
 				local effectiveCameraHeight = upperHeight + target.z - self.position.z
 
 				if not self.effectiveCameraHeightSent or math.abs(effectiveCameraHeight - self.effectiveCameraHeight) >= 1 then
@@ -313,7 +316,7 @@ Character.plugins = {
 		performJump = function (down)
 			local player = getPlayerEntity()
 			local water = (World.getMaterial(player.position) == MATERIAL.WATER)
-			getPlayerEntity().isPressingJumpSeconds = sif(down and (player:isOnFloor() or water), sif(not water, 0.25, 0.175), 1)
+			getPlayerEntity().isPressingJumpSeconds = (down and (player:isOnFloor() or water)) and (not water and 0.25 or 0.175) or 1
 		end,
 
 		plugin = {

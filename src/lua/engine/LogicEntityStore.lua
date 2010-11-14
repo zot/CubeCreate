@@ -20,7 +20,7 @@ function getEntity (uniqueId)
 		return ret
 	else
 		log(INFO, string.format("getEntity could not find entity %s", tostring(uniqueId)))
-		return nil
+		return null
 	end
 end
 
@@ -41,10 +41,10 @@ function getEntityByTag (withTag)
 		return ret[1]
 	elseif #ret > 1 then
 		log(WARNING, string.format("Attempting to get a single entity with tag '%s', but several exist", withTag))
-		return nil
+		return null
 	else
 		log(WARNING, string.format("Attempting to get a single entity with tag '%s', but no such entity exists", withTag))
-		return nil
+		return null
 	end
 end
 
@@ -77,7 +77,7 @@ end
 
 function getCloseEntities (origin, maxDistance, _class, withTag, unsorted)
 	local ret = {}
-	local entities = sif(_class, getEntitiesByClass(_class), table.values(__entitiesStore))
+	local entities = _class and getEntitiesByClass(_class) or table.values(__entitiesStore)
 
 	for i = 1, #entities do
 		local otherEntity = entities[i]
@@ -99,9 +99,9 @@ end
 function addEntity (_className, uniqueId, kwargs, _new)
 	uniqueId = defaultValue(uniqueId, 1331)
 	log(DEBUG, string.format("Adding new Scripting LogicEntity of type %s with uniqueId %i", _className, uniqueId))
-	log(DEBUG, string.format("   with arguments: %s, %s", encodeJSON(kwargs), tostring(_new)))
+	log(DEBUG, string.format("   with arguments: %s, %s", JSON.encode(kwargs), tostring(_new)))
 
-	assert(getEntity(uniqueId) == nil)
+	assert(getEntity(uniqueId) == null)
 
 	local _class = getEntityClass(_className)
 	local ret = _class()
@@ -190,7 +190,7 @@ end
 Global.time = 0
 Global.currTimeDelta = 1.0
 Global.lastmillis = 0
-Global.profiling = nil
+Global.profiling = null
 Global.queuedActions = {}
 
 function manageActions (seconds, lastmillis)
@@ -214,7 +214,7 @@ function manageActions (seconds, lastmillis)
 			Global.profiling.counter = seconds
 		else
 			Global.profiling.counter = Global.profiling.counter + seconds
-			if Global.profiling.counter >= Global.profiling.interval then
+			if Global.profiling.interval and Global.profiling.counter >= Global.profiling.interval then
 				Global.profiling.counter = 0
 			end
 		end
@@ -305,7 +305,7 @@ function renderDynamic (thirdperson)
 		local entity = entities[i]
 		log(INFO, string.format("renderDynamic for: %i", entity.uniqueId))
 
-		if entity.deactivated or not entity.renderDynamic then continue = true end
+		if entity.deactivated or entity.renderDynamic == null then continue = true end
 
 		if not continue then
 			if Global.profiling and Global.profiling.data then
@@ -342,18 +342,18 @@ function renderHUDModels ()
 end
 
 if Global.CLIENT then
-	playerLogicEntity = nil
+	playerLogicEntity = null
 
 	function setPlayerUniqueId (uniqueId)
 		log(DEBUG, string.format("Setting player unique ID to %i", uniqueId))
 
-		if uniqueId then
+		if uniqueId ~= null then
 			playerLogicEntity = getEntity(uniqueId)
 			playerLogicEntity._controlledHere = true
 
-			assert(not uniqueId or playerLogicEntity)
+			assert(uniqueId == null or playerLogicEntity ~= null)
 		else
-			playerLogicEntity = nil
+			playerLogicEntity = null
 		end
 	end
 
@@ -363,8 +363,8 @@ if Global.CLIENT then
 
 	function setStateDatum (uniqueId, keyProtocolId, value)
 		entity = getEntity(uniqueId)
-		if entity then
-			local key = MessageSystem.fromProtocolId(tostring(entity), keyProtocolId)
+		if entity ~= null then
+			local key = MessageSystem.fromProtocolId(tostring(entity), tonumber(keyProtocolId))
 			log(DEBUG, string.format("setStateDatum: %i, %i, %s", uniqueId, keyProtocolId, key))
 			entity:_setStateDatum(key, value)
 		end
@@ -372,7 +372,7 @@ if Global.CLIENT then
 
 	function testScenarioStarted ()
 		log(INFO, "Testing whether the scenario started")
-		if not getPlayerEntity() then
+		if getPlayerEntity() == null then
 			log(INFO, "...no, player logic entity not created yet")
 			return false
 		end
@@ -448,8 +448,8 @@ if Global.SERVER then
 
 	function setStateDatum (uniqueId, keyProtocolId, value, actorUniqueId)
 		local entity = getEntity(uniqueId)
-		if entity then
-			local key = MessageSystem.fromProtocolId(tostring(entity), keyProtocolId)
+		if entity ~= null then
+			local key = MessageSystem.fromProtocolId(tostring(entity), tonumber(keyProtocolId))
 			entity:_setStateDatum(key, value, actorUniqueId)
 		end
 	end
@@ -457,9 +457,9 @@ if Global.SERVER then
 	function loadEntities (serializedEntities)
 		log(DEBUG, string.format("Loading entities... %s %s", tostring(serializedEntities), type(serializedEntities)))
 
-		local entities = decodeJSON(serializedEntities)
+		local entities = JSON.decode(serializedEntities)
 		for i = 1, #entities do
-			log(DEBUG, string.format("loadEntities: %s", encodeJSON(entities[i])))
+			log(DEBUG, string.format("loadEntities: %s", JSON.encode(entities[i])))
 			local uniqueId = entities[i][1]
 			local _class = entities[i][2]
 			local stateData = entities[i][3]
@@ -467,13 +467,14 @@ if Global.SERVER then
 
 			if _class == "PlayerStart" then _class = "WorldMarker" end
 
+			log(DEBUG, tostring(CAPI.getMapversion()))
 			if CAPI.getMapversion() <= 30 and stateData.attr1 then
 				if not (_class == "Light" or _class == "FlickeringLight" or _class == "ParticleEffect" or _class == "Envmap") then
 					stateData.attr1 = (tonumber(stateData.attr1) + 180) % 360
 				end
 			end
 
-			addEntity(_class, uniqueId, { stateData = encodeJSON(stateData) })
+			addEntity(_class, uniqueId, { stateData = JSON.encode(stateData) })
 		end
 
 		log(DEBUG, "Loading entities complete")
@@ -491,7 +492,7 @@ function saveEntities ()
 			local uniqueId = _values[i].uniqueId
 			local _class = tostring(_values[i])
 			local stateData = _values[i]:createStateDataDict()
-			table.insert(ret, encodeJSON({uniqueId, _class, stateData}))
+			table.insert(ret, JSON.encode({uniqueId, _class, stateData}))
 		end
 	end
 

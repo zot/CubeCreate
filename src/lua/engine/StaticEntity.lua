@@ -43,7 +43,7 @@ end
 function StaticEntity:activate (kwargs)
 	kwargs = defaultValue(kwargs, {})
 
-	log(DEBUG, string.format("%i SE: self[AnimatableLogicEntity].activate() %s", self.uniqueId, encodeJSON(kwargs)))
+	log(DEBUG, string.format("%i SE: self[AnimatableLogicEntity].activate() %s", self.uniqueId, JSON.encode(kwargs)))
 
 	self[AnimatableLogicEntity].activate(self, kwargs)
 
@@ -110,7 +110,7 @@ end
 
 function StaticEntity:sendCompleteNotification (clientNumber)
 	clientNumber = defaultValue(clientNumber, MessageSystem.ALL_CLIENTS)
-	local clientNumbers = sif(clientNumber == MessageSystem.ALL_CLIENTS, getClientNumbers(), { clientNumber })
+	local clientNumbers = clientNumber == MessageSystem.ALL_CLIENTS and getClientNumbers() or { clientNumber }
 
 	log(DEBUG, "StaticE.sendCompleteNotification:")
 
@@ -313,7 +313,7 @@ end
 
 function Mapmodel:clientActivate (kwargs)
 	self[StaticEntity].clientActivate (self, kwargs)
-	self.defaultAnimation = CMath.bor(ANIM_TRIGGER, ANIM_START)
+	self.defaultAnimation = math.bor(ANIM_TRIGGER, ANIM_START)
 end
 
 function Mapmodel:onCollision (collider)
@@ -433,7 +433,7 @@ function TrigerredAction:init (_reverse)
 
 	self.secondsLeft = 1.0
 	if _reverse then
-		self.animation = CMath.bor(ANIM_TRIGGER, ANIM_REVERSE)
+		self.animation = math.bor(ANIM_TRIGGER, ANIM_REVERSE)
 	else
 		self.animation = ANIM_TRIGGER
 	end

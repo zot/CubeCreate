@@ -1,4 +1,4 @@
---------------------------------------------------------------------
+-----------------------------------------------------------------------------
 -- JSON4Lua: JSON encoding / decoding support for the Lua language.
 -- json Module.
 -- Author: Craig Mason-Jones
@@ -7,8 +7,43 @@
 -- This module is released under the MIT License (MIT).
 -- Please see LICENCE.txt for details.
 --
+-- USAGE:
+-- This module exposes two functions:
+--   encode(o)
+--     Returns the table / string / boolean / number / nil / JSON.null value as a JSON-encoded string.
+--   decode(json_string)
+--     Returns a Lua object populated with the data encoded in the JSON string json_string.
+--
+-- REQUIREMENTS:
+--   compat-5.1 if using Lua 5.0
+--
+-- CHANGELOG
+--	 0.9.50 Radical performance improvement on decode from Eike Decker. Many thanks!
+--	 0.9.40 Changed licence to MIT License (MIT)
+--   0.9.20 Introduction of local Lua functions for private functions (removed _ function prefix). 
+--          Fixed Lua 5.1 compatibility issues.
+--   		Introduced JSON.null to have null values in associative arrays.
+--          encode() performance improvement (more than 50%) through table.concat rather than ..
+--          Introduced decode ability to ignore /**/ comments in the JSON string.
+--   0.9.10 Fix to array encoding / decoding to correctly manage nil/null values in arrays.
+-----------------------------------------------------------------------------
 -- modified by quaker66 for usage of CubeCreate
---------------------------------------------------------------------
+-----------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------
+-- Imports and dependencies
+-----------------------------------------------------------------------------
+local math = require("math")
+local string = require("string")
+local table = require("table")
+local tostring = tostring
+
+local base = _G
+
+-----------------------------------------------------------------------------
+-- Module declaration
+-----------------------------------------------------------------------------
+module("JSON")
 
 -- Public functions
 
@@ -25,8 +60,8 @@ local isArray
 local isEncodable
 
 -- CubeCreate content
---- Public table storing information about simplification registers.
-JSONRegisterStorage = {}
+-- Table storing information about simplification registers.
+local JSONRegisterStorage = {}
 
 -----------------------------------------------------------------------------
 -- PUBLIC FUNCTIONS
@@ -34,7 +69,7 @@ JSONRegisterStorage = {}
 --- Encodes an arbitrary Lua object / variable.
 -- @param v The Lua object / variable to be JSON encoded.
 -- @return String containing the JSON encoding in internal Lua string format (i.e. not unicode)
-function encodeJSON (v)
+function encode (v)
   -- Handle nil values
   if v==nil then
     return "null"
@@ -43,13 +78,13 @@ function encodeJSON (v)
   local enc = v
 
   -- CubeCreate - make use of register storage
-  for i, t in ipairs(JSONRegisterStorage) do
+  for i, t in base.ipairs(JSONRegisterStorage) do
 	if t[1](enc) then
 		enc = t[2](enc)
 	end
   end
 
-  local vtype = type(enc)
+  local vtype = base.type(enc)
 
   -- Handle strings
   if vtype=='string' then    
@@ -58,7 +93,7 @@ function encodeJSON (v)
   
   -- Handle booleans
   if vtype=='number' or vtype=='boolean' then
-    return tostring(enc)
+    return base.tostring(enc)
   end
   
   -- Handle tables
@@ -68,12 +103,12 @@ function encodeJSON (v)
     local bArray, maxCount = isArray(enc)
     if bArray then
       for i = 1,maxCount do
-        table.insert(rval, encodeJSON(enc[i]))
+        table.insert(rval, encode(enc[i]))
       end
     else	-- An object, not an array
-      for i,j in pairs(enc) do
+      for i,j in base.pairs(enc) do
         if isEncodable(i) and isEncodable(j) then
-          table.insert(rval, '"' .. encodeString(i) .. '":' .. encodeJSON(j))
+          table.insert(rval, '"' .. encodeString(i) .. '":' .. encode(j))
         end
       end
     end
@@ -89,30 +124,30 @@ function encodeJSON (v)
     return 'null'
   end
   
-  assert(false,'encode attempt to encode unsupported type ' .. vtype .. ':' .. tostring(enc))
+  base.assert(false,'encode attempt to encode unsupported type ' .. vtype .. ':' .. base.tostring(enc))
 end
 
 -- CubeCreate content
 --- register a simplifier function for encoding
 -- @param check Function that returns true if argument passed to it can be simplified
--- @param simplifier Function to call when @p check returns true
-function registerJSON(check, simplifier)
+-- @param simplifier Function to call when check returns true
+function register(check, simplifier)
 	table.insert(JSONRegisterStorage, { check, simplifier })
 end
 
 --- Decodes a JSON string and returns the decoded value as a Lua data structure / value.
 -- @param s The string to scan.
 -- @return Lua objectthat was scanned, as a Lua table / string / number / boolean or nil.
-function decodeJSON(s)
+function decode(s)
 	-- Function is re-defined below after token and other items are created.
 	-- Just defined here for code neatness.
 	return null
 end
 
 --- The null function allows one to specify a null value in an associative array (which is otherwise
--- discarded if you set the value with 'nil' in Lua. Simply set t = { first=json.null }
+-- discarded if you set the value with 'nil' in Lua. Simply set t = { first=JSON.null }
 function null()
-  return null -- so json.null() will also return null ;-)
+  return null -- so JSON.null() will also return null ;-)
 end
 
 -----------------------------------------------------------------------------
@@ -140,8 +175,8 @@ function isArray(t)
   -- Next we count all the elements, ensuring that any non-indexed elements are not-encodable 
   -- (with the possible exception of 'n')
   local maxIndex = 0
-  for k,v in pairs(t) do
-    if (type(k)=='number' and math.floor(k)==k and 1<=k) then	-- k,v is an indexed pair
+  for k,v in base.pairs(t) do
+    if (base.type(k)=='number' and math.floor(k)==k and 1<=k) then	-- k,v is an indexed pair
       if (not isEncodable(v)) then return false end	-- All array elements must be encodable
       maxIndex = math.max(maxIndex,k)
     else
@@ -156,17 +191,22 @@ function isArray(t)
 end
 
 --- Determines whether the given Lua object / table / variable can be JSON encoded. The only
--- types that are JSON encodable are: string, boolean, number, nil, table and json.null.
+-- types that are JSON encodable are: string, boolean, number, nil, table and JSON.null.
 -- In this implementation, all other types are ignored.
 -- @param o The object to examine.
 -- @return boolean True if the object should be JSON encoded, false if it should be ignored.
 function isEncodable(o)
-  local t = type(o)
+  local t = base.type(o)
   return (t=='string' or t=='boolean' or t=='number' or t=='nil' or t=='table') or (t=='function' and o==null) 
 end
 
 -- Radical performance improvement for decode from Eike Decker!
 do
+	local type = base.type
+	local error = base.error
+	local assert = base.assert
+	local print = base.print
+	local tonumber = base.tonumber
 	-- initialize some values to be used in decoding function
 	
 	-- initializes a table to contain a byte=>table mapping
@@ -314,7 +354,7 @@ do
 		:link(tt_ignore)             :to (allchars)
 		:link(true)                  :to "*"
 		
-	function decodeJSON(js_string)
+	function decode (js_string)
 		local pos = 1 -- position in the string
 		
 		-- read the next byte value
@@ -368,7 +408,7 @@ do
 					--start = pos
 				end -- jump over escaped chars, no matter what
 			until t == true
-			return (loadstring("return " .. js_string:sub(start-1, pos-1) ) ())
+			return (base.loadstring("return " .. js_string:sub(start-1, pos-1) ) ())
 
 			-- We consider the situation where no escaped chars were encountered separately,
 			-- and use the fastest possible return in this case.
