@@ -10,6 +10,9 @@ if (WIN32 AND NOT MINGW)
     include_directories(${PLATFORM_SDK_B}/Include)
 endif (WIN32 AND NOT MINGW)
 include_directories(${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH} ${LUA_INCLUDE_DIR})
+if (NOT (WIN32 OR MINGW))
+	include_directories(${Boost_INCLUDE_DIRS})
+endif (NOT (WIN32 OR MINGW))
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux") # there is no LINUX variable declared
    add_definitions (-fsigned-char)
@@ -99,7 +102,6 @@ set(CLIENT_LIBRARIES
     enet_${CC_BUILD_SUFFIX}
     ${LUA_LIBRARIES}
     ${PYTHON_LIBRARIES}
-    boost_python_${CC_BUILD_SUFFIX}
     ${SDL_LIBRARY}
     ${SDLMIXER_LIBRARY}
     ${SDLIMAGE_LIBRARY}
@@ -113,6 +115,12 @@ set(CLIENT_LIBRARIES
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES} rt)
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+if (WIN32 OR MINGW)
+	set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES} boost_python_${CC_BUILD_SUFFIX})
+else (WIN32 OR MINGW)
+	set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES} ${Boost_PYTHON_LIBRARY})
+endif (WIN32 OR MINGW)
 
 # additional libs on windows
 if (MINGW OR WIN32)

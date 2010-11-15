@@ -109,6 +109,9 @@ find_package(SDL_mixer REQUIRED)
 find_package(SDL_image REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Lua51 REQUIRED)
+if (NOT (MINGW OR WIN32))
+	find_package(Boost COMPONENTS python REQUIRED)
+endif (NOT (MINGW OR WIN32))
 
 # PROCEED TO NEXT DIR
 add_subdirectory(src)
