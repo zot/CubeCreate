@@ -43,6 +43,12 @@
   #define ZLIB_DLL
 #endif
 
+#ifdef __GNUC__
+# define _UNUSED_ __attribute__((unused))
+#else
+# define _UNUSED_
+#endif
+
 #ifndef STANDALONE
 #include <SDL.h>
 #include <SDL_image.h>

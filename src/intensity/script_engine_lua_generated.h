@@ -21,7 +21,7 @@
  */
 #define LUA_EMBED_i(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
         , wrapped_code)
 
 
@@ -47,7 +47,7 @@
  */
 #define LUA_EMBED_s(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
         , wrapped_code)
 
 
@@ -73,7 +73,7 @@
  */
 #define LUA_EMBED_d(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
         , wrapped_code)
 
 
@@ -125,7 +125,7 @@
  */
 #define LUA_EMBED_b(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ bool arg1 = LuaEngine::getBool(1); \
+        _UNUSED_ bool arg1 = LuaEngine::getBool(1); \
         , wrapped_code)
 
 
@@ -151,8 +151,8 @@
  */
 #define LUA_EMBED_ii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
         , wrapped_code)
 
 
@@ -178,8 +178,8 @@
  */
 #define LUA_EMBED_is(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
         , wrapped_code)
 
 
@@ -205,8 +205,8 @@
  */
 #define LUA_EMBED_ss(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
         , wrapped_code)
 
 
@@ -232,8 +232,8 @@
  */
 #define LUA_EMBED_sd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
         , wrapped_code)
 
 
@@ -259,8 +259,8 @@
  */
 #define LUA_EMBED_si(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
         , wrapped_code)
 
 
@@ -287,7 +287,7 @@
 #define LUA_EMBED_oi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
         /* arg1 reserved for object */ \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
         , wrapped_code)
 
 
@@ -314,7 +314,7 @@
 #define LUA_EMBED_ob(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
         /* arg1 reserved for object */ \
-        __UNUSED__ bool arg2 = LuaEngine::getBool(2); \
+        _UNUSED_ bool arg2 = LuaEngine::getBool(2); \
         , wrapped_code)
 
 
@@ -341,7 +341,7 @@
 #define LUA_EMBED_os(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
         /* arg1 reserved for object */ \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
         , wrapped_code)
 
 
@@ -368,7 +368,7 @@
 #define LUA_EMBED_od(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
         /* arg1 reserved for object */ \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
         , wrapped_code)
 
 
@@ -394,8 +394,8 @@
  */
 #define LUA_EMBED_dd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
         , wrapped_code)
 
 
@@ -421,8 +421,8 @@
  */
 #define LUA_EMBED_ds(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
         , wrapped_code)
 
 
@@ -448,7 +448,7 @@
  */
 #define LUA_EMBED_do(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
         /* arg2 reserved for object */ \
         , wrapped_code)
 
@@ -475,9 +475,9 @@
  */
 #define LUA_EMBED_iis(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ std::string arg3 = LuaEngine::getString(3); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ std::string arg3 = LuaEngine::getString(3); \
         , wrapped_code)
 
 
@@ -503,9 +503,9 @@
  */
 #define LUA_EMBED_iii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
         , wrapped_code)
 
 
@@ -531,9 +531,9 @@
  */
 #define LUA_EMBED_iid(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
         , wrapped_code)
 
 
@@ -559,9 +559,9 @@
  */
 #define LUA_EMBED_ddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
         , wrapped_code)
 
 
@@ -587,9 +587,9 @@
  */
 #define LUA_EMBED_sdd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
         , wrapped_code)
 
 
@@ -615,9 +615,9 @@
  */
 #define LUA_EMBED_sss(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
-        __UNUSED__ std::string arg3 = LuaEngine::getString(3); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ std::string arg3 = LuaEngine::getString(3); \
         , wrapped_code)
 
 
@@ -643,9 +643,9 @@
  */
 #define LUA_EMBED_dds(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ std::string arg3 = LuaEngine::getString(3); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ std::string arg3 = LuaEngine::getString(3); \
         , wrapped_code)
 
 
@@ -671,9 +671,9 @@
  */
 #define LUA_EMBED_ssd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
         , wrapped_code)
 
 
@@ -700,9 +700,9 @@
 #define LUA_EMBED_oddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
         /* arg1 reserved for object */ \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
         , wrapped_code)
 
 
@@ -728,10 +728,10 @@
  */
 #define LUA_EMBED_dddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
         , wrapped_code)
 
 
@@ -757,10 +757,10 @@
  */
 #define LUA_EMBED_iddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
         , wrapped_code)
 
 
@@ -786,10 +786,10 @@
  */
 #define LUA_EMBED_iiss(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ std::string arg3 = LuaEngine::getString(3); \
-        __UNUSED__ std::string arg4 = LuaEngine::getString(4); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ std::string arg3 = LuaEngine::getString(3); \
+        _UNUSED_ std::string arg4 = LuaEngine::getString(4); \
         , wrapped_code)
 
 
@@ -815,10 +815,10 @@
  */
 #define LUA_EMBED_iiis(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ std::string arg4 = LuaEngine::getString(4); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ std::string arg4 = LuaEngine::getString(4); \
         , wrapped_code)
 
 
@@ -844,10 +844,10 @@
  */
 #define LUA_EMBED_ssdi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ int arg4 = LuaEngine::getInteger(4); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ int arg4 = LuaEngine::getInteger(4); \
         , wrapped_code)
 
 
@@ -873,10 +873,10 @@
  */
 #define LUA_EMBED_ssdd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
         , wrapped_code)
 
 
@@ -902,10 +902,10 @@
  */
 #define LUA_EMBED_iiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ int arg4 = LuaEngine::getInteger(4); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ int arg4 = LuaEngine::getInteger(4); \
         , wrapped_code)
 
 
@@ -931,10 +931,10 @@
  */
 #define LUA_EMBED_iidd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
         , wrapped_code)
 
 
@@ -960,11 +960,11 @@
  */
 #define LUA_EMBED_sdddi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
         , wrapped_code)
 
 
@@ -990,11 +990,11 @@
  */
 #define LUA_EMBED_sssdd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
-        __UNUSED__ std::string arg3 = LuaEngine::getString(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ std::string arg3 = LuaEngine::getString(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
         , wrapped_code)
 
 
@@ -1020,11 +1020,11 @@
  */
 #define LUA_EMBED_ddddi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
         , wrapped_code)
 
 
@@ -1050,11 +1050,11 @@
  */
 #define LUA_EMBED_sdddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
         , wrapped_code)
 
 
@@ -1080,11 +1080,11 @@
  */
 #define LUA_EMBED_siidi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
         , wrapped_code)
 
 
@@ -1110,11 +1110,11 @@
  */
 #define LUA_EMBED_iiiss(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ std::string arg4 = LuaEngine::getString(4); \
-        __UNUSED__ std::string arg5 = LuaEngine::getString(5); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ std::string arg4 = LuaEngine::getString(4); \
+        _UNUSED_ std::string arg5 = LuaEngine::getString(5); \
         , wrapped_code)
 
 
@@ -1140,11 +1140,11 @@
  */
 #define LUA_EMBED_iiisi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ std::string arg4 = LuaEngine::getString(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ std::string arg4 = LuaEngine::getString(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
         , wrapped_code)
 
 
@@ -1170,11 +1170,11 @@
  */
 #define LUA_EMBED_iiiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ int arg4 = LuaEngine::getInteger(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ int arg4 = LuaEngine::getInteger(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
         , wrapped_code)
 
 
@@ -1200,11 +1200,11 @@
  */
 #define LUA_EMBED_idddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
         , wrapped_code)
 
 
@@ -1230,11 +1230,11 @@
  */
 #define LUA_EMBED_iisss(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ std::string arg3 = LuaEngine::getString(3); \
-        __UNUSED__ std::string arg4 = LuaEngine::getString(4); \
-        __UNUSED__ std::string arg5 = LuaEngine::getString(5); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ std::string arg3 = LuaEngine::getString(3); \
+        _UNUSED_ std::string arg4 = LuaEngine::getString(4); \
+        _UNUSED_ std::string arg5 = LuaEngine::getString(5); \
         , wrapped_code)
 
 
@@ -1260,12 +1260,12 @@
  */
 #define LUA_EMBED_sdddii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
         , wrapped_code)
 
 
@@ -1291,12 +1291,12 @@
  */
 #define LUA_EMBED_dddddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
         , wrapped_code)
 
 
@@ -1322,12 +1322,12 @@
  */
 #define LUA_EMBED_iidddi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
         , wrapped_code)
 
 
@@ -1353,12 +1353,12 @@
  */
 #define LUA_EMBED_iisddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ std::string arg3 = LuaEngine::getString(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ std::string arg3 = LuaEngine::getString(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
         , wrapped_code)
 
 
@@ -1384,12 +1384,12 @@
  */
 #define LUA_EMBED_iiiddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
         , wrapped_code)
 
 
@@ -1415,12 +1415,12 @@
  */
 #define LUA_EMBED_ddddii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
         , wrapped_code)
 
 
@@ -1446,12 +1446,12 @@
  */
 #define LUA_EMBED_idddsi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ std::string arg5 = LuaEngine::getString(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ std::string arg5 = LuaEngine::getString(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
         , wrapped_code)
 
 
@@ -1477,12 +1477,12 @@
  */
 #define LUA_EMBED_ssiiid(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ int arg4 = LuaEngine::getInteger(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ int arg4 = LuaEngine::getInteger(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
         , wrapped_code)
 
 
@@ -1508,12 +1508,12 @@
  */
 #define LUA_EMBED_ddddid(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
         , wrapped_code)
 
 
@@ -1539,12 +1539,12 @@
  */
 #define LUA_EMBED_iiiiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ int arg4 = LuaEngine::getInteger(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ int arg4 = LuaEngine::getInteger(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
         , wrapped_code)
 
 
@@ -1570,13 +1570,13 @@
  */
 #define LUA_EMBED_sdddddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
         , wrapped_code)
 
 
@@ -1602,13 +1602,13 @@
  */
 #define LUA_EMBED_ddddddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
         , wrapped_code)
 
 
@@ -1634,13 +1634,13 @@
  */
 #define LUA_EMBED_iiiiddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ int arg4 = LuaEngine::getInteger(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ int arg4 = LuaEngine::getInteger(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
         , wrapped_code)
 
 
@@ -1666,13 +1666,13 @@
  */
 #define LUA_EMBED_iiddddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
         , wrapped_code)
 
 
@@ -1698,13 +1698,13 @@
  */
 #define LUA_EMBED_ssiiidi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ int arg4 = LuaEngine::getInteger(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ int arg4 = LuaEngine::getInteger(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
         , wrapped_code)
 
 
@@ -1730,13 +1730,13 @@
  */
 #define LUA_EMBED_iiiiiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ int arg4 = LuaEngine::getInteger(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ int arg4 = LuaEngine::getInteger(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
         , wrapped_code)
 
 
@@ -1762,13 +1762,13 @@
  */
 #define LUA_EMBED_sddddid(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
         , wrapped_code)
 
 
@@ -1794,14 +1794,14 @@
  */
 #define LUA_EMBED_ddddddii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
         , wrapped_code)
 
 
@@ -1827,14 +1827,14 @@
  */
 #define LUA_EMBED_ddddiiid(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
         , wrapped_code)
 
 
@@ -1860,14 +1860,14 @@
  */
 #define LUA_EMBED_iidddddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
         , wrapped_code)
 
 
@@ -1893,14 +1893,14 @@
  */
 #define LUA_EMBED_ssiiiiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ std::string arg1 = LuaEngine::getString(1); \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ int arg4 = LuaEngine::getInteger(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ int arg4 = LuaEngine::getInteger(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
         , wrapped_code)
 
 
@@ -1926,15 +1926,15 @@
  */
 #define LUA_EMBED_ddddddiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
         , wrapped_code)
 
 
@@ -1961,14 +1961,14 @@
 #define LUA_EMBED_oidddiiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
         /* arg1 reserved for object */ \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
         , wrapped_code)
 
 
@@ -1994,15 +1994,15 @@
  */
 #define LUA_EMBED_idddidddi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
         , wrapped_code)
 
 
@@ -2028,15 +2028,15 @@
  */
 #define LUA_EMBED_dddsiiidi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ std::string arg4 = LuaEngine::getString(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ std::string arg4 = LuaEngine::getString(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
         , wrapped_code)
 
 
@@ -2062,16 +2062,16 @@
  */
 #define LUA_EMBED_iiidddidii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ int arg10 = LuaEngine::getInteger(10); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ int arg10 = LuaEngine::getInteger(10); \
         , wrapped_code)
 
 
@@ -2097,16 +2097,16 @@
  */
 #define LUA_EMBED_ddddddiiid(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ double arg10 = LuaEngine::getDouble(10); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ double arg10 = LuaEngine::getDouble(10); \
         , wrapped_code)
 
 
@@ -2132,15 +2132,15 @@
  */
 #define LUA_EMBED_dddiiiiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ int arg4 = LuaEngine::getInteger(4); \
-        __UNUSED__ int arg5 = LuaEngine::getInteger(5); \
-        __UNUSED__ int arg6 = LuaEngine::getInteger(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ int arg4 = LuaEngine::getInteger(4); \
+        _UNUSED_ int arg5 = LuaEngine::getInteger(5); \
+        _UNUSED_ int arg6 = LuaEngine::getInteger(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
         , wrapped_code)
 
 
@@ -2166,17 +2166,17 @@
  */
 #define LUA_EMBED_ddddddiiidi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ double arg10 = LuaEngine::getDouble(10); \
-        __UNUSED__ int arg11 = LuaEngine::getInteger(11); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ double arg10 = LuaEngine::getDouble(10); \
+        _UNUSED_ int arg11 = LuaEngine::getInteger(11); \
         , wrapped_code)
 
 
@@ -2203,16 +2203,16 @@
 #define LUA_EMBED_osiddddddii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
         /* arg1 reserved for object */ \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ double arg9 = LuaEngine::getDouble(9); \
-        __UNUSED__ int arg10 = LuaEngine::getInteger(10); \
-        __UNUSED__ int arg11 = LuaEngine::getInteger(11); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ double arg9 = LuaEngine::getDouble(9); \
+        _UNUSED_ int arg10 = LuaEngine::getInteger(10); \
+        _UNUSED_ int arg11 = LuaEngine::getInteger(11); \
         , wrapped_code)
 
 
@@ -2238,17 +2238,17 @@
  */
 #define LUA_EMBED_iiidddidiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ int arg10 = LuaEngine::getInteger(10); \
-        __UNUSED__ int arg11 = LuaEngine::getInteger(11); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ int arg10 = LuaEngine::getInteger(10); \
+        _UNUSED_ int arg11 = LuaEngine::getInteger(11); \
         , wrapped_code)
 
 
@@ -2274,17 +2274,17 @@
  */
 #define LUA_EMBED_iissdddiiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ std::string arg3 = LuaEngine::getString(3); \
-        __UNUSED__ std::string arg4 = LuaEngine::getString(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ int arg10 = LuaEngine::getInteger(10); \
-        __UNUSED__ int arg11 = LuaEngine::getInteger(11); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ std::string arg3 = LuaEngine::getString(3); \
+        _UNUSED_ std::string arg4 = LuaEngine::getString(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ int arg10 = LuaEngine::getInteger(10); \
+        _UNUSED_ int arg11 = LuaEngine::getInteger(11); \
         , wrapped_code)
 
 
@@ -2310,17 +2310,17 @@
  */
 #define LUA_EMBED_iiddddddidi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ double arg10 = LuaEngine::getDouble(10); \
-        __UNUSED__ int arg11 = LuaEngine::getInteger(11); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ double arg10 = LuaEngine::getDouble(10); \
+        _UNUSED_ int arg11 = LuaEngine::getInteger(11); \
         , wrapped_code)
 
 
@@ -2346,18 +2346,18 @@
  */
 #define LUA_EMBED_ddddddiiidii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ double arg10 = LuaEngine::getDouble(10); \
-        __UNUSED__ int arg11 = LuaEngine::getInteger(11); \
-        __UNUSED__ int arg12 = LuaEngine::getInteger(12); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ double arg10 = LuaEngine::getDouble(10); \
+        _UNUSED_ int arg11 = LuaEngine::getInteger(11); \
+        _UNUSED_ int arg12 = LuaEngine::getInteger(12); \
         , wrapped_code)
 
 
@@ -2383,19 +2383,19 @@
  */
 #define LUA_EMBED_iiidddidiiibi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ int arg10 = LuaEngine::getInteger(10); \
-        __UNUSED__ int arg11 = LuaEngine::getInteger(11); \
-        __UNUSED__ bool arg12 = LuaEngine::getBool(12); \
-        __UNUSED__ int arg13 = LuaEngine::getInteger(13); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ int arg10 = LuaEngine::getInteger(10); \
+        _UNUSED_ int arg11 = LuaEngine::getInteger(11); \
+        _UNUSED_ bool arg12 = LuaEngine::getBool(12); \
+        _UNUSED_ int arg13 = LuaEngine::getInteger(13); \
         , wrapped_code)
 
 
@@ -2421,20 +2421,20 @@
  */
 #define LUA_EMBED_iiidddidiibibi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ int arg10 = LuaEngine::getInteger(10); \
-        __UNUSED__ bool arg11 = LuaEngine::getBool(11); \
-        __UNUSED__ int arg12 = LuaEngine::getInteger(12); \
-        __UNUSED__ bool arg13 = LuaEngine::getBool(13); \
-        __UNUSED__ int arg14 = LuaEngine::getInteger(14); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ int arg10 = LuaEngine::getInteger(10); \
+        _UNUSED_ bool arg11 = LuaEngine::getBool(11); \
+        _UNUSED_ int arg12 = LuaEngine::getInteger(12); \
+        _UNUSED_ bool arg13 = LuaEngine::getBool(13); \
+        _UNUSED_ int arg14 = LuaEngine::getInteger(14); \
         , wrapped_code)
 
 
@@ -2460,18 +2460,18 @@
  */
 #define LUA_EMBED_iiddddddidib(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ int arg2 = LuaEngine::getInteger(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ double arg10 = LuaEngine::getDouble(10); \
-        __UNUSED__ int arg11 = LuaEngine::getInteger(11); \
-        __UNUSED__ bool arg12 = LuaEngine::getBool(12); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ double arg10 = LuaEngine::getDouble(10); \
+        _UNUSED_ int arg11 = LuaEngine::getInteger(11); \
+        _UNUSED_ bool arg12 = LuaEngine::getBool(12); \
         , wrapped_code)
 
 
@@ -2497,18 +2497,18 @@
  */
 #define LUA_EMBED_idddddddiiii(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ int arg10 = LuaEngine::getInteger(10); \
-        __UNUSED__ int arg11 = LuaEngine::getInteger(11); \
-        __UNUSED__ int arg12 = LuaEngine::getInteger(12); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ int arg10 = LuaEngine::getInteger(10); \
+        _UNUSED_ int arg11 = LuaEngine::getInteger(11); \
+        _UNUSED_ int arg12 = LuaEngine::getInteger(12); \
         , wrapped_code)
 
 
@@ -2534,18 +2534,18 @@
  */
 #define LUA_EMBED_idddddiidddi(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ int arg1 = LuaEngine::getInteger(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ int arg7 = LuaEngine::getInteger(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
-        __UNUSED__ double arg9 = LuaEngine::getDouble(9); \
-        __UNUSED__ double arg10 = LuaEngine::getDouble(10); \
-        __UNUSED__ double arg11 = LuaEngine::getDouble(11); \
-        __UNUSED__ int arg12 = LuaEngine::getInteger(12); \
+        _UNUSED_ int arg1 = LuaEngine::getInteger(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ int arg7 = LuaEngine::getInteger(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ double arg9 = LuaEngine::getDouble(9); \
+        _UNUSED_ double arg10 = LuaEngine::getDouble(10); \
+        _UNUSED_ double arg11 = LuaEngine::getDouble(11); \
+        _UNUSED_ int arg12 = LuaEngine::getInteger(12); \
         , wrapped_code)
 
 
@@ -2571,20 +2571,20 @@
  */
 #define LUA_EMBED_dddddddiiidddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
-        __UNUSED__ double arg1 = LuaEngine::getDouble(1); \
-        __UNUSED__ double arg2 = LuaEngine::getDouble(2); \
-        __UNUSED__ double arg3 = LuaEngine::getDouble(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
-        __UNUSED__ int arg8 = LuaEngine::getInteger(8); \
-        __UNUSED__ int arg9 = LuaEngine::getInteger(9); \
-        __UNUSED__ int arg10 = LuaEngine::getInteger(10); \
-        __UNUSED__ double arg11 = LuaEngine::getDouble(11); \
-        __UNUSED__ double arg12 = LuaEngine::getDouble(12); \
-        __UNUSED__ double arg13 = LuaEngine::getDouble(13); \
-        __UNUSED__ double arg14 = LuaEngine::getDouble(14); \
+        _UNUSED_ double arg1 = LuaEngine::getDouble(1); \
+        _UNUSED_ double arg2 = LuaEngine::getDouble(2); \
+        _UNUSED_ double arg3 = LuaEngine::getDouble(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ int arg8 = LuaEngine::getInteger(8); \
+        _UNUSED_ int arg9 = LuaEngine::getInteger(9); \
+        _UNUSED_ int arg10 = LuaEngine::getInteger(10); \
+        _UNUSED_ double arg11 = LuaEngine::getDouble(11); \
+        _UNUSED_ double arg12 = LuaEngine::getDouble(12); \
+        _UNUSED_ double arg13 = LuaEngine::getDouble(13); \
+        _UNUSED_ double arg14 = LuaEngine::getDouble(14); \
         , wrapped_code)
 
 
@@ -2611,19 +2611,19 @@
 #define LUA_EMBED_osiddddddiidddd(name, numreturns, wrapped_code) \
     LUA_EMBED_GEN(__script__##name, numreturns, \
         /* arg1 reserved for object */ \
-        __UNUSED__ std::string arg2 = LuaEngine::getString(2); \
-        __UNUSED__ int arg3 = LuaEngine::getInteger(3); \
-        __UNUSED__ double arg4 = LuaEngine::getDouble(4); \
-        __UNUSED__ double arg5 = LuaEngine::getDouble(5); \
-        __UNUSED__ double arg6 = LuaEngine::getDouble(6); \
-        __UNUSED__ double arg7 = LuaEngine::getDouble(7); \
-        __UNUSED__ double arg8 = LuaEngine::getDouble(8); \
-        __UNUSED__ double arg9 = LuaEngine::getDouble(9); \
-        __UNUSED__ int arg10 = LuaEngine::getInteger(10); \
-        __UNUSED__ int arg11 = LuaEngine::getInteger(11); \
-        __UNUSED__ double arg12 = LuaEngine::getDouble(12); \
-        __UNUSED__ double arg13 = LuaEngine::getDouble(13); \
-        __UNUSED__ double arg14 = LuaEngine::getDouble(14); \
-        __UNUSED__ double arg15 = LuaEngine::getDouble(15); \
+        _UNUSED_ std::string arg2 = LuaEngine::getString(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ double arg4 = LuaEngine::getDouble(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        _UNUSED_ double arg9 = LuaEngine::getDouble(9); \
+        _UNUSED_ int arg10 = LuaEngine::getInteger(10); \
+        _UNUSED_ int arg11 = LuaEngine::getInteger(11); \
+        _UNUSED_ double arg12 = LuaEngine::getDouble(12); \
+        _UNUSED_ double arg13 = LuaEngine::getDouble(13); \
+        _UNUSED_ double arg14 = LuaEngine::getDouble(14); \
+        _UNUSED_ double arg15 = LuaEngine::getDouble(15); \
         , wrapped_code)
 

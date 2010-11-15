@@ -48,13 +48,13 @@ for string in strings:
         out.write('        ')
         temp = { 'index': index, 'indexplus': index+1 }
         if param == 'i':
-            out.write('__UNUSED__ int arg%(indexplus)d = LuaEngine::getInteger(%(indexplus)d); \\\n' % temp)
+            out.write('_UNUSED_ int arg%(indexplus)d = LuaEngine::getInteger(%(indexplus)d); \\\n' % temp)
         elif param == 's':
-            out.write('__UNUSED__ std::string arg%(indexplus)d = LuaEngine::getString(%(indexplus)d); \\\n' % temp)
+            out.write('_UNUSED_ std::string arg%(indexplus)d = LuaEngine::getString(%(indexplus)d); \\\n' % temp)
         elif param == 'd':
-            out.write('__UNUSED__ double arg%(indexplus)d = LuaEngine::getDouble(%(indexplus)d); \\\n' % temp)
+            out.write('_UNUSED_ double arg%(indexplus)d = LuaEngine::getDouble(%(indexplus)d); \\\n' % temp)
         elif param == 'b':
-            out.write('__UNUSED__ bool arg%(indexplus)d = LuaEngine::getBool(%(indexplus)d); \\\n' % temp)
+            out.write('_UNUSED_ bool arg%(indexplus)d = LuaEngine::getBool(%(indexplus)d); \\\n' % temp)
         elif param == 'o':
             out.write('/* arg%(indexplus)d reserved for object */ \\\n' %temp)
         else:
