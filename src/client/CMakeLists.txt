@@ -134,26 +134,6 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "BSD") # there is no BSD variable declared
     set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES} execinfo)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "BSD")
 
-# Experimental plugin - Linux only for now
-if(${INTENSITY_PLUGIN})
-    if (UNIX)
-
-        message(STATUS "*** Building with experimental browser plugin ***")
-        # add a preprocessor flag.
-        add_definitions(-DINTENSITY_PLUGIN)
-        # proceed to subdirs further
-        add_subdirectory(plugin)
-        add_subdirectory(plugin_listener)
-        # add listener header into includes and link to listener lib
-        include_directories(${CMAKE_SOURCE_DIR}/src/client/plugin_listener)
-        set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES} plugin_listener_${CC_BUILD_SUFFIX})
-        link_directories(${CMAKE_SOURCE_DIR}/src/client/plugin_listener)
-
-    else (UNIX)
-        message(STATUS "*** Not building the browser plugin because of unsupported platform ***")
-    endif (UNIX)
-endif(${INTENSITY_PLUGIN})
-
 # finally build and link executable
 add_executable(CC_Client_${CC_BUILD_SUFFIX} ${CLIENT_SOURCES})
 target_link_libraries(CC_Client_${CC_BUILD_SUFFIX} ${CLIENT_LIBRARIES})
