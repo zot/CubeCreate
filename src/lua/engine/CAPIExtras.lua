@@ -1,9 +1,6 @@
 -- CAPI extras for CubeCreate's Lua implementation
 -- provides various additional functions, tables etc.
 
--- echo - wrap it.
-echo = CAPI.echo
-
 -- setters
 
 function CAPI.setExtent0 (self, vec)
@@ -12,7 +9,7 @@ function CAPI.setExtent0 (self, vec)
 end
 
 function CAPI.setDynent0 (self, vec)
-	log(DEBUG, string.format("CAPI.setDynent0: %s,%s,%s", tostring(vec.x), tostring(vec.y), tostring(vec.z)))
+	log(DEBUG, string.format("CAPI.setDynent0: %f,%f,%f", vec.x, vec.y, vec.z))
 	CAPI.setDynent0_raw(self, vec.x, vec.y, vec.z)
 end
 
@@ -196,12 +193,7 @@ Model = {
 	objNoclip = CAPI.objNoclip,
 
 	alphatest = CAPI.mdlAlphatest,
-	bb = function (rad, h, eyeheight)
-		local rad = defaultValue(rad, 0.0)
-		local h = defaultValue(h, 0.0)
-		local eyeheight = defaultValue(eyeheight, 0.0)
-		CAPI.mdlBb(rad, h, eyeheight)
-	end,
+	bb = CAPI.mdlBb,
 	scale = CAPI.mdlScale,
 	spec = CAPI.mdlSpec,
 	glow = CAPI.mdlGlow,
@@ -225,47 +217,11 @@ Model = {
 
 	md5Skin = function (meshname, tex, masks, envmapmax, envmapmin)
 		local masks = defaultValue(masks, '')
-		local envmapmax = defaultValue(envmapmax, 0)
-		local envmapmin = defaultValue(envmapmin, 0)
 		CAPI.md5Skin(meshname, tex, masks, envmapmax, envmapmin)
 	end,
 
 	yaw = CAPI.modelYaw,
 	pitch = CAPI.modelPitch,
-
-	md2Pitch = CAPI.md2Pitch,
-	md2Anim = CAPI.md2Anim,
-
-	md3Load = CAPI.md3Load,
-	md3Pitch = CAPI.md3Pitch,
-	md3Skin = function (meshname, tex, masks, envmapmax, envmapmin)
-		local masks = defaultValue(masks, '')
-		local envmapmax = defaultValue(envmapmax, 0)
-		local envmapmin = defaultValue(envmapmin, 0)
-		CAPI.md3Skin(meshname, tex, masks, envmapmax, envmapmin)
-	end,
-	md3Spec = CAPI.md3Spec,
-	md3Ambient = CAPI.md3Ambient,
-	md3Glow = CAPI.md3Glow,
-	md3Glare = CAPI.md3Glare,
-	md3Alphatest = CAPI.md3Alphatest,
-	md3Alphablend = CAPI.md3Alphablend,
-	md3Cullface = CAPI.md3Cullface,
-	md3Envmap = CAPI.md3Envmap,
-	md3Bumpmap = function (meshname, normalmap, skin)
-		local skin = defaultValue(skin, '')
-		CAPI.md3Bumpmap(meshname, normalmap, skin)
-	end,
-	md3Fullbright = CAPI.md3Fullbright,
-	md3Shader = CAPI.md3Shader,
-	md3Scroll = CAPI.md3Scroll,
-	md3Anim = function (anim, frame, range, speed, priority)
-		local speed = defaultValue(speed, 0)
-		local priority = defaultValue(priority, 0)
-		CAPI.md3Anim(anim, frame, range, speed, priority)
-	end,
-	md3Link = CAPI.md3Link,
-	md3Noclip = CAPI.md3Noclip,
 
 	md5Bumpmap = function (meshname, normalmap, skin)
 		local skin = defaultValue(skin, '')
@@ -276,11 +232,7 @@ Model = {
 	md5Alphablend = CAPI.md5Alphablend,
 
 	md5Tag = CAPI.md5Tag,
-	md5Anim = function (anim, animfile, speed, priority)
-		local speed = defaultValue(speed, 0)
-		local priority = defaultValue(priority, 0)
-		CAPI.md5Anim(anim, animfile, speed, priority)
-	end,
+	md5Anim = CAPI.md5Anim,
 
 	md5Animpart = CAPI.md5Animpart,
 	md5Pitch = CAPI.md5Pitch,
@@ -303,8 +255,6 @@ Model = {
 	iqmAdjust = CAPI.iqmAdjust,
 	iqmSkin = function (meshname, tex, masks, envmapmax, envmapmin)
 		local masks = defaultValue(masks, '')
-		local envmapmax = defaultValue(envmapmax, 0)
-		local envmapmin = defaultValue(envmapmin, 0)
 		CAPI.iqmSkin(meshname, tex, masks, envmapmax, envmapmin)
 	end,
 	iqmSpec = CAPI.iqmSpec,
@@ -323,11 +273,7 @@ Model = {
 	iqmShader = CAPI.iqmShader,
 	iqmScroll = CAPI.iqmScroll,
 	iqmAnimpart = CAPI.iqmAnimpart,
-	iqmAnim = function (anim, animfile, speed, priority)
-		local speed = defaultValue(speed, 0)
-		local priority = defaultValue(priority, 0)
-		CAPI.iqmAnim(anim, animfile, speed, priority)
-	end,
+	iqmAnim = CAPI.iqmAnim,
 	iqmLink = CAPI.iqmLink,
 	iqmNoclip = CAPI.iqmNoclip,
 
@@ -338,8 +284,6 @@ Model = {
 	smdAdjust = CAPI.smdAdjust,
 	smdSkin = function (meshname, tex, masks, envmapmax, envmapmin)
 		local masks = defaultValue(masks, '')
-		local envmapmax = defaultValue(envmapmax, 0)
-		local envmapmin = defaultValue(envmapmin, 0)
 		CAPI.smdSkin(meshname, tex, masks, envmapmax, envmapmin)
 	end,
 	smdSpec = CAPI.smdSpec,
@@ -358,11 +302,7 @@ Model = {
 	smdShader = CAPI.smdShader,
 	smdScroll = CAPI.smdScroll,
 	smdAnimpart = CAPI.smdAnimpart,
-	smdAnim = function (anim, animfile, speed, priority)
-		local speed = defaultValue(speed, 0)
-		local priority = defaultValue(priority, 0)
-		CAPI.smdAnim(anim, animfile, speed, priority)
-	end,
+	smdAnim = CAPI.smdAnim,
 	smdLink = CAPI.smdLink,
 	smdNoclip = CAPI.smdNoclip,
 

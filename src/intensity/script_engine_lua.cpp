@@ -82,7 +82,7 @@ void LuaEngine::setupEmbedding()
 
     // setup logging outside CAPI, into its own "namespace".
     // the "namespace" is actually left on stack.
-    luaL_register(L, "Logging", (luaL_Reg[]){ { "log", __script__log }, { 0, 0 } });
+    luaL_register(L, "Logging", (luaL_Reg[]){ { "log", __script__log }, { "echo", __script__echo }, { 0, 0 } });
 
     // now we push logging levels, and pop the table finally
     #define PUSHLEVEL(level) setTable(#level, Logging::level);

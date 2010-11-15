@@ -3,9 +3,9 @@ import os
 strings = [
     'i', 's', 'd', 'o', 'b',
     'ii', 'is', 'ss', 'sd', 'si', 'oi', 'ob', 'os', 'od', 'dd', 'ds', 'do',
-    'iis', 'iii', 'iid', 'ddd', 'sdd', 'sss',
-    'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdi', 'ssdd', 'iiii',
-    'sdddi', 'sssdd', 'ddddi', 'sdddd', 'siidi', 'iiiss', 'iiisi', 'iiiii', 'idddd',
+    'iis', 'iii', 'iid', 'ddd', 'sdd', 'sss', 'dds', 'ssd',
+    'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdi', 'ssdd', 'iiii', 'iidd',
+    'sdddi', 'sssdd', 'ddddi', 'sdddd', 'siidi', 'iiiss', 'iiisi', 'iiiii', 'idddd', 'iisss',
     'sdddii', 'dddddd', 'iidddi', 'iisddd', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddid', 'iiiiii',
     'sdddddd', 'ddddddd', 'iiiiddd', 'iiddddd', 'ssiiidi', 'iiiiiii', 'sddddid',
     'ddddddii', 'ddddiiid', 'iidddddd', 'ssiiiiii',

@@ -24,3 +24,10 @@ INFO = Logging.INFO
 DEBUG = Logging.DEBUG
 WARNING = Logging.WARNING
 ERROR = Logging.ERROR
+
+--- Prints something into console.<br/>
+-- Useful for printing various console messages, like reports: Unlike logging, this has no level.<br/><br/>
+-- @param message The message. Use string.format if you want to format it.
+-- @class function
+-- @name echo
+echo = Logging.echo

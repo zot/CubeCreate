@@ -158,7 +158,7 @@ void musicdone()
     if(!musicdonecmd) return;
     char *cmd = musicdonecmd;
     musicdonecmd = NULL;
-    execute(cmd);
+    LuaEngine::runScript(cmd); // CubeCreate: lua
     delete[] cmd;
 }
 

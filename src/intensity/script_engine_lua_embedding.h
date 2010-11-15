@@ -18,15 +18,6 @@
 
 #include "intensity_physics.h"
 
-// Temporary till cubescript is out of game.
-#define CSSUDO(script) \
-    { \
-        bool old = overrideidents; \
-        overrideidents = true; \
-        execute(script); \
-        overrideidents = old; \
-    }
-
 #define RETURN_VECTOR3(sauervec) \
 { \
     LuaEngine::getGlobal("Vector3"); \
@@ -42,11 +33,11 @@ LUA_EMBED_is(log, 0, {
     Logging::log_noformat(arg1, arg2);
 });
 
-// HERE BEGINS CAPI, exports of functions from C++ to Lua.
 LUA_EMBED_s(echo, 0, {
     conoutf("\f1%s", arg1.c_str());
 });
 
+// HERE BEGINS CAPI, exports of functions from C++ to Lua.
 // General
 LUA_EMBED_NOPARAM(currTime, 1, {
     LuaEngine::pushValue(Utility::SystemInfo::currTime());
@@ -419,19 +410,9 @@ LUA_EMBED_sss(combineImages, 0, {
     });
 #endif
 
-#ifdef CLIENT
-LUA_EMBED_s(music, 0, {
-    assert( Utility::validateAlphaNumeric(arg1, "._/") );
-    std::string command = "music \"";
-    command += arg1;
-    command += "\" [ run_script \"Sound.musicCallback()\" ]";
-    CSSUDO(command.c_str());
-});
-#else
-LUA_EMBED_s(music, 0, {
-    arg1 = arg1; // warning otherwise
-});
-#endif
+extern void startmusic(char *name, char *cmd);
+
+LUA_EMBED_STD_CLIENT(music, startmusic, s, (char*)arg1.c_str(), (char*)"Sound.musicCallback()");
 
 #ifdef CLIENT
 extern int preload_sound(char *name, int vol);
@@ -646,6 +627,8 @@ extern void texcolor(float *r, float *g, float *b);
 extern void texscroll(float *scrollS, float *scrollT);
 extern void texffenv(int *ffenv);
 extern void setshader(char *name);
+extern void materialreset();
+extern void addshaderparam(const char *name, int type, int n, float x, float y, float z, float w);
 
 LUA_EMBED_STD_CLIENT(texLayer, texlayer, i, &arg1, (char*)"", (int*)0, (float*)0);
 LUA_EMBED_STD_CLIENT(texAlpha, texalpha, dd, (float*)&arg1, (float*)&arg2);
@@ -653,440 +636,255 @@ LUA_EMBED_STD_CLIENT(texColor, texcolor, ddd, (float*)&arg1, (float*)&arg2, (flo
 LUA_EMBED_STD_CLIENT(texScroll, texscroll, dd, (float*)&arg1, (float*)&arg2);
 LUA_EMBED_STD_CLIENT(texFFenv, texffenv, i, (int*)&arg1);
 LUA_EMBED_STD_CLIENT(setShader, setshader, s, (char*)arg1.c_str());
-
-#ifdef CLIENT
-LUA_EMBED_sdddd(setShaderParam, 0, {
-    std::string command = "setshaderparam ";
-    command += arg1;
-    assert( Utility::validateAlphaNumeric(arg1) );
-    command += " " + Utility::toString((float)arg2);
-    command += " " + Utility::toString((float)arg3);
-    command += " " + Utility::toString((float)arg4);
-    command += " " + Utility::toString((float)arg5);
-    CSSUDO(command.c_str());
-});
-#else
-LUA_EMBED_sdddd(setShaderParam, 0, {
-    arg1 = arg1; // warning otherwise
-    arg2 = arg2; // warning otherwise
-    arg3 = arg3; // warning otherwise
-    arg4 = arg4; // warning otherwise
-    arg5 = arg5; // warning otherwise
-});
-#endif
-
-extern void materialreset();
-LUA_EMBED_NOPARAM(materialReset, 0, {
-    materialreset();
-});
+LUA_EMBED_STD_CLIENT(setShaderParam, addshaderparam, sdddd, (char*)arg1.c_str(), SHPARAM_LOOKUP, -1, arg2, arg3, arg4, arg5);
+LUA_EMBED_STD(materialReset, materialreset, NOPARAM)
 
 // Models
 
-#define ADD_CS_d(arg) \
-    command += Utility::toString(arg); \
-    command += " ";
+extern void mdlalphatest(float *cutoff);
+extern void mdlalphablend(int *blend);
+extern void mdlalphadepth(int *depth);
+extern void mdldepthoffset(int *offset);
+extern void mdlcullface(int *cullface);
+extern void mdlcollide(int *collide);
+extern void mdlellipsecollide(int *collide);
+extern void mdlspec(int *percent);
+extern void mdlambient(int *percent);
+extern void mdlglow(int *percent);
+extern void mdlglare(float *specglare, float *glowglare);
+extern void mdlenvmap(float *envmapmax, float *envmapmin, char *envmap);
+extern void mdlfullbright(float *fullbright);
+extern void mdlshader(char *shader);
+extern void mdlspin(float *yaw, float *pitch);
+extern void mdlscale(int *percent);
+extern void mdltrans(float *x, float *y, float *z);
+extern void mdlyaw(float *angle);
+extern void mdlpitch(float *angle);
+extern void mdlshadow(int *shadow);
+extern void mdlbb(float *rad, float *h, float *eyeheight);
+extern void mdlextendbb(float *x, float *y, float *z);
+extern void mdlcollisionsonlyfortriggering(int *val);
+extern void mdlperentitycollisionboxes(int *val);
+extern void rdvert(float *x, float *y, float *z, float *radius);
+extern void rdeye(int *v);
+extern void rdtri(int *v1, int *v2, int *v3);
+extern void rdjoint(int *n, int *t, char *v1, char *v2, char *v3);
+extern void rdlimitdist(int *v1, int *v2, float *mindist, float *maxdist);
+extern void rdlimitrot(int *t1, int *t2, float *maxangle, float *qx, float *qy, float *qz, float *qw);
+extern void rdanimjoints(int *on);
 
-#define ADD_CS_s(arg) \
-    assert( Utility::validateAlphaNumeric(arg, "._/<>-:") ); \
-    command += "\""; \
-    command += arg; \
-    command += "\" ";
+extern void objload(char *model, float *smooth);
+extern void objpitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
+extern void objskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
+extern void objspec(char *meshname, int *percent);
+extern void objambient(char *meshname, int *percent);
+extern void objglow(char *meshname, int *percent);
+extern void objglare(char *meshname, float *specglare, float *glowglare);
+extern void objalphatest(char *meshname, float *cutoff);
+extern void objalphablend(char *meshname, int *blend);
+extern void objcullface(char *meshname, int *cullface);
+extern void objenvmap(char *meshname, char *envmap);
+extern void objbumpmap(char *meshname, char *normalmap, char *skin);
+extern void objfullbright(char *meshname, float *fullbright);
+extern void objshader(char *meshname, char *shader);
+extern void objscroll(char *meshname, float *scrollu, float *scrollv);
+extern void objnoclip(char *meshname, int *noclip);
 
-#define CUBESCRIPT_i(name, cmd) \
-LUA_EMBED_i(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    CSSUDO(command.c_str()); \
-});
+extern void setmd5dir(char *name);  
+extern void md5load(char *meshfile, char *skelname, float *smooth);
+extern void md5tag(char *name, char *tagname);        
+extern void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
+extern void md5adjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
+extern void md5skin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
+extern void md5spec(char *meshname, int *percent);
+extern void md5ambient(char *meshname, int *percent);
+extern void md5glow(char *meshname, int *percent);
+extern void md5glare(char *meshname, float *specglare, float *glowglare);
+extern void md5alphatest(char *meshname, float *cutoff);
+extern void md5alphablend(char *meshname, int *blend);
+extern void md5cullface(char *meshname, int *cullface);
+extern void md5envmap(char *meshname, char *envmap);
+extern void md5bumpmap(char *meshname, char *normalmap, char *skin);
+extern void md5fullbright(char *meshname, float *fullbright);
+extern void md5shader(char *meshname, char *shader);
+extern void md5scroll(char *meshname, float *scrollu, float *scrollv);
+extern void md5anim(char *anim, char *animfile, float *speed, int *priority);
+extern void md5animpart(char *maskstr);
+extern void md5link(int *parent, int *child, char *tagname, float *x, float *y, float *z);
+extern void md5noclip(char *meshname, int *noclip);
 
-#define CUBESCRIPT_ii(name, cmd) \
-LUA_EMBED_ii(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    ADD_CS_d(arg2); \
-    CSSUDO(command.c_str()); \
-});
+extern void setiqmdir(char *name);  
+extern void iqmload(char *meshfile, char *skelname);
+extern void iqmtag(char *name, char *tagname);        
+extern void iqmpitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
+extern void iqmadjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
+extern void iqmskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
+extern void iqmspec(char *meshname, int *percent);
+extern void iqmambient(char *meshname, int *percent);
+extern void iqmglow(char *meshname, int *percent);
+extern void iqmglare(char *meshname, float *specglare, float *glowglare);
+extern void iqmalphatest(char *meshname, float *cutoff);
+extern void iqmalphablend(char *meshname, int *blend);
+extern void iqmcullface(char *meshname, int *cullface);
+extern void iqmenvmap(char *meshname, char *envmap);
+extern void iqmbumpmap(char *meshname, char *normalmap, char *skin);
+extern void iqmfullbright(char *meshname, float *fullbright);
+extern void iqmshader(char *meshname, char *shader);
+extern void iqmscroll(char *meshname, float *scrollu, float *scrollv);
+extern void iqmanim(char *anim, char *animfile, float *speed, int *priority);
+extern void iqmanimpart(char *maskstr);
+extern void iqmlink(int *parent, int *child, char *tagname, float *x, float *y, float *z);
+extern void iqmnoclip(char *meshname, int *noclip);
 
-#define CUBESCRIPT_iii(name, cmd) \
-LUA_EMBED_iii(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_d(arg3); \
-    CSSUDO(command.c_str()); \
-});
+extern void setsmddir(char *name);  
+extern void smdload(char *meshfile, char *skelname);
+extern void smdtag(char *name, char *tagname);        
+extern void smdpitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
+extern void smdadjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
+extern void smdskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
+extern void smdspec(char *meshname, int *percent);
+extern void smdambient(char *meshname, int *percent);
+extern void smdglow(char *meshname, int *percent);
+extern void smdglare(char *meshname, float *specglare, float *glowglare);
+extern void smdalphatest(char *meshname, float *cutoff);
+extern void smdalphablend(char *meshname, int *blend);
+extern void smdcullface(char *meshname, int *cullface);
+extern void smdenvmap(char *meshname, char *envmap);
+extern void smdbumpmap(char *meshname, char *normalmap, char *skin);
+extern void smdfullbright(char *meshname, float *fullbright);
+extern void smdshader(char *meshname, char *shader);
+extern void smdscroll(char *meshname, float *scrollu, float *scrollv);
+extern void smdanim(char *anim, char *animfile, float *speed, int *priority);
+extern void smdanimpart(char *maskstr);
+extern void smdlink(int *parent, int *child, char *tagname, float *x, float *y, float *z);
+extern void smdnoclip(char *meshname, int *noclip);
 
-#define CUBESCRIPT_iiiii(name, cmd) \
-LUA_EMBED_iiiii(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_d(arg3); \
-    ADD_CS_d(arg4); \
-    ADD_CS_d(arg5); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(mdlAlphatest, mdlalphatest, d, (float*)&arg1);
+LUA_EMBED_STD(mdlAlphablend, mdlalphablend, i, (int*)&arg1);
+LUA_EMBED_STD(mdlAlphadepth, mdlalphadepth, i, (int*)&arg1);
 
-#define CUBESCRIPT_d(name, cmd) \
-LUA_EMBED_d(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(mdlBb, mdlbb, ddd, (float*)&arg1, (float*)&arg2, (float*)&arg3);
+LUA_EMBED_STD(mdlExtendbb, mdlextendbb, ddd, (float*)&arg1, (float*)&arg2, (float*)&arg3);
 
-#define CUBESCRIPT_dd(name, cmd) \
-LUA_EMBED_dd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    ADD_CS_d(arg2); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(mdlScale, mdlscale, i, (int*)&arg1);
+LUA_EMBED_STD(mdlSpec, mdlspec, i, (int*)&arg1);
+LUA_EMBED_STD(mdlGlow, mdlglow, i, (int*)&arg1);
+LUA_EMBED_STD(mdlGlare, mdlglare, dd, (float*)&arg1, (float*)&arg2);
+LUA_EMBED_STD(mdlAmbient, mdlambient, i, (int*)&arg1);
+LUA_EMBED_STD(mdlCullface, mdlcullface, i, (int*)&arg1);
+LUA_EMBED_STD(mdlDepthoffset, mdldepthoffset, i, (int*)&arg1);
+LUA_EMBED_STD(mdlFullbright, mdlfullbright, d, (float*)&arg1);
+LUA_EMBED_STD(mdlSpin, mdlspin, dd, (float*)&arg1, (float*)&arg2);
+LUA_EMBED_STD(mdlEnvmap, mdlenvmap, dds, (float*)&arg1, (float*)&arg2, (char*)arg3.c_str());
 
-#define CUBESCRIPT_iid(name, cmd) \
-LUA_EMBED_iid(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_d(arg3); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(mdlShader, mdlshader, s, (char*)arg1.c_str());
 
-#define CUBESCRIPT_iisddd(name, cmd) \
-LUA_EMBED_iisddd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_s(arg3); \
-    ADD_CS_d(arg4); \
-    ADD_CS_d(arg5); \
-    ADD_CS_d(arg6); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(mdlCollisionsOnlyForTriggering, mdlcollisionsonlyfortriggering, i, (int*)&arg1);
 
-#define CUBESCRIPT_ddd(name, cmd) \
-LUA_EMBED_ddd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_d(arg3); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(mdlTrans, mdltrans, ddd, (float*)&arg1, (float*)&arg2, (float*)&arg3);
 
-#define CUBESCRIPT_dddd(name, cmd) \
-LUA_EMBED_dddd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_d(arg3); \
-    ADD_CS_d(arg4); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(modelYaw, mdlyaw, d, (float*)&arg1);
+LUA_EMBED_STD(modelPitch, mdlpitch, d, (float*)&arg1);
+LUA_EMBED_STD(modelShadow, mdlshadow, i, (int*)&arg1);
+LUA_EMBED_STD(modelCollide, mdlcollide, i, (int*)&arg1);
+LUA_EMBED_STD(modelPerEntityCollisionBoxes, mdlperentitycollisionboxes, i, (int*)&arg1);
+LUA_EMBED_STD(modelEllipseCollide, mdlellipsecollide, i, (int*)&arg1);
 
-#define CUBESCRIPT_s(name, cmd) \
-LUA_EMBED_s(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(objLoad, objload, sd, (char*)arg1.c_str(), (float*)&arg2);
 
-#define CUBESCRIPT_si(name, cmd) \
-LUA_EMBED_si(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_d(arg2); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(objSkin, objskin, sssdd, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str(), (float*)&arg4, (float*)&arg5);
+LUA_EMBED_STD(objBumpmap, objbumpmap, sss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str());
+LUA_EMBED_STD(objEnvmap, objenvmap, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(objSpec, objspec, si, (char*)arg1.c_str(), (int*)&arg2);
 
-#define CUBESCRIPT_sd(name, cmd) \
-LUA_EMBED_sd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_d(arg2); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(objPitch, objpitch, dddd, (float*)&arg1, (float*)&arg2, (float*)&arg3, (float*)&arg4);
+LUA_EMBED_STD(objAmbient, objambient, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(objGlow, objglow, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(objGlare, objglare, sdd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3);
+LUA_EMBED_STD(objAlphatest, objalphatest, sd, (char*)arg1.c_str(), (float*)&arg2);
+LUA_EMBED_STD(objAlphablend, objalphablend, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(objCullface, objcullface, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(objFullbright, objfullbright, sd, (char*)arg1.c_str(), (float*)&arg2);
+LUA_EMBED_STD(objShader, objshader, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(objScroll, objscroll, sdd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3);
+LUA_EMBED_STD(objNoclip, objnoclip, si, (char*)arg1.c_str(), (int*)&arg2);
 
-#define CUBESCRIPT_siidi(name, cmd) \
-LUA_EMBED_siidi(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_d(arg3); \
-    ADD_CS_d(arg4); \
-    ADD_CS_d(arg5); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(md5Dir, setmd5dir, s, (char*)arg1.c_str());
+LUA_EMBED_STD(md5Load, md5load, ssd, (char*)arg1.c_str(), (char*)arg2.c_str(), (float*)&arg3);
+LUA_EMBED_STD(md5Tag, md5tag, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(md5Pitch, md5pitch, sdddd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3, (float*)&arg4, (float*)&arg5);
+LUA_EMBED_STD(md5Adjust, md5adjust, sdddddd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3, (float*)&arg4, (float*)&arg5, (float*)&arg6, (float*)&arg7);
+LUA_EMBED_STD(md5Skin, md5skin, sssdd, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str(), (float*)&arg4, (float*)&arg5);
+LUA_EMBED_STD(md5Spec, md5spec, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(md5Ambient, md5ambient, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(md5Glow, md5glow, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(md5Glare, md5glare, sdd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3);
+LUA_EMBED_STD(md5Alphatest, md5alphatest, sd, (char*)arg1.c_str(), (float*)&arg2);
+LUA_EMBED_STD(md5Alphablend, md5alphablend, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(md5Cullface, md5cullface, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(md5Envmap, md5envmap, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(md5Bumpmap, md5bumpmap, sss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str());
+LUA_EMBED_STD(md5Fullbright, md5fullbright, sd, (char*)arg1.c_str(), (float*)&arg2);
+LUA_EMBED_STD(md5Shader, md5shader, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(md5Scroll, md5scroll, sdd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3);
+LUA_EMBED_STD(md5Animpart, md5animpart, s, (char*)arg1.c_str());
+LUA_EMBED_STD(md5Anim, md5anim, ssdi, (char*)arg1.c_str(), (char*)arg2.c_str(), (float*)&arg3, (int*)&arg4);
+LUA_EMBED_STD(md5Link, md5link, iisddd, (int*)&arg1, (int*)&arg2, (char*)arg3.c_str(), (float*)&arg4, (float*)&arg5, (float*)&arg6);
+LUA_EMBED_STD(md5Noclip, md5noclip, si, (char*)arg1.c_str(), (int*)&arg2);
 
-#define CUBESCRIPT_sdd(name, cmd) \
-LUA_EMBED_sdd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_d(arg3); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(iqmDir, setiqmdir, s, (char*)arg1.c_str());
+LUA_EMBED_STD(iqmLoad, iqmload, ssd, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(iqmTag, iqmtag, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(iqmPitch, iqmpitch, sdddd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3, (float*)&arg4, (float*)&arg5);
+LUA_EMBED_STD(iqmAdjust, iqmadjust, sdddddd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3, (float*)&arg4, (float*)&arg5, (float*)&arg6, (float*)&arg7);
+LUA_EMBED_STD(iqmSkin, iqmskin, sssdd, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str(), (float*)&arg4, (float*)&arg5);
+LUA_EMBED_STD(iqmSpec, iqmspec, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(iqmAmbient, iqmambient, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(iqmGlow, iqmglow, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(iqmGlare, iqmglare, sdd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3);
+LUA_EMBED_STD(iqmAlphatest, iqmalphatest, sd, (char*)arg1.c_str(), (float*)&arg2);
+LUA_EMBED_STD(iqmAlphablend, iqmalphablend, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(iqmCullface, iqmcullface, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(iqmEnvmap, iqmenvmap, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(iqmBumpmap, iqmbumpmap, sss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str());
+LUA_EMBED_STD(iqmFullbright, iqmfullbright, sd, (char*)arg1.c_str(), (float*)&arg2);
+LUA_EMBED_STD(iqmShader, iqmshader, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(iqmScroll, iqmscroll, sdd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3);
+LUA_EMBED_STD(iqmAnimpart, iqmanimpart, s, (char*)arg1.c_str());
+LUA_EMBED_STD(iqmAnim, iqmanim, ssdi, (char*)arg1.c_str(), (char*)arg2.c_str(), (float*)&arg3, (int*)&arg4);
+LUA_EMBED_STD(iqmLink, iqmlink, iisddd, (int*)&arg1, (int*)&arg2, (char*)arg3.c_str(), (float*)&arg4, (float*)&arg5, (float*)&arg6);
+LUA_EMBED_STD(iqmNoclip, iqmnoclip, si, (char*)arg1.c_str(), (int*)&arg2);
 
-#define CUBESCRIPT_ss(name, cmd) \
-LUA_EMBED_ss(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_s(arg2); \
-    CSSUDO(command.c_str()); \
-});
+LUA_EMBED_STD(smdDir, setsmddir, s, (char*)arg1.c_str());
+LUA_EMBED_STD(smdLoad, smdload, ssd, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(smdTag, smdtag, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(smdPitch, smdpitch, sdddd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3, (float*)&arg4, (float*)&arg5);
+LUA_EMBED_STD(smdAdjust, smdadjust, sdddddd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3, (float*)&arg4, (float*)&arg5, (float*)&arg6, (float*)&arg7);
+LUA_EMBED_STD(smdSkin, smdskin, sssdd, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str(), (float*)&arg4, (float*)&arg5);
+LUA_EMBED_STD(smdSpec, smdspec, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(smdAmbient, smdambient, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(smdGlow, smdglow, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(smdGlare, smdglare, sdd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3);
+LUA_EMBED_STD(smdAlphatest, smdalphatest, sd, (char*)arg1.c_str(), (float*)&arg2);
+LUA_EMBED_STD(smdAlphablend, smdalphablend, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(smdCullface, smdcullface, si, (char*)arg1.c_str(), (int*)&arg2);
+LUA_EMBED_STD(smdEnvmap, smdenvmap, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(smdBumpmap, smdbumpmap, sss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str());
+LUA_EMBED_STD(smdFullbright, smdfullbright, sd, (char*)arg1.c_str(), (float*)&arg2);
+LUA_EMBED_STD(smdShader, smdshader, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD(smdScroll, smdscroll, sdd, (char*)arg1.c_str(), (float*)&arg2, (float*)&arg3);
+LUA_EMBED_STD(smdAnimpart, smdanimpart, s, (char*)arg1.c_str());
+LUA_EMBED_STD(smdAnim, smdanim, ssdi, (char*)arg1.c_str(), (char*)arg2.c_str(), (float*)&arg3, (int*)&arg4);
+LUA_EMBED_STD(smdLink, smdlink, iisddd, (int*)&arg1, (int*)&arg2, (char*)arg3.c_str(), (float*)&arg4, (float*)&arg5, (float*)&arg6);
+LUA_EMBED_STD(smdNoclip, smdnoclip, si, (char*)arg1.c_str(), (int*)&arg2);
 
-#define CUBESCRIPT_sss(name, cmd) \
-LUA_EMBED_sss(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_s(arg2); \
-    ADD_CS_s(arg3); \
-    CSSUDO(command.c_str()); \
-});
-
-#define CUBESCRIPT_ssdi(name, cmd) \
-LUA_EMBED_ssdi(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_s(arg2); \
-    ADD_CS_d(arg3); \
-    ADD_CS_d(arg4); \
-    CSSUDO(command.c_str()); \
-});
-
-#define CUBESCRIPT_ssdd(name, cmd) \
-LUA_EMBED_ssdd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_s(arg2); \
-    ADD_CS_d(arg3); \
-    ADD_CS_d(arg4); \
-    CSSUDO(command.c_str()); \
-});
-
-#define CUBESCRIPT_sssdd(name, cmd) \
-LUA_EMBED_sssdd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_s(arg2); \
-    ADD_CS_s(arg3); \
-    ADD_CS_d(arg4); \
-    ADD_CS_d(arg5); \
-    CSSUDO(command.c_str()); \
-});
-
-#define CUBESCRIPT_sdddd(name, cmd) \
-LUA_EMBED_sdddd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_d(arg3); \
-    ADD_CS_d(arg4); \
-    ADD_CS_d(arg5); \
-    CSSUDO(command.c_str()); \
-});
-
-#define CUBESCRIPT_sdddddd(name, cmd) \
-LUA_EMBED_sdddddd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_s(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_d(arg3); \
-    ADD_CS_d(arg4); \
-    ADD_CS_d(arg5); \
-    ADD_CS_d(arg6); \
-    ADD_CS_d(arg7); \
-    CSSUDO(command.c_str()); \
-});
-
-#define CUBESCRIPT_iiddddd(name, cmd) \
-LUA_EMBED_iiddddd(name, 0, { \
-    std::string command = #cmd; \
-    command += " "; \
-    ADD_CS_d(arg1); \
-    ADD_CS_d(arg2); \
-    ADD_CS_d(arg3); \
-    ADD_CS_d(arg4); \
-    ADD_CS_d(arg5); \
-    ADD_CS_d(arg6); \
-    ADD_CS_d(arg7); \
-    CSSUDO(command.c_str()); \
-});
-
-CUBESCRIPT_i(modelShadow, mdlshadow);
-CUBESCRIPT_i(modelCollide, mdlcollide);
-CUBESCRIPT_i(modelPerEntityCollisionBoxes, mdlperentitycollisionboxes);
-CUBESCRIPT_i(modelEllipseCollide, mdlellipsecollide);
-
-CUBESCRIPT_s(objLoad, objload);
-
-CUBESCRIPT_ss(objSkin, objskin);
-CUBESCRIPT_ss(objBumpmap, objbumpmap);
-CUBESCRIPT_ss(objEnvmap, objenvmap);
-CUBESCRIPT_si(objSpec, objspec);
-
-CUBESCRIPT_dddd(objPitch, objpitch);
-CUBESCRIPT_si(objAmbient, objambient);
-CUBESCRIPT_si(objGlow, objglow);
-CUBESCRIPT_sdd(objGlare, objglare);
-CUBESCRIPT_sd(objAlphatest, objalphatest);
-CUBESCRIPT_si(objAlphablend, objalphablend);
-CUBESCRIPT_si(objCullface, objcullface);
-CUBESCRIPT_sd(objFullbright, objfullbright);
-CUBESCRIPT_ss(objShader, objshader);
-CUBESCRIPT_sdd(objScroll, objscroll);
-CUBESCRIPT_si(objNoclip, objnoclip);
-
-CUBESCRIPT_d(mdlAlphatest, mdlalphatest);
-CUBESCRIPT_i(mdlAlphablend, mdlalphablend);
-CUBESCRIPT_i(mdlAlphadepth, mdlalphadepth);
-
-CUBESCRIPT_ddd(mdlBb, mdlbb);
-CUBESCRIPT_ddd(mdlExtendbb, mdlextendbb);
-
-CUBESCRIPT_i(mdlScale, mdlscale);
-CUBESCRIPT_i(mdlSpec, mdlspec);
-CUBESCRIPT_i(mdlGlow, mdlglow);
-CUBESCRIPT_dd(mdlGlare, mdlglare);
-CUBESCRIPT_i(mdlAmbient, mdlambient);
-CUBESCRIPT_i(mdlCullface, mdlcullface);
-CUBESCRIPT_i(mdlDepthoffset, mdldepthoffset);
-CUBESCRIPT_d(mdlFullbright, mdlfullbright);
-CUBESCRIPT_dd(mdlSpin, mdlspin);
-
-CUBESCRIPT_s(mdlShader, mdlshader);
-
-CUBESCRIPT_i(mdlCollisionsOnlyForTriggering, mdlcollisionsonlyfortriggering);
-
-CUBESCRIPT_ddd(mdlTrans, mdltrans);
-
-CUBESCRIPT_d(modelYaw, mdlyaw);
-CUBESCRIPT_d(modelPitch, mdlpitch);
-
-CUBESCRIPT_dddd(md2Pitch, md2pitch);
-CUBESCRIPT_siidi(md2Anim, md2anim);
-
-CUBESCRIPT_s(md3Load, md3load);
-CUBESCRIPT_dddd(md3Pitch, md3pitch);
-CUBESCRIPT_sssdd(md3Skin, md3skin);
-CUBESCRIPT_si(md3Spec, md3spec);
-CUBESCRIPT_si(md3Ambient, md3ambient);
-CUBESCRIPT_si(md3Glow, md3glow);
-CUBESCRIPT_sdd(md3Glare, md3glare);
-CUBESCRIPT_sd(md3Alphatest, md3alphatest);
-CUBESCRIPT_si(md3Alphablend, md3alphablend);
-CUBESCRIPT_si(md3Cullface, md3cullface);
-CUBESCRIPT_ss(md3Envmap, md3envmap);
-CUBESCRIPT_sss(md3Bumpmap, md3bumpmap);
-CUBESCRIPT_sd(md3Fullbright, md3fullbright);
-CUBESCRIPT_ss(md3Shader, md3shader);
-CUBESCRIPT_sdd(md3Scroll, md3scroll);
-CUBESCRIPT_siidi(md3Anim, md3anim);
-CUBESCRIPT_iisddd(md3Link, md3link);
-CUBESCRIPT_si(md3Noclip, md3noclip);
-
-CUBESCRIPT_s(md5Dir, md5dir);
-CUBESCRIPT_ss(md5Load, md5load);
-
-CUBESCRIPT_sssdd(md5Skin, md5skin);
-CUBESCRIPT_ss(md5Bumpmap, md5bumpmap);
-CUBESCRIPT_ss(md5Envmap, md5envmap);
-CUBESCRIPT_sd(md5Alphatest, md5alphatest);
-CUBESCRIPT_si(md5Alphablend, md5alphablend);
-
-CUBESCRIPT_sdddddd(md5Adjust, md5adjust);
-CUBESCRIPT_si(md5Spec, md5spec);
-CUBESCRIPT_si(md5Ambient, md5ambient);
-CUBESCRIPT_si(md5Glow, md5glow);
-CUBESCRIPT_sdd(md5Glare, md5glare);
-CUBESCRIPT_si(md5Cullface, md5cullface);
-CUBESCRIPT_sd(md5Fullbright, md5fullbright);
-CUBESCRIPT_ss(md5Shader, md5shader);
-CUBESCRIPT_sdd(md5Scroll, md5scroll);
-CUBESCRIPT_iisddd(md5Link, md5link);
-CUBESCRIPT_si(md5Noclip, md5noclip);
-
-CUBESCRIPT_ss(md5Tag, md5tag);
-CUBESCRIPT_ssdi(md5Anim, md5anim);
-
-CUBESCRIPT_s(md5Animpart, md5animpart);
-CUBESCRIPT_sdddd(md5Pitch, md5pitch);
-
-CUBESCRIPT_s(iqmDir, iqmdir);
-CUBESCRIPT_ss(iqmLoad, iqmload);
-CUBESCRIPT_ss(iqmTag, iqmtag);
-CUBESCRIPT_sdddd(iqmPitch, iqmpitch);
-CUBESCRIPT_sdddddd(iqmAdjust, iqmadjust);
-CUBESCRIPT_sssdd(iqmSkin, iqmskin);
-CUBESCRIPT_si(iqmSpec, iqmspec);
-CUBESCRIPT_si(iqmAmbient, iqmambient);
-CUBESCRIPT_si(iqmGlow, iqmglow);
-CUBESCRIPT_sdd(iqmGlare, iqmglare);
-CUBESCRIPT_sd(iqmAlphatest, iqmalphatest);
-CUBESCRIPT_si(iqmAlphablend, iqmalphablend);
-CUBESCRIPT_si(iqmCullface, iqmcullface);
-CUBESCRIPT_ss(iqmEnvmap, iqmenvmap);
-CUBESCRIPT_ss(iqmBumpmap, iqmbumpmap);
-CUBESCRIPT_sd(iqmFullbright, iqmfullbright);
-CUBESCRIPT_ss(iqmShader, iqmshader);
-CUBESCRIPT_sdd(iqmScroll, iqmscroll);
-CUBESCRIPT_s(iqmAnimpart, iqmanimpart);
-CUBESCRIPT_ssdi(iqmAnim, iqmanim);
-CUBESCRIPT_iisddd(iqmLink, iqmlink);
-CUBESCRIPT_si(iqmNoclip, iqmnoclip);
-
-CUBESCRIPT_s(smdDir, smddir);
-CUBESCRIPT_ss(smdLoad, smdload);
-CUBESCRIPT_ss(smdTag, smdtag);
-CUBESCRIPT_sdddd(smdPitch, smdpitch);
-CUBESCRIPT_sdddddd(smdAdjust, smdadjust);
-CUBESCRIPT_sssdd(smdSkin, smdskin);
-CUBESCRIPT_si(smdSpec, smdspec);
-CUBESCRIPT_si(smdAmbient, smdambient);
-CUBESCRIPT_si(smdGlow, smdglow);
-CUBESCRIPT_sdd(smdGlare, smdglare);
-CUBESCRIPT_sd(smdAlphatest, smdalphatest);
-CUBESCRIPT_si(smdAlphablend, smdalphablend);
-CUBESCRIPT_si(smdCullface, smdcullface);
-CUBESCRIPT_ss(smdEnvmap, smdenvmap);
-CUBESCRIPT_ss(smdBumpmap, smdbumpmap);
-CUBESCRIPT_sd(smdFullbright, smdfullbright);
-CUBESCRIPT_ss(smdShader, smdshader);
-CUBESCRIPT_sdd(smdScroll, smdscroll);
-CUBESCRIPT_s(smdAnimpart, smdanimpart);
-CUBESCRIPT_ssdi(smdAnim, smdanim);
-CUBESCRIPT_iisddd(smdLink, smdlink);
-CUBESCRIPT_si(smdNoclip, smdnoclip);
-
-CUBESCRIPT_ddd(rdVert, rdvert);
-CUBESCRIPT_i(rdEye, rdeye);
-CUBESCRIPT_iii(rdTri, rdtri);
-CUBESCRIPT_iiiii(rdJoint, rdjoint);
-CUBESCRIPT_iid(rdLimitDist, rdlimitdist);
-CUBESCRIPT_iiddddd(rdLimitRot, rdlimitrot);
-CUBESCRIPT_i(rdAnimJoints, rdanimjoints);
-
-CUBESCRIPT_dd(mdlEnvmap, mdlenvmap);
+LUA_EMBED_STD(rdVert, rdvert, dddd, (float*)&arg1, (float*)&arg2, (float*)&arg3, (float*)&arg4);
+LUA_EMBED_STD(rdEye, rdeye, i, (int*)&arg1);
+LUA_EMBED_STD(rdTri, rdtri, iii, (int*)&arg1, (int*)&arg2, (int*)&arg3);
+LUA_EMBED_STD(rdJoint, rdjoint, iisss, (int*)&arg1, (int*)&arg2, (char*)arg3.c_str(), (char*)arg4.c_str(), (char*)arg5.c_str());
+LUA_EMBED_STD(rdLimitDist, rdlimitdist, iidd, (int*)&arg1, (int*)&arg2, (float*)&arg3, (float*)&arg4);
+LUA_EMBED_STD(rdLimitRot, rdlimitrot, iiddddd, (int*)&arg1, (int*)&arg2, (float*)&arg3, (float*)&arg4, (float*)&arg5, (float*)&arg6, (float*)&arg7);
+LUA_EMBED_STD(rdAnimJoints, rdanimjoints, i, (int*)&arg1);
 
 // Keyboard
 
@@ -1164,64 +962,6 @@ LUA_EMBED_s(reloadModel, 0, {
             LuaEngine::getRef(target->luaRef);
         else
             LuaEngine::pushValue();
-    });
-
-    LUA_EMBED_i(useMinimap, 0, {
-        std::string command = "useminimap ";
-        command += Utility::toString(arg1);
-        CSSUDO(command.c_str());
-    });
-
-    LUA_EMBED_NOPARAM(usedMinimap, 1, {
-        LuaEngine::pushValue(game::usedminimap());
-    });
-
-    LUA_EMBED_i(minimapMinZoom, 0, {
-        std::string command = "forceminminimapzoom ";
-        command += Utility::toString(arg1);
-        CSSUDO(command.c_str());
-    });
-
-    LUA_EMBED_i(minimapMaxZoom, 0, {
-        std::string command = "forcemaxminimapzoom ";
-        command += Utility::toString(arg1);
-        CSSUDO(command.c_str());
-    });
-
-    LUA_EMBED_d(minimapRadius, 0, {
-        std::string command = "minimapradius ";
-        command += Utility::toString(arg1);
-        CSSUDO(command.c_str());
-    });
-
-    LUA_EMBED_d(minimapPositionX, 0, {
-        std::string command = "minimapxpos ";
-        command += Utility::toString(arg1);
-        CSSUDO(command.c_str());
-    });
-
-    LUA_EMBED_d(minimapPositionY, 0, {
-        std::string command = "minimapypos ";
-        command += Utility::toString(arg1);
-        CSSUDO(command.c_str());
-    });
-
-    LUA_EMBED_d(minimapRotation, 0, {
-        std::string command = "minimaprotation ";
-        command += Utility::toString(arg1);
-        CSSUDO(command.c_str());
-    });
-
-    LUA_EMBED_i(minimapSidesNum, 0, {
-        std::string command = "minimapsides ";
-        command += Utility::toString(arg1);
-        CSSUDO(command.c_str());
-    });
-
-    LUA_EMBED_i(minimapAlignRight, 0, {
-        std::string command = "minimaprightalign ";
-        command += Utility::toString(arg1);
-        CSSUDO(command.c_str());
     });
 
 // Rendering
