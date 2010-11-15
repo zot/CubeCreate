@@ -1,1 +1,2 @@
 Current upstream version of /enet, /engine and /shared: Sauerbraten SVN (in sync) + improvements from Sauerbraten Enhanced
+Dale Weiler forked to do some cleaning
