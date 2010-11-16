@@ -702,7 +702,7 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     }
 #endif
 
-    extern int useshaders, forceglsl;
+    extern int useshaders;//, forceglsl; CubeCreate: disable asm shaders
     bool hasshaders = (hasVP && hasFP) || hasGLSL;
     if(!useshaders || (useshaders<0 && avoidshaders) || !hasMT || !hasshaders)
     {
@@ -710,7 +710,8 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
         else if(useshaders<0 && !hasTF) conoutf(CON_WARN, "WARNING: Disabling shaders for extra performance. (use \"/shaders 1\" to enable shaders if desired)");
         renderpath = R_FIXEDFUNCTION;
     }
-    else renderpath = hasGLSL ? (!hasVP || !hasFP || forceglsl > 0 ? R_GLSLANG : R_ASMGLSLANG) : R_ASMSHADER;
+    else renderpath = R_GLSLANG;
+    //else renderpath = hasGLSL ? (!hasVP || !hasFP || forceglsl > 0 ? R_GLSLANG : R_ASMGLSLANG) : R_ASMSHADER; CubeCreate: disable asm shaders
 
     static const char * const rpnames[4] = { "fixed-function", "assembly shader", "GLSL shader", "assembly/GLSL shader" };
 #if 0 // INTENSITY - JUST PRINTF

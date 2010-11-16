@@ -102,8 +102,8 @@ LUA_EMBED_Z(dismantleCharacter, 0, , {
 });
 
 // Worldsystem
-extern void removeentity(extentity* entity);
-extern void addentity(extentity* entity);
+void removeentity(extentity* entity);
+void addentity(extentity* entity);
 
 // Entity attribs
 
@@ -410,7 +410,7 @@ LUA_EMBED_sss(combineImages, 0, {
     });
 #endif
 
-extern void startmusic(char *name, char *cmd);
+void startmusic(char *name, char *cmd);
 
 LUA_EMBED_STD_CLIENT(music, startmusic, s, (char*)arg1.c_str(), (char*)"Sound.musicCallback()");
 
@@ -593,171 +593,187 @@ LUA_EMBED_s(readFile, 1, {
 
 // Mapping
 
-extern void texturereset(int *n);
+void texturereset(int *n);
 LUA_EMBED_NOPARAM(textureReset, 0, {
     int num = 0;
     texturereset(&num);
 });
 
-extern void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale, int *forcedindex);
+void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale, int *forcedindex);
 LUA_EMBED_ssiiidi(texture, 0, {
     float arg6f = arg6;
     // XXX: arg7 may not be given, in which case it is undefined, and turns into 0.
     texture((char*)arg1.c_str(), (char*)arg2.c_str(), &arg3, &arg4, &arg5, &arg6f, &arg7);
 });
 
-extern void mapmodelreset(int *n);
+void mapmodelreset(int *n);
 LUA_EMBED_i(mapmodelReset, 0, {
     mapmodelreset(&arg1);
 });
 
-extern void mmodel(char *name);
+void mmodel(char *name);
 LUA_EMBED_s(mapmodel, 0, {
     mmodel((char*)arg1.c_str());
 });
 
-extern void autograss(char *name);
+void autograss(char *name);
 LUA_EMBED_s(autograss, 0, {
     autograss((char*)arg1.c_str());
 });
 
-extern void texlayer(int *layer, char *name, int *mode, float *scale);
-extern void texalpha(float *front, float *back);
-extern void texcolor(float *r, float *g, float *b);
-extern void texscroll(float *scrollS, float *scrollT);
-extern void texffenv(int *ffenv);
-extern void setshader(char *name);
-extern void materialreset();
-extern void addshaderparam(const char *name, int type, int n, float x, float y, float z, float w);
+void texlayer(int *layer, char *name, int *mode, float *scale);
+void texalpha(float *front, float *back);
+void texcolor(float *r, float *g, float *b);
+void texscroll(float *scrollS, float *scrollT);
+void texffenv(int *ffenv);
+void materialreset();
 
 LUA_EMBED_STD_CLIENT(texLayer, texlayer, i, &arg1, (char*)"", (int*)0, (float*)0);
 LUA_EMBED_STD_CLIENT(texAlpha, texalpha, dd, (float*)&arg1, (float*)&arg2);
 LUA_EMBED_STD_CLIENT(texColor, texcolor, ddd, (float*)&arg1, (float*)&arg2, (float*)&arg3);
 LUA_EMBED_STD_CLIENT(texScroll, texscroll, dd, (float*)&arg1, (float*)&arg2);
 LUA_EMBED_STD_CLIENT(texFFenv, texffenv, i, (int*)&arg1);
+LUA_EMBED_STD(materialReset, materialreset, NOPARAM)
+
+// shaders
+
+void shader(int *type, char *name, char *vs, char *ps);
+void variantshader(int *type, char *name, int *row, char *vs, char *ps);
+void setshader(char *name);
+void addshaderparam(const char *name, int type, int n, float x, float y, float z, float w);
+void altshader(char *origname, char *altname);
+void fastshader(char *nice, char *fast, int *detail);
+void defershader(int *type, const char *name, const char *contents);
+Shader *useshaderbyname(const char *name);
+
+LUA_EMBED_STD_CLIENT(shader, shader, isss, (int*)&arg1, (char*)arg2.c_str(), (char*)arg3.c_str(), (char*)arg4.c_str());
+LUA_EMBED_STD_CLIENT(variantShader, variantshader, isiss, (int*)&arg1, (char*)arg2.c_str(), (int*)&arg3, (char*)arg4.c_str(), (char*)arg5.c_str());
 LUA_EMBED_STD_CLIENT(setShader, setshader, s, (char*)arg1.c_str());
 LUA_EMBED_STD_CLIENT(setShaderParam, addshaderparam, sdddd, (char*)arg1.c_str(), SHPARAM_LOOKUP, -1, arg2, arg3, arg4, arg5);
-LUA_EMBED_STD(materialReset, materialreset, NOPARAM)
+LUA_EMBED_STD_CLIENT(altShader, altshader, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+LUA_EMBED_STD_CLIENT(fastShader, fastshader, ssi, (char*)arg1.c_str(), (char*)arg2.c_str(), (int*)&arg3);
+LUA_EMBED_STD_CLIENT(deferShader, defershader, iss, (int*)&arg1, (char*)arg2.c_str(), (char*)arg3.c_str());
+LUA_EMBED_STD_CLIENT(forceShader, useshaderbyname, s, (char*)arg1.c_str());
 
 // Models
 
-extern void mdlalphatest(float *cutoff);
-extern void mdlalphablend(int *blend);
-extern void mdlalphadepth(int *depth);
-extern void mdldepthoffset(int *offset);
-extern void mdlcullface(int *cullface);
-extern void mdlcollide(int *collide);
-extern void mdlellipsecollide(int *collide);
-extern void mdlspec(int *percent);
-extern void mdlambient(int *percent);
-extern void mdlglow(int *percent);
-extern void mdlglare(float *specglare, float *glowglare);
-extern void mdlenvmap(float *envmapmax, float *envmapmin, char *envmap);
-extern void mdlfullbright(float *fullbright);
-extern void mdlshader(char *shader);
-extern void mdlspin(float *yaw, float *pitch);
-extern void mdlscale(int *percent);
-extern void mdltrans(float *x, float *y, float *z);
-extern void mdlyaw(float *angle);
-extern void mdlpitch(float *angle);
-extern void mdlshadow(int *shadow);
-extern void mdlbb(float *rad, float *h, float *eyeheight);
-extern void mdlextendbb(float *x, float *y, float *z);
-extern void mdlcollisionsonlyfortriggering(int *val);
-extern void mdlperentitycollisionboxes(int *val);
-extern void rdvert(float *x, float *y, float *z, float *radius);
-extern void rdeye(int *v);
-extern void rdtri(int *v1, int *v2, int *v3);
-extern void rdjoint(int *n, int *t, char *v1, char *v2, char *v3);
-extern void rdlimitdist(int *v1, int *v2, float *mindist, float *maxdist);
-extern void rdlimitrot(int *t1, int *t2, float *maxangle, float *qx, float *qy, float *qz, float *qw);
-extern void rdanimjoints(int *on);
+void mdlalphatest(float *cutoff);
+void mdlalphablend(int *blend);
+void mdlalphadepth(int *depth);
+void mdldepthoffset(int *offset);
+void mdlcullface(int *cullface);
+void mdlcollide(int *collide);
+void mdlellipsecollide(int *collide);
+void mdlspec(int *percent);
+void mdlambient(int *percent);
+void mdlglow(int *percent);
+void mdlglare(float *specglare, float *glowglare);
+void mdlenvmap(float *envmapmax, float *envmapmin, char *envmap);
+void mdlfullbright(float *fullbright);
+void mdlshader(char *shader);
+void mdlspin(float *yaw, float *pitch);
+void mdlscale(int *percent);
+void mdltrans(float *x, float *y, float *z);
+void mdlyaw(float *angle);
+void mdlpitch(float *angle);
+void mdlshadow(int *shadow);
+void mdlbb(float *rad, float *h, float *eyeheight);
+void mdlextendbb(float *x, float *y, float *z);
+void mdlcollisionsonlyfortriggering(int *val);
+void mdlperentitycollisionboxes(int *val);
+void rdvert(float *x, float *y, float *z, float *radius);
+void rdeye(int *v);
+void rdtri(int *v1, int *v2, int *v3);
+void rdjoint(int *n, int *t, char *v1, char *v2, char *v3);
+void rdlimitdist(int *v1, int *v2, float *mindist, float *maxdist);
+void rdlimitrot(int *t1, int *t2, float *maxangle, float *qx, float *qy, float *qz, float *qw);
+void rdanimjoints(int *on);
 
-extern void objload(char *model, float *smooth);
-extern void objpitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
-extern void objskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
-extern void objspec(char *meshname, int *percent);
-extern void objambient(char *meshname, int *percent);
-extern void objglow(char *meshname, int *percent);
-extern void objglare(char *meshname, float *specglare, float *glowglare);
-extern void objalphatest(char *meshname, float *cutoff);
-extern void objalphablend(char *meshname, int *blend);
-extern void objcullface(char *meshname, int *cullface);
-extern void objenvmap(char *meshname, char *envmap);
-extern void objbumpmap(char *meshname, char *normalmap, char *skin);
-extern void objfullbright(char *meshname, float *fullbright);
-extern void objshader(char *meshname, char *shader);
-extern void objscroll(char *meshname, float *scrollu, float *scrollv);
-extern void objnoclip(char *meshname, int *noclip);
+void objload(char *model, float *smooth);
+void objpitch(float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
+void objskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
+void objspec(char *meshname, int *percent);
+void objambient(char *meshname, int *percent);
+void objglow(char *meshname, int *percent);
+void objglare(char *meshname, float *specglare, float *glowglare);
+void objalphatest(char *meshname, float *cutoff);
+void objalphablend(char *meshname, int *blend);
+void objcullface(char *meshname, int *cullface);
+void objenvmap(char *meshname, char *envmap);
+void objbumpmap(char *meshname, char *normalmap, char *skin);
+void objfullbright(char *meshname, float *fullbright);
+void objshader(char *meshname, char *shader);
+void objscroll(char *meshname, float *scrollu, float *scrollv);
+void objnoclip(char *meshname, int *noclip);
 
-extern void setmd5dir(char *name);  
-extern void md5load(char *meshfile, char *skelname, float *smooth);
-extern void md5tag(char *name, char *tagname);        
-extern void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
-extern void md5adjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
-extern void md5skin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
-extern void md5spec(char *meshname, int *percent);
-extern void md5ambient(char *meshname, int *percent);
-extern void md5glow(char *meshname, int *percent);
-extern void md5glare(char *meshname, float *specglare, float *glowglare);
-extern void md5alphatest(char *meshname, float *cutoff);
-extern void md5alphablend(char *meshname, int *blend);
-extern void md5cullface(char *meshname, int *cullface);
-extern void md5envmap(char *meshname, char *envmap);
-extern void md5bumpmap(char *meshname, char *normalmap, char *skin);
-extern void md5fullbright(char *meshname, float *fullbright);
-extern void md5shader(char *meshname, char *shader);
-extern void md5scroll(char *meshname, float *scrollu, float *scrollv);
-extern void md5anim(char *anim, char *animfile, float *speed, int *priority);
-extern void md5animpart(char *maskstr);
-extern void md5link(int *parent, int *child, char *tagname, float *x, float *y, float *z);
-extern void md5noclip(char *meshname, int *noclip);
+void setmd5dir(char *name);  
+void md5load(char *meshfile, char *skelname, float *smooth);
+void md5tag(char *name, char *tagname);        
+void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
+void md5adjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
+void md5skin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
+void md5spec(char *meshname, int *percent);
+void md5ambient(char *meshname, int *percent);
+void md5glow(char *meshname, int *percent);
+void md5glare(char *meshname, float *specglare, float *glowglare);
+void md5alphatest(char *meshname, float *cutoff);
+void md5alphablend(char *meshname, int *blend);
+void md5cullface(char *meshname, int *cullface);
+void md5envmap(char *meshname, char *envmap);
+void md5bumpmap(char *meshname, char *normalmap, char *skin);
+void md5fullbright(char *meshname, float *fullbright);
+void md5shader(char *meshname, char *shader);
+void md5scroll(char *meshname, float *scrollu, float *scrollv);
+void md5anim(char *anim, char *animfile, float *speed, int *priority);
+void md5animpart(char *maskstr);
+void md5link(int *parent, int *child, char *tagname, float *x, float *y, float *z);
+void md5noclip(char *meshname, int *noclip);
 
-extern void setiqmdir(char *name);  
-extern void iqmload(char *meshfile, char *skelname);
-extern void iqmtag(char *name, char *tagname);        
-extern void iqmpitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
-extern void iqmadjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
-extern void iqmskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
-extern void iqmspec(char *meshname, int *percent);
-extern void iqmambient(char *meshname, int *percent);
-extern void iqmglow(char *meshname, int *percent);
-extern void iqmglare(char *meshname, float *specglare, float *glowglare);
-extern void iqmalphatest(char *meshname, float *cutoff);
-extern void iqmalphablend(char *meshname, int *blend);
-extern void iqmcullface(char *meshname, int *cullface);
-extern void iqmenvmap(char *meshname, char *envmap);
-extern void iqmbumpmap(char *meshname, char *normalmap, char *skin);
-extern void iqmfullbright(char *meshname, float *fullbright);
-extern void iqmshader(char *meshname, char *shader);
-extern void iqmscroll(char *meshname, float *scrollu, float *scrollv);
-extern void iqmanim(char *anim, char *animfile, float *speed, int *priority);
-extern void iqmanimpart(char *maskstr);
-extern void iqmlink(int *parent, int *child, char *tagname, float *x, float *y, float *z);
-extern void iqmnoclip(char *meshname, int *noclip);
+void setiqmdir(char *name);  
+void iqmload(char *meshfile, char *skelname);
+void iqmtag(char *name, char *tagname);        
+void iqmpitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
+void iqmadjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
+void iqmskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
+void iqmspec(char *meshname, int *percent);
+void iqmambient(char *meshname, int *percent);
+void iqmglow(char *meshname, int *percent);
+void iqmglare(char *meshname, float *specglare, float *glowglare);
+void iqmalphatest(char *meshname, float *cutoff);
+void iqmalphablend(char *meshname, int *blend);
+void iqmcullface(char *meshname, int *cullface);
+void iqmenvmap(char *meshname, char *envmap);
+void iqmbumpmap(char *meshname, char *normalmap, char *skin);
+void iqmfullbright(char *meshname, float *fullbright);
+void iqmshader(char *meshname, char *shader);
+void iqmscroll(char *meshname, float *scrollu, float *scrollv);
+void iqmanim(char *anim, char *animfile, float *speed, int *priority);
+void iqmanimpart(char *maskstr);
+void iqmlink(int *parent, int *child, char *tagname, float *x, float *y, float *z);
+void iqmnoclip(char *meshname, int *noclip);
 
-extern void setsmddir(char *name);  
-extern void smdload(char *meshfile, char *skelname);
-extern void smdtag(char *name, char *tagname);        
-extern void smdpitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
-extern void smdadjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
-extern void smdskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
-extern void smdspec(char *meshname, int *percent);
-extern void smdambient(char *meshname, int *percent);
-extern void smdglow(char *meshname, int *percent);
-extern void smdglare(char *meshname, float *specglare, float *glowglare);
-extern void smdalphatest(char *meshname, float *cutoff);
-extern void smdalphablend(char *meshname, int *blend);
-extern void smdcullface(char *meshname, int *cullface);
-extern void smdenvmap(char *meshname, char *envmap);
-extern void smdbumpmap(char *meshname, char *normalmap, char *skin);
-extern void smdfullbright(char *meshname, float *fullbright);
-extern void smdshader(char *meshname, char *shader);
-extern void smdscroll(char *meshname, float *scrollu, float *scrollv);
-extern void smdanim(char *anim, char *animfile, float *speed, int *priority);
-extern void smdanimpart(char *maskstr);
-extern void smdlink(int *parent, int *child, char *tagname, float *x, float *y, float *z);
-extern void smdnoclip(char *meshname, int *noclip);
+void setsmddir(char *name);  
+void smdload(char *meshfile, char *skelname);
+void smdtag(char *name, char *tagname);        
+void smdpitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
+void smdadjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
+void smdskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
+void smdspec(char *meshname, int *percent);
+void smdambient(char *meshname, int *percent);
+void smdglow(char *meshname, int *percent);
+void smdglare(char *meshname, float *specglare, float *glowglare);
+void smdalphatest(char *meshname, float *cutoff);
+void smdalphablend(char *meshname, int *blend);
+void smdcullface(char *meshname, int *cullface);
+void smdenvmap(char *meshname, char *envmap);
+void smdbumpmap(char *meshname, char *normalmap, char *skin);
+void smdfullbright(char *meshname, float *fullbright);
+void smdshader(char *meshname, char *shader);
+void smdscroll(char *meshname, float *scrollu, float *scrollv);
+void smdanim(char *anim, char *animfile, float *speed, int *priority);
+void smdanimpart(char *maskstr);
+void smdlink(int *parent, int *child, char *tagname, float *x, float *y, float *z);
+void smdnoclip(char *meshname, int *noclip);
 
 LUA_EMBED_STD(mdlAlphatest, mdlalphatest, d, (float*)&arg1);
 LUA_EMBED_STD(mdlAlphablend, mdlalphablend, i, (int*)&arg1);
@@ -940,7 +956,7 @@ LUA_EMBED_s(preloadModel, 0, {
 });
 
 LUA_EMBED_s(reloadModel, 0, {
-    extern void clearmodel(char *name);
+    void clearmodel(char *name);
     clearmodel((char*)arg1.c_str());
     if (!loadmodel((char*)arg1.c_str())) LuaEngine::error("Cannot load model.");
 });
@@ -1290,11 +1306,11 @@ LUA_EMBED_s(modelMesh, 1, {
 // dummies are needed because we don't want to check further in CAPIExtras.
 
 #ifdef CLIENT
-    extern void keymap(int *code, char *key);
-    extern void newfont(char *name, char *tex, int *defaultw, int *defaulth, int *offsetx, int *offsety, int *offsetw, int *offseth);
-    extern void fontoffset(char *c);
-    extern void fontchar(int *x, int *y, int *w, int *h);
-    extern void registersound(char *name, int *vol);
+    void keymap(int *code, char *key);
+    void newfont(char *name, char *tex, int *defaultw, int *defaulth, int *offsetx, int *offsety, int *offsetw, int *offseth);
+    void fontoffset(char *c);
+    void fontchar(int *x, int *y, int *w, int *h);
+    void registersound(char *name, int *vol);
 
     LUA_EMBED_is(keymap, 0, {
         keymap(&arg1, (char *)arg2.c_str());
@@ -1353,10 +1369,10 @@ extern identtable *idents; // we must extern out ident table.
 // (which will be done after cubescript is completely out)
 
 // here we must also extern some setters
-extern void setvarchecked(ident *id, int val);
-extern void setfvarchecked(ident *id, float val);
-extern void setsvarchecked(ident *id, const char *val);
-extern void alias(const char *name, const char *action);
+void setvarchecked(ident *id, int val);
+void setfvarchecked(ident *id, float val);
+void setsvarchecked(ident *id, const char *val);
+void alias(const char *name, const char *action);
 
 LUA_EMBED_s(getVariable, 1, {
     ident *ident = idents->access(arg1.c_str());

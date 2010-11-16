@@ -64,7 +64,9 @@ void loadshaders()
 
     initshaders = true;
     standardshader = true;
-    execfile(renderpath==R_GLSLANG ? "data/glsl.cfg" : "data/stdshader.cfg");
+    //execfile(renderpath==R_GLSLANG ? "data/glsl.cfg" : "data/stdshader.cfg"); CubeCreate
+    LuaEngine::runFile("data/glsl.lua");
+    execfile("data/glsl.cfg");
     standardshader = false;
     initshaders = false;
     defaultshader = lookupshaderbyname("default");
@@ -746,7 +748,7 @@ void Shader::bindprograms()
 
 VARFN(shaders, useshaders, -1, -1, 1, initwarning("shaders"));
 VARF(shaderprecision, 0, 0, 2, initwarning("shader quality"));
-VARF(forceglsl, 0, 0, 1, initwarning("shaders"));
+//VARF(forceglsl, 0, 0, 1, initwarning("shaders"));
 
 bool Shader::compile()
 {

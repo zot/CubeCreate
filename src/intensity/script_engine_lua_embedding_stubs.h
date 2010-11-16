@@ -153,9 +153,16 @@ luaL_Reg CAPI[] = {
     STDREG(texColor),
     STDREG(texScroll),
     STDREG(texFFenv),
-    STDREG(setShader),
-    STDREG(setShaderParam),
     STDREG(materialReset),
+    // shaders
+	STDREG(shader),
+	STDREG(variantShader),
+	STDREG(setShader),
+    STDREG(setShaderParam),
+	STDREG(altShader),
+	STDREG(fastShader),
+	STDREG(deferShader),
+	STDREG(forceShader),
     // models
 	STDREG(mdlAlphatest),
 	STDREG(mdlAlphablend),

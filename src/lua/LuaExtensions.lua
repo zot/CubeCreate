@@ -310,3 +310,38 @@ math.RAD = (math.pi / 180.0)
 -- @class table
 -- @name null
 null = { __ccnull = true }
+
+--- Convert a script template into real script.
+-- Accepts string as a script template, runs all conditionals etc inside
+-- and returns a final script string.
+-- Based on luadoc template system, which is licensed under MIT/X11.
+-- <br/><br/>Usage:<br/><br/>
+-- <code>
+-- local x = 5
+-- local tmpl = "foobar: <%=x%> <% if x == 5 then return 10 else return 15 end %>"<br/>
+-- local scrp = template(tmpl)<br/>
+-- echo(scrp)<br/>
+-- -- and return value should be:<br/>
+-- -- foobar: 5 10<br/>
+-- </code>
+-- @param s The string specifying the template.
+-- @return A translated template.
+function template(s)
+	s = string.gsub(s, "<%%(.-)%%>", "<?lua %1 ?>")
+	local res = {}
+	local start = 1   -- start of untranslated part in `s'
+	while true do
+		local ip, fp, target, exp, code = string.find(s, "<%?(%w*)[ \t]*(=?)(.-)%?>", start)
+		if not ip then break end
+		table.insert(res, string.sub(s, start, ip-1))
+		if exp == "=" then   -- expression?
+			table.insert(res, string.format("%s", loadstring("return " .. code)()))
+		else  -- command
+			local ret = loadstring(code)()
+			if ret then table.insert(res, string.format(" %s ", tostring(ret))) end
+		end
+		start = fp + 1
+	end
+	table.insert(res, string.sub(s, start, -1))
+	return table.concat(res)
+end

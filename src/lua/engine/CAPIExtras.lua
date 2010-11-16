@@ -91,16 +91,6 @@ Map = {
 	texFFenv = CAPI.texFFenv,
 	texScroll = CAPI.texScroll,
 
-	setShader = CAPI.setShader,
-
-	setShaderParam = function (_name, x, y, z, w)
-		local x = defaultValue(x, 0)
-		local y = defaultValue(y, 0)
-		local z = defaultValue(z, 0)
-		local w = defaultValue(w, 0)
-		CAPI.setShaderParam(_name, x, y, z, w)
-	end,
-
 	materialReset = CAPI.materialReset,
 
 	preloadSound = function (_name, volume)
@@ -116,6 +106,37 @@ Map = {
 	end,
 
 	combineImages = CAPI.combineImages
+}
+
+-- Shaders
+
+Shader = {
+	normal = function (stype, name, vertex, fragment)
+		vertex = template(vertex);
+		fragment = template(fragment);
+		CAPI.shader(stype, name, vertex, fragment)
+	end,
+
+	variant = function (stype, name, row, vertex, fragment)
+		vertex = template(vertex);
+		fragment = template(fragment);
+		CAPI.shader(stype, name, row, vertex, fragment)
+	end,
+
+	set = CAPI.setShader,
+
+	setParam = function (_name, x, y, z, w)
+		local x = defaultValue(x, 0)
+		local y = defaultValue(y, 0)
+		local z = defaultValue(z, 0)
+		local w = defaultValue(w, 0)
+		CAPI.setShaderParam(_name, x, y, z, w)
+	end,
+
+	alt = CAPI.altShader,
+	fast = CAPI.fastShader,
+	defer = CAPI.deferShader,
+	force = CAPI.forceShader
 }
 
 -- World
