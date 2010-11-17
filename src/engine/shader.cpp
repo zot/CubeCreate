@@ -1972,9 +1972,7 @@ void clearpostfx()
     cleanuppostfx(false);
 }
 
-COMMAND(clearpostfx, "");
-
-ICOMMAND(addpostfx, "siisffff", (char *name, int *bind, int *scale, char *inputs, float *x, float *y, float *z, float *w),
+void addpostfx(const char *name, int bind, int scale, const char *inputs, float x, float y, float z, float w)
 {
     int inputmask = inputs[0] ? 0 : 1;
     int freemask = inputs[0] ? 0 : 1;
@@ -1988,14 +1986,14 @@ ICOMMAND(addpostfx, "siisffff", (char *name, int *bind, int *scale, char *inputs
     else if(*inputs=='-') freeinputs = true;
     inputmask &= (1<<NUMPOSTFXBINDS)-1;
     freemask &= (1<<NUMPOSTFXBINDS)-1;
-    addpostfx(name, clamp(*bind, 0, NUMPOSTFXBINDS-1), max(*scale, 0), inputmask, freemask, vec4(*x, *y, *z, *w));
-});
+    addpostfx(name, clamp(bind, 0, NUMPOSTFXBINDS-1), max(scale, 0), inputmask, freemask, vec4(x, y, z, w));
+}
 
-ICOMMAND(setpostfx, "sffff", (char *name, float *x, float *y, float *z, float *w),
+void setpostfx(const char *name, float x, float y, float z, float w)
 {
     clearpostfx();
-    if(name[0]) addpostfx(name, 0, 0, 1, 1, vec4(*x, *y, *z, *w));
-});
+    if(name[0]) addpostfx(name, 0, 0, 1, 1, vec4(x, y, z, w));
+}
 
 struct tmufunc
 {

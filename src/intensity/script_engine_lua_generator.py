@@ -8,7 +8,7 @@ strings = [
     'sdddi', 'sssdd', 'ddddi', 'sdddd', 'siidi', 'iiiss', 'iiisi', 'iiiii', 'idddd', 'iisss', 'isiss',
     'sdddii', 'dddddd', 'iidddi', 'iisddd', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddid', 'iiiiii', 'sidddd',
     'sdddddd', 'ddddddd', 'iiiiddd', 'iiddddd', 'ssiiidi', 'iiiiiii', 'sddddid',
-    'ddddddii', 'ddddiiid', 'iidddddd', 'ssiiiiii',
+    'ddddddii', 'ddddiiid', 'iidddddd', 'ssiiiiii', 'siisdddd',
     'ddddddiii', 'oidddiiii', 'idddidddi', 'dddsiiidi', 'iiidddidii', 'ddddddiiid', 'dddiiiiii',
     'ddddddiiidi', 'osiddddddii', 'iiidddidiii', 'iissdddiiii', 'iiddddddidi', 'ddddddiiidii',
     'iiidddidiiibi', 'iiidddidiibibi', 'iiddddddidib', 'idddddddiiii', 'idddddiidddi',

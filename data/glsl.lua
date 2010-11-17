@@ -1314,6 +1314,663 @@ end
 
 -- SOME SHADERS HERE
 
+------------------------------------------------
+--
+-- full screen shaders: 
+--
+------------------------------------------------
+
+fsvs = [[
+    void main(void)
+    {
+        gl_Position = gl_Vertex;   // woohoo, no mvp :) 
+        gl_TexCoord[0].xy = gl_MultiTexCoord0.xy;
+]]
+
+fsps = [[
+    #extension GL_ARB_texture_rectangle : enable
+    uniform sampler2DRect tex0; 
+    void main(void)
+    {
+        vec4 sample = texture2DRect(tex0, gl_TexCoord[0].xy);
+]]
+
+setup4corners = [[
+    gl_TexCoord[1].xy = gl_MultiTexCoord0.xy + vec2(-1.5, -1.5);
+    gl_TexCoord[2].xy = gl_MultiTexCoord0.xy + vec2( 1.5, -1.5);
+    gl_TexCoord[3].xy = gl_MultiTexCoord0.xy + vec2(-1.5,  1.5);
+    gl_TexCoord[4].xy = gl_MultiTexCoord0.xy + vec2( 1.5,  1.5);
+]]
+
+sample4corners = [[
+    vec4 s00 = texture2DRect(tex0, gl_TexCoord[1].xy);
+    vec4 s02 = texture2DRect(tex0, gl_TexCoord[2].xy);
+    vec4 s20 = texture2DRect(tex0, gl_TexCoord[3].xy);
+    vec4 s22 = texture2DRect(tex0, gl_TexCoord[4].xy);
+]]
+
+-- some simple ones that just do an effect on the RGB value...
+
+lazyshader(4, "invert", "<%=fsvs%> }", "<%=fsps%> gl_FragColor = 1.0 - sample; }")
+lazyshader(4, "gbr",    "<%=fsvs%> }", "<%=fsps%> gl_FragColor = sample.yzxw; }")
+lazyshader(4, "bw",     "<%=fsvs%> }", "<%=fsps%> gl_FragColor = vec4(dot(sample.xyz, vec3(0.333))); }")
+
+-- sobel
+
+lazyshader(4, "sobel", "<%=fsvs%> <%=setup4corners%> }",
+	[[
+		<%=fsps%>
+		<%=sample4corners%>
+		vec4 t = s00 + s20 - s02 - s22;
+		vec4 u = s00 + s02 - s20 - s22;
+		gl_FragColor = sample + t*t + u*u;
+	}
+	]]
+)
+
+-- rotoscope
+
+lazyshader(4, "rotoscope",
+	[[
+		uniform vec4 params;
+		void main(void)
+		{
+			gl_Position = gl_Vertex;
+			gl_TexCoord[0].xy = gl_MultiTexCoord0.xy;
+
+			// stuff two sets of texture coordinates into each one to get around hardware attribute limits
+			gl_TexCoord[1] = vec4(-1.0, -1.0,  1.0, 0.0)*params.x + gl_MultiTexCoord0.xyyx;
+			gl_TexCoord[2] = vec4(-1.0,  0.0, -1.0, 1.0)*params.x + gl_MultiTexCoord0.xyyx;
+			gl_TexCoord[3] = vec4(-1.0,  1.0,  0.0, 1.0)*params.x + gl_MultiTexCoord0.xyyx;
+			gl_TexCoord[4] = vec4( 0.0, -1.0,  1.0, 1.0)*params.x + gl_MultiTexCoord0.xyyx;
+		}
+	]],
+	[[
+		#extension GL_ARB_texture_rectangle : enable
+		uniform sampler2DRect tex0; 
+		void main(void)
+		{
+			#define t11 gl_TexCoord[0]
+			#define t00_12 gl_TexCoord[1]
+			#define t01_20 gl_TexCoord[2]
+			#define t02_21 gl_TexCoord[3]
+			#define t10_22 gl_TexCoord[4]
+			vec4 c00 = texture2DRect(tex0, t00_12.xy);
+			vec4 c01 = texture2DRect(tex0, t01_20.xy);
+			vec4 c02 = texture2DRect(tex0, t02_21.xy);
+			vec4 c10 = texture2DRect(tex0, t10_22.xy);
+			vec4 c11 = texture2DRect(tex0, t11.xy);
+			vec4 c12 = texture2DRect(tex0, t00_12.wz);
+			vec4 c20 = texture2DRect(tex0, t01_20.wz);
+			vec4 c21 = texture2DRect(tex0, t02_21.wz);
+			vec4 c22 = texture2DRect(tex0, t10_22.wz);
+
+			vec4 diag1 = c00 - c22;
+			vec4 diag2 = c02 - c20;
+			vec4 xedge = (c01 - c21)*2.0 + diag1 + diag2;
+			vec4 yedge = (c10 - c12)*2.0 + diag1 - diag2;
+			xedge *= xedge;
+			yedge *= yedge;
+
+			vec4 xyedge = xedge + yedge;
+			float sobel = step(max(xyedge.x, max(xyedge.y, xyedge.z)), 0.1);
+
+			float hue = dot(c11.xyz, vec3(1.0));
+			c11 /= hue;
+			vec3 cc = step(vec3(0.2, 0.8, 1.5), vec3(hue));
+			c11 *= dot(cc, vec3(0.5, 0.5, 1.5)); 
+		
+			gl_FragColor = c11 * max(cc.z, sobel);
+		}
+	]]
+)
+
+blur3args = {}
+function blur3shader(...)
+	blur3args = { ... }
+	lazyshader(4, blur3args[1],
+		[[
+			void main(void)
+			{
+				gl_Position = gl_Vertex;
+				gl_TexCoord[0].xy = gl_MultiTexCoord0.xy + vec2(<% return (blur3args[2]) and -0.5 or 0.0 %>, <% return (blur3args[3]) and -0.5 or 0.0 %>);
+				gl_TexCoord[1].xy = gl_MultiTexCoord0.xy + vec2(<% return (blur3args[2]) and 0.5 or 0.0 %>, <% return (blur3args[3]) and 0.5 or 0.0 %>);
+			}
+		]],
+		[[
+			#extension GL_ARB_texture_rectangle : enable
+			uniform sampler2DRect tex0; 
+			void main(void)
+			{
+				gl_FragColor = 0.5*(texture2DRect(tex0, gl_TexCoord[0].xy) + texture2DRect(tex0, gl_TexCoord[1].xy));
+			}
+		]]
+	)
+end
+
+blur3shader("hblur3", 1, 0)
+blur3shader("vblur3", 0, 1)
+
+blur5args = {}
+function blur5shader(...)
+	blur5args = { ... }
+	lazyshader(4, blur5args[1],
+		[[
+			<%=fsvs%>
+				gl_TexCoord[1].xy = gl_MultiTexCoord0.xy + vec2(<% return (blur3args[2]) and -1.333 or 0.0 %>, <% return (blur3args[3]) and -1.333 or 0.0 %>);
+				gl_TexCoord[2].xy = gl_MultiTexCoord0.xy + vec2(<% return (blur3args[2]) and 1.333 or 0.0 %>, <% return (blur3args[3]) and 1.333 or 0.0 %>);
+			}
+		]],
+		[[
+			#extension GL_ARB_texture_rectangle : enable
+			uniform sampler2DRect tex0; 
+			void main(void)
+			{
+				gl_FragColor = 0.4*texture2DRect(tex0, gl_TexCoord[0].xy) + 0.3*(texture2DRect(tex0, gl_TexCoord[1].xy) + texture2DRect(tex0, gl_TexCoord[2].xy));
+			}
+		]]
+	)
+end
+
+blur5shader("hblur5", 1, 0)
+blur5shader("vblur5", 0, 1)
+
+function bloom(...)
+	PostFX.clear()
+	local args = { ... }
+	if #args >= 1 then
+		setupbloom(6, args[1])
+	end
+end
+
+function rotoscope(...)
+	PostFX.clear()
+	local args = { ... }
+	if #args >= 1 then
+		PostFX.add("rotoscope", 0, 0, 0, args[1])
+	end
+	if #args >= 2 then
+		if args[2] == 1 then
+			PostFX.add("hblur3")
+			PostFX.add("vblur3")
+		end
+		if args[2] == 2 then
+			PostFX.add("hblur5")
+			PostFX.add("vblur5")
+		end
+	end
+end
+
+-- bloom-ish
+
+Shader.normal(4, "glare",
+	[[
+		void main(void)
+		{
+			gl_Position = gl_Vertex;
+			gl_TexCoord[0].xy = gl_MultiTexCoord0.xy;
+		}
+	]],
+	[[
+		uniform vec4 glarescale;
+		uniform sampler2D tex0; 
+		void main(void)
+		{
+			gl_FragColor = texture2D(tex0, gl_TexCoord[0].xy) * glarescale;
+		}
+	]]
+)
+
+lazyshader(4, "bloom_scale", "<%=fsvs%> <%=setup4corners%> }",
+	[[
+		<%=fsps%>
+		<%=sample4corners%>
+			gl_FragColor = 0.2 * (s02 + s00 + s22 + s20 + sample);
+		}
+	]]
+)
+
+lazyshader(4, "bloom_init", "<%=fsvs%> }",
+	[[
+		<%=fsps%>
+			float t = max(sample.r, max(sample.g, sample.b));
+			gl_FragColor = t*t*sample;
+		}
+	]]
+)
+
+bloomsargs = {}
+function bloomshader(...)
+	bloomsargs = { ... }
+	Shader.defer(4, bloomsargs[1],
+		[[
+			Shader.force("bloom_scale")
+			Shader.force("bloom_init")
+			Shader.normal(4, bloomsargs[1],
+				[=[
+					void main(void)
+					{
+						gl_Position = gl_Vertex;
+						gl_TexCoord[0].xy = gl_MultiTexCoord0.xy;
+						vec2 tc = gl_MultiTexCoord0.xy;
+						<%
+							local ret = {}
+							for i = 1, bloomsargs[2] do
+								table.insert(ret, string.format([==[
+									tc *= 0.5;
+									gl_TexCoord[%i].xy = tc;
+								]==], i))
+							end
+							return table.concat(ret, '\n')
+						%>
+					}
+				]=],
+				[=[
+					#extension GL_ARB_texture_rectangle : enable
+					uniform vec4 params;
+					uniform sampler2DRect tex0<% local ret = {}; for i = 1, bloomsargs[2] do table.insert(ret, string.format(", tex%i", i)) end return table.concat(ret) %>; 
+					void main(void)
+					{
+						vec4 sample = texture2DRect(tex0, gl_TexCoord[0].xy);
+						<%
+							local ret = {}
+							for i = 1, bloomsargs[2] do
+								table.insert(ret, (i > 1 and "bloom += " or "vec4 bloom = ") .. string.format("texture2DRect(tex%i, gl_TexCoord[%i].xy);", i, i))
+							end
+							return table.concat(ret, '\n')
+						%>
+						gl_FragColor = bloom*params.x + sample;
+					}
+				]=]
+			)
+		]]
+	)
+end
+
+bloomshader("bloom1", 1)
+bloomshader("bloom2", 2)
+bloomshader("bloom3", 3)
+bloomshader("bloom4", 4)
+bloomshader("bloom5", 5)
+bloomshader("bloom6", 6)
+
+function setupbloom(n, inp)
+	PostFX.add("bloom_init", 1, 1, "+0")
+	local tc = {}
+	for i = 1, n do
+		PostFX.add("bloom_scale", i + 1, i + 1, "+" .. i)
+		table.insert(tc, i)
+	end
+	PostFX.add("bloom" .. n, 0, 0, table.concat(tc, ' '), inp)
+end
+
+function bloom(...)
+	PostFX.clear()
+	local args = { ... }
+	if #args >= 1 then
+		setupbloom(6, args[1])
+	end
+end
+
+------------------------------------------------
+--
+-- miscellaneous effect shaders: 
+--
+------------------------------------------------
+
+-- wobbles the vertices of an explosion sphere
+-- and generates all texcoords 
+-- and blends the edge color
+-- and modulates the texture
+
+expargs = {}
+function explosionshader(...)
+	expargs = { ... }
+	Shader.normal(4, expargs[1],
+		[[
+			#pragma CUBE2_fog
+			uniform vec4 center, animstate;
+			<% if string.find(expargs[1], "3d") then return "uniform vec4 texgenS, texgenT;" end %>
+			<% if string.find(expargs[1], "soft") then return "uniform vec4 depthfxparams, depthfxview;" end %>
+			void main(void)
+			{
+				vec4 wobble = vec4(gl_Vertex.xyz*(1.0 + 0.5*abs(fract(dot(gl_Vertex.xyz, center.xyz) + animstate.w*0.002) - 0.5)), gl_Vertex.w);
+				<%
+					if string.find(expargs[1], "soft") then
+						return [=[
+							vec4 projtc = gl_ModelViewProjectionMatrix * wobble;
+							gl_Position = projtc;
+
+							projtc.z = depthfxparams.y - (gl_ModelViewMatrix * wobble).z*depthfxparams.x;
+							projtc.xy = (projtc.xy + projtc.w)*depthfxview.xy;
+							gl_TexCoord[3] = projtc;
+						]=]
+					else
+						return "gl_Position = gl_ModelViewProjectionMatrix * wobble;"
+					end
+				%>
+
+				gl_FrontColor = gl_Color;
+		
+				<%=expargs[2]%>
+			} 
+		]],
+		[[
+			<%
+				if string.find(expargs[1], "rect") then
+					return [=[
+						#extension GL_ARB_texture_rectangle : enable
+						uniform sampler2DRect tex2;
+					]=]
+				else
+					return "uniform sampler2D tex2;"
+				end
+			%>
+			uniform sampler2D tex0, tex1;
+			<% if string.find(expargs[1], "soft") then return "uniform vec4 depthfxparams;" end %>
+			<% if string.find(expargs[1], "soft8") then return "uniform vec4 depthfxselect;" end %>
+			void main(void)
+			{
+				vec2 dtc = gl_TexCoord[0].xy + texture2D(tex0, <%=expargs[3]%>.xy).xy*0.1; // use color texture as noise to distort texcoords
+				vec4 diffuse = texture2D(tex0, dtc);
+				vec4 blend = texture2D(tex1, gl_TexCoord[1].xy); // get blend factors from modulation texture
+				<%
+					if string.find(expargs[1], "glare") then
+						return [=[
+							float k = blend.a*blend.a;
+							diffuse.rgb *= k*8.0;
+							diffuse.a *= k;
+							diffuse.b += k*k;
+						]=]
+					else
+						return [=[
+							diffuse *= blend.a*4.0; // dup alpha into RGB channels + intensify and over saturate
+							diffuse.b += 0.5 - blend.a*0.5; // blue tint 
+						]=]
+					end
+				%>
+
+				<%
+					if string.find(expargs[1], "soft") then
+						local ret = { string.format([=[
+							gl_FragColor.rgb = diffuse.rgb * gl_Color.rgb;
+
+							#define depthvals texture%sProj(tex2, gl_TexCoord[3])
+						]=], string.find(expargs[1], "rect") and "2DRect" or "2D") }
+						if string.find(expargs[1], "soft8") then
+							table.insert(ret, "float depth = dot(depthvals, depthfxselect);")
+						else
+							table.insert(ret, "float depth = depthvals.x*depthfxparams.z;")
+						end
+						table.insert(ret, "gl_FragColor.a = diffuse.a * max(clamp(depth - gl_TexCoord[3].z, 0.0, 1.0) * gl_Color.a, depthfxparams.w);")
+						return table.concat(ret, '\n')
+					else
+						return "gl_FragColor = diffuse * gl_Color;"
+					end
+				%>
+			}
+		]]
+	)
+end
+
+for i = 1, (CV.usetexrect and 6 or 4) do
+	local list = { "", "glare", "soft", "soft8", "softrect", "soft8rect" }
+	explosionshader("explosion2d" .. list[i],
+		[[
+			// blow up the tex coords
+			float dtc = 1.768 - animstate.x*1.414; // -2, 2.5; -> -2*sqrt(0.5), 2.5*sqrt(0.5);
+			dtc *= dtc;
+			gl_TexCoord[0].xy = animstate.w*0.0004 + dtc*gl_Vertex.xy;
+			gl_TexCoord[1].xy = gl_Vertex.xy*0.5 + 0.5; // using wobble makes it look too spherical at a distance
+		]], "gl_TexCoord[1]"
+	)
+	explosionshader("explosion3d" .. list[i],
+		[[
+			gl_TexCoord[0].xy = gl_MultiTexCoord0.xy;
+			vec2 texgen = vec2(dot(texgenS, gl_Vertex), dot(texgenT, gl_Vertex)); 
+			gl_TexCoord[1].xy = texgen;
+			gl_TexCoord[2].xy = texgen - animstate.w*0.0005;
+		]], "gl_TexCoord[2]"
+	)
+end
+
+partargs = {}
+function particleshader(...)
+	partargs = { ... }
+	Shader.normal(4, partargs[1],
+		[[
+			#pragma CUBE2_fog
+			uniform vec4 colorscale;
+			<% if string.find(partargs[1], "soft") then return "uniform vec4 depthfxparams, depthfxview;" end %>
+			void main(void)
+			{
+				gl_Position = ftransform();
+				gl_TexCoord[0].xy = gl_MultiTexCoord0.xy;
+				gl_TexCoord[1] = gl_Color * colorscale; 
+
+				<%
+					if string.find(partargs[1], "soft") then
+						return [=[
+							vec4 projtc = gl_ModelViewProjectionMatrix * gl_Vertex;
+							projtc.xy = (projtc.xy + projtc.w) * depthfxview.xy;
+							gl_TexCoord[2] = projtc;
+
+							vec2 offset = gl_MultiTexCoord0.xy*2.82842712474619 - 1.4142135623731;
+							gl_TexCoord[3].xyz = vec3(offset, 1.0);
+							gl_TexCoord[4].xyz = vec3(offset, depthfxparams.y - (gl_ModelViewMatrix * gl_Vertex).z*depthfxparams.x);
+						]=]
+					end
+				%>
+			}
+		]],
+		[[
+			<%
+				if string.find(partargs[1], "soft") then
+					if string.find(partargs[1], "rect") then
+						return [=[
+							#extension GL_ARB_texture_rectangle : enable
+							uniform sampler2DRect tex2;
+						]=]
+					else
+						return "uniform sampler2D tex2;"
+					end
+				end
+			%>
+			uniform sampler2D tex0;
+			<% if string.find(partargs[1], "soft") then return "uniform vec4 depthfxparams;" end %>
+			<% if string.find(partargs[1], "soft8") then return "uniform vec4 depthfxselect;" end %>
+			void main(void)
+			{
+				vec4 diffuse = texture2D(tex0, gl_TexCoord[0].xy);
+
+				<%
+					if string.find(partargs[1], "soft") then
+						local ret = { string.format([=[
+							#define depthvals texture%sProj(tex2, gl_TexCoord[2])
+						]=], string.find(partargs[1], "rect") and "2DRect" or "2D") }
+
+						if string.find(partargs[1], "soft8") then
+							table.insert(ret, "float depth = dot(depthvals, depthfxselect);")
+						else
+							table.insert(ret, "float depth = depthvals.x*depthfxparams.z;")
+						end
+						table.insert(ret, "diffuse.a *= clamp(depth - dot(gl_TexCoord[3].xyz, gl_TexCoord[4].xyz), 0.0, 1.0);")
+						return table.concat(ret, '\n')
+					end
+				%>
+
+				gl_FragColor = diffuse * gl_TexCoord[1];
+			}
+		]]
+	)
+end
+
+for i = 1, (CV.usetexrect and 5 or 3) do
+	local list = { "", "soft", "soft8", "softrect", "soft8rect" }
+	particleshader("particle" .. list[i])
+end
+
+Shader.normal(4, "particlenotexture",
+	[[
+		#pragma CUBE2_fog
+		uniform vec4 colorscale;
+		void main(void)
+		{
+			gl_Position = ftransform();
+			gl_TexCoord[0] = gl_Color * colorscale;
+		} 
+	]],
+	[[
+		void main(void)
+		{
+			gl_FragColor = gl_TexCoord[0];
+		}
+	]]
+)
+
+Shader.normal(4, "blendbrush",
+	[[
+		uniform vec4 texgenS, texgenT;
+		void main(void)
+		{
+			gl_Position = ftransform();
+			gl_FrontColor = gl_Color;
+			gl_TexCoord[0].xy = vec2(dot(texgenS, gl_Vertex), dot(texgenT, gl_Vertex));
+		}
+	]],
+	[[
+		uniform sampler2D tex0;
+		void main(void)
+		{
+			gl_FragColor = texture2D(tex0, gl_TexCoord[0].xy) * gl_Color;
+		}
+	]]
+)
+
+lazyshader(4, "moviergb",
+	[[
+		void main(void)
+		{
+			gl_Position = ftransform();
+			gl_TexCoord[0].xy = gl_MultiTexCoord0.xy;
+		}
+	]],
+	[[
+		#extension GL_ARB_texture_rectangle : enable
+		uniform sampler2DRect tex0;
+		void main(void)
+		{
+			gl_FragColor = texture2DRect(tex0, gl_TexCoord[0].xy);
+		}
+	]]
+)
+
+lazyshader(4, "movieyuv",
+	[[
+		void main(void)
+		{
+			gl_Position = ftransform();
+			gl_TexCoord[0].xy = gl_MultiTexCoord0.xy;
+		}
+	]],
+	[[
+		#extension GL_ARB_texture_rectangle : enable
+		uniform sampler2DRect tex0;
+		void main(void)
+		{
+			vec4 sample = texture2DRect(tex0, gl_TexCoord[0].xy);
+			gl_FragColor = vec4(dot(sample, vec4(0.500, -0.419, -0.081, 0.500)),
+								dot(sample, vec4(-0.169, -0.331, 0.500, 0.500)),
+								dot(sample.rgb, vec3(0.299, 0.587, 0.114)),
+								sample.a);
+		}
+	]]
+)
+
+lazyshader(4, "moviey",
+	[[
+		void main(void)
+		{
+			gl_Position = ftransform();
+			gl_TexCoord[0].xy = gl_MultiTexCoord0.xy + vec2(-1.5, 0.0);
+			gl_TexCoord[1].xy = gl_MultiTexCoord0.xy + vec2(-0.5, 0.0);
+			gl_TexCoord[2].xy = gl_MultiTexCoord0.xy + vec2( 0.5, 0.0);
+			gl_TexCoord[3].xy = gl_MultiTexCoord0.xy + vec2( 1.5, 0.0);
+		}
+	]],
+	[[
+		#extension GL_ARB_texture_rectangle : enable
+		uniform sampler2DRect tex0;
+		void main(void)
+		{
+			vec3 sample1 = texture2DRect(tex0, gl_TexCoord[0].xy).rgb;
+			vec3 sample2 = texture2DRect(tex0, gl_TexCoord[1].xy).rgb;
+			vec3 sample3 = texture2DRect(tex0, gl_TexCoord[2].xy).rgb;
+			vec3 sample4 = texture2DRect(tex0, gl_TexCoord[3].xy).rgb;
+			gl_FragColor = vec4(dot(sample3, vec3(0.299, 0.587, 0.114)),
+								dot(sample2, vec3(0.299, 0.587, 0.114)),
+								dot(sample1, vec3(0.299, 0.587, 0.114)),
+								dot(sample4, vec3(0.299, 0.587, 0.114)));
+		}
+	]]
+)
+
+lazyshader(4, "movieu",
+	[[
+		void main(void)
+		{
+			gl_Position = ftransform();
+			gl_TexCoord[0].xy = gl_MultiTexCoord0.xy + vec2(-3.0, 0.0);
+			gl_TexCoord[1].xy = gl_MultiTexCoord0.xy + vec2(-1.0, 0.0);
+			gl_TexCoord[2].xy = gl_MultiTexCoord0.xy + vec2( 1.0, 0.0);
+			gl_TexCoord[3].xy = gl_MultiTexCoord0.xy + vec2( 3.0, 0.0);
+		}
+	]],
+	[[
+		#extension GL_ARB_texture_rectangle : enable
+		uniform sampler2DRect tex0;
+		void main(void)
+		{
+			vec4 sample1 = texture2DRect(tex0, gl_TexCoord[0].xy);
+			vec4 sample2 = texture2DRect(tex0, gl_TexCoord[1].xy);
+			vec4 sample3 = texture2DRect(tex0, gl_TexCoord[2].xy);
+			vec4 sample4 = texture2DRect(tex0, gl_TexCoord[3].xy);
+			gl_FragColor = vec4(dot(sample3, vec4(-0.169, -0.331, 0.500, 0.500)),
+								dot(sample2, vec4(-0.169, -0.331, 0.500, 0.500)),
+							dot(sample1, vec4(-0.169, -0.331, 0.500, 0.500)),
+									dot(sample4, vec4(-0.169, -0.331, 0.500, 0.500)));
+		}
+	]]
+)
+
+lazyshader(4, "moviev",
+	[[
+		void main(void)
+		{
+			gl_Position = ftransform();
+			gl_TexCoord[0].xy = gl_MultiTexCoord0.xy + vec2(-3.0, 0.0);
+			gl_TexCoord[1].xy = gl_MultiTexCoord0.xy + vec2(-1.0, 0.0);
+			gl_TexCoord[2].xy = gl_MultiTexCoord0.xy + vec2( 1.0, 0.0);
+			gl_TexCoord[3].xy = gl_MultiTexCoord0.xy + vec2( 3.0, 0.0);
+		}
+	]],
+	[[
+		#extension GL_ARB_texture_rectangle : enable
+		uniform sampler2DRect tex0;
+		void main(void)
+		{
+			vec4 sample1 = texture2DRect(tex0, gl_TexCoord[0].xy);
+			vec4 sample2 = texture2DRect(tex0, gl_TexCoord[1].xy);
+			vec4 sample3 = texture2DRect(tex0, gl_TexCoord[2].xy);
+			vec4 sample4 = texture2DRect(tex0, gl_TexCoord[3].xy);
+			gl_FragColor = vec4(dot(sample3, vec4(0.500, -0.419, -0.081, 0.500)),
+								dot(sample2, vec4(0.500, -0.419, -0.081, 0.500)),
+								dot(sample1, vec4(0.500, -0.419, -0.081, 0.500)),
+								dot(sample4, vec4(0.500, -0.419, -0.081, 0.500)));
+		}
+	]]
+)
+
 ---------------------------------------------------
 --
 -- reflective/refractive water shaders:

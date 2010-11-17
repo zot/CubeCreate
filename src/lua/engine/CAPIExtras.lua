@@ -192,6 +192,23 @@ Shader = {
 	isNative = CAPI.isShaderNative
 }
 
+-- post-effects
+
+PostFX = {
+	add = function (name, bind, scale, inputs, x, y, z, w)
+		local bind = defaultValue(bind, 0)
+		local scale = defaultValue(scale, 0)
+		local inputs = defaultValue(inputs, "")
+		local x = defaultValue(x, 0)
+		local y = defaultValue(y, 0)
+		local z = defaultValue(z, 0)
+		local w = defaultValue(w, 0)
+		CAPI.addPostFX(name, bind, scale, inputs, x, y, z, w)
+	end,
+	set = CAPI.setPostFX,
+	clear = CAPI.clearPostFX
+}
+
 -- World
 
 local World_keys = {}

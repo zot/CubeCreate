@@ -171,6 +171,9 @@ luaL_Reg CAPI[] = {
 	STDREG(defVertexParam),
 	STDREG(defPixelParam),
 	STDREG(defUniformParam),
+	STDREG(addPostFX),
+	STDREG(setPostFX),
+	STDREG(clearPostFX),
     // models
 	STDREG(mdlAlphatest),
 	STDREG(mdlAlphablend),

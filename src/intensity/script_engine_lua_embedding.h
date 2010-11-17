@@ -649,6 +649,10 @@ Shader *useshaderbyname(const char *name);
 void isshaderdefined(char *name);
 void isshadernative(char *name);
 
+void addpostfx(const char *name, int bind, int scale, const char *inputs, float x, float y, float z, float w);
+void setpostfx(const char *name, float x, float y, float z, float w);
+void clearpostfx();
+
 LUA_EMBED_STD_CLIENT(shader, shader, isss, (int*)&arg1, (char*)arg2.c_str(), (char*)arg3.c_str(), (char*)arg4.c_str());
 LUA_EMBED_STD_CLIENT(variantShader, variantshader, isiss, (int*)&arg1, (char*)arg2.c_str(), (int*)&arg3, (char*)arg4.c_str(), (char*)arg5.c_str());
 LUA_EMBED_STD_CLIENT(setShader, setshader, s, (char*)arg1.c_str());
@@ -667,6 +671,10 @@ LUA_EMBED_STD_CLIENT(setShaderParam, addshaderparam, sdddd, (char*)arg1.c_str(),
 LUA_EMBED_STD_CLIENT(defVertexParam, addshaderparam, sidddd, (char*)arg1.c_str()[0] ? (char*)arg1.c_str() : NULL, SHPARAM_VERTEX, arg2, arg3, arg4, arg5, arg6);
 LUA_EMBED_STD_CLIENT(defPixelParam, addshaderparam, sidddd, (char*)arg1.c_str()[0] ? (char*)arg1.c_str() : NULL, SHPARAM_PIXEL, arg2, arg3, arg4, arg5, arg6);
 LUA_EMBED_STD_CLIENT(defUniformParam, addshaderparam, sdddd, (char*)arg1.c_str(), SHPARAM_UNIFORM, -1, arg2, arg3, arg4, arg5);
+
+LUA_EMBED_STD_CLIENT(addPostFX, addpostfx, siisdddd, arg1.c_str(), arg2, arg3, arg4.c_str(), arg5, arg6, arg7, arg8);
+LUA_EMBED_STD_CLIENT(setPostFX, setpostfx, sdddd, arg1.c_str(), arg2, arg3, arg4, arg5);
+LUA_EMBED_STD_CLIENT(clearPostFX, clearpostfx, NOPARAM);
 
 // Models
 

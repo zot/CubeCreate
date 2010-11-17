@@ -2051,6 +2051,39 @@
 
 
 /**
+ * @def LUA_EMBED_siisdddd
+ * @ingroup Lua_Engine_Group
+ * @brief Wrapper over LUA_EMBED_GEN, accepting arguments siisdddd.
+ * @param name Name of embedded lua function
+ * @param numreturns Number of items the function returns onto stack
+ * @param wrapped_code The code to wrap itself
+ * 
+ * THIS MACRO IS AUTO-GENERATED.\n
+ * -----------------------------\n
+ * This macro wraps over LUA_EMBED_GEN and sets up arguments - arg1 to argN of proper types.
+ * Those can be later used. No need to pop them, it all happens automatically.
+ * @code
+ * LUA_EMBED_si("foo", 1, {
+ *     printf("Foo: %s\n", arg1);
+ *     LuaEngine::pushValue(arg2);
+ * });
+ * @endcode
+ * @see LUA_EMBED_GEN()
+ */
+#define LUA_EMBED_siisdddd(name, numreturns, wrapped_code) \
+    LUA_EMBED_GEN(__script__##name, numreturns, \
+        _UNUSED_ std::string arg1 = LuaEngine::getString(1); \
+        _UNUSED_ int arg2 = LuaEngine::getInteger(2); \
+        _UNUSED_ int arg3 = LuaEngine::getInteger(3); \
+        _UNUSED_ std::string arg4 = LuaEngine::getString(4); \
+        _UNUSED_ double arg5 = LuaEngine::getDouble(5); \
+        _UNUSED_ double arg6 = LuaEngine::getDouble(6); \
+        _UNUSED_ double arg7 = LuaEngine::getDouble(7); \
+        _UNUSED_ double arg8 = LuaEngine::getDouble(8); \
+        , wrapped_code)
+
+
+/**
  * @def LUA_EMBED_ddddddiii
  * @ingroup Lua_Engine_Group
  * @brief Wrapper over LUA_EMBED_GEN, accepting arguments ddddddiii.
