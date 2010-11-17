@@ -133,10 +133,63 @@ Shader = {
 		CAPI.setShaderParam(_name, x, y, z, w)
 	end,
 
+	setVertexParam = function (i, x, y, z, w)
+		local x = defaultValue(x, 0)
+		local y = defaultValue(y, 0)
+		local z = defaultValue(z, 0)
+		local w = defaultValue(w, 0)
+		CAPI.setVertexParam(i, x, y, z, w)
+	end,
+
+	setPixelParam = function (i, x, y, z, w)
+		local x = defaultValue(x, 0)
+		local y = defaultValue(y, 0)
+		local z = defaultValue(z, 0)
+		local w = defaultValue(w, 0)
+		CAPI.setPixelParam(i, x, y, z, w)
+	end,
+
+	setUniformParam = function (_name, x, y, z, w)
+		local x = defaultValue(x, 0)
+		local y = defaultValue(y, 0)
+		local z = defaultValue(z, 0)
+		local w = defaultValue(w, 0)
+		CAPI.setUniformParam(_name, x, y, z, w)
+	end,
+
+	defVertexParam = function (_name, i, x, y, z, w)
+		local x = defaultValue(x, 0)
+		local y = defaultValue(y, 0)
+		local z = defaultValue(z, 0)
+		local w = defaultValue(w, 0)
+		CAPI.defVertexParam(_name, i, x, y, z, w)
+	end,
+
+	defPixelParam = function (_name, i, x, y, z, w)
+		local x = defaultValue(x, 0)
+		local y = defaultValue(y, 0)
+		local z = defaultValue(z, 0)
+		local w = defaultValue(w, 0)
+		CAPI.defPixelParam(_name, i, x, y, z, w)
+	end,
+
+	defUniformParam = function (_name, x, y, z, w)
+		local x = defaultValue(x, 0)
+		local y = defaultValue(y, 0)
+		local z = defaultValue(z, 0)
+		local w = defaultValue(w, 0)
+		CAPI.defUniformParam(_name, x, y, z, w)
+	end,
+
 	alt = CAPI.altShader,
 	fast = CAPI.fastShader,
-	defer = CAPI.deferShader,
-	force = CAPI.forceShader
+	defer = function (stype, name, contents)
+		contents = template(contents)
+		CAPI.deferShader(stype, name, contents)
+	end,
+	force = CAPI.forceShader,
+	isDefined = CAPI.isShaderDefined,
+	isNative = CAPI.isShaderNative
 }
 
 -- World

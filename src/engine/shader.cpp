@@ -66,7 +66,6 @@ void loadshaders()
     standardshader = true;
     //execfile(renderpath==R_GLSLANG ? "data/glsl.cfg" : "data/stdshader.cfg"); CubeCreate
     LuaEngine::runFile("data/glsl.lua");
-    execfile("data/glsl.cfg");
     standardshader = false;
     initshaders = false;
     defaultshader = lookupshaderbyname("default");
@@ -1449,7 +1448,7 @@ void defershader(int *type, const char *name, const char *contents)
 {
     Shader *exists = shaders.access(name);
     if(exists && !(exists->type&SHADER_INVALID)) return;
-    if(!defershaders) { execute(contents); return; }
+    if(!defershaders) { LuaEngine::runScript(contents); return; } // CubeCreate: lua
     char *rname = exists ? exists->name : newstring(name);
     Shader &s = shaders[rname];
     s.name = rname;
@@ -1470,7 +1469,7 @@ void useshader(Shader *s)
     forceshaders = false;
     persistidents = false;
     curparams.shrink(0);
-    execute(defer);
+    LuaEngine::runScript(defer); // CubeCreate: lua
     persistidents = waspersisting;
     forceshaders = wasforcing;
     standardshader = wasstandard;
@@ -1759,14 +1758,6 @@ void fastshader(char *nice, char *fast, int *detail)
     ns->fixdetailshader(false);
 }
 
-COMMAND(shader, "isss");
-COMMAND(variantshader, "isiss");
-COMMAND(setshader, "s");
-COMMAND(altshader, "ss");
-COMMAND(fastshader, "ssi");
-COMMAND(defershader, "iss");
-ICOMMAND(forceshader, "s", (const char *name), useshaderbyname(name));
-
 void isshaderdefined(char *name)
 {
     Shader *s = lookupshaderbyname(name);
@@ -1778,9 +1769,6 @@ void isshadernative(char *name)
     Shader *s = lookupshaderbyname(name);
     intret(s && s->native ? 1 : 0);
 }
-
-COMMAND(isshaderdefined, "s");
-COMMAND(isshadernative, "s");
 
 static hashset<const char *> shaderparamnames(256);
 
@@ -1816,14 +1804,6 @@ void addshaderparam(const char *name, int type, int n, float x, float y, float z
     ShaderParam param = {name, type, n, -1, {x, y, z, w}};
     curparams.add(param);
 }
-
-ICOMMAND(setvertexparam, "iffff", (int *n, float *x, float *y, float *z, float *w), addshaderparam(NULL, SHPARAM_VERTEX, *n, *x, *y, *z, *w));
-ICOMMAND(setpixelparam, "iffff", (int *n, float *x, float *y, float *z, float *w), addshaderparam(NULL, SHPARAM_PIXEL, *n, *x, *y, *z, *w));
-ICOMMAND(setuniformparam, "sffff", (char *name, float *x, float *y, float *z, float *w), addshaderparam(name, SHPARAM_UNIFORM, -1, *x, *y, *z, *w));
-ICOMMAND(setshaderparam, "sffff", (char *name, float *x, float *y, float *z, float *w), addshaderparam(name, SHPARAM_LOOKUP, -1, *x, *y, *z, *w));
-ICOMMAND(defvertexparam, "siffff", (char *name, int *n, float *x, float *y, float *z, float *w), addshaderparam(name[0] ? name : NULL, SHPARAM_VERTEX, *n, *x, *y, *z, *w));
-ICOMMAND(defpixelparam, "siffff", (char *name, int *n, float *x, float *y, float *z, float *w), addshaderparam(name[0] ? name : NULL, SHPARAM_PIXEL, *n, *x, *y, *z, *w));
-ICOMMAND(defuniformparam, "sffff", (char *name, float *x, float *y, float *z, float *w), addshaderparam(name, SHPARAM_UNIFORM, -1, *x, *y, *z, *w));
 
 #define NUMPOSTFXBINDS 10
 

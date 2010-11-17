@@ -6,7 +6,7 @@ strings = [
     'iis', 'iii', 'iid', 'ddd', 'sdd', 'sss', 'dds', 'ssd', 'ssi', 'iss',
     'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdi', 'ssdd', 'iiii', 'iidd', 'isss',
     'sdddi', 'sssdd', 'ddddi', 'sdddd', 'siidi', 'iiiss', 'iiisi', 'iiiii', 'idddd', 'iisss', 'isiss',
-    'sdddii', 'dddddd', 'iidddi', 'iisddd', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddid', 'iiiiii',
+    'sdddii', 'dddddd', 'iidddi', 'iisddd', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddid', 'iiiiii', 'sidddd',
     'sdddddd', 'ddddddd', 'iiiiddd', 'iiddddd', 'ssiiidi', 'iiiiiii', 'sddddid',
     'ddddddii', 'ddddiiid', 'iidddddd', 'ssiiiiii',
     'ddddddiii', 'oidddiiii', 'idddidddi', 'dddsiiidi', 'iiidddidii', 'ddddddiiid', 'dddiiiiii',

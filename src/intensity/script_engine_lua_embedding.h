@@ -646,14 +646,27 @@ void fastshader(char *nice, char *fast, int *detail);
 void defershader(int *type, const char *name, const char *contents);
 Shader *useshaderbyname(const char *name);
 
+void isshaderdefined(char *name);
+void isshadernative(char *name);
+
 LUA_EMBED_STD_CLIENT(shader, shader, isss, (int*)&arg1, (char*)arg2.c_str(), (char*)arg3.c_str(), (char*)arg4.c_str());
 LUA_EMBED_STD_CLIENT(variantShader, variantshader, isiss, (int*)&arg1, (char*)arg2.c_str(), (int*)&arg3, (char*)arg4.c_str(), (char*)arg5.c_str());
 LUA_EMBED_STD_CLIENT(setShader, setshader, s, (char*)arg1.c_str());
-LUA_EMBED_STD_CLIENT(setShaderParam, addshaderparam, sdddd, (char*)arg1.c_str(), SHPARAM_LOOKUP, -1, arg2, arg3, arg4, arg5);
 LUA_EMBED_STD_CLIENT(altShader, altshader, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
 LUA_EMBED_STD_CLIENT(fastShader, fastshader, ssi, (char*)arg1.c_str(), (char*)arg2.c_str(), (int*)&arg3);
 LUA_EMBED_STD_CLIENT(deferShader, defershader, iss, (int*)&arg1, (char*)arg2.c_str(), (char*)arg3.c_str());
 LUA_EMBED_STD_CLIENT(forceShader, useshaderbyname, s, (char*)arg1.c_str());
+
+LUA_EMBED_STD_CLIENT(isShaderDefined, isshaderdefined, s, (char*)arg1.c_str());
+LUA_EMBED_STD_CLIENT(isShaderNative, isshadernative, s, (char*)arg1.c_str());
+
+LUA_EMBED_STD_CLIENT(setVertexParam, addshaderparam, idddd, NULL, SHPARAM_VERTEX, arg1, arg2, arg3, arg4, arg5);
+LUA_EMBED_STD_CLIENT(setPixelParam, addshaderparam, idddd, NULL, SHPARAM_VERTEX, arg1, arg2, arg3, arg4, arg5);
+LUA_EMBED_STD_CLIENT(setUniformParam, addshaderparam, sdddd, (char*)arg1.c_str(), SHPARAM_UNIFORM, -1, arg2, arg3, arg4, arg5);
+LUA_EMBED_STD_CLIENT(setShaderParam, addshaderparam, sdddd, (char*)arg1.c_str(), SHPARAM_LOOKUP, -1, arg2, arg3, arg4, arg5);
+LUA_EMBED_STD_CLIENT(defVertexParam, addshaderparam, sidddd, (char*)arg1.c_str()[0] ? (char*)arg1.c_str() : NULL, SHPARAM_VERTEX, arg2, arg3, arg4, arg5, arg6);
+LUA_EMBED_STD_CLIENT(defPixelParam, addshaderparam, sidddd, (char*)arg1.c_str()[0] ? (char*)arg1.c_str() : NULL, SHPARAM_PIXEL, arg2, arg3, arg4, arg5, arg6);
+LUA_EMBED_STD_CLIENT(defUniformParam, addshaderparam, sdddd, (char*)arg1.c_str(), SHPARAM_UNIFORM, -1, arg2, arg3, arg4, arg5);
 
 // Models
 
