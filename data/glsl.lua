@@ -601,28 +601,30 @@ function bumpvariantshader(...)
 
 				<%
 					if btopt("o") then
+						local r = {[=[
+							vec4 tangent = gl_Color*2.0 - 1.0;
+							vec3 binormal = cross(gl_Normal, tangent.xyz) * tangent.w;
+						]=]}
 						if btopt("t") then
-							local r = [=[
+							table.insert(r, [=[
 								-- trans eye vector into TS
 								vec3 camobj = camera.xyz - gl_Vertex.xyz;
 								camvec = vec3(dot(camobj, tangent.xyz), dot(camobj, binormal), dot(camobj, gl_Normal));
-							]=]
+							]=])
 						end
 						if btopt("r") then
 							if not btopt("t") then
-								local r = [=[
+								table.insert(r, [=[
 									camvec = camera.xyz - gl_Vertex.xyz;
-									-- calculate tangent -> world transform
-									world = mat3(tangent.xyz, binormal, gl_Normal);
-								]=]
-							else
-								local r = [=[
-									-- calculate tangent -> world transform
-									world = mat3(tangent.xyz, binormal, gl_Normal);	
-								]=]
+								]=])
+							end
+							table.insert(r, [=[
+								// calculate tangent -> world transform
+								world = mat3(tangent.xyz, binormal, gl_Normal);
+							]=]
 							end
 						end
-						if r then return r end
+						return table.concat(r, '\n')
 					end
 				%>
 
@@ -700,7 +702,7 @@ function bumpvariantshader(...)
 								htc += height.w < htc.z ? duv : vec(0.0);
 								height = texture2D(normalmap, htc.xy);
 							]=])
-						done
+						end
 						table.insert(ret, [=[
 							#define dtc htc.xy
 							#define bump height.xyz	
@@ -1312,7 +1314,445 @@ for i = 1, 4 do
 	Shader.variant(4, "notexturemodel", 1, template(notexturemodelvertexshader), "")
 end
 
--- SOME SHADERS HERE
+-- mdltype:
+--	e -> envmap
+--	n -> normalmap
+--	s -> spec
+--	m -> masks
+--	B -> matrix skeletal animation
+--	b -> dual-quat skeletal animation
+--	i -> glare intensity
+
+function mdlopt(arg)
+	return string.find(modelvfargs[1], arg) ~= nil
+end
+
+modelvfargs = {}
+modelvertexshader = [[
+	<% if mdlopt("b") or mdlopt("B") then return template(skelanimdefs) end %>
+	#pragma CUBE2_fog opos
+	<%
+		if mdlopt("n") then
+			return [=[
+				#pragma CUBE2_attrib vtangent 1
+				attribute vec4 vtangent;
+			]=]
+		end
+	%>
+	uniform vec4 camera, lightdir, lightscale, texscroll;
+	<%
+		if mdlopt("n") then
+			if mdlopt("e") then
+				return [=[
+					varying vec3 camvec;
+					varying mat3 world;
+				]=]
+			else
+				return "varying vec3 lightvec, halfangle;"
+			end
+		else
+			local r = {}
+			if mdlopt("s") then
+				table.insert(r, "varying vec3 nvec, halfangle;")
+			end
+			if mdlopt("e") then
+				table.insert(r, [=[
+					uniform vec4 envmapscale;
+					varying vec3 rvec;
+					varying float rmod;
+				]=])
+			end
+			return table.concat(r, '\n')
+		end
+	%>
+	void main(void)
+	{
+		<% if mdlopt("B") then skelmatanimargs = { modelvfargs[2], 1, mdlopt("n") } return template(skelmatanim) end %>
+		<% if mdlopt("b") then skelquatanimargs = { modelvfargs[2], 1, mdlopt("n") } return template(skelquatanim) end %>
+		<%
+			if mdlopt("b") or mdlopt("B") then
+				return "gl_Position = gl_ModelViewProjectionMatrix * opos;"
+			else
+				return [=[
+					gl_Position = ftransform();
+					#define opos gl_Vertex
+					#define onormal gl_Normal
+					#define otangent vtangent.xyz
+				]=]
+			end
+		%>
+
+		<%
+			if mdlopt("n") or mdlopt("s") or mdlopt("i") then
+				return "gl_FrontColor = gl_Color;"
+			end
+		%>
+		gl_TexCoord[0].xy = gl_MultiTexCoord0.xy + texscroll.yz;
+
+		<%
+			if mdlopt("e") or mdlopt("s") then
+				return "vec3 camdir = normalize(camera.xyz - opos.xyz);"
+			end
+		%>
+
+		<%
+			if mdlopt("n") then
+				if mdlopt("e") then
+					return [=[
+						camvec = mat3(gl_TextureMatrix[0][0].xyz, gl_TextureMatrix[0][1].xyz, gl_TextureMatrix[0][2].xyz) * camdir;
+						// composition of tangent -> object and object -> world transforms
+						//   becomes tangent -> world
+						vec3 wnormal = mat3(gl_TextureMatrix[0][0].xyz, gl_TextureMatrix[0][1].xyz, gl_TextureMatrix[0][2].xyz) * onormal;
+						vec3 wtangent = mat3(gl_TextureMatrix[0][0].xyz, gl_TextureMatrix[0][1].xyz, gl_TextureMatrix[0][2].xyz) * otangent;
+						world = mat3(wtangent, cross(wnormal, wtangent) * vtangent.w, wnormal);
+					]=]
+				else
+					local r = {[=[
+						vec3 obitangent = cross(onormal, otangent) * vtangent.w;
+						lightvec = vec3(dot(lightdir.xyz, otangent), dot(lightdir.xyz, obitangent), dot(lightdir.xyz, onormal));
+					]=]}
+					if mdlopt("s") then
+						table.insert(r, [=[
+							vec3 halfdir = lightdir.xyz + camdir; 
+							halfangle = vec3(dot(halfdir, otangent), dot(halfdir, obitangent), dot(halfdir, onormal));
+						]=])
+					end
+					return table.concat(r, '\n')
+				end
+			else
+				local r = {}
+				if mdlopt("s") then
+					table.insert(r, [=[
+						nvec = onormal; 
+						halfangle = lightdir.xyz + camdir;
+					]=])
+				elseif not mdlopt("i") then
+					table.insert(r, "gl_FrontColor = vec4(gl_Color.rgb*max(dot(onormal, lightdir.xyz) + 0.5, lightscale.y), gl_Color.a);")
+				end
+				if mdlopt("e") then
+					table.insert(r, [=[
+						float invfresnel = dot(camdir, onormal);
+						rvec = mat3(gl_TextureMatrix[0][0].xyz, gl_TextureMatrix[0][1].xyz, gl_TextureMatrix[0][2].xyz) * (2.0*invfresnel*onormal - camdir);
+						rmod = envmapscale.x*max(invfresnel, 0.0) + envmapscale.y;	
+					]=])
+				end
+				return table.concat(r, '\n')
+			end	
+		%>
+	}
+]]
+
+modelfragmentshader = [[
+	<% if mdlopt("b") or mdlopt("B") then return template(skelanimfragdefs) end %>
+	<%
+		if mdlopt("n") then
+			if mdlopt("e") then
+				return [=[
+					#define lightvec lightdirworld.xyz
+					uniform vec4 lightdirworld, envmapscale;
+					varying vec3 camvec;
+					varying mat3 world;
+				]=]
+			else
+				return "varying vec3 lightvec, halfangle;"
+			end
+		else
+			local r = {}
+			if mdlopt("s") then
+				table.insert(r, [=[
+					#define lightvec lightdir.xyz
+					uniform vec4 lightdir;
+					varying vec3 nvec, halfangle;
+				]=])
+			end
+			if mdlopt("e") then
+				table.insert(r, [=[
+					varying vec3 rvec;
+					varying float rmod;
+				]=])
+			end
+			return table.concat(r, '\n')
+		end
+	%>
+	<% if mdlopt("s") or mdlopt("m") or (mdlopt("n") and not mdlopt("i")) then return "uniform vec4 lightscale;" end %>
+	<% if mdlopt("i") and (mdlopt("s") or mdlopt("m")) then return "uniform vec4 glarescale;" end %>
+	uniform sampler2D tex0;
+	<% if mdlopt("m") then return "uniform sampler2D tex1;" end %>
+	<% if mdlopt("e") then return "uniform samplerCube tex2;" end %>
+	<% if mdlopt("n") then return "uniform sampler2D tex3;" end %>
+	void main(void)
+	{
+		vec4 light = texture2D(tex0, gl_TexCoord[0].xy);
+		<%
+			if mdlopt("m") then
+				return [=[
+					vec3 masks = texture2D(tex1, gl_TexCoord[0].xy).rgb;
+					vec3 glow = light.rgb * lightscale.z;
+				]=]
+			end
+		%>
+
+		<%
+			if mdlopt("n") then
+				local r = { "vec3 normal = normalize(texture2D(tex3, gl_TexCoord[0].xy).rgb - 0.5);" }
+				if mdlopt("e") then
+					table.insert(r, "normal = world * normal;")
+				end
+				return table.concat(r, '\n')
+			end
+		%>
+
+		<%
+			if mdlopt("s") then
+				local r = {}
+				if mdlopt("n") then
+					if mdlopt("e") then
+						table.insert(r, "vec3 halfangle = lightvec + camvec;")
+					end
+				else
+					table.insert(r, "vec3 normal = normalize(nvec);")
+				end
+				table.insert(r, "float spec = lightscale.x * pow(clamp(dot(normalize(halfangle), normal), 0.0, 1.0), @(? (mdlopt "i") "256.0" "128.0"));")
+				if mdlopt("m") then
+					table.insert(r, "spec *= masks.r; // specmap in red channel")
+				end
+				return table.concat(r, '\n')
+			end
+		%>
+
+		<%
+			if mdlopt("i") then
+				if mdlopt("s") then
+					local r = { "spec *= glarescale.x;" }
+					if mdlopt("m") then
+						table.insert(r, "light.rgb = spec * gl_Color.rgb;")
+					else
+						table.insert(r, "gl_FragColor.rgb = spec * gl_Color.rgb;")
+					end
+					return table.concat(r, '\n')
+				else
+					if not mdlopt("m") then return "gl_FragColor.rgb = vec3(0.0);" end
+				end
+			else
+				local r = {}
+				if mdlopt("s") or mdlopt("n") then
+					table.insert(r, "light.rgb *= max(dot(normal, lightvec) + 0.5, lightscale.y);")
+				end
+				if mdlopt("s") then
+					table.insert(r, "light.rgb += spec;")
+				end
+				if mdlopt("m") then
+					table.insert(r, "light.rgb *= gl_Color.rgb;")
+				else
+					table.insert(r, "gl_FragColor = light * gl_Color;")
+				end
+				return table.concat(r, '\n')
+			end
+		%>
+
+		<%
+			if mdlopt("m") then
+				if mdlopt("e") then
+					local r = { "light.rgb = mix(light.rgb, glow, masks.g); // glow mask in green channel" }
+					if mdlopt("n") then
+						table.insert(r, [=[
+							vec3 camn = normalize(camvec);
+							float invfresnel = dot(camn, normal);
+							vec3 rvec = 2.0*invfresnel*normal - camn;
+							float rmod = envmapscale.x*max(invfresnel, 0.0) + envmapscale.y;
+						]=])
+					end
+					table.insert(r, [=[
+						vec3 reflect = textureCube(tex2, rvec).rgb; 
+						gl_FragColor.rgb = mix(light.rgb, reflect, rmod*masks.b); // envmap mask in blue channel
+					]=])
+					return table.concat(r, '\n')
+				elseif mdlopt("i") then
+					local r = { "float k = min(masks.g*masks.g*glarescale.y, 1.0); // glow mask in green channel" }
+					if mdlopt("s") then
+						table.insert(r, "gl_FragColor.rgb = glow*k + light.rgb")
+					else
+						table.insert(r, "gl_FragColor.rgb = glow*k")
+					end
+					return table.concat(r, '\n')
+				else
+					return "gl_FragColor.rgb = mix(light.rgb, glow, masks.g); // glow mask in green channel"
+				end
+			end
+		%>
+
+		<%
+			if mdlopt("i") or mdlopt("m") then
+				return "gl_FragColor.a = light.a * gl_Color.a;"
+			end
+		%>
+	}
+]]
+
+function modelanimshader (...)
+	local args = { ... }
+	fraganimshader =  args[2] > 0 and args[2]
+	reuseanimshader = fraganimshader
+	if CV.ati_ubo_bug then
+		reuseanimshader = string.format("%i , %i", args[2], tonumber(args[2] > 0))
+		if args[4] == 1 then
+			modelvfargs = { "bB" .. args[3] }
+			fraganimshader = template(modelfragmentshader)
+		else
+			fraganimshader = reuseanimshader
+		end
+	end
+	modelvfargs = { "B" .. args[3], args[4] }
+	Shader.variant(4, args[1], args[2], template(modelvertexshader), fraganimshader)
+	modelvfargs = { "b" .. args[3], args[4] }
+	Shader.variant(4, args[1], args[2] + 1, template(modelvertexshader), reuseanimshader)
+end
+
+modelshaderargs = {}
+function modelshader (...)
+	modelshaderargs = { ... }
+	Shader.defer(4, modelshaderargs[1],
+		[[
+			basemodeltype = modelshaderargs[2]
+			modelvfargs = { basemodeltype }
+			Shader.normal(4, modelshaderargs[1], template(modelvertexshader), template(modelfragmentshader))
+			for i = 1, 4 do
+				modelanimshader(modelshaderargs[1], 0, basemodeltype, i)
+			end
+			glaremodeltype = string.gsub(basemodeltype .. "i", "e", "")
+			if not string.find(glaremodeltype, "s") then glaremodeltype = string.gsub(glaremodeltype, "n", "") end
+			modelvfargs = { glaremodeltype }
+			Shader.variant(4, modelshaderargs[1], 2, template(modelvertexshader), template(modelfragmentshader))
+			for i = 1, 4 do
+				modelanimshader(modelshaderargs[1], 2, glaremodeltype, i)
+			end
+		]]
+	)
+end
+	
+
+------------------------------------------------
+--
+--, gourad, lighting, model, shader:, cheaper,, non-specular, version, for, vegetation, etc., gets, used, when, spec==0
+--
+------------------------------------------------
+
+modelshader("nospecmodel", "")
+modelshader("masksnospecmodel", "m")
+modelshader("envmapnospecmodel", "me")
+Shader.alt("envmapnospecmodel", "masksnospecmodel")
+
+modelshader("bumpnospecmodel", "n")
+modelshader("bumpmasksnospecmodel", "nm")
+modelshader("bumpenvmapnospecmodel", "nme")
+Shader.alt("bumpenvmapnospecmodel", "bumpmasksnospecmodel")
+
+------------------------------------------------
+--
+--, phong, lighting, model, shader
+--
+------------------------------------------------
+
+modelshader("stdmodel", "s")
+Shader.fast("stdmodel", "nospecmodel", 1)
+modelshader("masksmodel", "sm")
+Shader.fast("masksmodel", "masksnospecmodel", 1)
+modelshader("envmapmodel", "sme")
+Shader.alt("envmapmodel", "masksmodel")
+Shader.fast("envmapmodel", "envmapnospecmodel", 1)
+
+modelshader("bumpmodel", "ns")
+Shader.fast("bumpmodel", "bumpnospecmodel", 1)
+modelshader("bumpmasksmodel", "nsm")
+Shader.fast("bumpmasksmodel", "bumpmasksnospecmodel", 1)
+modelshader("bumpenvmapmodel", "nsme")
+Shader.alt("bumpenvmapmodel", "bumpmasksmodel")
+Shader.fast("bumpenvmapmodel", "bumpenvmapnospecmodel", 1)
+
+------------------------------------------------
+--
+-- separable blur with up to 7 taps
+--
+------------------------------------------------
+
+blurargs = {}
+function blurshader(...)
+	blurargs = { ... }
+	Shader.normal(4, blurargs[1],
+		[[
+			uniform vec4 offsets;
+			void main(void)
+			{
+				gl_Position = gl_Vertex;
+				gl_TexCoord[0].xy = gl_MultiTexCoord0.xy;
+				vec2 tc1 = gl_MultiTexCoord0.xy + offsets.xy;
+				vec2 tc2 = gl_MultiTexCoord0.xy - offsets.xy;
+				gl_TexCoord[1].xy = tc1;
+				gl_TexCoord[2].xy = tc2;
+				<%
+					for i = 1, math.min(blurargs[2], 2) do
+						local a = tostring(blurargs[3])
+						local b = {"z", "w"}
+						return string.format([=[
+							tc1.%s += offsets.%s;
+							tc2.%s -= offsets.%s;
+							gl_TexCoord[%i].xy = tc1;
+							gl_TexCoord[%i].xy = tc2;
+						]=], a, b[i], a, b[i], i*2 + 2, i*2 + 3)
+					end
+				%>
+			}
+		]],
+		[[
+			<%
+				if blurargs[4] == "2DRect" then
+					return "#extension GL_ARB_texture_rectangle : enable"
+				end
+			%>
+			uniform vec4 weights, weights2, offset4, offset5, offset6, offset7;
+			uniform <% return "sampler" .. blurargs[4] %> tex0;
+			void main(void)
+			{
+				#define texval(coords) <% return "texture" .. blurargs[4] %>(tex0, (coords))
+				vec4 val = texval(gl_TexCoord[0].xy) * weights.x;
+				<%
+					local a = { "y", "z", "w" }
+					local b = { "x", "y", "z", "w" }
+					local c = { "offset4", "offset5", "offset6", "offset7" }
+					local ret = {}
+					for i = 1, blurargs[2] do
+						if i < 4 then
+							table.insert(ret, string.format("val += weights.%s * (texval(gl_TexCoord[%i].xy) + texval(gl_TexCoord[%i].xy));", a[i], i * 2, i*2 + 1))
+						else
+							table.insert(ret, string.format([=[
+								val += weights2.%s * (texval(gl_TexCoord[0].xy + %s.xy) + texval(gl_TexCoord[0].xy - %s.xy));
+							]=], b[i - 3], c[i - 3], c[i - 3]))
+						end
+					end
+					return table.concat(ret, '\n')
+				%>
+				gl_FragColor = val;
+			}
+		]]
+	)
+end
+
+for i = 1, 7 do
+	blurshader(string.format("blurx%i", i), i, "x", "2D")
+	blurshader(string.format("blury%i", i), i, "y", "2D")
+	if i > 0 then
+		Shader.alt(string.format("blurx%i", i), string.format("blurx%i", i - 1))
+		Shader.alt(string.format("blury%i", i), string.format("blury%i", i - 1))
+	end
+	if CV.usetexrect then
+		blurshader(string.format("blurx%irect", i), i, "x", "2DRect")
+		blurshader(string.format("blury%irect", i), i, "y", "2DRect")
+		if i > 0 then
+			Shader.alt(string.format("blurx%irect", i), string.format("blurx%irect", i - 1))
+			Shader.alt(string.format("blury%irect", i), string.format("blury%irect", i - 1))
+		end
+	end
+end
 
 ------------------------------------------------
 --
@@ -1596,7 +2036,7 @@ bloomshader("bloom6", 6)
 
 function setupbloom(n, inp)
 	PostFX.add("bloom_init", 1, 1, "+0")
-	local tc = {}
+	local tc = { 0 }
 	for i = 1, n do
 		PostFX.add("bloom_scale", i + 1, i + 1, "+" .. i)
 		table.insert(tc, i)
