@@ -1438,3 +1438,74 @@ LUA_EMBED_ss(setVariable, 0, {
         }
     }
 });
+
+void run_python(char *code);
+
+LUA_EMBED_s(runCS, 0, {
+	execute(arg1.c_str());
+});
+
+// not safe, quick, FIXME
+LUA_EMBED_s(runPython, 0, {
+	run_python((char*)arg1.c_str());
+});
+
+#ifdef CLIENT
+void showgui(const char *name);
+int cleargui(int n);
+void guionclear(char *action);
+void guistayopen(char *contents);
+void guinoautotab(char *contents);
+void guibutton(char *name, char *action, char *icon);
+void guiimage(char *path, char *action, float *scale, int *overlaid, char *alt);
+void guicolor(int *color);
+void guitextbox(char *text, int *width, int *height, int *color);
+void guitext(char *name, char *icon);
+void guititle(char *name);
+void guitab(char *name);
+void guibar();
+void guistrut(float *strut, int *alt);
+void guislider(char *var, int *min, int *max, char *onchange);
+void guilistslider(char *var, char *list, char *onchange);
+void guinameslider(char *var, char *names, char *list, char *onchange);
+void guicheckbox(char *name, char *var, float *on, float *off, char *onchange);
+void guiradio(char *name, char *var, float *n, char *onchange);
+void guibitfield(char *name, char *var, int *mask, char *onchange);
+void guifield(char *var, int *maxlength, char *onchange, int *password);
+void guieditor(char *name, int *maxlength, int *height, int *mode);
+void guikeyfield(char *var, int *maxlength, char *onchange);
+void guilist(char *contents);
+void guialign(int *align, char *contents);
+void newgui(char *name, char *contents, char *header);
+
+LUA_EMBED_STD(newGUI, newgui, sss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str());
+LUA_EMBED_STD(GUIButton, guibutton, sss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str());
+LUA_EMBED_STD(GUIText, guitext, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+
+LUA_EMBED_i(clearGUI, 1, {
+	LuaEngine::pushValue(cleargui(arg1));
+});
+
+LUA_EMBED_STD(showGUI, showgui, s, (char*)arg1.c_str());
+LUA_EMBED_STD(GUIOnClear, guionclear, s, (char*)arg1.c_str());
+LUA_EMBED_STD(GUIStayOpen, guistayopen, s, (char*)arg1.c_str());
+LUA_EMBED_STD(GUINoAutoTab, guinoautotab, s, (char*)arg1.c_str());
+LUA_EMBED_STD(GUIList, guilist, s, (char*)arg1.c_str());
+LUA_EMBED_STD(GUIAlign, guialign, is, (int*)&arg1, (char*)arg2.c_str());
+LUA_EMBED_STD(GUITitle, guititle, s, (char*)arg1.c_str());
+LUA_EMBED_STD(GUIBar, guibar, NOPARAM);
+LUA_EMBED_STD(GUIStrut, guistrut, di, (float*)&arg1, (int*)&arg2);
+LUA_EMBED_STD(GUIImage, guiimage, ssdis, (char*)arg1.c_str(), (char*)arg2.c_str(), (float*)&arg3, (int*)&arg4, (char*)arg5.c_str());
+LUA_EMBED_STD(GUISlider, guislider, siis, (char*)arg1.c_str(), (int*)&arg2, (int*)&arg3, (char*)arg4.c_str());
+LUA_EMBED_STD(GUIListSlider, guilistslider, sss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str());
+LUA_EMBED_STD(GUINameSlider, guinameslider, ssss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str(), (char*)arg4.c_str());
+LUA_EMBED_STD(GUIRadio, guiradio, ssds, (char*)arg1.c_str(), (char*)arg2.c_str(), (float*)&arg3, (char*)arg4.c_str());
+LUA_EMBED_STD(GUIBitfield, guibitfield, ssis, (char*)arg1.c_str(), (char*)arg2.c_str(), (int*)&arg3, (char*)arg4.c_str());
+LUA_EMBED_STD(GUICheckBox, guicheckbox, ssdds, (char*)arg1.c_str(), (char*)arg2.c_str(), (float*)&arg3, (float*)&arg4, (char*)arg5.c_str());
+LUA_EMBED_STD(GUITab, guitab, s, (char*)arg1.c_str());
+LUA_EMBED_STD(GUIField, guifield, sisi, (char*)arg1.c_str(), (int*)&arg2, (char*)arg3.c_str(), (int*)&arg4);
+LUA_EMBED_STD(GUIKeyfield, guikeyfield, sis, (char*)arg1.c_str(), (int*)&arg2, (char*)arg3.c_str());
+LUA_EMBED_STD(GUIEditor, guieditor, siii, (char*)arg1.c_str(), (int*)&arg2, (int*)&arg3, (int*)&arg4);
+LUA_EMBED_STD(GUIColor, guicolor, i, (int*)&arg1);
+LUA_EMBED_STD(GUITextBox, guitextbox, siii, (char*)arg1.c_str(), (int*)&arg2, (int*)&arg3, (int*)&arg4);
+#endif

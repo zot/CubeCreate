@@ -22,7 +22,7 @@ struct menu : g3d_callback
         cgui = &g;
         cgui->start(menustart, 0.03f, &menutab);
         cgui->tab(header ? header : name, GUI_TITLE_COLOR);
-        execute(contents);
+        LuaEngine::runScript(contents);
         cgui->end();
         cgui = NULL;
     }
@@ -92,7 +92,7 @@ struct delayedupdate
 
     void run()
     {
-        if(type == ACTION) { if(val.s) execute(val.s); }
+        if(type == ACTION) { if(val.s) LuaEngine::runScript(val.s); }
         else if(id) switch(id->type)
         {
             case ID_VAR: setvarchecked(id, getint()); break;
@@ -195,7 +195,7 @@ void guistayopen(char *contents)
 {
     bool oldclearmenu = shouldclearmenu;
     shouldclearmenu = false;
-    execute(contents);
+    LuaEngine::runScript(contents);
     shouldclearmenu = oldclearmenu;
 }
 
@@ -203,7 +203,7 @@ void guinoautotab(char *contents)
 {
     if(!cgui) return;
     cgui->allowautotab(false);
-    execute(contents);
+    LuaEngine::runScript(contents);
     cgui->allowautotab(true);
 }
 
@@ -452,7 +452,7 @@ void guilist(char *contents)
 {
     if(!cgui) return;
     cgui->pushlist();
-    execute(contents);
+    LuaEngine::runScript(contents);
     cgui->poplist();
 }
 
@@ -460,7 +460,7 @@ void guialign(int *align, char *contents)
 {
     if(!cgui) return;
     cgui->pushlist(clamp(*align, -1, 1));
-    execute(contents);
+    LuaEngine::runScript(contents);
     cgui->poplist();
 }
 
@@ -608,7 +608,7 @@ void menuprocess()
                 {
                     char *action = m->onclear;
                     m->onclear = NULL;
-                    execute(action);
+                    LuaEngine::runScript(action);
                     delete[] action;
                 }
             }

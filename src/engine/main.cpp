@@ -1293,7 +1293,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     LuaEngine::runFile("data/keymap.lua");
     LuaEngine::runFile("data/sounds.lua");
     execfile("data/stdedit.cfg");
-    execfile("data/menus.cfg");
+    LuaEngine::runFile("data/menus.lua");
     execfile("data/brush.cfg");
     execfile("mybrushes.cfg");
     if(game::savedservers()) execfile(game::savedservers());

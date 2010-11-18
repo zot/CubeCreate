@@ -658,4 +658,38 @@ function _CV:__set (k, v)
 	CAPI.setVariable(k, v)
 	return true
 end
+function _CV:run(c)
+	CAPI.runCS(c)
+end
 CV = _CV()
+
+-- 3dgui
+
+GUI = {
+	new = CAPI.newGUI,
+	button = CAPI.GUIButton,
+	text = CAPI.GUIText,
+	clear = CAPI.clearGUI,
+	show = CAPI.showGUI,
+	onClear = CAPI.GUIOnClear,
+	stayOpen = CAPI.GUIStayOpen,
+	noAutotab = CAPI.GUINoAutoTab,
+	list = CAPI.GUIList,
+	align = CAPI.GUIAlign,
+	title = CAPI.GUITitle,
+	bar = CAPI.GUIBar,
+	strut = CAPI.GUIStrut,
+	image = CAPI.GUIImage,
+	slider = CAPI.GUISlider,
+	listSlider = CAPI.GUIListSlider,
+	nameSlider = CAPI.GUINameSlider,
+	radio = CAPI.GUIRadio,
+	bitField = CAPI.GUIBitfield,
+	checkBox = CAPI.GUICheckBox,
+	tab = CAPI.GUITab,
+	field = CAPI.GUIField,
+	keyField = CAPI.GUIKeyfield,
+	editor = CAPI.GUIEditor,
+	color = CAPI.GUIColor,
+	textBox = CAPI.GUITextBox
+}

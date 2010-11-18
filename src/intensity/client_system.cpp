@@ -653,9 +653,9 @@ void show_instances()
     }
 
     std::string command =
-        "newgui instances [\n"
-        "    guitext \"Pick an instance to enter:\"\n"
-        "    guibar\n";
+        "GUI.new(\"instances\", [[\n"
+        "    GUI.text(\"Pick an instance to enter:\")\n"
+        "    GUI.bar()\n";
 
     int numInstances = boost::python::extract<int>(instances.attr("__len__")());
 
@@ -668,15 +668,15 @@ void show_instances()
         assert( Utility::validateAlphaNumeric(instance_id) );
         assert( Utility::validateAlphaNumeric(event_name, " (),.;") ); // XXX: Allow more than alphanumeric+spaces: ()s, .s, etc.
 
-        command += "    guibutton \"" + event_name + "\" \"connect_to_instance " + instance_id + "\"\n";
+        command += "    GUI.button(\"" + event_name + "\", \"CE.connect_to_instance(" + instance_id + ")\")\n";
     }
 
-    command += "]\n";
-    command += "showgui instances\n";
+    command += "]])\n";
+    command += "GUI.show(\"instances\")\n";
 
     Logging::log(Logging::DEBUG, "Instances GUI: %s\r\n", command.c_str());
 
-    execute(command.c_str());
+    LuaEngine::runScript(command);
 }
 
 COMMAND(show_instances, "");

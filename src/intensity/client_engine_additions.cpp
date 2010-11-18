@@ -432,11 +432,12 @@ void prepare_entity_gui()
 
     setsvar((char*)"entity_gui_title", (char*)title.c_str());
 
+
     // Create the gui
     std::string command =
-    "newgui entity [\n"
-    "    guitext $entity_gui_title\n"
-    "    guibar\n";
+    "GUI.new(\"entity\", [[\n"
+    "    GUI.text(CV.entity_gui_title)\n"
+    "    GUI.bar()\n";
 
     for (int i = 0; i < num_entity_gui_fields; i++)
     {
@@ -451,24 +452,24 @@ void prepare_entity_gui()
         }
 
         command +=
-    "    guilist [\n"
-    "        guitext (get_entity_gui_label " + sI + ")\n"
-    "        new_entity_gui_field_" + sI + " = (get_entity_gui_value " + sI + ")\n"
-    "        guifield new_entity_gui_field_" + sI + " " + Utility::toString((int)value.size()+25) + " [set_entity_gui_value " + sI + " $new_entity_gui_field_" + sI + "] 0\n"
-    "    ]\n";
+    "    GUI.list([[\n"
+    "        GUI.text(CE.get_gui_label(" + sI + "))\n"
+    "        CV:run(\"new_entity_gui_field_" + sI + " = \" .. CE.get_gui_value(" + sI + "))\n"
+    "        GUI.field(\"new_entity_gui_field_" + sI + "\", " + Utility::toString((int)value.size()+25) + ", [[ CE.set_gui_value(" + sI + ", CV.new_entity_gui_field_" + sI + ") ]], 0)\n"
+    "    ]])\n";
 
         if ((i+1) % 10 == 0)
         {
             command +=
-    "   guitab " + Utility::toString(i) + "\n";
+    "   GUI.tab(" + Utility::toString(i) + ")\n";
         }
     }
 
     command +=
-    "]";
+    "]])\n";
 
 //    printf("Command: %s\r\n", command.c_str());
-    execute(command.c_str());
+    LuaEngine::runScript(command);
 }
 
 COMMAND(prepare_entity_gui, "");

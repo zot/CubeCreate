@@ -2,10 +2,10 @@ import os
 
 strings = [
     'i', 's', 'd', 'o', 'b',
-    'ii', 'is', 'ss', 'sd', 'si', 'oi', 'ob', 'os', 'od', 'dd', 'ds', 'do',
-    'iis', 'iii', 'iid', 'ddd', 'sdd', 'sss', 'dds', 'ssd', 'ssi', 'iss',
-    'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdi', 'ssdd', 'iiii', 'iidd', 'isss',
-    'sdddi', 'sssdd', 'ddddi', 'sdddd', 'siidi', 'iiiss', 'iiisi', 'iiiii', 'idddd', 'iisss', 'isiss',
+    'ii', 'is', 'ss', 'sd', 'si', 'oi', 'ob', 'os', 'od', 'dd', 'ds', 'do', 'di',
+    'iis', 'iii', 'iid', 'ddd', 'sdd', 'sss', 'dds', 'ssd', 'ssi', 'iss', 'sis',
+    'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdi', 'ssdd', 'iiii', 'iidd', 'isss', 'siis', 'ssss', 'ssds', 'ssis', 'sisi', 'siii', 'siii',
+    'sdddi', 'sssdd', 'ddddi', 'sdddd', 'siidi', 'iiiss', 'iiisi', 'iiiii', 'idddd', 'iisss', 'isiss', 'ssdis', 'ssdds',
     'sdddii', 'dddddd', 'iidddi', 'iisddd', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddid', 'iiiiii', 'sidddd',
     'sdddddd', 'ddddddd', 'iiiiddd', 'iiddddd', 'ssiiidi', 'iiiiiii', 'sddddid',
     'ddddddii', 'ddddiiid', 'iidddddd', 'ssiiiiii', 'siisdddd',

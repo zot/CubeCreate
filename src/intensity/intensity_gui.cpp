@@ -85,29 +85,6 @@ ICOMMAND(getentityclass, "i", (int *index), {
     result(ret.c_str());
 });
 
-
-
-#if 0
-    std::string command = "newgui instances [\n";
-
-    int numInstances = boost::python::extract<int>(instances.attr("__len__")());
-
-    for (int i = 0; i < numInstances; i++)
-    {
-        boost::python::object instance = instances[i];
-        std::string instance_id = boost::python::extract<std::string>(instance.attr("__getitem__")("instance_id"));
-        std::string event_name = boost::python::extract<std::string>(instance.attr("__getitem__")("event_name"));
-
-        command += "    guibutton \"" + event_name + "\" \"connect_to_instance " + instance_id + "\"\n";
-    }
-
-    command += "    guibar\n";
-    command += "    guibutton \"back\"  [ cleargui 1 ]\n";
-    command += "]\n";
-#endif
-
-
-
     bool canQuit()
     {
         if ( !EditingSystem::madeChanges )

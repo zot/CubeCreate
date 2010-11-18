@@ -26,7 +26,7 @@ def get_output_file():
     return os.path.join(get_home_subdir(), 'out_server.txt')
 
 def run_server(location=None, use_master=True):
-    CModule.run_cubescript('echo "Starting server, please wait..."')
+    CModule.run_script('echo("Starting server, please wait...")')
 
     if location is not None:
         location = 'base/' + location + '.tar.gz'
@@ -72,11 +72,11 @@ def run_server(location=None, use_master=True):
                 def do_connect():
                     assert(not Module.server_proc.connected_to)
                     Module.server_proc.connected_to = True
-                    CModule.run_cubescript('connect 127.0.0.1 28787') # XXX: hard-coded
+                    CModule.run_script('CV:run("connect 127.0.0.1 28787")') # XXX: hard-coded
                 main_actionqueue.add_action(do_connect)
                 break
             else:
-                CModule.run_cubescript('echo "Waiting for server to finish starting up... (%d)"' % i)
+                CModule.run_script('echo("Waiting for server to finish starting up... (%d)")' % i)
         if not success:
             log(logging.ERROR, "Failed to start server. See out_server.txt")
     side_actionqueue.add_action(prepare_to_connect)
@@ -117,71 +117,69 @@ shutdown.connect(stop_server, weak=False)
 def show_gui(sender, **kwargs):
     if has_server():
         if check_server_ready():
-            CModule.run_cubescript('''
-                guitext "Local server: Running"
-                guistayopen [
-                    guibutton "  stop" [ (run_python "intensity.components.server_runner.stop_server()") ]
-                ]
-                guibutton "  show output" [ showgui local_server_output ]
-                guistayopen [
-                    guibutton "  save map" [ do_upload ]
-                ]
-                guibutton "  restart map" "showgui restart_map"
-                guibutton "  editing commands" "showgui editing"
+            CModule.run_script('''
+                GUI.text("Local server: Running")
+                GUI.stayOpen([[ GUI.button("  stop", [=[ CAPI.runPython("intensity.components.server_runner.stop_server()") ]=]) ]])
+                GUI.button("  show output", [[ GUI.show("local_server_output") ]])
+                GUI.stayOpen([[ GUI.button("  save map", [=[ CV:run("do_upload") ]=]) ]])
+                GUI.button("  restart map", [[ GUI.show("restart_map") ]])
+                GUI.button("  editing commands", [[ GUI.show("editing") ]])
             ''')
         elif check_server_terminated():
             Module.server_proc = None
             log(logging.ERROR, "Local server terminated due to an error")
         else:
-            CModule.run_cubescript('''
-                guitext "Local server: ...preparing..."
-                guistayopen [
-                    guibutton "  stop" [ (run_python "intensity.components.server_runner.stop_server()") ]
-                ]
+            CModule.run_script('''
+                GUI.text("Local server: ...preparing...")
+                GUI.stayOpen([[ GUI.button("  stop", [=[ CAPI.runPython("intensity.components.server_runner.stop_server()") ]=]) ]])
             ''')
     else:
-        CModule.run_cubescript('''
-            guitext "Local server: (not active)"
-            if ( = $logged_into_master 0 ) [
-                guitext "   << not logged into master >>"
-            ]
+        CModule.run_script('''
+            GUI.text("Local server: (not active)")
+            if CV.logged_into_master == 0 then
+				GUI.text("   << not logged into master >>")
+			end
 
-            guilist [
-                guitext "Map location to run: base/"
-                guifield local_server_location 30 []
-                guitext ".tar.gz"
-            ]
-            guistayopen [
-                guibutton "  start" [
-                    if ( = $logged_into_master 1 ) [
-                        (run_python (format "intensity.components.server_runner.run_server('%1')" $local_server_location))
-                    ] [
-                        (run_python (format "intensity.components.server_runner.run_server('%1', False)" $local_server_location))
-                    ]
-                ]
-            ]
-            guibutton "  show output" [ showgui local_server_output ]
+            GUI.list([[
+                GUI.text("Map location to run: base/")
+                GUI.field("local_server_location", 30, "")
+                GUI.text(".tar.gz")
+            ]])
+            GUI.stayOpen([[
+			    GUI.button("  start", [=[
+			        if CV.logged_into_master == 1 then
+						CAPI.runPython(string.format("intensity.components.server_runner.run_server('%s')", CV.local_server_location))
+					else
+					    CAPI.runPython(string.format("intensity.components.server_runner.run_server('%s', False)", CV.local_server_location))
+					end
+			    ]=])
+            ]])
+            GUI.button("  show output", [[ GUI.show("local_server_output") ]])
         ''')
-    CModule.run_cubescript('guibar')
+    CModule.run_script('GUI.bar()')
 
 show_components.connect(show_gui, weak=False)
 
 # Always enter private edit mode if masterless
 def request_private_edit(sender, **kwargs):
-    if not CModule.run_cubescript("$logged_into_master"):
+    if not CModule.run_script_int("CV.logged_into_master"):
         MessageSystem.send(CModule.RequestPrivateEditMode)
 map_load_finish.connect(request_private_edit, weak=False)
 
-CModule.run_cubescript('''
-    newgui local_server_output [
-        guinoautotab [
-            guibar
-            guieditor "%(name)s" -80 20
-            guibar
-            guistayopen [
-                guibutton "refresh" [textfocus "%(name)s"; textload "%(name)s"; showgui -1]
-            ]
-        ]
-    ]
+CModule.run_script('''
+    GUI.new("local_server_output", [[
+        GUI.noAutotab([=[
+            GUI.bar()
+            GUI.editor("%(name)s", -80, 20)
+            GUI.bar()
+            GUI.stayOpen([==[
+                GUI.button("refresh", [===[
+                    GUI.textfocus("%(name)s")
+                    GUI.textload("%(name)s")
+                    GUI.show("-1")
+                ]===])
+            ]==])
+        ]=])
+    ]])
 ''' % { 'name': get_output_file() })
 
