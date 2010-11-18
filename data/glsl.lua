@@ -1244,8 +1244,8 @@ Shader.normal(4, "shadowmapcaster", shadowmapcastervertexshader, [[
 ]])
 
 for i = 1, 4 do
-	skelmatanimargs = { i + 1, 0, 0 }
-	skelquatanimargs = { i + 1, 0, 0 }
+	skelmatanimargs = { i + 1, false, false }
+	skelquatanimargs = { i + 1, false, false }
 	smcvsargs = { template(skelanimdefs), template(skelmatanim) }
 	Shader.variant(4, "shadowmapcaster", 0, template(shadowmapcastervertexshader), "")
 	smcvsargs = { template(skelanimdefs), template(skelquatanim) }
@@ -1306,8 +1306,8 @@ Shader.normal(4, "notexturemodel", notexturemodelvertexshader,
 )
 
 for i = 1, 4 do
-	skelmatanimargs = { i + 1, 0, 0 }
-	skelquatanimargs = { i + 1, 0, 0 }
+	skelmatanimargs = { i + 1, false, false }
+	skelquatanimargs = { i + 1, false, false }
 	ntmvsargs = { template(skelanimdefs), template(skelmatanim) }
 	Shader.variant(4, "notexturemodel", 0, template(notexturemodelvertexshader), "")
 	ntmvsargs = { template(skelanimdefs), template(skelquatanim) }
@@ -2500,7 +2500,7 @@ end
 
 reflectivity = "invfresnel = invfresnel*0.5 + 0.5;"
 
-watershader("waterglare", 1, 1,
+watershader("waterglare", true, true,
 	[[
 		vec3 bump = texture2D(tex1, gl_TexCoord[2].xy + 0.025*dudv).rgb*2.0 - 1.0;
 	]],
@@ -2548,14 +2548,14 @@ lazyshader(4, "underwater",
 	]]
 )
 
-watershader("underwaterrefract", 0, 1,
+watershader("underwaterrefract", false, true,
 	[[
 		dudv = texture2D(tex2, gl_TexCoord[2].xy + 0.025*dudv).xy*2.0 - 1.0;
 		gl_FragColor = texture2D(tex3, gl_TexCoord[0].xy/gl_TexCoord[0].w + 0.01*dudv);
 	]], ""
 )
 
-watershader("underwaterrefractfast", 0, 1,
+watershader("underwaterrefractfast", false, true,
 	[[
 		gl_FragColor = texture2DProj(tex3, gl_TexCoord[0] + vec4(0.4*dudv, 0.0, 0.0));
 	]], ""
@@ -2564,7 +2564,7 @@ watershader("underwaterrefractfast", 0, 1,
 Shader.fast("underwaterrefract", "underwaterrefractfast", 2)
 Shader.alt("underwaterrefract", "underwaterrefractfast")
 
-watershader("underwaterfade", 0, 1,
+watershader("underwaterfade", false, true,
 	[[
 		dudv = texture2D(tex2, gl_TexCoord[2].xy + 0.025*dudv).xy*2.0 - 1.0;
 
@@ -2575,7 +2575,7 @@ watershader("underwaterfade", 0, 1,
 	]], ""
 )
 
-watershader("underwaterfadefast", 0, 1,
+watershader("underwaterfadefast", false, true,
 	[[
 		gl_FragColor.rgb = texture2DProj(tex3, gl_TexCoord[0] + vec4(0.4*dudv, 0.0, 0.0)).rgb;
 		gl_FragColor.a = gl_TexCoord[0].z + 4.0*texture2DProj(tex3, gl_TexCoord[0]).a;
@@ -2585,7 +2585,7 @@ watershader("underwaterfadefast", 0, 1,
 Shader.fast("underwaterfade", "underwaterfadefast", 2)
 Shader.alt("underwaterfade", "underwaterfadefast")
 
-watershader("water", 1, 0,
+watershader("water", true, false,
 	[[
 		vec3 bump = texture2D(tex1, gl_TexCoord[2].xy + 0.025*dudv).rgb*2.0 - 1.0;
 	]],
@@ -2597,7 +2597,7 @@ watershader("water", 1, 0,
 	]]
 )
 
-watershader("waterfast", 0, 0,
+watershader("waterfast", true, false,
 	[[
 		vec3 bump = texture2D(tex1, gl_TexCoord[2].xy + 0.025*dudv).rgb*2.0 - 1.0;
 	]],
@@ -2612,7 +2612,7 @@ watershader("waterfast", 0, 0,
 Shader.fast("water", "waterfast", 1)
 Shader.alt("water", "waterfast")
 
-watershader("waterreflect", 1, 0,
+watershader("waterreflect", true, false,
 	[[
 		vec3 reflect = texture2DProj(tex0, gl_TexCoord[0] + vec4(0.4*dudv, 0.0, 0.0)).rgb;
 		vec3 bump = texture2D(tex1, gl_TexCoord[2].xy + 0.025*dudv).rgb*2.0 - 1.0;
@@ -2625,7 +2625,7 @@ watershader("waterreflect", 1, 0,
 	]]
 )
 
-watershader("waterreflectfast", 0, 0,
+watershader("waterreflectfast", false, false,
 	[[
 		vec3 reflect = texture2DProj(tex0, gl_TexCoord[0] + vec4(0.4*dudv, 0.0, 0.0)).rgb;
 		vec3 bump = texture2D(tex1, gl_TexCoord[2].xy + 0.025*dudv).rgb*2.0 - 1.0;
@@ -2641,7 +2641,7 @@ watershader("waterreflectfast", 0, 0,
 Shader.fast("waterreflect", "waterreflectfast", 2)
 Shader.alt("waterreflect", "waterreflectfast")
 
-watershader("waterrefract", 1, 1,
+watershader("waterrefract", true, true,
 	[[
 		vec2 dtc = gl_TexCoord[2].xy + 0.025*dudv;
 		vec3 bump = texture2D(tex1, dtc).rgb*2.0 - 1.0;
@@ -2658,7 +2658,7 @@ watershader("waterrefract", 1, 1,
 	]]
 )
 
-watershader("waterrefractfast", 0, 1,
+watershader("waterrefractfast", false, true,
 	[[
 		vec4 rtc = gl_TexCoord[0] + vec4(0.4*dudv, 0.0, 0.0);
 		vec3 reflect = texture2DProj(tex0, rtc).rgb;
@@ -2675,7 +2675,7 @@ watershader("waterrefractfast", 0, 1,
 Shader.fast("waterrefract", "waterrefractfast", 2)
 Shader.alt("waterrefract", "waterrefractfast")
 
-watershader("waterfade", 1, 1,
+watershader("waterfade", true, true,
 	[[
 		vec2 dtc = gl_TexCoord[2].xy + 0.025*dudv;
 		vec3 bump = texture2D(tex1, dtc).rgb*2.0 - 1.0;
@@ -2695,7 +2695,7 @@ watershader("waterfade", 1, 1,
 	]]
 )
 
-watershader("waterfadefast", 0, 1,
+watershader("waterfadefast", false, true,
 	[[
 		vec4 rtc = gl_TexCoord[0] + vec4(0.4*dudv, 0.0, 0.0);
 		vec3 reflect = texture2DProj(tex0, rtc).rgb;
@@ -2713,7 +2713,7 @@ watershader("waterfadefast", 0, 1,
 Shader.fast("waterfade", "waterfadefast", 2)
 Shader.alt("waterfade", "waterrefract")
 
-watershader("waterenv", 1, 0,
+watershader("waterenv", true, false,
 	[[
 		vec3 bump = texture2D(tex1, gl_TexCoord[2].xy + 0.025*dudv).rgb*2.0 - 1.0;
 		float invfresnel = clamp(dot(camvec, bump), 0.0, 1.0); 
@@ -2726,7 +2726,7 @@ watershader("waterenv", 1, 0,
 	]]
 )
 
-watershader("waterenvfast", 0, 0,
+watershader("waterenvfast", false, false,
 	[[
 		vec3 bump = texture2D(tex1, gl_TexCoord[2].xy + 0.025*dudv).rgb*2.0 - 1.0;
 		float invfresnel = clamp(dot(camvec, bump), 0.0, 1.0); 
@@ -2742,7 +2742,7 @@ watershader("waterenvfast", 0, 0,
 Shader.fast("waterenv", "waterenvfast", 2)
 Shader.alt("waterenv", "waterenvfast")
 
-watershader("waterenvrefract", 1, 1,
+watershader("waterenvrefract", true, true,
 	[[
 		vec2 dtc = gl_TexCoord[2].xy + 0.025*dudv;
 		vec3 bump = texture2D(tex1, dtc).rgb*2.0 - 1.0;
@@ -2758,7 +2758,7 @@ watershader("waterenvrefract", 1, 1,
 	]]
 )
 
-watershader("waterenvrefractfast", 0, 1,
+watershader("waterenvrefractfast", false, true,
 	[[
 		vec3 refract = texture2DProj(tex3, gl_TexCoord[0] + vec4(0.4*dudv, 0.0, 0.0)).rgb;
 		vec3 bump = texture2D(tex1, gl_TexCoord[2].xy + 0.025*dudv).rgb*2.0 - 1.0;
@@ -2774,7 +2774,7 @@ watershader("waterenvrefractfast", 0, 1,
 Shader.fast("waterenvrefract", "waterenvrefractfast", 2)
 Shader.alt("waterenvrefract", "waterenvrefractfast")
 
-watershader("waterenvfade", 1, 1,
+watershader("waterenvfade", true, true,
 	[[
 		vec2 dtc = gl_TexCoord[2].xy + 0.025*dudv;
 		vec3 bump = texture2D(tex1, dtc).rgb*2.0 - 1.0;
@@ -2794,7 +2794,7 @@ watershader("waterenvfade", 1, 1,
 	]]
 )
 
-watershader("waterenvfadefast", 0, 1,
+watershader("waterenvfadefast", false, true,
 	[[
 		vec3 refract = texture2DProj(tex3, gl_TexCoord[0] + vec4(0.4*dudv, 0.0, 0.0)).rgb;
 		gl_FragColor.a = gl_TexCoord[0].z + 4.0*texture2DProj(tex3, gl_TexCoord[0]).a;
