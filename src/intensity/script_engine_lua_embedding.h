@@ -1,11 +1,5 @@
 #include <cmath>
 
-#ifndef WIN32
-    #define ISNAN(x) std::isnan(x)
-#else
-    #define ISNAN(x) _isnan(x)
-#endif
-
 #ifdef CLIENT
     #include "client_engine_additions.h"
     #include "intensity_gui.h"
@@ -1411,7 +1405,7 @@ LUA_EMBED_s(getVariable, 1, {
                 LuaEngine::pushValue(std::string(*ident->storage.s));
                 break;
             case ID_ALIAS:
-                LuaEngine::pushValue(ident->action);
+                LuaEngine::pushValue(std::string(ident->action));
                 break;
         }
     }
@@ -1437,6 +1431,55 @@ LUA_EMBED_ss(setVariable, 0, {
                 break;
         }
     }
+});
+
+// isn't really noparam, but we want to get various types from stack
+LUA_EMBED_NOPARAM(syncVariableFromLua, 0, {
+	std::string name = LuaEngine::getString(1);
+	std::string type = LuaEngine::getString(2);
+	switch (type[0])
+	{
+		case 'I':
+		{
+			EngineVariables::syncFromLua(name, LuaEngine::getInteger(3));
+			break;
+		}
+		case 'F':
+		{
+			EngineVariables::syncFromLua(name, LuaEngine::getDouble(3));
+			break;
+		}
+		case 'S':
+		{
+			EngineVariables::syncFromLua(name, LuaEngine::getString(3));
+			break;
+		}
+		default: break;
+	}
+});
+
+LUA_EMBED_NOPARAM(registerVariableFromLua, 0, {
+	std::string name = LuaEngine::getString(1);
+	std::string type = LuaEngine::getString(2);
+	switch (type[0])
+	{
+		case 'I':
+		{
+			REGVAR(name, LuaEngine::getInteger(3), LuaEngine::getInteger(4), LuaEngine::getInteger(5));
+			break;
+		}
+		case 'F':
+		{
+			REGVAR(name, LuaEngine::getDouble(3), LuaEngine::getDouble(4), LuaEngine::getDouble(5));
+			break;
+		}
+		case 'S':
+		{
+			REGVAR(name, LuaEngine::getString(4));
+			break;
+		}
+		default: break;
+	}
 });
 
 void run_python(char *code);

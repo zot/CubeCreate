@@ -18,6 +18,14 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux") # there is no LINUX variable declared
    add_definitions (-fsigned-char)
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
+if (CMAKE_COMPILER_IS_GNUCXX)
+    if (CC_USE_CPP0X)
+        set(CMAKE_CXX_COMPILER "g++-4.5")
+        add_definitions(-std=c++0x)
+        add_definitions(-DCC_USE_CPP0X)
+    endif (CC_USE_CPP0X)
+endif (CMAKE_COMPILER_IS_GNUCXX)
+
 # include JSON.
 include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/json)
 # server def and executable build
@@ -55,6 +63,7 @@ set(SERVER_SOURCES
     ../intensity/targeting
     ../intensity/network_system
     ../intensity/script_engine_lua
+    ../intensity/engine_variables
     ../intensity/fpsserver_interface
     ../intensity/fpsclient_interface
     ../intensity/intensity_physics

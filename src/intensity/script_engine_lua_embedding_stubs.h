@@ -358,6 +358,8 @@ luaL_Reg CAPI[] = {
     STDREG(fontChar),
     STDREG(getVariable),
     STDREG(setVariable),
+    STDREG(syncVariableFromLua),
+    STDREG(registerVariableFromLua),
     STDREG(runCS),
     STDREG(runPython),
     // menus

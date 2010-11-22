@@ -118,6 +118,7 @@ void LuaEngine::setupEmbedding()
     pop(1);
 
     setupModule("LuaExtensions", true); // set up lua extensions right after we have CAPI
+    setupModule("engine/EngineVariables");
     setupModule("engine/CAPIExtras", true);
     setupModule("engine/Utilities");
     setupModule("engine/Actions");
@@ -155,6 +156,9 @@ void LuaEngine::create()
 {
     if (exists()) return; // if already initialized, just return
 
+	// before even opening lua, register internal variables
+	EngineVariables::fill();
+
     L = lua_open();
     if (L)
     {
@@ -167,6 +171,8 @@ void LuaEngine::create()
         engineParameters.clear();
 
         setupEmbedding();
+        // after setting up embedding, we can fill lua too :)
+        EngineVariables::fillLua();
     }
 }
 
@@ -174,6 +180,7 @@ void LuaEngine::destroy()
 {
     if (!exists()) return;
 
+	EngineVariables::clear();
     lua_close(L);
     hasState = false;
 }

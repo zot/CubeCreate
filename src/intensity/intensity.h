@@ -9,6 +9,7 @@
     #include <string>
 
     #include "script_engine_lua.h"
+    #include "engine_variables.h"
     #include "engine_additions.h"
     #include "logging.h"
 
