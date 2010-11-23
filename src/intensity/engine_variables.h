@@ -176,6 +176,13 @@ public:
      */
 	bool isPersistent();
     /**
+     * @brief Gets if the variable is read only.
+     * @return If read only, then true, otherwise false.
+     * 
+     * Gets if the variable is read only (only from Lua though!).
+     */
+	bool isReadOnly();
+    /**
      * @brief Registers integer Lua variable based on C++ representation it's ran for.
      * 
      * Registers integer Lua variable based on C++ representation it's ran for.
@@ -205,6 +212,8 @@ private:
 	std::string name;
 	// var type
 	std::string type;
+	// is readonly (only from lua, C++ is writable)?
+	bool readOnly;
 
 	// anytypes storing the values
 	boost::any prev;
@@ -328,36 +337,36 @@ private:
  * @brief Macro for making lambda callback creation easier.
  * @param code The code used as body of lambda function.
  * 
- * This creates a lambda function callback for integer variables, letting @p code get min, max, prev and cur values.
+ * This creates a lambda function callback for integer variables, letting @p code get minv, maxv, prev and curv values.
  * @code
  * REGVAR("foo", 0, 1, 2, ICB({ foo }));
  * @endcode
  */
-#define ICB(code) _lambda_(_UNUSED_ int min, _UNUSED_ int max, _UNUSED_ int prev, _UNUSED_ int cur) code
+#define ICB(code) _lambda_(_UNUSED_ int minv, _UNUSED_ int maxv, _UNUSED_ int prev, _UNUSED_ int curv) code
 
 /**
  * @def FCB
  * @brief Macro for making lambda callback creation easier.
  * @param code The code used as body of lambda function.
  * 
- * This creates a lambda function callback for double variables, letting @p code get min, max, prev and cur values.
+ * This creates a lambda function callback for double variables, letting @p code get minv, maxv, prev and curv values.
  * @code
  * REGVAR("foo", 0.1, 1.3, 5.1, FCB({ foo }));
  * @endcode
  */
-#define FCB(code) _lambda_(_UNUSED_ double min, _UNUSED_ double max, _UNUSED_ double prev, _UNUSED_ double cur) code
+#define FCB(code) _lambda_(_UNUSED_ double minv, _UNUSED_ double maxv, _UNUSED_ double prev, _UNUSED_ double curv) code
 
 /**
  * @def SCB
  * @brief Macro for making lambda callback creation easier.
  * @param code The code used as body of lambda function.
  * 
- * This creates a lambda function callback for string variables, letting @p code get prev and cur values.
+ * This creates a lambda function callback for string variables, letting @p code get prev and curv values.
  * @code
  * REGVAR("foo", "bar", SCB({ foo }));
  * @endcode
  */
-#define SCB(code) _lambda_(_UNUSED_ const std::string& prev, _UNUSED_ const std::string& cur) code
+#define SCB(code) _lambda_(_UNUSED_ const std::string& prev, _UNUSED_ const std::string& curv) code
 
 /**
  * @}

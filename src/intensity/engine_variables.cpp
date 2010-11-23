@@ -45,7 +45,16 @@ EngineVariable::EngineVariable
 (const std::string& vname, int minvi, int curvi, int maxvi, void (_cb_ cb)(int, int, int, int), bool persist)
 {
 	name = vname;
-	minv = minvi; curv = curvi; maxv = maxvi; prev = curvi;
+	if (minvi > maxvi)
+	{
+		readOnly = true;
+		minv = maxvi; curv = curvi; maxv = minvi; prev = curvi;
+	}
+	else
+	{
+		readOnly = false;
+		minv = minvi; curv = curvi; maxv = maxvi; prev = curvi;
+	}
 	intCB = cb;
 	persistent = persist;
 	type = cb ? ( persist ? "IVARFP" : "IVARF" ) : ( persist ? "IVARP" : "IVAR" );
@@ -57,7 +66,16 @@ EngineVariable::EngineVariable
 (const std::string& vname, double minvf, double curvf, double maxvf, void (_cb_ cb)(double, double, double, double), bool persist)
 {
 	name = vname;
-	minv = minvf; curv = curvf; maxv = maxvf; prev = curvf;
+	if (minvf > maxvf)
+	{
+		readOnly = true;
+		minv = maxvf; curv = curvf; maxv = minvf; prev = curvf;
+	}
+	else
+	{
+		readOnly = false;
+		minv = minvf; curv = curvf; maxv = maxvf; prev = curvf;
+	}
 	doubleCB = cb;
 	persistent = persist;
 	type = cb ? ( persist ? "FVARFP" : "FVARF" ) : ( persist ? "FVARP" : "FVAR" );
@@ -69,6 +87,7 @@ EngineVariable::EngineVariable
 (const std::string& vname, const std::string& curvs, void (_cb_ cb)(const std::string&, const std::string&), bool persist)
 {
 	name = vname;
+	readOnly = false;
 	curv = curvs; prev = curvs;
 	stringCB = cb;
 	persistent = persist;
@@ -130,6 +149,12 @@ bool EngineVariable::isPersistent()
 	return persistent;
 }
 
+// check if it's read only
+bool EngineVariable::isReadOnly()
+{
+	return readOnly;
+}
+
 // these are used for registration of Lua variables after one is registered in C++
 void EngineVariable::registerLuaIVAR()
 {
@@ -138,7 +163,8 @@ void EngineVariable::registerLuaIVAR()
 	LuaEngine::pushValue(anyint(minv));
 	LuaEngine::pushValue(anyint(curv));
 	LuaEngine::pushValue(anyint(maxv));
-	LuaEngine::call(4, 0);
+	LuaEngine::pushValue(true);
+	LuaEngine::call(5, 0);
 }
 
 void EngineVariable::registerLuaFVAR()
@@ -148,7 +174,8 @@ void EngineVariable::registerLuaFVAR()
 	LuaEngine::pushValue(anydouble(minv));
 	LuaEngine::pushValue(anydouble(curv));
 	LuaEngine::pushValue(anydouble(maxv));
-	LuaEngine::call(4, 0);
+	LuaEngine::pushValue(true);
+	LuaEngine::call(5, 0);
 }
 
 void EngineVariable::registerLuaSVAR()

@@ -9,7 +9,7 @@ REGVAR("fullbrightmodels", 0, 0, 200, NULL, true);
 // engine/blend.cpp
 
 REGVAR("blendpaintmode", 0, 0, 5, ICB({
-    if(!cur) stoppaintblendmap();
+    if(!curv) stoppaintblendmap();
 }));
 
 REGVAR("paintblendmapdelay", 1, 500, 3000);
@@ -34,7 +34,7 @@ REGVAR("blobdyntris", 128, 4096, 1<<16, ICB({ initblobs(BLOB_DYNAMIC); }), true)
 void setrate(int rate);
 void throttle();
 
-REGVAR("rate", 0, 0, 25000, ICB({ setrate(cur); }));
+REGVAR("rate", 0, 0, 25000, ICB({ setrate(curv); }));
 REGVAR("throttle_interval", 0, 5, 30, ICB({ throttle(); }));
 REGVAR("throttle_accel", 0, 2, 32, ICB({ throttle(); }));
 REGVAR("throttle_decel", 0, 2, 32, ICB({ throttle(); }));
@@ -46,7 +46,7 @@ REGVAR("connectport", 0, 0, 0xFFFF);
 
 extern vector<cline> conlines;
 
-REGVAR("maxcon", 10, 200, 1000, ICB({ while(conlines.length() > cur) delete[] conlines.pop().line; }), true);
+REGVAR("maxcon", 10, 200, 1000, ICB({ while(conlines.length() > curv) delete[] conlines.pop().line; }), true);
 REGVAR("fullconsole", 0, 0, 1);
 REGVAR("consize", 0, 5, 100, NULL, true);
 REGVAR("miniconsize", 0, 5, 100, NULL, true);
@@ -124,8 +124,8 @@ REGVAR("grassanimmillis", 0, 3000, 60000); // override
 REGVAR("grassanimscale", 0.0f, 0.03f, 1.0f); // override
 REGVAR("grassscale", 1, 2, 64); // override
 REGVAR("grasscolour", 0, 0xFFFFFF, 0xFFFFFF, ICB({
-	int c = cur;
-    if(!cur)
+	int c = curv;
+    if(!curv)
     {
 		EngineVariables::get("grasscolour").get()->set(0xFFFFFF);
 		c = 0xFFFFFF;
@@ -150,20 +150,20 @@ REGVAR("lighterror", 1, 8, 16); // override
 REGVAR("bumperror", 1, 3, 16); // override
 REGVAR("lightlod", 0, 0, 10); // override
 REGVAR("ambient", 1, 0x191919, 0xFFFFFF, ICB({
-	int c = cur;
-    if(cur <= 255)
+	int c = curv;
+    if(curv <= 255)
     {
-		EngineVariables::get("ambient").get()->set(cur | (cur<<8) | (cur<<16));
-		c = cur | (cur<<8) | (cur<<16);
+		EngineVariables::get("ambient").get()->set(curv | (curv<<8) | (curv<<16));
+		c = curv | (curv<<8) | (curv<<16);
 	}
     ambientcolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
 })); // override
 REGVAR("skylight", 0, 0, 0xFFFFFF, ICB({
-	int c = cur;
-    if(cur <= 255)
+	int c = curv;
+    if(curv <= 255)
     {
-		EngineVariables::get("skylight").get()->set(cur | (cur<<8) | (cur<<16));
-		c = cur | (cur<<8) | (cur<<16);
+		EngineVariables::get("skylight").get()->set(curv | (curv<<8) | (curv<<16));
+		c = curv | (curv<<8) | (curv<<16);
 	}
     skylightcolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
 })); // override
@@ -179,7 +179,7 @@ REGVAR("lightcachesize", 4, 6, 12, ICB({ clearlightcache(); }));
 REGVAR("lightthreads", 1, 1, 16, NULL, true);
 REGVAR("patchnormals", 0, 0, 1);
 REGVAR("fullbright", 0, 0, 1, ICB({ if (lightmaptexs.length()) initlights(); }));
-REGVAR("fullbrightlevel", 0, 128, 255, ICB({ setfullbrightlevel(cur); }));
+REGVAR("fullbrightlevel", 0, 128, 255, ICB({ setfullbrightlevel(curv); }));
 REGVAR("convertlms", 0, 1, 1, ICB({ cleanuplightmaps(); initlights(); allchanged(); }));
 REGVAR("roundlightmaptex", 0, 4, 16, ICB({ cleanuplightmaps(); initlights(); allchanged(); }));
 REGVAR("batchlightmaps", 0, 4, 256, ICB({ cleanuplightmaps(); initlights(); allchanged(); }));
@@ -211,9 +211,9 @@ REGVAR("depthbits", 0, 0, 32, ICB({ initwarning("depth-buffer precision"); }));
 REGVAR("stencilbits", 0, 0, 32, ICB({ initwarning("stencil-buffer precision"); }));
 REGVAR("fsaa", -1, -1, 16, ICB({ initwarning("anti-aliasing"); }));
 REGVAR("vsync", -1, -1, 1, ICB({ initwarning("vertical sync"); }));
-REGVAR("fullscreen", 0, 0, 1, ICB({ setfullscreen(cur!=0); }));
+REGVAR("fullscreen", 0, 0, 1, ICB({ setfullscreen(curv!=0); }));
 REGVAR("gamma", 30, 100, 300, ICB({
-    float f = cur/100.0f;
+    float f = curv/100.0f;
     if(SDL_SetGamma(f,f,f)==-1)
     {
         conoutf(CON_ERROR, "Could not set gamma (card/driver doesn't support it?)");
@@ -244,50 +244,92 @@ REGVAR("waterfallenv", 0, 1, 1, ICB({ preloadwatershaders(); }), true);
 REGVAR("menudistance", 16, 10, 256, NULL, true);
 REGVAR("menuautoclose", 32, 120, 4096, NULL, true);
 REGVAR("applydialog", 0, 1, 1, NULL, true);
-REGVAR("mainmenu", 0, 1, 1);
+REGVAR("mainmenu", 1, 1, 0);
 
+// engine/movie.cpp
+
+REGVAR("dbgmovie", 0, 0, 1);
+REGVAR("movieaccelblit", 0, 0, 1);
+REGVAR("movieaccelyuv", 0, 0, 1);
+REGVAR("movieaccel", 0, 1, 1, NULL, true);
+REGVAR("moviesync", 0, 0, 1, NULL, true);
+REGVAR("moview", 0, 320, 10000, NULL, true);
+REGVAR("movieh", 0, 240, 10000, NULL, true);
+REGVAR("moviefps", 1, 24, 1000, NULL, true);
+REGVAR("moviesound", 0, 1, 1, NULL, true);
+#endif
+
+// engine/normal.cpp
+REGVAR("lerpangle", 0, 44, 180); // override
+REGVAR("lerpsubdiv", 0, 2, 4); // override
+REGVAR("lerpsubdivsize", 4, 4, 128); // override
+
+// engine/octa.cpp
+REGVAR("mipvis", 0, 0, 1);
+REGVAR("minface", 0, 1, 1);
+REGVAR("maxmerge", 0, 6, 12);
+
+// engine/octaedit.cpp
+
+extern selinfo sel;
+extern int orient, gridsize;
+extern ivec cor, lastcor;
+extern ivec cur, lastcur;
+extern int horient;
+extern bool havesel;
+// TODO: get rid of those
+#define MAXBRUSH    64
+#define MAXBRUSH2   32
+
+REGVAR("dragging", 0, 0, 1, ICB({
+    if(!curv || cor[0]<0) return;
+    lastcur = cur;
+    lastcor = cor;
+    sel.grid = gridsize;
+    sel.orient = orient;
+}));
+
+REGVAR("moving", 0, 0, 1, ICB({
+    if(!curv) return;
+    vec v(cur.v); v.add(1);
+    EngineVariables::get("moving").get()->set(pointinsel(sel, v));
+    if(EngineVariables::get("moving").get()->getInteger()) havesel = false; // tell cursorupdate to create handle
+}));
+
+REGVAR("gridpower", 0, 3, 12, ICB({
+    if(EngineVariables::get("dragging").get()->getInteger()) return;
+    gridsize = 1<<curv;
+    if(gridsize>=worldsize) gridsize = worldsize/2;
+    cancelsel();
+}));
+
+REGVAR("passthroughsel", 0, 0, 1);
+REGVAR("editing", 1, 0, 0);
+REGVAR("selectcorners", 0, 0, 1);
+REGVAR("hmapedit", 0, 0, 1, ICB({ horient = sel.orient; }));
+REGVAR("gridlookup", 0, 0, 1);
+REGVAR("passthroughcube", 0, 1, 1);
+REGVAR("undomegs", 0, 5, 100, NULL, true); // bounded by n megs
+REGVAR("nompedit", 0, 1, 1, NULL, true);
+REGVAR("brushx", 0, MAXBRUSH2, MAXBRUSH);
+REGVAR("brushy", 0, MAXBRUSH2, MAXBRUSH);
+REGVAR("bypassheightmapcheck", 0, 0, 1, NULL, true); // temp
+REGVAR("invalidcubeguard", 0, 1, 1);
+REGVAR("selectionsurf", 0, 0, 1);
+REGVAR("usevdelta", 1, 0, 0);
+REGVAR("allfaces", 0, 0, 1);
+REGVAR("texguiwidth", 1, 12, 1000, NULL, true);
+REGVAR("texguiheight", 1, 8, 1000, NULL, true);
+REGVAR("texguitime", 0, 25, 1000, NULL, true);
+REGVAR("texgui2d", 0, 1, 1);
+
+#ifdef CLIENT
 // engine/shader.cpp - just for test now
 
 REGVAR("shaders", -1, -1, 1, ICB({ initwarning("shaders"); }));
 #endif
+
 /*
-engine/movie.cpp:VAR(dbgmovie, 0, 0, 1);
-engine/movie.cpp:VAR(movieaccelblit, 0, 0, 1);
-engine/movie.cpp:VAR(movieaccelyuv, 0, 1, 1);
-engine/movie.cpp:VARP(movieaccel, 0, 1, 1);
-engine/movie.cpp:VARP(moviesync, 0, 0, 1);
-engine/movie.cpp:VARP(moview, 0, 320, 10000);
-engine/movie.cpp:VARP(movieh, 0, 240, 10000);
-engine/movie.cpp:VARP(moviefps, 1, 24, 1000);
-engine/movie.cpp:VARP(moviesound, 0, 1, 1);
-engine/normal.cpp:VARR(lerpangle, 0, 44, 180);
-engine/normal.cpp:VARR(lerpsubdiv, 0, 2, 4);
-engine/normal.cpp:VARR(lerpsubdivsize, 4, 4, 128);
-engine/octa.cpp:VAR(mipvis, 0, 0, 1);
-engine/octa.cpp:VAR(minface, 0, 1, 1);
-engine/octa.cpp:VAR(maxmerge, 0, 6, 12);
-engine/octaedit.cpp:VARF(dragging, 0, 0, 1,
-engine/octaedit.cpp:VARF(moving, 0, 0, 1,
-engine/octaedit.cpp:VARF(gridpower, 0, 3, 12,
-engine/octaedit.cpp:VAR(passthroughsel, 0, 0, 1);
-engine/octaedit.cpp:VAR(editing, 1, 0, 0);
-engine/octaedit.cpp:VAR(selectcorners, 0, 0, 1);
-engine/octaedit.cpp:VARF(hmapedit, 0, 0, 1, horient = sel.orient);
-engine/octaedit.cpp:VAR(gridlookup, 0, 0, 1);
-engine/octaedit.cpp:VAR(passthroughcube, 0, 1, 1);
-engine/octaedit.cpp:VARP(undomegs, 0, 5, 100);                              // bounded by n megs
-engine/octaedit.cpp:VARP(nompedit, 0, 1, 1);
-engine/octaedit.cpp:VAR(brushx, 0, MAXBRUSH2, MAXBRUSH);
-engine/octaedit.cpp:VAR(brushy, 0, MAXBRUSH2, MAXBRUSH);
-engine/octaedit.cpp:VARP(bypassheightmapcheck, 0, 0, 1);    // temp
-engine/octaedit.cpp:VAR(invalidcubeguard, 0, 1, 1);
-engine/octaedit.cpp:VAR(selectionsurf, 0, 0, 1);
-engine/octaedit.cpp:VAR(usevdelta, 1, 0, 0);
-engine/octaedit.cpp:VAR(allfaces, 0, 0, 1);
-engine/octaedit.cpp:VARP(texguiwidth, 1, 12, 1000);
-engine/octaedit.cpp:VARP(texguiheight, 1, 8, 1000);
-engine/octaedit.cpp:VARP(texguitime, 0, 25, 1000);
-engine/octaedit.cpp:VARP(texgui2d, 0, 1, 1);
 engine/octarender.cpp:VAR(printvbo, 0, 0, 1);
 engine/octarender.cpp:VARFN(vbosize, maxvbosize, 0, 1<<14, 1<<16, allchanged());
 engine/octarender.cpp:VARFP(filltjoints, 0, 1, 1, allchanged());

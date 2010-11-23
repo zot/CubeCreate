@@ -38,6 +38,8 @@ function _VARS:reg(var, skipReg)
 				var:chng(oval, val)
 			end
 			CAPI.syncVariableFromLua(var.name, tostring(var), val)
+		--else
+			--CAPI.syncVariableFromLua(var.name, tostring(var), var.curv) -- run the callback anyway, sync with the same value
 		end
 	end, var)
 	if not skipReg then CAPI.registerVariableFromLua(var.name, tostring(var), var.minv, var.curv, var.maxv) end -- in order to simplify things, no need to pass minv, maxv
@@ -54,7 +56,7 @@ end
 EV = _VARS()
 
 _VAR = class()
-function _VAR:__init(name, minv, curv, maxv, onchange)
+function _VAR:__init(name, minv, curv, maxv, onchange, readonly)
 	assert(name, "Cannot register variable: name is missing.")
 	assert(curv, "Cannot register variable: no value set.")
 	self.name = name
@@ -62,17 +64,23 @@ function _VAR:__init(name, minv, curv, maxv, onchange)
 	self.maxv = maxv
 	self.curv = curv
 	self.chng = onchange
+	self.read = readonly
 end
 
 IVAR = class(_VAR)
 function IVAR:__tostring() return "IVAR" end
-function IVAR:__init(name, minv, curv, maxv)
+function IVAR:__init(name, minv, curv, maxv, readonly)
 	assert(type(minv) == "number" and type(curv) == "number" and type(maxv) == "number", "Wrong value type provided to IVAR.")
-	self[_VAR].__user_init(self, name, minv, curv, maxv, nil)
+	self[_VAR].__user_init(self, name, minv, curv, maxv, nil, readonly)
 end
 function IVAR:isInReach(v)
+	if self.read then
+		log(ERROR, "Variable is read only.")
+		return false
+	end
 	if type(v) ~= "number" then
 		log(ERROR, "Wrong value type passed to variable.")
+		return false
 	end
 	if v < self.minv or v > self.maxv then
 		log(ERROR, "Variable accepts only values of range " .. self.minv .. " to " .. self.maxv)
@@ -83,10 +91,10 @@ end
 
 IVARF = class(IVAR)
 function IVARF:__tostring() return "IVARF" end
-function IVARF:__init(name, minv, curv, maxv, onchange)
+function IVARF:__init(name, minv, curv, maxv, onchange, readonly)
 	assert(type(minv) == "number" and type(curv) == "number" and type(maxv) == "number", "Wrong value type provided to IVARF.")
 	assert(onchange and type(onchange) == "function", "Wrong type of onchange callback to IVARF.")
-	self[_VAR].__user_init(self, name, minv, curv, maxv, onchange)
+	self[_VAR].__user_init(self, name, minv, curv, maxv, onchange, readonly)
 end
 
 FVAR = class(IVAR)
@@ -113,7 +121,7 @@ function SVARF:__tostring() return "SVARF" end
 function SVARF:__init(name, curv, onchange)
 	assert(type(curv) == "string", "Wrong value type provided to SVARF.")
 	assert(onchange and type(onchange) == "function", "Wrong type of onchange callback to SVARF.")
-	self[_VAR].__user_init(self, name, nil, curv, nil, onchange)
+	self[_VAR].__user_init(self, name, nil, curv, nil, onchange, false)
 end
 
 function ivar  (name, ...) EV:r("IVAR",   name, ...) end
