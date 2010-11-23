@@ -443,6 +443,8 @@ extern const char *addreleaseaction(const char *s);
 extern JSONObject writebinds();
 extern JSONObject writecompletions();
 
+struct cline { char *line; int type, outtime; };
+
 // main
 enum
 {

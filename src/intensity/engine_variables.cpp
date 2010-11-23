@@ -178,19 +178,19 @@ void EngineVariable::callCB(bool luaSync)
 	{
 		case 'I':
 		{
-			if (hasCB) intCB(anyint(minv), anyint(maxv), anyint(prev), anyint(curv));
+			if (hasCB && !luaSync) intCB(anyint(minv), anyint(maxv), anyint(prev), anyint(curv));
 			SYNCV(anyint(curv));
 			break;
 		}
 		case 'F':
 		{
-			if (hasCB) doubleCB(anydouble(minv), anydouble(maxv), anydouble(prev), anydouble(curv));
+			if (hasCB && !luaSync) doubleCB(anydouble(minv), anydouble(maxv), anydouble(prev), anydouble(curv));
 			SYNCV(anydouble(curv));
 			break;
 		}
 		case 'S':
 		{
-			if (hasCB) stringCB(anystring(prev), anystring(curv));
+			if (hasCB && !luaSync) stringCB(anystring(prev), anystring(curv));
 			SYNCV(anystring(curv));
 			break;
 		}

@@ -4,8 +4,6 @@
 
 #include "client_engine_additions.h" // INTENSITY
 
-
-struct cline { char *line; int type, outtime; };
 vector<cline> conlines;
 
 int commandmillis = -1;

@@ -324,5 +324,41 @@ private:
 #define REGVAR(name, ...) EngineVariables::reg(name, EngineVariablePtr(new EngineVariable(name, __VA_ARGS__)))
 
 /**
+ * @def ICB
+ * @brief Macro for making lambda callback creation easier.
+ * @param code The code used as body of lambda function.
+ * 
+ * This creates a lambda function callback for integer variables, letting @p code get min, max, prev and cur values.
+ * @code
+ * REGVAR("foo", 0, 1, 2, ICB({ foo }));
+ * @endcode
+ */
+#define ICB(code) _lambda_(_UNUSED_ int min, _UNUSED_ int max, _UNUSED_ int prev, _UNUSED_ int cur) code
+
+/**
+ * @def FCB
+ * @brief Macro for making lambda callback creation easier.
+ * @param code The code used as body of lambda function.
+ * 
+ * This creates a lambda function callback for double variables, letting @p code get min, max, prev and cur values.
+ * @code
+ * REGVAR("foo", 0.1, 1.3, 5.1, FCB({ foo }));
+ * @endcode
+ */
+#define FCB(code) _lambda_(_UNUSED_ double min, _UNUSED_ double max, _UNUSED_ double prev, _UNUSED_ double cur) code
+
+/**
+ * @def SCB
+ * @brief Macro for making lambda callback creation easier.
+ * @param code The code used as body of lambda function.
+ * 
+ * This creates a lambda function callback for string variables, letting @p code get prev and cur values.
+ * @code
+ * REGVAR("foo", "bar", SCB({ foo }));
+ * @endcode
+ */
+#define SCB(code) _lambda_(_UNUSED_ const std::string& prev, _UNUSED_ const std::string& cur) code
+
+/**
  * @}
  */
