@@ -587,11 +587,7 @@ void setfullscreen(bool enable)
 #endif
 }
 
-#ifdef _DEBUG
 VARF(fullscreen, 0, 0, 1, setfullscreen(fullscreen!=0));
-#else
-VARF(fullscreen, 0, 0, 1, setfullscreen(fullscreen!=0)); // INTENSITY: To be safe, non-fullscreen even when not debugging
-#endif
 
 void setScreenScriptValues() // INTENSITY: New function
 {
@@ -634,9 +630,6 @@ void screenres(int *w, int *h)
 
 COMMAND(screenres, "ii");
 
-#ifdef INTENSITY_PLUGIN // INTENSITY
-int gamma = 100; // INTENSITY: Otherwise as a shared library the other way will crash us
-#else
 VARFP(gamma, 30, 100, 300,
 {
     float f = gamma/100.0f;
@@ -646,7 +639,6 @@ VARFP(gamma, 30, 100, 300,
         conoutf(CON_ERROR, "sdl: %s", SDL_GetError());
     }
 });
-#endif // INTENSITY
 
 void resetgamma()
 {
@@ -1155,7 +1147,7 @@ static bool findarg(int argc, char **argv, const char *str)
 }
 
 int clockrealbase = 0, clockvirtbase = 0; // INTENSITY: Removed 'static'
-static void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = totalmillis; }
+void clockreset() { clockrealbase = SDL_GetTicks(); clockvirtbase = totalmillis; }
 VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
 VARFP(clockfix, 0, 0, 1, clockreset());
 

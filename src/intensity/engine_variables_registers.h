@@ -184,47 +184,73 @@ REGVAR("convertlms", 0, 1, 1, ICB({ cleanuplightmaps(); initlights(); allchanged
 REGVAR("roundlightmaptex", 0, 4, 16, ICB({ cleanuplightmaps(); initlights(); allchanged(); }));
 REGVAR("batchlightmaps", 0, 4, 256, ICB({ cleanuplightmaps(); initlights(); allchanged(); }));
 
+// engine/lightning.h
+
+REGVAR("lnjittermillis", 0, 100, 1000);
+REGVAR("lnjitterradius", 0, 4, 100);
+REGVAR("lnjitterscale", 0.0f, 0.5f, 10.0f);
+REGVAR("lnscrollmillis", 1, 300, 5000);
+REGVAR("lnscrollscale", 0.0f, 0.125f, 10.0f);
+REGVAR("lnblendpower", 0.0f, 0.25f, 1000.0f);
+
+// engine/main.cpp
+
+// TODO: remove those defines
+#define SCR_MINW 320
+#define SCR_MINH 200
+#define SCR_MAXW 10000
+#define SCR_MAXH 10000
+
+void setfullscreen(bool enable);
+void clockreset();
+
+REGVAR("scr_w", SCR_MINW, -1, SCR_MAXW, ICB({ initwarning("screen resolution"); }));
+REGVAR("scr_h", SCR_MINH, -1, SCR_MAXH, ICB({ initwarning("screen resolution"); }));
+REGVAR("colorbits", 0, 0, 32, ICB({ initwarning("color depth"); }));
+REGVAR("depthbits", 0, 0, 32, ICB({ initwarning("depth-buffer precision"); }));
+REGVAR("stencilbits", 0, 0, 32, ICB({ initwarning("stencil-buffer precision"); }));
+REGVAR("fsaa", -1, -1, 16, ICB({ initwarning("anti-aliasing"); }));
+REGVAR("vsync", -1, -1, 1, ICB({ initwarning("vertical sync"); }));
+REGVAR("fullscreen", 0, 0, 1, ICB({ setfullscreen(cur!=0); }));
+REGVAR("gamma", 30, 100, 300, ICB({
+    float f = cur/100.0f;
+    if(SDL_SetGamma(f,f,f)==-1)
+    {
+        conoutf(CON_ERROR, "Could not set gamma (card/driver doesn't support it?)");
+        conoutf(CON_ERROR, "sdl: %s", SDL_GetError());
+    }
+}), true);
+REGVAR("dbgmodes", 0, 0, 1);
+REGVAR("iskeydown", 0, 0, 1);
+REGVAR("iskeyup", 0, 0, 1);
+REGVAR("ismousedown", 0, 0, 1);
+REGVAR("ismouseup", 0, 0, 1);
+REGVAR("gamespeed", 10, 100, 1000, ICB({ if(multiplayer()) EngineVariables::get("gamespeed").get()->set(100); }));
+REGVAR("paused", 0, 0, 1, ICB({ if(multiplayer()) EngineVariables::get("paused").get()->set(0); }));
+REGVAR("mainmenufps", 0, 60, 1000);
+REGVAR("maxfps", 0, 100, 1000, NULL, true);
+REGVAR("clockerror", 990000, 1000000, 1010000, ICB({ clockreset(); }), true);
+REGVAR("clockfix", 0, 0, 1, ICB({ clockreset(); }), true);
+
+// engine/material.cpp
+
+REGVAR("optmats", 0, 1, 1, ICB({ allchanged(); }));
+REGVAR("showmat", 0, 1, 1, NULL, true);
+REGVAR("glassenv", 0, 1, 1, NULL, true);
+REGVAR("waterfallenv", 0, 1, 1, ICB({ preloadwatershaders(); }), true);
+
+// engine/menus.cpp
+
+REGVAR("menudistance", 16, 10, 256, NULL, true);
+REGVAR("menuautoclose", 32, 120, 4096, NULL, true);
+REGVAR("applydialog", 0, 1, 1, NULL, true);
+REGVAR("mainmenu", 0, 1, 1);
 
 // engine/shader.cpp - just for test now
 
 REGVAR("shaders", -1, -1, 1, ICB({ initwarning("shaders"); }));
 #endif
 /*
-engine/lightning.h:VAR(lnjittermillis, 0, 100, 1000);
-engine/lightning.h:VAR(lnjitterradius, 0, 4, 100);
-engine/lightning.h:FVAR(lnjitterscale, 0, 0.5f, 10);
-engine/lightning.h:VAR(lnscrollmillis, 1, 300, 5000);
-engine/lightning.h:FVAR(lnscrollscale, 0, 0.125f, 10);
-engine/lightning.h:FVAR(lnblendpower, 0, 0.25f, 1000);
-engine/main.cpp:VARF(scr_w, SCR_MINW, -1, SCR_MAXW, initwarning("screen resolution"));
-engine/main.cpp:VARF(scr_h, SCR_MINH, -1, SCR_MAXH, initwarning("screen resolution"));
-engine/main.cpp:VARF(colorbits, 0, 0, 32, initwarning("color depth"));
-engine/main.cpp:VARF(depthbits, 0, 0, 32, initwarning("depth-buffer precision"));
-engine/main.cpp:VARF(stencilbits, 0, 0, 32, initwarning("stencil-buffer precision"));
-engine/main.cpp:VARF(fsaa, -1, -1, 16, initwarning("anti-aliasing"));
-engine/main.cpp:VARF(vsync, -1, -1, 1, initwarning("vertical sync"));
-engine/main.cpp:VARF(fullscreen, 0, 0, 1, setfullscreen(fullscreen!=0));
-engine/main.cpp:VARF(fullscreen, 0, 0, 1, setfullscreen(fullscreen!=0)); // INTENSITY: To be safe, non-fullscreen even when not debugging
-engine/main.cpp:VARFP(gamma, 30, 100, 300,
-engine/main.cpp:VAR(dbgmodes, 0, 0, 1);
-engine/main.cpp:VAR(iskeydown, 0, 0, 1);
-engine/main.cpp:VAR(iskeyup, 0, 0, 1);
-engine/main.cpp:VAR(ismousedown, 0, 0, 1);
-engine/main.cpp:VAR(ismouseup, 0, 0, 1);
-engine/main.cpp:VARF(gamespeed, 10, 100, 1000, if(multiplayer()) gamespeed = 100);
-engine/main.cpp:VARF(paused, 0, 0, 1, if(multiplayer()) paused = 0);
-engine/main.cpp:VAR(mainmenufps, 0, 60, 1000);
-engine/main.cpp:VARP(maxfps, 0, 100, 1000); // INTENSITY: Was 200 (causes movement stutter)
-engine/main.cpp:VARFP(clockerror, 990000, 1000000, 1010000, clockreset());
-engine/main.cpp:VARFP(clockfix, 0, 0, 1, clockreset());
-engine/material.cpp:VARF(optmats, 0, 1, 1, allchanged());
-engine/material.cpp:VARP(showmat, 0, 1, 1);
-engine/material.cpp:VARP(glassenv, 0, 1, 1);
-engine/material.cpp:VARFP(waterfallenv, 0, 1, 1, preloadwatershaders());
-engine/menus.cpp:VARP(menudistance,  16, 40,  256);
-engine/menus.cpp:VARP(menuautoclose, 32, 120, 4096);
-engine/menus.cpp:VARP(applydialog, 0, 1, 1);
-engine/menus.cpp:VAR(mainmenu, 1, 1, 0);
 engine/movie.cpp:VAR(dbgmovie, 0, 0, 1);
 engine/movie.cpp:VAR(movieaccelblit, 0, 0, 1);
 engine/movie.cpp:VAR(movieaccelyuv, 0, 1, 1);
