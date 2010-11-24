@@ -785,7 +785,8 @@ VAR(avatarzoomfov, 10, 25, 60);
 VAR(avatarfov, 10, 65, 150);
 FVAR(avatardepth, 0, 0.5f, 1);
 
-static int zoommillis = 0;
+// CubeCreate: remove static
+int zoommillis = 0;
 VARF(zoom, -1, 0, 1,
     if(zoom) zoommillis = totalmillis;
 );

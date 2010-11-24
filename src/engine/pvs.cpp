@@ -940,7 +940,8 @@ static inline pvsdata *lookupviewcell(const vec &p)
     return NULL;
 }
 
-static void lockpvs_(bool lock)
+// CubeCreate: removed static
+void lockpvs_(bool lock)
 {
     if(lockedpvs) DELETEA(lockedpvs);
     if(!lock) return;

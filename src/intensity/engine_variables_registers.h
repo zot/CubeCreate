@@ -323,6 +323,255 @@ REGVAR("texguiheight", 1, 8, 1000, NULL, true);
 REGVAR("texguitime", 0, 25, 1000, NULL, true);
 REGVAR("texgui2d", 0, 1, 1);
 
+// engine/octarender.cpp
+
+REGVAR("printvbo", 0, 0, 1);
+REGVAR("vbosize", 0, 1<<14, 1<<16, ICB({ allchanged(); })); // globalname was maxvbosize
+REGVAR("filltjoints", 0, 1, 1, ICB({ allchanged(); }), true);
+REGVAR("vacubemax", 64, 512, 256*256, ICB({ allchanged(); }));
+REGVAR("vacubesize", 32, 128, 0x1000, ICB({ allchanged(); }));
+REGVAR("vacubemin", 0, 128, 256*256, ICB({ allchanged(); }));
+
+// engine/physics.cpp
+
+REGVAR("dynentsize", 4, 7, 12, ICB({ cleardynentcache(); }));
+REGVAR("maxroll", 0, 3, 20, NULL, true);
+REGVAR("straferoll", 0.0f, 0.033f, 90.0f);
+REGVAR("floatspeed", 10, 100, 1000);
+REGVAR("physicsinterp", 0, 1, 1);
+
+// engine/pvs.cpp
+
+void lockpvs_(bool lock);
+
+REGVAR("maxpvsblocker", 1, 512, 1<<16);
+REGVAR("pvsleafsize", 1, 64, 1024);
+REGVAR("pvsthreads", 1, 1, 16, NULL, true);
+REGVAR("lockpvs", 0, 0, 1, ICB({ lockpvs_(curv!=0); }));
+REGVAR("pvs", 0, 1, 1); // globalname was usepvs
+REGVAR("waterpvs", 0, 1, 1); // globalname was usewaterpvs
+
+// engine/ragdoll.h
+
+REGVAR("ragdolltimestepmin", 1, 5, 50);
+REGVAR("ragdolltimestepmax", 1, 10, 50);
+REGVAR("ragdollrotfric", 0.0f, 0.85f, 1.0f);
+REGVAR("ragdollrotfricstop", 0.0f, 0.1f, 1.0f);
+REGVAR("ragdollconstrain", 1, 5, 100);
+REGVAR("ragdollbodyfric", 0.0f, 0.95f, 1.0f);
+REGVAR("ragdollbodyfricscale", 0.0f, 2.0f, 10.0f);
+REGVAR("ragdollwaterfric", 0.0f, 0.85f, 1.0f);
+REGVAR("ragdollgroundfric", 0.0f, 0.8f, 1.0f);
+REGVAR("ragdollairfric", 0.0f, 0.996f, 1.0f);
+REGVAR("ragdollexpireoffset", 0, 1500, 30000);
+REGVAR("ragdollwaterexpireoffset", 0, 3000, 30000);
+REGVAR("ragdolleyesmooth", 0.0f, 0.5f, 1.0f);
+REGVAR("ragdolleyesmoothmillis", 1, 250, 10000);
+
+// engine/rendergl.cpp
+
+#ifdef CLIENT
+extern int zoommillis, damageblendmillis;
+extern bvec fogcolor;
+extern bvec minimapcolor;
+extern GLuint minimaptex;
+void cleanupmotionblur();
+
+REGVAR("renderpath", 1, 0, 0);
+REGVAR("ati_skybox_bug", 0, 0, 1, NULL, true);
+REGVAR("ati_oq_bug", 0, 0, 1);
+REGVAR("ati_minmax_bug", 0, 0, 1);
+REGVAR("ati_dph_bug", 0, 0, 1);
+REGVAR("ati_teximage_bug", 0, 0, 1);
+REGVAR("ati_line_bug", 0, 0, 1);
+REGVAR("ati_cubemap_bug", 0, 0, 1);
+REGVAR("ati_ubo_bug", 0, 0, 1);
+REGVAR("nvidia_scissor_bug", 0, 0, 1);
+REGVAR("apple_glsldepth_bug", 0, 0, 1);
+REGVAR("apple_ff_bug", 0, 0, 1);
+REGVAR("apple_vp_bug", 0, 0, 1);
+REGVAR("sdl_backingstore_bug", -1, 0, 1);
+REGVAR("intel_quadric_bug", 0, 0, 1);
+REGVAR("mesa_program_bug", 0, 0, 1);
+REGVAR("avoidshaders", 1, 0, 0);
+REGVAR("minimizetcusage", 1, 0, 0);
+REGVAR("emulatefog", 1, 0, 0);
+REGVAR("usevp2", 1, 0, 0);
+REGVAR("usevp3", 1, 0, 0);
+REGVAR("usetexrect", 1, 0, 0);
+REGVAR("hasglsl", 1, 0, 0);
+REGVAR("useubo", 1, 0, 0);
+REGVAR("usebue", 1, 0, 0);
+REGVAR("rtscissor", 0, 1, 1);
+REGVAR("blurtile", 0, 1, 1);
+REGVAR("rtsharefb", 0, 1, 1);
+REGVAR("dbgexts", 0, 0, 1);
+REGVAR("wireframe", 0, 0, 1);
+REGVAR("zoominvel", 0, 250, 5000, NULL, true);
+REGVAR("zoomoutvel", 0, 100, 5000, NULL, true);
+REGVAR("zoomfov", 10, 35, 60, NULL, true);
+REGVAR("fov", 10, 100, 150, NULL, true);
+REGVAR("avatarzoomfov", 10, 25, 60);
+REGVAR("avatarfov", 10, 65, 150);
+REGVAR("avatardepth", 0.0f, 0.5f, 1.0f);
+REGVAR("zoom", -1, 0, 1, ICB({ if(curv) zoommillis = totalmillis; }));
+REGVAR("zoomsens", 1e-3f, 1.0f, 1000.0f, NULL, true);
+REGVAR("zoomaccel", 0.0f, 0.0f, 1000.0f, NULL, true);
+REGVAR("zoomautosens", 0, 1, 1, NULL, true);
+REGVAR("sensitivity", 1e-3f, 3.0f, 1000.0f, NULL, true);
+REGVAR("sensitivityscale", 1e-3f, 1.0f, 1000.0f, NULL, true);
+REGVAR("invmouse", 0, 0, 1, NULL, true);
+REGVAR("mouseaccel", 0.0f, 0.0f, 1000.0f, NULL, true);
+REGVAR("thirdperson", 0, 0, 2);
+REGVAR("thirdpersondistance", 0.0f, 20.0f, 1000.0f);
+REGVAR("nearplane", 1e-3f, 0.54f, 1e3f);
+REGVAR("reflectclip", 0, 6, 64);
+REGVAR("reflectclipavatar", -64, 0, 64);
+REGVAR("polygonoffsetfactor", -1e4f, -3.0f, 1e4f);
+REGVAR("polygonoffsetunits", -1e4f, -3.0f, 1e4f);
+REGVAR("depthoffset", -1e4f, -0.01f, 1e4f);
+REGVAR("fog", 16, 4000, 1000024); // override
+REGVAR("fogcolour", 0, 0x8099B3, 0xFFFFFF, ICB({ fogcolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF); })); // override
+REGVAR("skyboxglare", 0, 1, 1, NULL, true);
+REGVAR("reflectmms", 0, 1, 1, NULL, true);
+REGVAR("refractsky", 0, 0, 1); // override
+REGVAR("minimapheight", 0, 0, 2<<16); // override
+REGVAR("minimapcolour", 0, 0, 0xFFFFFF, ICB({ minimapcolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF); })); // override
+REGVAR("minimapclip", 0, 0, 1); // override
+REGVAR("minimapsize", 7, 8, 10, ICB({ if (minimaptex) drawminimap(); }), true);
+REGVAR("motionblur", 0, 0, 1, ICB({ if (!curv) cleanupmotionblur(); }), true);
+REGVAR("motionblurmillis", 1, 5, 1000, NULL, true);
+REGVAR("motionblurscale", 0.0f, 0.5f, 1.0f, NULL, true);
+REGVAR("damagecompass", 0, 1, 1, NULL, true); // globalname was usedamagecompass
+REGVAR("damagecompassfade", 1, 1000, 10000, NULL, true);
+REGVAR("damagecompasssize", 1, 30, 100, NULL, true);
+REGVAR("damagecompassalpha", 1, 25, 100, NULL, true);
+REGVAR("damagecompassmin", 1, 25, 1000, NULL, true);
+REGVAR("damagecompassmax", 1, 200, 1000, NULL, true);
+REGVAR("damagescreen", 0, 1, 1, ICB({ if (!curv) damageblendmillis = 0; }), true);
+REGVAR("damagescreenfactor", 1, 7, 100, NULL, true);
+REGVAR("damagescreenalpha", 1, 45, 100, NULL, true);
+REGVAR("damagescreenfade", 0, 125, 1000, NULL, true);
+REGVAR("damagescreenmin", 1, 10, 1000, NULL, true);
+REGVAR("damagescreenmax", 1, 100, 1000, NULL, true);
+REGVAR("hidestats", 0, 0, 1);
+REGVAR("hidehud", 0, 0, 1);
+REGVAR("crosshairsize", 0, 15, 50, NULL, true);
+REGVAR("cursorsize", 0, 30, 50, NULL, true);
+REGVAR("crosshairfx", 0, 1, 1, NULL, true);
+REGVAR("wallclock", 0, 0, 1, NULL, true);
+REGVAR("wallclock24", 0, 0, 1, NULL, true);
+REGVAR("wallclocksecs", 0, 0, 1, NULL, true);
+REGVAR("showfps", 0, 1, 1, NULL, true);
+REGVAR("showfpsrange", 0, 0, 1, NULL, true);
+REGVAR("showeditstats", 0, 0, 1);
+REGVAR("statrate", 1, 200, 1000);
+REGVAR("conscale", 1e-3f, 0.33f, 1e3f, NULL, true);
+#endif
+
+// engine/rendermodel.cpp
+
+REGVAR("oqdynent", 0, 1, 1, NULL, true);
+REGVAR("animationinterpolationtime", 0, 150, 1000, NULL, true);
+REGVAR("showboundingbox", 0, 0, 2);
+REGVAR("modeltweaks", 0, 0, 1); // INTENSITY: SkyManager: tweaks for models (like ambience, glow, so we can sync it with ambientlight
+REGVAR("tweakmodelspec", 0.0f, 1.0f, 100.0f);
+REGVAR("tweakmodelambient", 0.0f, 1.0f, 100.0f);
+REGVAR("tweakmodelglow", 0.0f, 1.0f, 100.0f);
+REGVAR("tweakmodelspecglare", 0.0f, 1.0f, 100.0f);
+REGVAR("tweakmodelglowglare", 0.0f, 1.0f, 100.0f);
+REGVAR("tweakmodelscale", 0.001f, 1.0f, 100.0f); // override // end INTENSITY
+REGVAR("maxmodelradiusdistance", 10, 200, 1000, NULL, true);
+REGVAR("animoverride", -1, 0, NUMANIMS-1);
+REGVAR("testanims", 0, 0, 1);
+REGVAR("testpitch", -90, 0, 90);
+#ifdef CLIENT
+// engine/renderparticles.cpp
+
+REGVAR("particlesize", 20, 100, 500, NULL, true);
+REGVAR("emitmillis", 1, 17, 1000, NULL, true);
+REGVAR("dbgpseed", 0, 0, 1);
+REGVAR("outlinemeters", 0, 0, 1, NULL, true);
+REGVAR("maxparticles", 10, 4000, 40000, ICB({ particleinit(); }), true);
+REGVAR("fewparticles", 10, 100, 40000, ICB({ particleinit(); }), true);
+REGVAR("particleglare", 0, 2, 100, NULL, true);
+REGVAR("debugparticles", 0, 0, 1);
+REGVAR("maxparticledistance", 256, 1024, 4096, NULL, true);
+REGVAR("maxtrail", 1, 500, 10000, NULL, true);
+REGVAR("particletext", 0, 1, 1, NULL, true);
+REGVAR("maxparticletextdistance", 0, 128, 10000, NULL, true);
+REGVAR("showparticles", 0, 1, 1, NULL, true);
+REGVAR("cullparticles", 0, 1, 1);
+REGVAR("replayparticles", 0, 1, 1);
+REGVAR("seedparticles", 0, 3000, 10000); // globalname was seedmillis
+REGVAR("dbgpcull", 0, 0, 1);
+REGVAR("editpartsize", 0.0f, 2.0f, 100.0f, ICB({ particleinit(); }), true);
+
+// engine/rendersky.cpp
+
+extern Texture *sky[6], *clouds[6], *stars[6], *sun[6];
+extern Texture *cloudoverlay, *altcloudoverlay;
+void loadsky(const char *basename, Texture *texs[6]);
+Texture *loadskyoverlay(const char *basename);
+extern bvec fogdomecolor;
+
+REGVAR("starbox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), stars); })); // override // INTENSITY: SkyManager: various star and sun variables
+REGVAR("starboxtint", 0, 0xFFFFFF, 0xFFFFFF); // override
+REGVAR("spinstars", -720.0f, 0.0f, 720.0f); // override
+REGVAR("yawstars", 0, 0, 360); // override // end INTENSITY
+REGVAR("skybox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), sky); })); // override
+REGVAR("skyboxalpha", 0.0f, 0.999f, 1.0f); // override // INTENSITY: Less than one so it won't occlude and cause starbox to be culled.
+REGVAR("skyboxtint", 0, 0xFFFFFF, 0xFFFFFF); // INTENSITY: was skyboxcolour
+REGVAR("spinsky", -720.0f, 0.0f, 720.0f); // override
+REGVAR("yawsky", 0, 0, 360); // override
+REGVAR("sunbox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), sun); })); // override
+REGVAR("sunboxalpha", 0.0f, 1.0f, 1.0f); // override
+REGVAR("sunboxtint", 0, 0xFFFFFF, 0xFFFFFF); // override
+REGVAR("spinsun", -720.0f, 0.0f, 720.0f); // override
+REGVAR("yawsun", 0, 0, 360, ICB({ skymillis = 1; })); // override
+REGVAR("cloudbox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), clouds); })); // override
+REGVAR("cloudboxalpha", 0.0f, 0.999f, 1.0f); // override // INTENSITY: was 1
+REGVAR("cloudboxtint", 0, 0xFFFFFF, 0xFFFFFF); // override
+REGVAR("spinclouds", -720.0f, 0.0f, 720.0f); // override
+REGVAR("yawclouds", 0, 0, 360); // override
+REGVAR("cloudclip", 0.0f, 0.5f, 1.0f); // override
+REGVAR("cloudlayer", "", SCB({ if (!curv.empty()) cloudoverlay = loadskyoverlay(curv.c_str()); })); // override
+REGVAR("cloudscrollx", -16.0f, 0.0f, 16.0f); // override
+REGVAR("cloudscrolly", -16.0f, 0.0f, 16.0f); // override
+REGVAR("cloudscale", 0.001f, 1.0f, 64.0f); // override
+REGVAR("spincloudlayer", -720.0f, 0.0f, 720.0f); // override
+REGVAR("yawcloudlayer", 0, 0, 360); // override
+REGVAR("cloudheight", -1.0f, 0.2f, 1.0f); // override
+REGVAR("cloudfade", 0.0f, 0.2f, 1.0f); // override
+REGVAR("cloudalpha", 0.0f, 1.0f, 1.0f); // override
+REGVAR("cloudsubdiv", 4, 16, 64); // override
+REGVAR("cloudtint", 0, 0xFFFFFF, 0xFFFFFF); // override
+REGVAR("altcloudlayer", "", SCB({ if (!curv.empty()) altcloudoverlay = loadskyoverlay(curv.c_str()); })); // override
+REGVAR("altcloudscrollx", -16.0f, 0.0f, 16.0f); // override
+REGVAR("altcloudscrolly", -16.0f, 0.0f, 16.0f); // override
+REGVAR("altcloudscale", 0.001f, 1.0f, 64.0f); // override
+REGVAR("spinaltcloudlayer", -720.0f, 0.0f, 720.0f); // override
+REGVAR("yawaltcloudlayer", 0, 0, 360); // override
+REGVAR("altcloudheight", -1.0f, 0.1f, 1.0f); // override
+REGVAR("altcloudfade", 0.0f, 0.1f, 1.0f); // override
+REGVAR("altcloudalpha", 0.0f, 0.0f, 1.0f); // override
+REGVAR("altcloudsubdiv", 4, 16, 64); // override
+REGVAR("altcloudtint", 0, 0xFFFFFF, 0xFFFFFF); // override
+REGVAR("fogdomeheight", -1.0f, -0.5f, 1.0f); // override
+REGVAR("fogdomemin", 0.0f, 0.0f, 1.0f); // override
+REGVAR("fogdomemax", 0.0f, 0.0f, 1.0f); // override
+REGVAR("fogdomecap", 0, 1, 1); // override
+REGVAR("fogdomeclip", 0.0f, 1.0f, 1.0f); // override
+REGVAR("fogdomecolour", 0, 0, 0xFFFFFF, ICB({ fogdomecolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF); })); // override
+REGVAR("sparklyfix", 0, 0, 1, NULL, true);
+REGVAR("showsky", 0, 1, 1);
+REGVAR("clipsky", 0, 1, 1);
+REGVAR("clampsky", 0, 1, 1);
+REGVAR("fogdomeclouds", 0, 1, 1); // override
+REGVAR("skytexture", 0, 1, 1); // override // globalname was useskytexture
+
+#endif
+
 #ifdef CLIENT
 // engine/shader.cpp - just for test now
 
@@ -330,213 +579,6 @@ REGVAR("shaders", -1, -1, 1, ICB({ initwarning("shaders"); }));
 #endif
 
 /*
-engine/octarender.cpp:VAR(printvbo, 0, 0, 1);
-engine/octarender.cpp:VARFN(vbosize, maxvbosize, 0, 1<<14, 1<<16, allchanged());
-engine/octarender.cpp:VARFP(filltjoints, 0, 1, 1, allchanged());
-engine/octarender.cpp:VARF(vacubemax, 64, 512, 256*256, allchanged());
-engine/octarender.cpp:VARF(vacubesize, 32, 128, 0x1000, allchanged());
-engine/octarender.cpp:VARF(vacubemin, 0, 128, 256*256, allchanged());
-engine/physics.cpp:VARF(dynentsize, 4, 7, 12, cleardynentcache());
-engine/physics.cpp:VARP(maxroll, 0, 3, 20);
-engine/physics.cpp:FVAR(straferoll, 0, 0.033f, 90);
-engine/physics.cpp:VAR(floatspeed, 10, 100, 1000);
-engine/physics.cpp:VAR(physinterp, 0, 1, 1);
-engine/pvs.cpp:VAR(maxpvsblocker, 1, 512, 1<<16);
-engine/pvs.cpp:VAR(pvsleafsize, 1, 64, 1024);
-engine/pvs.cpp:VARP(pvsthreads, 1, 1, 16);
-engine/pvs.cpp:VARF(lockpvs, 0, 0, 1, lockpvs_(lockpvs!=0));
-engine/pvs.cpp:VARN(pvs, usepvs, 0, 1, 1);
-engine/pvs.cpp:VARN(waterpvs, usewaterpvs, 0, 1, 1);
-engine/ragdoll.h:VAR(ragdolltimestepmin, 1, 5, 50);
-engine/ragdoll.h:VAR(ragdolltimestepmax, 1, 10, 50);
-engine/ragdoll.h:FVAR(ragdollrotfric, 0, 0.85f, 1);
-engine/ragdoll.h:FVAR(ragdollrotfricstop, 0, 0.1f, 1);
-engine/ragdoll.h:VAR(ragdollconstrain, 1, 5, 100);
-engine/ragdoll.h:FVAR(ragdollbodyfric, 0, 0.95f, 1);
-engine/ragdoll.h:FVAR(ragdollbodyfricscale, 0, 2, 10);
-engine/ragdoll.h:FVAR(ragdollwaterfric, 0, 0.85f, 1);
-engine/ragdoll.h:FVAR(ragdollgroundfric, 0, 0.8f, 1);
-engine/ragdoll.h:FVAR(ragdollairfric, 0, 0.996f, 1);
-engine/ragdoll.h:VAR(ragdollexpireoffset, 0, 1500, 30000);
-engine/ragdoll.h:VAR(ragdollwaterexpireoffset, 0, 3000, 30000);
-engine/ragdoll.h:FVAR(ragdolleyesmooth, 0, 0.5f, 1);
-engine/ragdoll.h:VAR(ragdolleyesmoothmillis, 1, 250, 10000);
-engine/rendergl.cpp:VAR(renderpath, 1, 0, 0);
-engine/rendergl.cpp:VARP(ati_skybox_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(ati_oq_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(ati_minmax_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(ati_dph_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(ati_teximage_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(ati_line_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(ati_cubemap_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(ati_ubo_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(nvidia_scissor_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(apple_glsldepth_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(apple_ff_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(apple_vp_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(sdl_backingstore_bug, -1, 0, 1);
-engine/rendergl.cpp:VAR(intel_quadric_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(mesa_program_bug, 0, 0, 1);
-engine/rendergl.cpp:VAR(avoidshaders, 1, 0, 0);
-engine/rendergl.cpp:VAR(minimizetcusage, 1, 0, 0);
-engine/rendergl.cpp:VAR(emulatefog, 1, 0, 0);
-engine/rendergl.cpp:VAR(usevp2, 1, 0, 0);
-engine/rendergl.cpp:VAR(usevp3, 1, 0, 0);
-engine/rendergl.cpp:VAR(usetexrect, 1, 0, 0);
-engine/rendergl.cpp:VAR(hasglsl, 1, 0, 0);
-engine/rendergl.cpp:VAR(useubo, 1, 0, 0);
-engine/rendergl.cpp:VAR(usebue, 1, 0, 0);
-engine/rendergl.cpp:VAR(rtscissor, 0, 1, 1);
-engine/rendergl.cpp:VAR(blurtile, 0, 1, 1);
-engine/rendergl.cpp:VAR(rtsharefb, 0, 1, 1);
-engine/rendergl.cpp:VAR(dbgexts, 0, 0, 1);
-engine/rendergl.cpp:VAR(wireframe, 0, 0, 1);
-engine/rendergl.cpp:VARP(zoominvel, 0, 250, 5000);
-engine/rendergl.cpp:VARP(zoomoutvel, 0, 100, 5000);
-engine/rendergl.cpp:VARP(zoomfov, 10, 35, 60);
-engine/rendergl.cpp:VARP(fov, 10, 100, 150);
-engine/rendergl.cpp:VAR(avatarzoomfov, 10, 25, 60);
-engine/rendergl.cpp:VAR(avatarfov, 10, 65, 150);
-engine/rendergl.cpp:FVAR(avatardepth, 0, 0.5f, 1);
-engine/rendergl.cpp:VARF(zoom, -1, 0, 1,
-engine/rendergl.cpp:FVARP(zoomsens, 1e-3f, 1, 1000);
-engine/rendergl.cpp:FVARP(zoomaccel, 0, 0, 1000);
-engine/rendergl.cpp:VARP(zoomautosens, 0, 1, 1);
-engine/rendergl.cpp:FVARP(sensitivity, 1e-3f, 3, 1000);
-engine/rendergl.cpp:FVARP(sensitivityscale, 1e-3f, 1, 1000);
-engine/rendergl.cpp:VARP(invmouse, 0, 0, 1);
-engine/rendergl.cpp:FVARP(mouseaccel, 0, 0, 1000);
-engine/rendergl.cpp:VAR(thirdperson, 0, 1, 2); // INTENSITY: 3rdperson by default
-engine/rendergl.cpp:FVAR(thirdpersondistance, 0, 20, 1000);
-engine/rendergl.cpp:FVAR(nearplane, 1e-3f, 0.54f, 1e3f);
-engine/rendergl.cpp:VAR(reflectclip, 0, 6, 64);
-engine/rendergl.cpp:VAR(reflectclipavatar, -64, 0, 64);
-engine/rendergl.cpp:FVAR(polygonoffsetfactor, -1e4f, -3.0f, 1e4f);
-engine/rendergl.cpp:FVAR(polygonoffsetunits, -1e4f, -3.0f, 1e4f);
-engine/rendergl.cpp:FVAR(depthoffset, -1e4f, 0.01f, 1e4f);
-engine/rendergl.cpp:VARR(fog, 16, 4000, 1000024);
-engine/rendergl.cpp:HVARFR(fogcolour, 0, 0x8099B3, 0xFFFFFF,
-engine/rendergl.cpp:VARP(skyboxglare, 0, 1, 1);
-engine/rendergl.cpp:VARP(reflectmms, 0, 1, 1);
-engine/rendergl.cpp:VARR(refractsky, 0, 0, 1);
-engine/rendergl.cpp:VARR(minimapheight, 0, 0, 2<<16);
-engine/rendergl.cpp:HVARFR(minimapcolour, 0, 0, 0xFFFFFF,
-engine/rendergl.cpp:VARR(minimapclip, 0, 0, 1);
-engine/rendergl.cpp:VARFP(minimapsize, 7, 8, 10, { if(minimaptex) drawminimap(); });
-engine/rendergl.cpp:VARFP(motionblur, 0, 0, 1, { if(!motionblur) cleanupmotionblur(); });
-engine/rendergl.cpp:VARP(motionblurmillis, 1, 5, 1000);
-engine/rendergl.cpp:FVARP(motionblurscale, 0, 0.5f, 1);
-engine/rendergl.cpp:VARNP(damagecompass, usedamagecompass, 0, 1, 1);
-engine/rendergl.cpp:VARP(damagecompassfade, 1, 1000, 10000);
-engine/rendergl.cpp:VARP(damagecompasssize, 1, 30, 100);
-engine/rendergl.cpp:VARP(damagecompassalpha, 1, 25, 100);
-engine/rendergl.cpp:VARP(damagecompassmin, 1, 25, 1000);
-engine/rendergl.cpp:VARP(damagecompassmax, 1, 200, 1000);
-engine/rendergl.cpp:VARFP(damagescreen, 0, 1, 1, { if(!damagescreen) damageblendmillis = 0; });
-engine/rendergl.cpp:VARP(damagescreenfactor, 1, 7, 100);
-engine/rendergl.cpp:VARP(damagescreenalpha, 1, 45, 100);
-engine/rendergl.cpp:VARP(damagescreenfade, 0, 125, 1000);
-engine/rendergl.cpp:VARP(damagescreenmin, 1, 10, 1000);
-engine/rendergl.cpp:VARP(damagescreenmax, 1, 100, 1000);
-engine/rendergl.cpp:VAR(hidestats, 0, 0, 1);
-engine/rendergl.cpp:VAR(hidehud, 0, 0, 1);
-engine/rendergl.cpp:VARP(crosshairsize, 0, 15, 50);
-engine/rendergl.cpp:VARP(cursorsize, 0, 30, 50);
-engine/rendergl.cpp:VARP(crosshairfx, 0, 1, 1);
-engine/rendergl.cpp:VARP(wallclock, 0, 0, 1);
-engine/rendergl.cpp:VARP(wallclock24, 0, 0, 1);
-engine/rendergl.cpp:VARP(wallclocksecs, 0, 0, 1);
-engine/rendergl.cpp:VARP(showfps, 0, 1, 1);
-engine/rendergl.cpp:VARP(showfpsrange, 0, 0, 1);
-engine/rendergl.cpp:VAR(showeditstats, 0, 0, 1);
-engine/rendergl.cpp:VAR(statrate, 1, 200, 1000);
-engine/rendergl.cpp:FVARP(conscale, 1e-3f, 0.33f, 1e3f);
-engine/rendermodel.cpp:VARP(oqdynent, 0, 1, 1);
-engine/rendermodel.cpp:VARP(animationinterpolationtime, 0, 150, 1000);
-engine/rendermodel.cpp:VAR(showboundingbox, 0, 0, 2);
-engine/rendermodel.cpp:VAR(modeltweaks, 0, 0, 1); // INTENSITY: SkyManager: tweaks for models (like ambience, glow, so we can sync it with ambientlight
-engine/rendermodel.cpp:FVAR(tweakmodelspec, 0, 1.0, 100.0);
-engine/rendermodel.cpp:FVAR(tweakmodelambient, 0, 1.0, 100.0);
-engine/rendermodel.cpp:FVAR(tweakmodelglow, 0, 1.0, 100.0);
-engine/rendermodel.cpp:FVAR(tweakmodelspecglare, 0, 1.0, 100.0);
-engine/rendermodel.cpp:FVAR(tweakmodelglowglare, 0, 1.0, 100.0);
-engine/rendermodel.cpp:FVARR(tweakmodelscale, 0.001, 1.0, 100.0); // end INTENSITY
-engine/rendermodel.cpp:VARP(maxmodelradiusdistance, 10, 200, 1000);
-engine/rendermodel.cpp:VAR(animoverride, -1, 0, NUMANIMS-1);
-engine/rendermodel.cpp:VAR(testanims, 0, 0, 1);
-engine/rendermodel.cpp:VAR(testpitch, -90, 0, 90);
-engine/renderparticles.cpp:VARP(particlesize, 20, 100, 500);
-engine/renderparticles.cpp:VARP(emitmillis, 1, 17, 1000);
-engine/renderparticles.cpp:VAR(dbgpseed, 0, 0, 1);
-engine/renderparticles.cpp:VARP(outlinemeters, 0, 0, 1);
-engine/renderparticles.cpp:VARFP(maxparticles, 10, 4000, 40000, particleinit());
-engine/renderparticles.cpp:VARFP(fewparticles, 10, 100, 40000, particleinit());
-engine/renderparticles.cpp:VARP(particleglare, 0, 2, 100);
-engine/renderparticles.cpp:VAR(debugparticles, 0, 0, 1);
-engine/renderparticles.cpp:VARP(maxparticledistance, 256, 1024, 4096);
-engine/renderparticles.cpp:VARP(maxtrail, 1, 500, 10000);
-engine/renderparticles.cpp:VARP(particletext, 0, 1, 1);
-engine/renderparticles.cpp:VARP(maxparticletextdistance, 0, 128, 10000);
-engine/renderparticles.cpp:VARP(showparticles, 0, 1, 1);
-engine/renderparticles.cpp:VAR(cullparticles, 0, 1, 1);
-engine/renderparticles.cpp:VAR(replayparticles, 0, 1, 1);
-engine/renderparticles.cpp:VARN(seedparticles, seedmillis, 0, 3000, 10000);
-engine/renderparticles.cpp:VAR(dbgpcull, 0, 0, 1);
-engine/renderparticles.cpp:FVARFP(editpartsize, 0.0f, 2.0f, 100.0f, particleinit()); // quaker66: control size of editparticles
-engine/rendersky.cpp:SVARFR(starbox, "", { if(starbox[0]) loadsky(starbox, stars); }); // INTENSITY: SkyManager: various star and sun variables
-engine/rendersky.cpp:HVARR(starboxtint, 0, 0xFFFFFF, 0xFFFFFF);
-engine/rendersky.cpp:FVARR(spinstars, -720, 0, 720);
-engine/rendersky.cpp:VARR(yawstars, 0, 0, 360); // end INTENSITY
-engine/rendersky.cpp:SVARFR(skybox, "", { if(skybox[0]) loadsky(skybox, sky); }); 
-engine/rendersky.cpp:FVARR(skyboxalpha, 0, 0.999f, 1); // INTENSITY: Less than one so it won't occlude and cause starbox to be culled.
-engine/rendersky.cpp:HVARR(skyboxtint, 0, 0xFFFFFF, 0xFFFFFF); // INTENSITY: was skyboxcolour
-engine/rendersky.cpp:FVARR(spinsky, -720, 0, 720);
-engine/rendersky.cpp:VARR(yawsky, 0, 0, 360);
-engine/rendersky.cpp:SVARFR(sunbox, "", { if(sunbox[0]) loadsky(sunbox, sun); }); // INTENSITY: add sun stuff
-engine/rendersky.cpp:FVARR(sunboxalpha, 0, 1, 1);
-engine/rendersky.cpp:HVARR(sunboxtint, 0, 0xFFFFFF, 0xFFFFFF);
-engine/rendersky.cpp:FVARR(spinsun, -720, 0, 720);
-engine/rendersky.cpp:VARFR(yawsun, 0, 0, 360, { skymillis = 1; }); // end INTENSITY
-engine/rendersky.cpp:SVARFR(cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
-engine/rendersky.cpp:FVARR(cloudboxalpha, 0, 0.999f, 1); // INTENSITY: was 1
-engine/rendersky.cpp:HVARR(cloudboxtint, 0, 0xFFFFFF, 0xFFFFFF); // INTENSITY: was cloudboxcolour
-engine/rendersky.cpp:FVARR(spinclouds, -720, 0, 720);
-engine/rendersky.cpp:VARR(yawclouds, 0, 0, 360);
-engine/rendersky.cpp:FVARR(cloudclip, 0, 0.5f, 1);
-engine/rendersky.cpp:SVARFR(cloudlayer, "", { if(cloudlayer[0]) cloudoverlay = loadskyoverlay(cloudlayer); });
-engine/rendersky.cpp:FVARR(cloudscrollx, -16, 0, 16);
-engine/rendersky.cpp:FVARR(cloudscrolly, -16, 0, 16);
-engine/rendersky.cpp:FVARR(cloudscale, 0.001, 1, 64);
-engine/rendersky.cpp:FVARR(spincloudlayer, -720, 0, 720);
-engine/rendersky.cpp:VARR(yawcloudlayer, 0, 0, 360);
-engine/rendersky.cpp:FVARR(cloudheight, -1, 0.2f, 1);
-engine/rendersky.cpp:FVARR(cloudfade, 0, 0.2f, 1);
-engine/rendersky.cpp:FVARR(cloudalpha, 0, 1, 1);
-engine/rendersky.cpp:VARR(cloudsubdiv, 4, 16, 64);
-engine/rendersky.cpp:HVARR(cloudtint, 0, 0xFFFFFF, 0xFFFFFF); // INTENSITY: SkyManager: was cloudcolour
-engine/rendersky.cpp:SVARFR(altcloudlayer, "", { if(altcloudlayer[0]) altcloudoverlay = loadskyoverlay(altcloudlayer); }); // INTENSITY: SkyManager: added variables
-engine/rendersky.cpp:FVARR(altcloudscrollx, -16, 0, 16);
-engine/rendersky.cpp:FVARR(altcloudscrolly, -16, 0, 16);
-engine/rendersky.cpp:FVARR(altcloudscale, 0, 1, 64);
-engine/rendersky.cpp:FVARR(spinaltcloudlayer, -720, 0, 720);
-engine/rendersky.cpp:VARR(yawaltcloudlayer, 0, 0, 360);
-engine/rendersky.cpp:FVARR(altcloudheight, -1, 0.1f, 1);
-engine/rendersky.cpp:FVARR(altcloudfade, 0, 0.1f, 1);
-engine/rendersky.cpp:FVARR(altcloudalpha, 0, 0, 1);
-engine/rendersky.cpp:VARR(altcloudsubdiv, 4, 16, 64);
-engine/rendersky.cpp:HVARR(altcloudtint, 0, 0xFFFFFF, 0xFFFFFF); // end INTENSITY
-engine/rendersky.cpp:FVARR(fogdomeheight, -1, -0.5f, 1); 
-engine/rendersky.cpp:FVARR(fogdomemin, 0, 0, 1);
-engine/rendersky.cpp:FVARR(fogdomemax, 0, 0, 1);
-engine/rendersky.cpp:VARR(fogdomecap, 0, 1, 1);
-engine/rendersky.cpp:FVARR(fogdomeclip, 0, 1, 1);
-engine/rendersky.cpp:HVARFR(fogdomecolour, 0, 0, 0xFFFFFF,
-engine/rendersky.cpp:VARP(sparklyfix, 0, 0, 1);
-engine/rendersky.cpp:VAR(showsky, 0, 1, 1); 
-engine/rendersky.cpp:VAR(clipsky, 0, 1, 1);
-engine/rendersky.cpp:VAR(clampsky, 0, 1, 1);
-engine/rendersky.cpp:VARR(fogdomeclouds, 0, 1, 1);
-engine/rendersky.cpp:VARNR(skytexture, useskytexture, 0, 1, 1);
 engine/renderva.cpp:VAR(oqfrags, 0, 8, 64);
 engine/renderva.cpp:VAR(oqwait, 0, 1, 1);
 engine/renderva.cpp:VAR(oqmm, 0, 4, 8);
