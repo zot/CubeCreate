@@ -570,145 +570,209 @@ REGVAR("clampsky", 0, 1, 1);
 REGVAR("fogdomeclouds", 0, 1, 1); // override
 REGVAR("skytexture", 0, 1, 1); // override // globalname was useskytexture
 
+// engine/renderva.cpp
+
+REGVAR("oqfrags", 0, 8, 64);
+REGVAR("oqwait", 0, 1, 1);
+REGVAR("oqmm", 0, 4, 8);
+REGVAR("outline", 0, 0, 0xFFFFFF);
+REGVAR("dtoutline", 0, 1, 1);
+REGVAR("blendbrushcolor", 0, 0x0000C0, 0xFFFFFF);
+REGVAR("oqdist", 0, 256, 1024);
+REGVAR("zpass", 0, 1, 1);
+REGVAR("glowpass", 0, 1, 1);
+REGVAR("envpass", 0, 1, 1);
+REGVAR("batchgeom", 0, 1, 1);
+REGVAR("causticscale", 0, 100, 10000); // override
+REGVAR("causticmillis", 0, 75, 1000); // override
+REGVAR("caustics", 0, 1, 1, ICB({ loadcaustics(); }), true);
+REGVAR("oqgeom", 0, 1, 1);
+REGVAR("dbgffsm", 0, 0, 1);
+REGVAR("dbgffdl", 0, 0, 1);
+REGVAR("ffdlscissor", 0, 1, 1);
+#endif
+// engine/serverbrowser.cpp
+
+REGVAR("searchlan", 0, 0, 1, NULL, true);
+REGVAR("servpingrate", 1000, 5000, 60000, NULL, true);
+REGVAR("servpingdecay", 1000, 15000, 60000, NULL, true);
+REGVAR("maxservpings", 0, 10, 1000, NULL, true);
+
+// engine/server.cpp
+
+void disconnectmaster();
+
+REGVAR("updatemaster", 0, 1, 1); // globalname was allowupdatemaster
+REGVAR("mastername", std::string(server::defaultmaster()), SCB({ disconnectmaster(); }));
+REGVAR("serveruprate", 0, 0, INT_MAX);
+REGVAR("serverip", "");
+REGVAR("serverport", 0, server::serverport(), 0xFFFF, ICB({ if(!curv) EngineVariables::get("serverport").get()->set(server::serverport()); })); // not hex var
+#ifdef CLIENT
+// engine/shader.cpp
+
+void fixshaderdetail();
+
+REGVAR("reservevpparams", 1, 16, 0);
+REGVAR("maxvpenvparams", 1, 0, 0);
+REGVAR("maxvplocalparams", 1, 0, 0);
+REGVAR("maxfpenvparams", 1, 0, 0);
+REGVAR("maxfplocalparams", 1, 0, 0);
+REGVAR("maxtexcoords", 1, 0, 0);
+REGVAR("maxvsuniforms", 1, 0, 0);
+REGVAR("maxfsuniforms", 1, 0, 0);
+REGVAR("maxvaryings", 1, 0, 0);
+REGVAR("dbgshader", 0, 0, 2);
+REGVAR("dbgubo", 0, 0, 1);
+REGVAR("shaders", -1, -1, 1, ICB({ initwarning("shaders"); })); // globalname was useshaders
+REGVAR("shaderprecision", 0, 0, 2, ICB({ initwarning("shader quality"); }));
+REGVAR("reserveshadowmaptc", 1, 0, 0);
+REGVAR("reservedynlighttc", 1, 0, 0);
+REGVAR("minimizedynlighttcusage", 1, 0, 0);
+REGVAR("defershaders", 0, 1, 1);
+REGVAR("nativeshaders", 0, 1, 1, ICB({ fixshaderdetail(); }));
+REGVAR("shaderdetail", 0, MAXSHADERDETAIL, MAXSHADERDETAIL, ICB({ fixshaderdetail(); }), true);
+REGVAR("maxtmus", 1, 0, 0);
+REGVAR("nolights", 1, 0, 0);
+REGVAR("nowater", 1, 0, 0);
+REGVAR("nomasks", 1, 0, 0);
+
+// engine/shadowmap.cpp
+
+void cleanshadowmap();
+void setshadowdir(int angle);
+extern bvec shadowmapambientcolor;
+
+REGVAR("shadowmap", 0, 0, 1, NULL, true);
+REGVAR("shadowmapsize", 7, 9, 11, ICB({ cleanshadowmap(); }), true);
+REGVAR("shadowmapradius", 64, 96, 256, NULL, true);
+REGVAR("shadowmapheight", 0, 32, 128);
+REGVAR("ffshadowmapdist", 128, 1024, 4096, NULL, true);
+REGVAR("shadowmapdist", 128, 256, 512, NULL, true);
+REGVAR("fpshadowmap", 0, 0, 1, ICB({ cleanshadowmap(); }), true);
+REGVAR("shadowmapprecision", 0, 0, 1, ICB({ cleanshadowmap(); }), true);
+REGVAR("shadowmapambient", 0, 0, 0xFFFFFF, ICB({
+	int v = curv;
+    if(v <= 255) v |= (v<<8) | (v<<16);
+    shadowmapambientcolor = bvec((v>>16)&0xFF, (v>>8)&0xFF, v&0xFF);
+    EngineVariables::get("shadowmapambient").get()->set(v);
+})); // override
+REGVAR("shadowmapintensity", 0, 40, 100, NULL, true);
+REGVAR("blurshadowmap", 0, 1, 3, NULL, true);
+REGVAR("blursmsigma", 1, 100, 200, NULL, true);
+REGVAR("shadowmapcasters", 1, 0, 0);
+REGVAR("shadowmapangle", 0, 0, 360, ICB({ setshadowdir(curv); })); // override
+REGVAR("shadowmapbias", 0, 5, 1024, NULL, true);
+REGVAR("shadowmappeelbias", 0, 20, 1024, NULL, true);
+REGVAR("smdepthpeel", 0, 1, 1);
+REGVAR("smoothshadowmappeel", 1, 0, 0);
+REGVAR("ffsmscissor", 0, 1, 1);
+REGVAR("debugsm", 0, 0, 1);
+#endif
+// engine/skelmodel.h
+
+REGVAR("gpuskel", 0, 1, 1, NULL, true);
+REGVAR("matskel", 0, 1, 1, NULL, true);
+#ifdef CLIENT
+// engine/sound.cpp
+
+void stopchannels();
+void setmusicvol(int musicvol);
+// TODO: remove
+#define MIX_DEFAULT_FREQUENCY 22050
+
+REGVAR("soundvol", 0, 255, 255, ICB({ if(!curv) { stopchannels(); setmusicvol(0); } }), true);
+REGVAR("musicvol", 0, 128, 255, ICB({ setmusicvol(EngineVariables::get("soundvol").get()->getInteger() ? curv : 0); }), true);
+REGVAR("soundchans", 1, 32, 128, ICB({ initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); }));
+REGVAR("soundfreq", 0, MIX_DEFAULT_FREQUENCY, 44100, ICB({ initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); }));
+REGVAR("soundbufferlen", 128, 1024, 4096, ICB({ initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); }));
+REGVAR("uwambient", 0, 0, 1);
+REGVAR("stereo", 0, 1, 1);
+REGVAR("maxsoundradius", 0, 340, 10000, NULL, true);
+REGVAR("maxsoundsatonce", 0, 5, 100, NULL, true);
+REGVAR("dbgsound", 0, 0, 1);
+#if defined(WIN32) || defined(_POSIX_SHARED_MEMORY_OBJECTS)
+REGVAR("mumble", 0, 1, 1, ICB({ if (curv) initmumble(); else closemumble(); }), true);
+#else
+REGVAR("mumble", 0, 0, 1, ICB({ if (curv) initmumble(); else closemumble(); }), true);
 #endif
 
-#ifdef CLIENT
-// engine/shader.cpp - just for test now
+// engine/texture.cpp
 
-REGVAR("shaders", -1, -1, 1, ICB({ initwarning("shaders"); }));
+// TODO: removeme
+enum
+{
+    IMG_BMP = 0,
+    IMG_TGA = 1,
+    IMG_PNG = 2,
+    NUMIMG
+};
+
+REGVAR("hwtexsize", 1, 0, 0);
+REGVAR("hwcubetexsize", 1, 0, 0);
+REGVAR("hwmaxaniso", 1, 0, 0);
+REGVAR("maxtexsize", 0, 0, 1<<12, ICB({ initwarning("texture quality", INIT_LOAD); }), true);
+REGVAR("reducefilter", 0, 1, 1, ICB({ initwarning("texture quality", INIT_LOAD); }), true);
+REGVAR("texreduce", 0, 0, 12, ICB({ initwarning("texture quality", INIT_LOAD); }), true);
+REGVAR("texcompress", 0, 1<<10, 1<<12, ICB({ initwarning("texture quality", INIT_LOAD); }), true);
+REGVAR("texcompressquality", -1, -1, 1, ICB({ setuptexcompress(); }), true);
+REGVAR("trilinear", 0, 1, 1, ICB({ initwarning("texture filtering", INIT_LOAD); }), true);
+REGVAR("bilinear", 0, 1, 1, ICB({ initwarning("texture filtering", INIT_LOAD); }), true);
+REGVAR("aniso", 0, 0, 16, ICB({ initwarning("texture filtering", INIT_LOAD); }), true);
+REGVAR("hwmipmap", 0, 0, 1, ICB({ initwarning("texture filtering", INIT_LOAD); }), true);
+REGVAR("usenp2", 0, 0, 1, ICB({ initwarning("texture quality", INIT_LOAD); }), true);
+REGVAR("usedds", 0, 1, 1);
+REGVAR("dbgdds", 0, 0, 1);
+REGVAR("autocompactvslots", 0, 256, 0x10000, NULL, true);
+REGVAR("envmapsize", 4, 7, 10, ICB({ setupmaterials(); }), true);
+REGVAR("envmapradius", 0, 128, 10000);
+REGVAR("aaenvmap", 0, 2, 4);
+REGVAR("compresspng", 0, 9, 9, NULL, true);
+REGVAR("compresstga", 0, 1, 1, NULL, true);
+REGVAR("screenshotformat", 0, IMG_PNG, NUMIMG-1, NULL, true);
+REGVAR("screenshotdir", "", NULL, true);
+
+// engine/water.cpp
+
+extern bvec watercolor, waterfallcolor, lavacolor;
+
+REGVAR("waterreflect", 0, 1, 1, ICB({ cleanreflections(); preloadwatershaders(); }), true);
+REGVAR("waterrefract", 0, 1, 1, ICB({ cleanreflections(); preloadwatershaders(); }), true);
+REGVAR("waterenvmap", 0, 1, 1, ICB({ cleanreflections(); preloadwatershaders(); }), true);
+REGVAR("waterfallrefract", 0, 0, 1, ICB({ cleanreflections(); preloadwatershaders(); }), true);
+REGVAR("watersubdiv", 0, 2, 3, NULL, true);
+REGVAR("waterlod", 0, 1, 3, NULL, true);
+REGVAR("vertwater", 0, 1, 1, ICB({ allchanged(); }), true);
+REGVAR("reflectdist", 0, 2000, 10000, NULL, true);
+REGVAR("watercolour", 0, 0x144650, 0xFFFFFF, ICB({
+	int c = curv;
+    if(!c) c = 0x144650;
+    watercolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
+    EngineVariables::get("watercolour").get()->set(c);
+})); // override
+REGVAR("waterfog", 0, 150, 10000); // override
+REGVAR("waterfallcolour", 0, 0, 0xFFFFFF, ICB({
+	waterfallcolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF);
+})); // override
+REGVAR("lavacolour", 0, 0xFF4000, 0xFFFFFF, ICB({
+	int c = curv;
+    if(!c) c = 0xFF4000;
+    lavacolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
+    EngineVariables::get("lavacolour").get()->set(c);
+})); // override
+REGVAR("lavafog", 0, 50, 10000); // override
+REGVAR("waterspec", 0, 150, 1000); // override
+REGVAR("oqwater", 0, 2, 2);
+REGVAR("waterfade", 0, 1, 1, ICB({ cleanreflections(); preloadwatershaders(); }), true);
+REGVAR("reflectsize", 6, 8, 10, ICB({ cleanreflections(); }), true);
+REGVAR("maxreflect", 1, 1, 8, NULL, true);
+REGVAR("maskreflect", 0, 2, 16);
+REGVAR("reflectscissor", 0, 1, 1);
+REGVAR("reflectvfc", 0, 1, 1);
+REGVAR("refractclear", 0, 0, 1); // override
+
 #endif
 
 /*
-engine/renderva.cpp:VAR(oqfrags, 0, 8, 64);
-engine/renderva.cpp:VAR(oqwait, 0, 1, 1);
-engine/renderva.cpp:VAR(oqmm, 0, 4, 8);
-engine/renderva.cpp:HVAR(outline, 0, 0, 0xFFFFFF);
-engine/renderva.cpp:VAR(dtoutline, 0, 1, 1);
-engine/renderva.cpp:HVAR(blendbrushcolor, 0, 0x0000C0, 0xFFFFFF);
-engine/renderva.cpp:VAR(oqdist, 0, 256, 1024);
-engine/renderva.cpp:VAR(zpass, 0, 1, 1);
-engine/renderva.cpp:VAR(glowpass, 0, 1, 1);
-engine/renderva.cpp:VAR(envpass, 0, 1, 1);
-engine/renderva.cpp:VAR(batchgeom, 0, 1, 1);
-engine/renderva.cpp:VARR(causticscale, 0, 100, 10000);
-engine/renderva.cpp:VARR(causticmillis, 0, 75, 1000);
-engine/renderva.cpp:VARFP(caustics, 0, 1, 1, loadcaustics());
-engine/renderva.cpp:VAR(oqgeom, 0, 1, 1);
-engine/renderva.cpp:VAR(dbgffsm, 0, 0, 1);
-engine/renderva.cpp:VAR(dbgffdl, 0, 0, 1);
-engine/renderva.cpp:VAR(ffdlscissor, 0, 1, 1);
-engine/serverbrowser.cpp:VARP(searchlan, 0, 0, 1);
-engine/serverbrowser.cpp:VARP(servpingrate, 1000, 5000, 60000);
-engine/serverbrowser.cpp:VARP(servpingdecay, 1000, 15000, 60000);
-engine/serverbrowser.cpp:VARP(maxservpings, 0, 10, 1000);
-engine/server.cpp:VARN(updatemaster, allowupdatemaster, 0, 1, 1);
-engine/server.cpp:SVARF(mastername, server::defaultmaster(), disconnectmaster());
-engine/server.cpp:VAR(serveruprate, 0, 0, INT_MAX);
-engine/server.cpp:SVAR(serverip, "");
-engine/server.cpp:VARF(serverport, 0, server::serverport(), 0xFFFF, { if(!serverport) serverport = server::serverport(); });
-engine/shader.cpp:VAR(reservevpparams, 1, 16, 0);
-engine/shader.cpp:VAR(maxvpenvparams, 1, 0, 0);
-engine/shader.cpp:VAR(maxvplocalparams, 1, 0, 0);
-engine/shader.cpp:VAR(maxfpenvparams, 1, 0, 0);
-engine/shader.cpp:VAR(maxfplocalparams, 1, 0, 0);
-engine/shader.cpp:VAR(maxtexcoords, 1, 0, 0);
-engine/shader.cpp:VAR(maxvsuniforms, 1, 0, 0);
-engine/shader.cpp:VAR(maxfsuniforms, 1, 0, 0);
-engine/shader.cpp:VAR(maxvaryings, 1, 0, 0);
-engine/shader.cpp:VAR(dbgshader, 0, 0, 2);
-engine/shader.cpp:VAR(dbgubo, 0, 0, 1);
-engine/shader.cpp:VARFN(shaders, useshaders, -1, -1, 1, initwarning("shaders"));
-engine/shader.cpp:VARF(shaderprecision, 0, 0, 2, initwarning("shader quality"));
-engine/shader.cpp://VARF(forceglsl, 0, 0, 1, initwarning("shaders"));
-engine/shader.cpp:VAR(reserveshadowmaptc, 1, 0, 0);
-engine/shader.cpp:VAR(reservedynlighttc, 1, 0, 0);
-engine/shader.cpp:VAR(minimizedynlighttcusage, 1, 0, 0);
-engine/shader.cpp:VAR(defershaders, 0, 1, 1);
-engine/shader.cpp:VARF(nativeshaders, 0, 1, 1, fixshaderdetail());
-engine/shader.cpp:VARFP(shaderdetail, 0, MAXSHADERDETAIL, MAXSHADERDETAIL, fixshaderdetail());
-engine/shader.cpp:VAR(maxtmus, 1, 0, 0);
-engine/shader.cpp:VAR(nolights, 1, 0, 0);
-engine/shader.cpp:VAR(nowater, 1, 0, 0);
-engine/shader.cpp:VAR(nomasks, 1, 0, 0);
-engine/shadowmap.cpp:VARP(shadowmap, 0, 0, 1);
-engine/shadowmap.cpp:VARFP(shadowmapsize, 7, 9, 11, cleanshadowmap());
-engine/shadowmap.cpp:VARP(shadowmapradius, 64, 96, 256);
-engine/shadowmap.cpp:VAR(shadowmapheight, 0, 32, 128);
-engine/shadowmap.cpp:VARP(ffshadowmapdist, 128, 1024, 4096);
-engine/shadowmap.cpp:VARP(shadowmapdist, 128, 256, 512);
-engine/shadowmap.cpp:VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
-engine/shadowmap.cpp:VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
-engine/shadowmap.cpp:HVARFR(shadowmapambient, 0, 0, 0xFFFFFF,
-engine/shadowmap.cpp:VARP(shadowmapintensity, 0, 40, 100);
-engine/shadowmap.cpp:VARP(blurshadowmap, 0, 1, 3);
-engine/shadowmap.cpp:VARP(blursmsigma, 1, 100, 200);
-engine/shadowmap.cpp:VAR(shadowmapcasters, 1, 0, 0);
-engine/shadowmap.cpp:VARFR(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
-engine/shadowmap.cpp:VARP(shadowmapbias, 0, 5, 1024);
-engine/shadowmap.cpp:VARP(shadowmappeelbias, 0, 20, 1024);
-engine/shadowmap.cpp:VAR(smdepthpeel, 0, 1, 1);
-engine/shadowmap.cpp:VAR(smoothshadowmappeel, 1, 0, 0);
-engine/shadowmap.cpp:VAR(ffsmscissor, 0, 1, 1);
-engine/shadowmap.cpp:VAR(debugsm, 0, 0, 1);
-engine/skelmodel.h:VARP(gpuskel, 0, 1, 1);
-engine/skelmodel.h:VARP(matskel, 0, 1, 1);
-engine/sound.cpp:VARFP(soundvol, 0, 255, 255, if(!soundvol) { stopchannels(); setmusicvol(0); });
-engine/sound.cpp:VARFP(musicvol, 0, 128, 255, setmusicvol(soundvol ? musicvol : 0));
-engine/sound.cpp:VARF(soundchans, 1, 32, 128, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-engine/sound.cpp:VARF(soundfreq, 0, MIX_DEFAULT_FREQUENCY, 44100, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-engine/sound.cpp:VARF(soundbufferlen, 128, 1024, 4096, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-engine/sound.cpp:VAR(uwambient, 0, 0, 1);
-engine/sound.cpp:VAR(stereo, 0, 1, 1);
-engine/sound.cpp:VARP(maxsoundradius, 0, 340, 10000);
-engine/sound.cpp:VARP(maxsoundsatonce, 0, 5, 100);
-engine/sound.cpp:VAR(dbgsound, 0, 0, 1);
-engine/sound.cpp:VARFP(mumble, 0, 1, 1, { if(mumble) initmumble(); else closemumble(); });
-engine/sound.cpp:VARFP(mumble, 0, 0, 1, { if(mumble) initmumble(); else closemumble(); });
-engine/texture.cpp:VAR(hwtexsize, 1, 0, 0);
-engine/texture.cpp:VAR(hwcubetexsize, 1, 0, 0);
-engine/texture.cpp:VAR(hwmaxaniso, 1, 0, 0);
-engine/texture.cpp:VARFP(maxtexsize, 0, 0, 1<<12, initwarning("texture quality", INIT_LOAD));
-engine/texture.cpp:VARFP(reducefilter, 0, 1, 1, initwarning("texture quality", INIT_LOAD));
-engine/texture.cpp:VARFP(texreduce, 0, 0, 12, initwarning("texture quality", INIT_LOAD));
-engine/texture.cpp:VARFP(texcompress, 0, 1<<10, 1<<12, initwarning("texture quality", INIT_LOAD));
-engine/texture.cpp:VARFP(texcompressquality, -1, -1, 1, setuptexcompress());
-engine/texture.cpp:VARFP(trilinear, 0, 1, 1, initwarning("texture filtering", INIT_LOAD));
-engine/texture.cpp:VARFP(bilinear, 0, 1, 1, initwarning("texture filtering", INIT_LOAD));
-engine/texture.cpp:VARFP(aniso, 0, 0, 16, initwarning("texture filtering", INIT_LOAD));
-engine/texture.cpp:VARFP(hwmipmap, 0, 0, 1, initwarning("texture filtering", INIT_LOAD));
-engine/texture.cpp:VARFP(usenp2, 0, 0, 1, initwarning("texture quality", INIT_LOAD));
-engine/texture.cpp:VAR(usedds, 0, 1, 1);
-engine/texture.cpp:VAR(dbgdds, 0, 0, 1);
-engine/texture.cpp:VARP(autocompactvslots, 0, 256, 0x10000);
-engine/texture.cpp:VARFP(envmapsize, 4, 7, 10, setupmaterials());
-engine/texture.cpp:VAR(envmapradius, 0, 128, 10000);
-engine/texture.cpp:VAR(aaenvmap, 0, 2, 4);
-engine/texture.cpp:VARP(compresspng, 0, 9, 9);
-engine/texture.cpp:VARP(compresstga, 0, 1, 1);
-engine/texture.cpp:VARP(screenshotformat, 0, IMG_PNG, NUMIMG-1);
-engine/texture.cpp:SVARP(screenshotdir, "");
-engine/water.cpp:VARFP(waterreflect, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
-engine/water.cpp:VARFP(waterrefract, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
-engine/water.cpp:VARFP(waterenvmap, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
-engine/water.cpp:VARFP(waterfallrefract, 0, 0, 1, { cleanreflections(); preloadwatershaders(); });
-engine/water.cpp:VARP(watersubdiv, 0, 2, 3);
-engine/water.cpp:VARP(waterlod, 0, 1, 3);
-engine/water.cpp:VARFP(vertwater, 0, 1, 1, allchanged());
-engine/water.cpp:VARP(reflectdist, 0, 2000, 10000);
-engine/water.cpp:HVARFR(watercolour, 0, 0x144650, 0xFFFFFF,
-engine/water.cpp:VARR(waterfog, 0, 150, 10000);
-engine/water.cpp:HVARFR(waterfallcolour, 0, 0, 0xFFFFFF,
-engine/water.cpp:HVARFR(lavacolour, 0, 0xFF4000, 0xFFFFFF,
-engine/water.cpp:VARR(lavafog, 0, 50, 10000);
-engine/water.cpp:VARR(waterspec, 0, 150, 1000);
-engine/water.cpp:VAR(oqwater, 0, 2, 2);
-engine/water.cpp:VARFP(waterfade, 0, 1, 1, { cleanreflections(); preloadwatershaders(); });
-engine/water.cpp:VARFP(reflectsize, 6, 8, 10, cleanreflections());
-engine/water.cpp:VARP(maxreflect, 1, 1, 8);
-engine/water.cpp:VAR(maskreflect, 0, 2, 16);
-engine/water.cpp:VAR(reflectscissor, 0, 1, 1);
-engine/water.cpp:VAR(reflectvfc, 0, 1, 1);
-engine/water.cpp:VARR(refractclear, 0, 0, 1);
 engine/world.cpp:VARR(mapversion, 1, MAPVERSION, 0);
 engine/world.cpp:VARNR(mapscale, worldscale, 1, 0, 0);
 engine/world.cpp:VARNR(mapsize, worldsize, 1, 0, 0);
