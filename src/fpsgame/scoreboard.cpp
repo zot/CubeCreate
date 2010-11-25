@@ -121,3 +121,8 @@ namespace game
     ICOMMAND(showscores, "D", (int *down), showscores(*down!=0));
 }
 
+// CubeCreate: temporary for variable exports >.>
+void scorebshow(bool on)
+{
+	game::scoreboard.show(on);
+}

@@ -769,83 +769,149 @@ REGVAR("maskreflect", 0, 2, 16);
 REGVAR("reflectscissor", 0, 1, 1);
 REGVAR("reflectvfc", 0, 1, 1);
 REGVAR("refractclear", 0, 0, 1); // override
-
 #endif
 
-/*
-engine/world.cpp:VARR(mapversion, 1, MAPVERSION, 0);
-engine/world.cpp:VARNR(mapscale, worldscale, 1, 0, 0);
-engine/world.cpp:VARNR(mapsize, worldsize, 1, 0, 0);
-engine/world.cpp:SVARR(maptitle, "Untitled Map by Unknown");
-engine/world.cpp:VAR(octaentsize, 0, 128, 1024);
-engine/world.cpp:VAR(entselradius, 0, 2, 10);
-engine/world.cpp:VARF(entediting, 0, 0, 1, { if(!entediting) { entcancel(); efocus = enthover = -1; } });
-engine/world.cpp:VAR(attachradius, 1, 100, 1000);
-engine/world.cpp:VAR(entselsnap, 0, 0, 1);
-engine/world.cpp:VAR(entmovingshadow, 0, 1, 1);
-engine/world.cpp:VAR(showentradius, 0, 1, 1);
-engine/world.cpp:VAR(entitysurf, 0, 0, 1);
-engine/world.cpp:VARF(entmoving, 0, 0, 2,
-engine/world.cpp:VAR(entautoviewdist, 0, 25, 100);
-engine/world.cpp:VAR(entdrop, 0, 2, 3);
-engine/worldio.cpp:VARP(savebak, 0, 2, 2);
-engine/worldio.cpp:VAR(dbgvars, 0, 0, 1);
-engine/3dgui.cpp:VARP(guiautotab, 6, 16, 40);
-engine/3dgui.cpp:VARP(guiclicktab, 0, 1, 1); // INTENSITY: Click to switch tabs by default
-engine/3dgui.cpp:VARP(guipushdist, 1, 4, 64);
-engine/3dgui.cpp:FVARP(guisens, 1e-3f, 1, 1e3f);
-engine/3dgui.cpp:VARNP(guifollow, useguifollow, 0, 1, 1);
-engine/3dgui.cpp:VARNP(gui2d, usegui2d, 0, 1, 1);
-fpsgame/client.cpp:    SVARP(chat_sound, "olpc/FlavioGaete/Vla_G_Major");
-fpsgame/entities.cpp:    VAR(triggerstate, -1, 0, 1);
-fpsgame/fps.cpp:    VAR(useminimap, 0, 0, 1); // do we want the minimap? Set from JS.
-fpsgame/fps.cpp:    VARP(minminimapzoom, 0, 384, 10000); // minimal and maximal scale of minimap, some sort of "zoom"
-fpsgame/fps.cpp:    VARP(maxminimapzoom, 1, 1024, 10000);
-fpsgame/fps.cpp:    VAR(forceminminimapzoom, -1, -1, 10000); // these are not stored in cfg or across maps and are made for map-specific forcing.
-fpsgame/fps.cpp:    VAR(forcemaxminimapzoom, -1, -1, 10000);
-fpsgame/fps.cpp:    FVAR(minimapradius, 0.0f, 0.3f, 10.0f); // minimap size, relative to screen height (1.0 = full height), max is 10.0f (maybe someone will find usage?)
-fpsgame/fps.cpp:    FVAR(minimapxpos, -10000.0f, 0.1f, 10000.0f); // minimap x position relative from right edge of screen (1.0 = one minimap size from right edge)
-fpsgame/fps.cpp:    FVAR(minimapypos, -10000.0f, 0.1f, 10000.0f); // like above, but from top edge.
-fpsgame/fps.cpp:    FVAR(minimaprotation, 0.0f, 0.0f, 360.0f); // rotation of minimap
-fpsgame/fps.cpp:    VAR(minimapsides, 3, 10, 1000); // number of minimap sides. No need to make it bigger than 1000, 1000 is really smooth circle at very big sizes.
-fpsgame/fps.cpp:    VAR(minimaprightalign, 0, 1, 1); // do we want to align minimap right? if this is 1, then we do, if 0, then it's aligned to left.
-fpsgame/fps.cpp:    VARP(smoothmove, 0, 75, 100);
-fpsgame/fps.cpp:    VARP(smoothdist, 0, 32, 64);
-fpsgame/fps.cpp:    IVARP(startmenu, 0, 1, 1);
-fpsgame/fps.cpp:    IVARP(hudgun, 0, 1, 1);
-fpsgame/fps.cpp:    IVARP(hudgunsway, 0, 1, 1);
-fpsgame/fps.cpp:    IVARP(teamhudguns, 0, 1, 1);
-fpsgame/scoreboard.cpp:    VARP(scoreboard2d, 0, 1, 1);
-fpsgame/scoreboard.cpp:    VARP(showpj, 0, 1, 1); // Kripken
-fpsgame/scoreboard.cpp:    VARP(showping, 0, 1, 1);
-fpsgame/scoreboard.cpp:    VARP(showspectators, 0, 1, 1);
-fpsgame/scoreboard.cpp:    VARFN(scoreboard, showscoreboard, 0, 0, 1, scoreboard.show(showscoreboard!=0));
-intensity/client_engine_additions.cpp:VAR(CameraControl::cameraMoveDist, 5, 10, 200);                 // Distance camera moves per iteration
-intensity/client_engine_additions.cpp://VAR(CameraControl::cameraMoveIters, MIN_CAMERA_MOVE_ITERS, 14, 18); // Number of iterations to move camera DEPRECATED
-intensity/client_engine_additions.cpp:VAR(cam_dist, 0, 50, 200);
-intensity/client_engine_additions.cpp:FVARP(cameraheight, 0, 10, 50); // How much higher than the player to set the camera
-intensity/client_engine_additions.cpp:FVAR(smoothcamera, 0, 0.2, 100.0); // Smoothing factor for the smooth camera. 0 means no smoothing
-intensity/client_engine_additions.cpp:FVARP(cameraavoid, 0, 0.33, 1); // 1 means the camera is 100% away from the closest obstacle (and therefore on the player). 0 means it is on that obstacle. 0.5 means it is midway between them.
-intensity/client_engine_additions.cpp:SVAR(entity_gui_title, "");
-intensity/client_engine_additions.cpp:VAR(num_entity_gui_fields, 0, 0, 13);
-intensity/client_system.cpp:VAR(can_edit, 0, 0, 1);
-intensity/client_system.cpp:SVARP(last_uploaded_map_asset, "");
-intensity/intensity_gui.cpp:SVAR(message_title, "");
-intensity/intensity_gui.cpp:SVAR(message_content, "");
-intensity/intensity_gui.cpp:SVAR(input_title, "");
-intensity/intensity_gui.cpp:SVAR(input_content, "");
-intensity/intensity_gui.cpp:SVAR(input_data, "");
-intensity/master.cpp:SVARP(entered_username, ""); // Persisted - uses "-" instead of "@", to get around sauer issue
-intensity/master.cpp:SVAR(true_username, "");  // Has "@", can be sent to server to login
-intensity/master.cpp:SVAR(entered_password, "");
-intensity/master.cpp:SVARP(hashed_password, "");
-intensity/master.cpp:VAR(have_master, 0, 1, 1);
-intensity/master.cpp:VAR(logged_into_master, 0, 0, 1);
-intensity/master.cpp:SVAR(error_message, ""); // TODO: Move
-intensity/script_engine_lua_embedding.h:    VARP(blood, 0, 1, 1);
-intensity/script_engine_lua_embedding.h:    VARP(ragdoll, 0, 1, 1);
-intensity/server_system.cpp:VARR(fog, 1, 2, 300000);
-intensity/server_system.cpp:VAR(thirdperson, 0, 1, 2);
-intensity/targeting.cpp:VAR(has_mouse_target, 0, 0, 1);
-shared/stream.cpp:VAR(dbggz, 0, 0, 1);
-shared/zip.cpp:VAR(dbgzip, 0, 0, 1);*/
+// engine/world.cpp
+
+extern int efocus, enthover;
+extern bool initentdragging;
+bool noentedit();
+bool enttoggle(int id);
+void entadd(int id);
+
+REGVAR("mapversion", 1, MAPVERSION, 0); // override
+REGVAR("mapscale", 1, 0, 0); // override, globalname was worldscale
+REGVAR("mapsize", 1, 0, 0); // override, globalname was worldsize
+REGVAR("maptitle", "Untitled Map by Unknown"); // override
+REGVAR("octaentsize", 0, 128, 1024);
+REGVAR("entselradius", 0, 2, 10);
+REGVAR("entediting", 0, 0, 1, ICB({ if(!curv) { entcancel(); efocus = enthover = -1; } }));
+REGVAR("attachradius", 1, 100, 1000);
+REGVAR("entselsnap", 0, 0, 1);
+REGVAR("entmovingshadow", 0, 1, 1);
+REGVAR("showentradius", 0, 1, 1);
+REGVAR("entitysurf", 0, 0, 1);
+REGVAR("entmoving", 0, 0, 2, ICB({
+	int c = curv;
+    if(enthover < 0 || noentedit()) c = 0;
+    else if(c == 1) c = enttoggle(enthover);
+    else if(c == 2 && entgroup.find(enthover) < 0) entadd(enthover);
+    if(c > 0) initentdragging = true;
+    EngineVariables::get("entmoving").get()->set(c);
+}));
+REGVAR("entautoviewdist", 0, 25, 100);
+REGVAR("entdrop", 0, 2, 3);
+
+// engine/worldio.cpp
+
+REGVAR("savebak", 0, 2, 2, NULL, true);
+REGVAR("dbgvars", 0, 0, 1);
+
+#ifdef CLIENT
+// engine/3dgui.cpp
+
+REGVAR("guiautotab", 6, 16, 40, NULL, true);
+REGVAR("guiclicktab", 0, 1, 1, NULL, true);
+REGVAR("guipushdist", 1, 4, 64, NULL, true);
+REGVAR("guisens", 1e-3f, 1.0f, 1e3f, NULL, true);
+REGVAR("guifollow", 0, 1, 1, NULL, true); // globalname was useguifollow
+REGVAR("gui2d", 0, 1, 1, NULL, true); // globalname was usegui2d
+#endif
+
+// fpsgame/client.cpp
+
+REGVAR("chat_sound", "olpc/FlavioGaete/Vla_G_Major", NULL, true);
+
+// fpsgame/entities.cpp
+
+REGVAR("triggerstate", -1, 0, 1);
+
+// fpsgame/fps.cpp
+
+// TODO: remove those minimap related (especially xpos/ypos, as that is *not* good since it is moved differently for all screen resolutions)
+REGVAR("useminimap", 0, 0, 1); // do we want minimap? set from lua
+REGVAR("minminimapzoom", 0, 384, 10000, NULL, true);
+REGVAR("maxminimapzoom", 1, 1024, 10000, NULL, true);
+REGVAR("forceminminimapzoom", -1, -1, 10000); // these are not stored in cfg or across maps and are made for map-specific forcing.
+REGVAR("forcemaxminimapzoom", -1, -1, 10000);
+REGVAR("minimapradius", 0.0f, 0.3f, 10.0f); // minimap size, relative to screen height (1.0 = full height), max is 10.0f (maybe someone will find usage?)
+REGVAR("minimapxpos", -10000.0f, 0.1f, 10000.0f); // minimap x position relative from right edge of screen (1.0 = one minimap size from right edge)
+REGVAR("minimapypos", -10000.0f, 0.1f, 10000.0f); // like above, but from top edge.
+REGVAR("minimaprotation", 0.0f, 0.0f, 360.0f); // rotation of minimap
+REGVAR("minimapsides", 3, 10, 1000); // number of minimap sides. No need to make it bigger than 1000, 1000 is really smooth circle at very big sizes.
+REGVAR("minimaprightalign", 0, 1, 1); // do we want to align minimap right? if this is 1, then we do, if 0, then it's aligned to left.
+REGVAR("smoothmove", 0, 75, 100, NULL, true);
+REGVAR("smoothdist", 0, 32, 64, NULL, true);
+REGVAR("startmenu", 0, 1, 1, NULL, true); // was IVARP
+REGVAR("hudgun", 0, 1, 1, NULL, true); // was IVARP
+REGVAR("hudgunsway", 0, 1, 1, NULL, true); // was IVARP
+REGVAR("teamhudguns", 0, 1, 1, NULL, true); // was IVARP
+
+#ifdef CLIENT
+// fpsgame/scoreboard.cpp
+
+void scorebshow(bool on);
+
+REGVAR("scoreboard2d", 0, 1, 1, NULL, true);
+REGVAR("showpj", 0, 1, 1, NULL, true); // Kripken
+REGVAR("showping", 0, 1, 1, NULL, true);
+REGVAR("showspectators", 0, 1, 1, NULL, true);
+REGVAR("scoreboard", 0, 0, 1, ICB({ scorebshow(curv!=0); })); // globalname was showscoreboard
+
+// intensity/client_engine_additions.cpp
+
+REGVAR("cameraMoveDist", 5, 10, 200); // Distance camera moves per iteration
+REGVAR("cam_dist", 0, 50, 200); // How much higher than the player to set the camera
+REGVAR("cameraheight", 0.0f, 10.0f, 50.0f, NULL, true); // How much higher than the player to set the camera
+REGVAR("smoothcamera", 0.0f, 0.2f, 100.0f); // Smoothing factor for the smooth camera. 0 means no smoothing
+REGVAR("cameraavoid", 0.0f, 0.33f, 1.0f, NULL, true); // 1 means the camera is 100% away from the closest obstacle (and therefore on the player). 0 means it is on that obstacle. 0.5 means it is midway between them.
+REGVAR("entity_gui_title", "");
+REGVAR("num_entity_gui_fields", 0, 0, 13);
+
+// intensity/client_system.cpp
+
+REGVAR("can_edit", 0, 0, 1);
+REGVAR("last_uploaded_map_asset", "", NULL, true);
+
+// intensity/intensity_gui.cpp
+
+REGVAR("message_title", "");
+REGVAR("message_content", "");
+REGVAR("input_title", "");
+REGVAR("input_content", "");
+REGVAR("input_data", "");
+#endif
+
+// intensity/master.cpp
+
+REGVAR("entered_username", "", NULL, true); // Persisted - uses "-" instead of "@", to get around sauer issue
+REGVAR("true_username", ""); // Has "@", can be sent to server to login
+REGVAR("entered_password", "");
+REGVAR("hashed_password", "", NULL, true);
+REGVAR("have_master", 0, 1, 1);
+REGVAR("logged_into_master", 0, 0, 1);
+REGVAR("error_message", "");
+
+// intensity/script_engine_lua_embedding.h
+
+REGVAR("blood", 0, 1, 1, NULL, true);
+REGVAR("ragdoll", 0, 1, 1, NULL, true);
+
+#ifdef SERVER
+// intensity/server_system.cpp
+
+REGVAR("fog", 1, 2, 300000); // override
+REGVAR("thirdperson", 0, 1, 2);
+#endif
+
+// intensity/targeting.cpp
+
+REGVAR("has_mouse_target", 0, 0, 1);
+
+// shared/stream.cpp
+
+REGVAR("dbggz", 0, 0, 1);
+
+// shared/zip.cpp
+
+REGVAR("dbgzip", 0, 0, 1);
