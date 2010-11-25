@@ -369,5 +369,54 @@ private:
 #define SCB(code) _lambda_(_UNUSED_ const std::string& prev, _UNUSED_ const std::string& curv) code
 
 /**
+ * @def GETIV
+ * @brief Macro for making getting variable value easier.
+ * @param name Name of the variable to get.
+ * 
+ * Gets value of variable of name @p name as integer.
+ * @code
+ * int i = GETIV(foo);
+ * @endcode
+ */
+#define GETIV(name) EngineVariables::get(#name).get()->getInteger()
+
+/**
+ * @def GETFV
+ * @brief Macro for making getting variable value easier.
+ * @param name Name of the variable to get.
+ * 
+ * Gets value of variable of name @p name as double.
+ * @code
+ * double d = GETFV(foo);
+ * @endcode
+ */
+#define GETFV(name) EngineVariables::get(#name).get()->getDouble()
+
+/**
+ * @def GETSV
+ * @brief Macro for making getting variable value easier.
+ * @param name Name of the variable to get.
+ * 
+ * Gets value of variable of name @p name as string.
+ * @code
+ * std::string s = GETSV(foo);
+ * @endcode
+ */
+#define GETSV(name) EngineVariables::get(#name).get()->getString()
+
+/**
+ * @def SETV
+ * @brief Macro for making setting variable value easier.
+ * @param name Name of the variable to set.
+ * @param value New value to set.
+ * 
+ * Sets value of variable of name @p name.
+ * @code
+ * SETV(foo, 15);
+ * @endcode
+ */
+#define SETV(name, value) EngineVariables::get(#name).get()->set(value)
+
+/**
  * @}
  */

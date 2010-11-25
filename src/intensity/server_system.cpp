@@ -389,7 +389,6 @@ Shader *defaultshader = NULL, *rectshader = NULL, *foggedshader = NULL, *foggedn
 bool inbetweenframes = false, renderedframe = false;
 int fullbright = 0, outline = 0;
 int showmat = 0;
-int usegui2d = 1;
 int menuautoclose = 120;
 vec shadowoffset(0, 0, 0), shadowfocus(0, 0, 0), shadowdir(0, 0.707, 1);
 int explicitsky = 0;

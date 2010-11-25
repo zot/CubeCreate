@@ -2107,8 +2107,7 @@ struct texturegui : g3d_callback
     {   
         if(!menuon) return;
         filltexlist();
-        extern int usegui2d;
-        if(!editmode || ((!texgui2d || !usegui2d) && camera1->o.dist(menupos) > menuautoclose)) menuon = false;
+        if(!editmode || ((!texgui2d || !GETIV(gui2d)) && camera1->o.dist(menupos) > menuautoclose)) menuon = false;
         else g3d_addgui(this, menupos, texgui2d ? GUI_2D : 0);
     }
 } gui;

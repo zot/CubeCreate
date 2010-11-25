@@ -158,29 +158,29 @@ bool EngineVariable::isReadOnly()
 // these are used for registration of Lua variables after one is registered in C++
 void EngineVariable::registerLuaIVAR()
 {
-	LuaEngine::getGlobal("ivar");
+	LuaEngine::getGlobal("_cpp_ivar");
 	LuaEngine::pushValue(name);
 	LuaEngine::pushValue(anyint(minv));
 	LuaEngine::pushValue(anyint(curv));
 	LuaEngine::pushValue(anyint(maxv));
-	LuaEngine::pushValue(true);
+	LuaEngine::pushValue(readOnly);
 	LuaEngine::call(5, 0);
 }
 
 void EngineVariable::registerLuaFVAR()
 {
-	LuaEngine::getGlobal("fvar");
+	LuaEngine::getGlobal("_cpp_fvar");
 	LuaEngine::pushValue(name);
 	LuaEngine::pushValue(anydouble(minv));
 	LuaEngine::pushValue(anydouble(curv));
 	LuaEngine::pushValue(anydouble(maxv));
-	LuaEngine::pushValue(true);
+	LuaEngine::pushValue(readOnly);
 	LuaEngine::call(5, 0);
 }
 
 void EngineVariable::registerLuaSVAR()
 {
-	LuaEngine::getGlobal("svar");
+	LuaEngine::getGlobal("_cpp_svar");
 	LuaEngine::pushValue(name);
 	LuaEngine::pushValue(anystring(curv));
 	LuaEngine::call(2, 0);

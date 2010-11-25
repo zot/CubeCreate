@@ -130,3 +130,7 @@ function fvar  (name, ...) EV:r("FVAR",   name, ...) end
 function fvarf (name, ...) EV:r("FVARF",  name, ...) end
 function svar  (name, ...) EV:r("SVAR",   name, ...) end
 function svarf (name, ...) EV:r("SVARF",  name, ...) end
+
+function _cpp_ivar (...) EV:reg(IVAR(...), true) end
+function _cpp_fvar (...) EV:reg(FVAR(...), true) end
+function _cpp_svar (...) EV:reg(SVAR(...), true) end

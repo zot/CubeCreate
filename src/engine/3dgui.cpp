@@ -30,9 +30,6 @@ float cursorx = 0.5f, cursory = 0.5f; // INTENSITY: removed 'static'
 #define SKIN_SCALE 4
 #define INSERT (3*SKIN_SCALE)
 
-VARP(guiautotab, 6, 16, 40);
-VARP(guiclicktab, 0, 1, 1); // INTENSITY: Click to switch tabs by default
-
 struct gui : g3d_gui
 {
     struct list
@@ -64,7 +61,7 @@ struct gui : g3d_gui
         if(tcurrent)
         {
             if(layoutpass && !tpos) tcurrent = NULL; //disable tabs because you didn't start with one
-            if(shouldautotab && !curdepth && (layoutpass ? 0 : cury) + ysize > guiautotab*FONTH) tab(NULL, tcolor); 
+            if(shouldautotab && !curdepth && (layoutpass ? 0 : cury) + ysize > GETIV(guiautotab)*FONTH) tab(NULL, tcolor); 
         }
     }
 
@@ -74,7 +71,7 @@ struct gui : g3d_gui
         {
             if(layoutpass)
             {
-                int space = guiautotab*FONTH - ysize;
+                int space = GETIV(guiautotab)*FONTH - ysize;
                 if(space < 0) return true;
                 int l = lists[curlist].parent;
                 while(l >= 0)
@@ -86,7 +83,7 @@ struct gui : g3d_gui
             }
             else
             {
-                int space = guiautotab*FONTH - cury;
+                int space = GETIV(guiautotab)*FONTH - cury;
                 if(ysize > space) return true;
                 int l = lists[curlist].parent;
                 while(l >= 0)
@@ -128,7 +125,7 @@ struct gui : g3d_gui
                 y1 = cury - ((skiny[6]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE-h,
                 y2 = cury;
             bool hit = tcurrent && windowhit==this && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2;
-            if(hit && (!guiclicktab || mousebuttons&G3D_DOWN)) 
+            if(hit && (!GETIV(guiclicktab) || mousebuttons&G3D_DOWN)) 
                 *tcurrent = tpos; //roll-over to switch tab
             
             drawskin(x1-skinx[visible()?2:6]*SKIN_SCALE, y1-skiny[1]*SKIN_SCALE, w, h, visible()?10:19, 9, gui2d ? 1 : 2, light, alpha);
@@ -912,8 +909,6 @@ int gui::curdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
 int gui::ty, gui::tx, gui::tpos, *gui::tcurrent, gui::tcolor;
 static vector<gui> guis2d, guis3d;
 
-VARP(guipushdist, 1, 4, 64);
-
 bool menukey(int code, bool isdown, int cooked)
 {
     editor *e = currentfocus();
@@ -956,7 +951,7 @@ bool menukey(int code, bool isdown, int cooked)
                                 windowhit->savedorigin->add(camdir);
                         }
                     }
-                    else windowhit->savedorigin->add(vec(camdir).mul(guipushdist));
+                    else windowhit->savedorigin->add(vec(camdir).mul(GETIV(guipushdist)));
                 }
                 return true;
             case -5:
@@ -973,7 +968,7 @@ bool menukey(int code, bool isdown, int cooked)
                                 guis2d.last().savedorigin->sub(camdir);
                         }
                     }
-                    else windowhit->savedorigin->sub(vec(camdir).mul(guipushdist));
+                    else windowhit->savedorigin->sub(vec(camdir).mul(GETIV(guipushdist)));
                 }
                 return true;
         }
@@ -1025,24 +1020,19 @@ void g3d_resetcursor()
     cursorx = cursory = 0.5f;
 }
 
-FVARP(guisens, 1e-3f, 1, 1e3f);
-
 bool g3d_movecursor(int dx, int dy)
 {
     if((!guis2d.length() || !hascursor) && GuiControl::isMouselooking()) return false; // INTENSITY: Added our mouselooking check
     const float CURSORSCALE = 500.0f;
-    cursorx = max(0.0f, min(1.0f, cursorx+guisens*dx*(screen->h/(screen->w*CURSORSCALE))));
-    cursory = max(0.0f, min(1.0f, cursory+guisens*dy/CURSORSCALE));
+    cursorx = max(0.0f, min(1.0f, cursorx+float(GETFV(guisens))*dx*(screen->h/(screen->w*CURSORSCALE))));
+    cursory = max(0.0f, min(1.0f, cursory+float(GETFV(guisens))*dy/CURSORSCALE));
     return true;
 }
 
-VARNP(guifollow, useguifollow, 0, 1, 1);
-VARNP(gui2d, usegui2d, 0, 1, 1);
-
 void g3d_addgui(g3d_callback *cb, vec &origin, int flags)
 {
-    bool gui2d = flags&GUI_FORCE_2D || (flags&GUI_2D && usegui2d) || mainmenu;
-    if(!gui2d && flags&GUI_FOLLOW && useguifollow) origin.z = player->o.z-(player->eyeheight-1);
+    bool gui2d = flags&GUI_FORCE_2D || (flags&GUI_2D && GETIV(gui2d)) || mainmenu;
+    if(!gui2d && flags&GUI_FOLLOW && GETIV(guifollow)) origin.z = player->o.z-(player->eyeheight-1);
     gui &g = (gui2d ? guis2d : guis3d).add();
     g.cb = cb;
     g.origin = origin;
