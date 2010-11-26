@@ -903,7 +903,8 @@ REGVAR("ragdoll", 0, 1, 1, NULL, true);
 REGVAR("fog", 1, 2, 300000); // override
 REGVAR("thirdperson", 0, 1, 2);
 REGVAR("gui2d", 1, 1, 0);
-REGVAR("gamespeed", 100, 100, 0);
+REGVAR("gamespeed", 0, 100, 100);
+REGVAR("paused", 0, 0, 1);
 #endif
 
 // intensity/targeting.cpp
