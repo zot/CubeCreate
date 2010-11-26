@@ -310,8 +310,6 @@ float TargetingControl::estimatePlayerPotentialVisiblityChange(physent* target)
 #define PHYSFRAMETIME 5
 #define MAXFRAMETIME 200 /* 5fps, suitable for really tiny nonmoving entities */
 
-extern int scr_w, scr_h; // main.cpp
-
 void TargetingControl::calcPhysicsFrames(physent *entity)
 {
     // XXX: Note that at 200fps we now see bad movement stutter. Look at the original
@@ -333,7 +331,6 @@ void TargetingControl::calcPhysicsFrames(physent *entity)
     if(diff <= 0) fpsEntity->physsteps = 0;
     else
     {
-//        extern int gamespeed;
         // Kripken: Use an configurable frame time. In particular this lets the server use a slower rate
         int entityFrameTime;
 
@@ -348,7 +345,7 @@ void TargetingControl::calcPhysicsFrames(physent *entity)
                 if (Utility::Config::getInt("Physics", "adaptive", 0))
                 {
                     // Visible size in pixels (2D coordinates)
-                    int pixelChange = max(1.0f, scr_w*scr_h*(estimatePlayerPotentialVisiblityChange(fpsEntity)/100.0f));
+                    int pixelChange = max(1.0f, GETIV(scr_w)*GETIV(scr_h)*(estimatePlayerPotentialVisiblityChange(fpsEntity)/100.0f));
 
                     entityFrameTime = clamp(int(entityFrameTime*20000.0f/pixelChange),
                                             entityFrameTime, // min of the default setting - never go lower than that

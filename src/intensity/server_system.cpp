@@ -359,7 +359,6 @@ int envmapradius = 128;
 int nolights = 1;
 float loadprogress = 0.333;
 vector<LightMap> lightmaps;
-int gamespeed = 100;
 int initing = NOT_INITING;
 bool shadowmapping = false;
 int ati_oq_bug = 0;

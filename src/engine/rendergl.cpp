@@ -1760,7 +1760,7 @@ void addmotionblur()
 {
     if(!motionblur || !hasTR || max(screen->w, screen->h) > hwtexsize) return;
 
-    if(paused || game::ispaused()) { lastmotion = 0; return; }
+    if(GETIV(paused) || game::ispaused()) { lastmotion = 0; return; }
 
     if(!motiontex || motionw != screen->w || motionh != screen->h)
     {

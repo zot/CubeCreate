@@ -1194,8 +1194,8 @@ void resetmap()
     cancelsel();
     pruneundos();
 
-    setvar("gamespeed", 100, false);
-    setvar("paused", 0, false);
+    SETV(gamespeed, 100);
+    SETV(paused, 0);
 
     entities::clearents();
     outsideents.setsize(0);

@@ -451,16 +451,14 @@ LUA_EMBED_i(playSound, 0, {
         adddecal(arg1, center, surface, arg8, color, arg12);
     });
 
-    VARP(blood, 0, 1, 1);
-
     LUA_EMBED_iiidddidiibibi(particleSplash, 0, {
-        if (arg1 == PART_BLOOD && !blood) return 0;
+        if (arg1 == PART_BLOOD && !GETIV(blood)) return 0;
         vec p(arg4, arg5, arg6);
         particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
     });
 
     LUA_EMBED_iiidddidiiibi(particleSplashRegular, 0, {
-        if (arg1 == PART_BLOOD && !blood) return 0;
+        if (arg1 == PART_BLOOD && !GETIV(blood)) return 0;
         vec p(arg4, arg5, arg6);
         regular_particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
     });
@@ -997,7 +995,6 @@ LUA_EMBED_s(reloadModel, 0, {
 
 // Rendering
 
-    VARP(ragdoll, 0, 1, 1);
     static int oldThirdperson = -1;
 
     void prepareRagdoll(int& anim, LogicEntityPtr self)
@@ -1017,7 +1014,7 @@ LUA_EMBED_s(reloadModel, 0, {
                 }
             }
 
-            if (fpsEntity->ragdoll || !ragdoll || !PhysicsManager::getEngine()->prepareRagdoll(self))
+            if (fpsEntity->ragdoll || !GETIV(ragdoll) || !PhysicsManager::getEngine()->prepareRagdoll(self))
             {
                 anim &= ~ANIM_RAGDOLL;
                 LuaEngine::getRef(self->luaRef);

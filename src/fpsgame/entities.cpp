@@ -229,14 +229,12 @@ namespace entities
         else unlocktriggers(*tag, TRIGGERED, TRIGGER_RESETTING);
     });
 
-    VAR(triggerstate, -1, 0, 1);
-
     void doleveltrigger(int trigger, int state)
     {
         defformatstring(aliasname)("level_trigger_%d", trigger);
         if(identexists(aliasname))
         {
-            triggerstate = state;
+            SETV(triggerstate, state);
             execute(aliasname);
         }
     }
