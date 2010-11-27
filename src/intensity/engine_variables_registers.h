@@ -842,10 +842,6 @@ REGVAR("minimapsides", 3, 10, 1000); // number of minimap sides. No need to make
 REGVAR("minimaprightalign", 0, 1, 1); // do we want to align minimap right? if this is 1, then we do, if 0, then it's aligned to left.
 REGVAR("smoothmove", 0, 75, 100, NULL, true);
 REGVAR("smoothdist", 0, 32, 64, NULL, true);
-REGVAR("startmenu", 0, 1, 1, NULL, true); // was IVARP
-REGVAR("hudgun", 0, 1, 1, NULL, true); // was IVARP
-REGVAR("hudgunsway", 0, 1, 1, NULL, true); // was IVARP
-REGVAR("teamhudguns", 0, 1, 1, NULL, true); // was IVARP
 
 #ifdef CLIENT
 // fpsgame/scoreboard.cpp
@@ -871,6 +867,8 @@ REGVAR("num_entity_gui_fields", 0, 0, 13);
 // intensity/client_system.cpp
 
 REGVAR("can_edit", 0, 0, 1);
+// The asset ID of the last saved map. This is useful if we want to reload it (if it
+// crashed the server, for example
 REGVAR("last_uploaded_map_asset", "", NULL, true);
 
 // intensity/intensity_gui.cpp
@@ -911,6 +909,7 @@ REGVAR("paused", 0, 0, 1);
 
 REGVAR("has_mouse_target", 0, 0, 1);
 
+#ifndef STANDALONE
 // shared/stream.cpp
 
 REGVAR("dbggz", 0, 0, 1);
@@ -918,3 +917,4 @@ REGVAR("dbggz", 0, 0, 1);
 // shared/zip.cpp
 
 REGVAR("dbgzip", 0, 0, 1);
+#endif

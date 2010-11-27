@@ -18,21 +18,17 @@
 //=========================
 
 #define MIN_CAMERA_MOVE_ITERS 8
-VAR(CameraControl::cameraMoveDist, 5, 10, 200);                 // Distance camera moves per iteration
-//VAR(CameraControl::cameraMoveIters, MIN_CAMERA_MOVE_ITERS, 14, 18); // Number of iterations to move camera DEPRECATED
-
-VAR(cam_dist, 0, 50, 200);
 
 void CameraControl::incrementCameraDist(int inc_dir)
 {
     Logging::log(Logging::DEBUG, "changing camera increment: %d\r\n", inc_dir);
 
-    cam_dist += (inc_dir * CameraControl::cameraMoveDist);
+    SETV(cam_dist, GETIV(cam_dist) + (inc_dir * GETIV(cameraMoveDist)));
 
     if (LuaEngine::exists())
     {
         LuaEngine::getGlobal("Global");
-        LuaEngine::setTable("cameraDistance", cam_dist);
+        LuaEngine::setTable("cameraDistance", GETIV(cam_dist));
         LuaEngine::pop(1);
     }
 }
@@ -54,18 +50,14 @@ void CameraControl::prepareCharacterViewing()
     camera1->pitch = 0;
     camera1->yaw   = camera1->yaw;
 
-    saved_cam_dist = cam_dist;
-    cam_dist = MIN_CAMERA_MOVE_ITERS*3;
+    saved_cam_dist = GETIV(cam_dist);
+    SETV(cam_dist, MIN_CAMERA_MOVE_ITERS*3);
 }
 
 void CameraControl::stopCharacterViewing()
 {
-    cam_dist = saved_cam_dist;
+    SETV(cam_dist, saved_cam_dist);
 }
-
-FVARP(cameraheight, 0, 10, 50); // How much higher than the player to set the camera
-FVAR(smoothcamera, 0, 0.2, 100.0); // Smoothing factor for the smooth camera. 0 means no smoothing
-FVARP(cameraavoid, 0, 0.33, 1); // 1 means the camera is 100% away from the closest obstacle (and therefore on the player). 0 means it is on that obstacle. 0.5 means it is midway between them.
 
 physent forcedCamera;
 bool useForcedCamera = false;
@@ -170,12 +162,12 @@ void CameraControl::positionCamera(physent* camera1)
     }
 
     // Sync camera height to scripts, if necessary
-    static float lastCameraHeight = -1;
-    if (LuaEngine::exists() && lastCameraHeight != cameraheight)
+    static double lastCameraHeight = -1;
+    if (LuaEngine::exists() && lastCameraHeight != GETFV(cameraheight))
     {
-        lastCameraHeight = cameraheight;
+        lastCameraHeight = GETFV(cameraheight);
         LuaEngine::getGlobal("Global");
-        LuaEngine::setTable("cameraHeight", cameraheight);
+        LuaEngine::setTable("cameraHeight", GETFV(cameraheight));
         LuaEngine::pop(1);
     }
 
@@ -202,18 +194,18 @@ void CameraControl::positionCamera(physent* camera1)
         if (thirdperson)
         {
             vec up(0, 0, 1);
-            movecamera(camera1, up, cameraheight, 1);
-            movecamera(camera1, up, clamp(cameraheight- camera1->o.dist(cameraOrigin), 0.0f, 1.0f), 0.1f); // Find distance to obstacle
+            movecamera(camera1, up, float(GETFV(cameraheight)), 1);
+            movecamera(camera1, up, clamp(float(GETFV(cameraheight)) - camera1->o.dist(cameraOrigin), 0.0f, 1.0f), 0.1f); // Find distance to obstacle
         }
 
         vec cameraOrigin2 = camera1->o;
-        movecamera(camera1, dir, cam_dist, 1);
-        movecamera(camera1, dir, clamp(cam_dist - camera1->o.dist(cameraOrigin2), 0.0f, 1.0f), 0.1f); // Find distance to obstacle
+        movecamera(camera1, dir, GETIV(cam_dist), 1);
+        movecamera(camera1, dir, clamp(GETIV(cam_dist) - camera1->o.dist(cameraOrigin2), 0.0f, 1.0f), 0.1f); // Find distance to obstacle
 
-        if (smoothcamera) {
-            float intendedDist = camera1->o.dist(cameraOrigin2)*(1.0f-cameraavoid);
+        if (GETFV(smoothcamera)) {
+            float intendedDist = camera1->o.dist(cameraOrigin2)*(1.0f-float(GETFV(cameraavoid)));
             static float lastDist = 5;
-            float ACTUAL_DISTANCE_FACTOR = clamp(1.0f - (curtime/1000.0f)/smoothcamera, 0.0f, 1.0f);
+            float ACTUAL_DISTANCE_FACTOR = clamp(1.0f - (curtime/1000.0f)/float(GETFV(smoothcamera)), 0.0f, 1.0f);
             float actualDist = ACTUAL_DISTANCE_FACTOR*lastDist + (1-ACTUAL_DISTANCE_FACTOR)*intendedDist;
 
             // Start again, move to current distance
@@ -223,8 +215,8 @@ void CameraControl::positionCamera(physent* camera1)
             lastDist = actualDist;
         }
     } else {
-        camera1->o.z += cameraheight;
-        camera1->o.add(vec(dir).mul(cam_dist));
+        camera1->o.z += float(GETFV(cameraheight));
+        camera1->o.add(vec(dir).mul(GETIV(cam_dist)));
     }
 
     camera1->maxspeed = saved_camera_speed;
@@ -244,9 +236,9 @@ void CameraControl::positionCamera(physent* camera1)
     float pitchDelta = camera1->pitch - actualCamera.pitch;
 
     // Only interpolate if we are fairly close, otherwise this might be a new map, or we teleported, etc.
-    if (smoothcamera && !GuiControl::isMouselooking() && temp.magnitude() < 50*player->radius && fabs(yawDelta) < 30.0f && fabs(pitchDelta) < 30.0f)
+    if (GETFV(smoothcamera) && !GuiControl::isMouselooking() && temp.magnitude() < 50*player->radius && fabs(yawDelta) < 30.0f && fabs(pitchDelta) < 30.0f)
     {
-        float ACTUAL_CAMERA_FACTOR = clamp(1.0f - (curtime/1000.0f)/smoothcamera, 0.0f, 1.0f);
+        float ACTUAL_CAMERA_FACTOR = clamp(1.0f - (curtime/1000.0f)/float(GETFV(smoothcamera)), 0.0f, 1.0f);
 
         vec temp = player->o;
         temp.sub(lastPlayerPosition);
@@ -337,10 +329,6 @@ LogicEntityPtr GuiControl::EditedEntity::currEntity;
 GuiControl::EditedEntity::StateDataMap GuiControl::EditedEntity::stateData;
 std::vector<std::string> GuiControl::EditedEntity::sortedKeys;
 
-SVAR(entity_gui_title, "");
-
-VAR(num_entity_gui_fields, 0, 0, 13);
-
 // Sets up a GUI for editing an entity's state data
 void prepare_entity_gui()
 {
@@ -400,7 +388,7 @@ void prepare_entity_gui()
         );
 
         GuiControl::EditedEntity::sortedKeys.push_back( key );
-        num_entity_gui_fields++; // increment for later loop
+        SETV(num_entity_gui_fields, GETIV(num_entity_gui_fields)+1); // increment for later loop
     });
 
     LuaEngine::pop(2);
@@ -408,7 +396,7 @@ void prepare_entity_gui()
 
     sort( GuiControl::EditedEntity::sortedKeys.begin(), GuiControl::EditedEntity::sortedKeys.end() ); // So order is always the same
 
-    for (int i = 0; i < num_entity_gui_fields; i++)
+    for (int i = 0; i < GETIV(num_entity_gui_fields); i++)
     {
         std::string key = GuiControl::EditedEntity::sortedKeys[i];
         std::string guiName = GuiControl::EditedEntity::stateData[key].first;
@@ -430,16 +418,15 @@ void prepare_entity_gui()
     LuaEngine::pop(1);
     title = Utility::toString(uniqueId) + ": " + title;
 
-    setsvar((char*)"entity_gui_title", (char*)title.c_str());
-
+    SETVF(entity_gui_title, title);
 
     // Create the gui
     std::string command =
     "GUI.new(\"entity\", [[\n"
-    "    GUI.text(CV.entity_gui_title)\n"
+    "    GUI.text(EV.entity_gui_title)\n"
     "    GUI.bar()\n";
 
-    for (int i = 0; i < num_entity_gui_fields; i++)
+    for (int i = 0; i < GETIV(num_entity_gui_fields); i++)
     {
         std::string sI = Utility::toString(i);
         std::string key = GuiControl::EditedEntity::sortedKeys[i];

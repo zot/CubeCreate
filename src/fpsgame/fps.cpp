@@ -32,18 +32,6 @@
 
 namespace game
 {
-    VAR(useminimap, 0, 0, 1); // do we want the minimap? Set from JS.
-    VARP(minminimapzoom, 0, 384, 10000); // minimal and maximal scale of minimap, some sort of "zoom"
-    VARP(maxminimapzoom, 1, 1024, 10000);
-    VAR(forceminminimapzoom, -1, -1, 10000); // these are not stored in cfg or across maps and are made for map-specific forcing.
-    VAR(forcemaxminimapzoom, -1, -1, 10000);
-    FVAR(minimapradius, 0.0f, 0.3f, 10.0f); // minimap size, relative to screen height (1.0 = full height), max is 10.0f (maybe someone will find usage?)
-    FVAR(minimapxpos, -10000.0f, 0.1f, 10000.0f); // minimap x position relative from right edge of screen (1.0 = one minimap size from right edge)
-    FVAR(minimapypos, -10000.0f, 0.1f, 10000.0f); // like above, but from top edge.
-    FVAR(minimaprotation, 0.0f, 0.0f, 360.0f); // rotation of minimap
-    VAR(minimapsides, 3, 10, 1000); // number of minimap sides. No need to make it bigger than 1000, 1000 is really smooth circle at very big sizes.
-    VAR(minimaprightalign, 0, 1, 1); // do we want to align minimap right? if this is 1, then we do, if 0, then it's aligned to left.
-
     int gamemode = 0;
     string clientmap = "";
     int maptime = 0, maprealtime = 0;
@@ -185,9 +173,6 @@ namespace game
         return true;
     }
 
-    VARP(smoothmove, 0, 75, 100);
-    VARP(smoothdist, 0, 32, 64);
-
     void predictplayer(fpsent *d, bool move)
     {
         d->o = d->newpos;
@@ -198,7 +183,7 @@ namespace game
             moveplayer(d, 1, false);
             d->newpos = d->o;
         }
-        float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove;
+        float k = 1.0f - float(lastmillis - d->smoothmillis)/GETIV(smoothmove);
         if(k>0)
         {
             d->o.add(vec(d->deltapos).mul(k));
@@ -258,7 +243,7 @@ namespace game
             if(d->state==CS_ALIVE || d->state==CS_EDITING)
             {
 #if (SERVER_DRIVEN_PLAYERS == 0)
-                if(smoothmove && d->smoothmillis>0) predictplayer(d, true); // Disable to force server to always move clients
+                if(GETIV(smoothmove) && d->smoothmillis>0) predictplayer(d, true); // Disable to force server to always move clients
                 else moveplayer(d, 1, false);
 #else
                 moveplayer(d, 1, false);
@@ -572,8 +557,6 @@ namespace game
 */
     void preload() { }; // We use our own preloading system, but need to add the above projectiles etc.
 
-    IVARP(startmenu, 0, 1, 1);
-
     void startmap(const char *name)   // called just after a map load
     {
 //        if(multiplayer(false) && m_sp) { gamemode = 0; conoutf(CON_ERROR, "coop sp not supported yet"); } Kripken
@@ -666,10 +649,6 @@ namespace game
         assert(0);
     }
 
-    IVARP(hudgun, 0, 1, 1);
-    IVARP(hudgunsway, 0, 1, 1);
-    IVARP(teamhudguns, 0, 1, 1);
-   
     void drawhudmodel(fpsent *d, int anim, float speed = 0, int base = 0)
     {
         Logging::log(Logging::WARNING, "Rendering hudmodel is deprecated for now\r\n");
@@ -682,15 +661,12 @@ namespace game
 
     bool needminimap() // you have to enable the minimap inside your map script.
     {
-        if (!mainmenu && useminimap)
-          return true;
-        else
-          return false;
+        return (!mainmenu && GETIV(useminimap));
     }
 
     bool usedminimap()
     {
-        return useminimap;
+        return GETIV(useminimap);
     }
 
     void drawicon(float tx, float ty, int x, int y)
@@ -706,7 +682,7 @@ namespace game
     void gameplayhud(int w, int h)
     {
         // Draw the minimap when needed
-        if (useminimap) ClientSystem::drawMinimap(w, h, minminimapzoom, maxminimapzoom, forceminminimapzoom, forcemaxminimapzoom, minimapradius, minimapxpos, minimapypos, minimaprotation, minimapsides, minimaprightalign);
+        if (GETIV(useminimap)) ClientSystem::drawMinimap(w, h);
         // Draw the HUD for the game
         ClientSystem::drawHUD(w, h);
     }
@@ -749,8 +725,8 @@ namespace game
     const char *defaultmap() { return "login"; }
     const char *savedconfig() { return "config.json"; }
     const char *restoreconfig() { return "restore.json"; }
-    const char *defaultconfig() { return "data/defaults.cfg"; }
-    const char *autoexec() { return "autoexec.cfg"; }
+    const char *defaultconfig() { return "data/defaults.lua"; }
+    const char *autoexec() { return "autoexec.lua"; }
     const char *savedservers() { return NULL; } //"servers.cfg"; }
 
     // Dummies

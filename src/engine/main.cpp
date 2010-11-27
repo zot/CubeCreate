@@ -587,8 +587,8 @@ void setScreenScriptValues() // INTENSITY: New function
         LuaEngine::setTable("screenWidth", GETIV(scr_w));
         LuaEngine::setTable("screenHeight", GETIV(scr_h));
         LuaEngine::setTable("fontHeight", FONTH);
-        LuaEngine::setTable("cameraDistance", getvar("cam_dist"));
-        LuaEngine::setTable("cameraHeight", getvar("cameraheight"));
+        LuaEngine::setTable("cameraDistance", GETIV(cam_dist));
+        LuaEngine::setTable("cameraHeight", GETFV(cameraheight));
         LuaEngine::pop(1);
     }
 }
@@ -1225,7 +1225,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     initlog("console");
     persistidents = false;
-    if(!execfile("data/stdlib.cfg", false)) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
+    if(!LuaEngine::runFile("data/stdlib.lua").empty()) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
     if(!LuaEngine::runFile("data/font.lua").empty()) fatal("cannot find font definitions");
     if(!setfont("default")) fatal("no default font specified");
 
@@ -1248,21 +1248,21 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     LuaEngine::runFile("data/keymap.lua");
     LuaEngine::runFile("data/sounds.lua");
-    execfile("data/stdedit.cfg");
+    LuaEngine::runFile("data/stdedit.lua");
     LuaEngine::runFile("data/menus.lua");
-    execfile("data/brush.cfg");
-    execfile("mybrushes.cfg");
-    if(game::savedservers()) execfile(game::savedservers());
+    LuaEngine::runFile("data/brush.lua");
+    LuaEngine::runFile("mybrushes.lua");
+    if(game::savedservers()) LuaEngine::runFile(std::string(game::savedservers()));
     
     persistidents = true;
     
     initing = INIT_LOAD;
     if(!config_exec_json(game::savedconfig(), false)) 
     {
-        execfile(game::defaultconfig());
+        LuaEngine::runFile(std::string(game::defaultconfig()));
         writecfg(game::restoreconfig());
     }
-    execfile(game::autoexec(), false);
+    LuaEngine::runFile(std::string(game::autoexec()));
     initing = NOT_INITING;
 
     persistidents = false;

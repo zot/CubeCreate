@@ -1,4 +1,4 @@
-
+CV:run([[
 // implements some editing commands
 
 
@@ -151,7 +151,7 @@ entfind    = [
     entselect [ && (equaltype @@arg1) [equalattr 0 @@arg2] [equalattr 1 @@arg3] [equalattr 2 @@arg4] ]
   ] [
     entselect [ && (equaltype @@arg1) [equalattr 0 @@arg2] [equalattr 1 @@arg3] [equalattr 2 @@arg4] [equalattr 3 @@arg5] ]
-  ]]]]
+  ] ] ] ]
 ]
 
 entfindinsel = [ 
@@ -165,7 +165,7 @@ entfindinsel = [
     entselect [ && (insel) [equaltype @@arg1] [equalattr 0 @@arg2] [equalattr 1 @@arg3] [equalattr 2 @@arg4] ]
   ] [
     entselect [ && (insel) [equaltype @@arg1] [equalattr 0 @@arg2] [equalattr 1 @@arg3] [equalattr 2 @@arg4] [equalattr 3 @@arg5] ]
-  ]]]]
+  ] ] ] ]
 ]
 
 lse        = [
@@ -324,4 +324,4 @@ scrollblendbrush = [
 exec "data/intensity_edit.cfg"
 
 minimaphere = [minimapheight (at (getcampos) 2)]
-
+]])

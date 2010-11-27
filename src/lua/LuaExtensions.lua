@@ -290,6 +290,13 @@ math.bor = CAPI.bor
 -- @name math.band
 math.band = CAPI.band
 
+--- Bitwise NOT surrogate.
+-- @param arg1 A number value to make bitwise NOT for.
+-- @return The result of bitwise NOT with argument.
+-- @class function
+-- @name math.bnot
+math.bnot = CAPI.bnot
+
 --- Round a float number to integer.
 -- @param num The float number to round.
 -- @return A rounded integer value.

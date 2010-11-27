@@ -19,6 +19,6 @@ Map.texture("1", "yo_frankie/generic_lava.png", 0, 0, 0, 2) -- falling lava
 -- texture 0 is hardcoded as the sky
 
 Map.textureReset() -- let's start at texture slot 0
-Map.setShader("stdworld") -- default world shader
+Shader.set("stdworld") -- default world shader
 Map.texture("0", "golgotha/watr1.jpg") -- Dummy
-Map.setShader("stdworld") 
+Shader.set("stdworld") 

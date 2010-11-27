@@ -1,3 +1,4 @@
+CV:run([[
 // these default settings get executed whenever "config.cfg" is not available
 // do not modify anything below, instead change settings in game, or add to autoexec.cfg
 
@@ -146,8 +147,8 @@ editbindvar M showmat
 editbind PERIOD selentedit
 
 editbind F2 showtexgui
-editbind F3 [if (cleargui 1) [] [showentgui]]
-editbind F4 [if (cleargui 1) [] [showgui mapmodels]]
+editbind F3 [if (cleargui 1) [] [showentgui] ]
+editbind F4 [if (cleargui 1) [] [showgui mapmodels] ]
 editbind F5 savemap
 editbind F6 [ notepad (mapcfgname) ]
 editbind F9 [echo (getseltex) : (gettexname (getseltex))]
@@ -213,8 +214,8 @@ delta_edit_16 = [ vdelta [voffset 0 (* $arg1 $multiplier2)] ] // vSlot: offset V
 delta_edit_17 = [ vdelta [vrotate $arg1] ] // vSlot: rotate
 delta_edit_18 = [ vdelta [vscale (if (< $arg1 0) 0.5 2)] ] // vSlot: scale
  
-editbind LALT [multiplier = 10;onrelease [multiplier = 1]]
-editbind RALT [multiplier2 = 32;onrelease [multiplier2 = 1]]
+editbind LALT [multiplier = 10;onrelease [multiplier = 1] ]
+editbind RALT [multiplier2 = 32;onrelease [multiplier2 = 1] ]
 multiplier = 1
 multiplier2 = 1
 
@@ -231,4 +232,4 @@ editbind KP9 [scrollblendbrush 1]
 
 // INTENSITY
 exec "data/intensity_defaults.cfg"
-
+]])

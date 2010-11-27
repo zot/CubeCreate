@@ -91,6 +91,7 @@ execfile( os.path.join(PYTHON_SCRIPT_DIR, "server", "server_init.py") )
 print "Initializing CModule"
 
 CModule.init()
+CModule.create_engine()
 CModule.set_home_dir( get_home_subdir() )
 
 # Utilities

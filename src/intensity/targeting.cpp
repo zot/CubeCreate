@@ -126,8 +126,6 @@ void mouse_targeting(int* on)
 
 COMMAND(mouse_targeting, "i");
 
-VAR(has_mouse_target, 0, 0, 1);
-
 void set_mouse_target_entity(int *uniqueId)
 {
     TargetingControl::targetLogicEntity = LogicSystem::getLogicEntity(*uniqueId);
@@ -160,7 +158,7 @@ void TargetingControl::determineMouseTarget(bool forceEntityCheck)
     {
         TargetingControl::targetLogicEntity = placeholderLogicEntity;
         TargetingControl::targetPosition = TargetingControl::worldPosition;
-        has_mouse_target = false;
+        SETV(has_mouse_target, 0);
     } else {
         static long lastEntityCheck = -1; // Use this to not run an actual entity check more than 1/frame
 
@@ -191,9 +189,9 @@ void TargetingControl::determineMouseTarget(bool forceEntityCheck)
                 ClientSystem::playerLogicEntity->dynamicEntity->o = save;
             }
 
-            has_mouse_target = TargetingControl::targetLogicEntity.get() && !TargetingControl::targetLogicEntity->isNone();
+            SETV(has_mouse_target, int(TargetingControl::targetLogicEntity.get() && !TargetingControl::targetLogicEntity->isNone()));
 
-            if (has_mouse_target)
+            if (GETIV(has_mouse_target))
             {
                 vec temp(worldpos);
                 temp.sub(camera1->o);

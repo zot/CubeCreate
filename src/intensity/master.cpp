@@ -13,17 +13,6 @@ namespace MasterServer
 {
 
 #ifdef CLIENT
-
-SVARP(entered_username, ""); // Persisted - uses "-" instead of "@", to get around sauer issue
-SVAR(true_username, "");  // Has "@", can be sent to server to login
-SVAR(entered_password, "");
-SVARP(hashed_password, "");
-
-VAR(have_master, 0, 1, 1);
-VAR(logged_into_master, 0, 0, 1);
-
-SVAR(error_message, ""); // TODO: Move
-
 //! Log in to the master server
 void do_login(char *username, char *password)
 {
@@ -34,7 +23,7 @@ void do_login(char *username, char *password)
 
     if (_password == "--------") // If a password not entered, use the old (hashed) one
     {
-        _password = hashed_password;
+        _password = GETSV(hashed_password);
     }
 
     REFLECT_PYTHON( login_to_master );
@@ -44,14 +33,14 @@ void do_login(char *username, char *password)
     if (success) {
         // Save password
         _password = boost::python::extract<std::string>(ret[1]);
-        setsvar("hashed_password", _password.c_str());
+        SETVF(hashed_password, _password);
 
         // Mark as logged in, and continue
-        setvar("logged_into_master", 1);
+        SETVF(logged_into_master, 1);
         execute("setup_main_menu");
         conoutf("Logged in successfully");
     } else {
-        setsvar("hashed_password", ""); // Remove the old saved password, for security
+        SETVF(hashed_password, ""); // Remove the old saved password, for security
     }
 }
 
@@ -62,13 +51,13 @@ void useLogin(std::string userId, std::string sessionId)
     REFLECT_PYTHON( use_master_login );
     use_master_login( userId, sessionId );
 
-    setvar("logged_into_master", 1);
+    SETVF(logged_into_master, 1);
     execute("setup_main_menu");
 }
 
 void logout()
 {
-    logged_into_master = 0;
+    SETV(logged_into_master, 0);
     execute("setup_main_menu");
 }
 

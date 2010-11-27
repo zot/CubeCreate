@@ -60,6 +60,10 @@ LUA_EMBED_NOPARAM(band, 1, {
     LuaEngine::pushValue(out);
 });
 
+LUA_EMBED_i(bnot, 1, {
+    LuaEngine::pushValue(~arg1);
+});
+
 // Entity management
 
 //LUA_EMBED_i(registerLogicEntityNonSauer, 0, {

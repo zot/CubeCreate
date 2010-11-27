@@ -85,11 +85,11 @@ void FPSClientInterface::updatePosition(fpsent *d)
 
 int FPSClientInterface::smoothmove()
 {
-    return game::smoothmove;
+    return GETIV(smoothmove);
 }
 
 int FPSClientInterface::smoothdist()
 {
-    return game::smoothdist;
+    return GETIV(smoothdist);
 }
 

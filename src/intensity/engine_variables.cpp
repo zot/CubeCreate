@@ -110,7 +110,7 @@ std::string EngineVariable::getString()  { return anystring(curv); }
  */
 
 // you use this one for integer variables; checking for right value is done in both here and lua to save stack manipulation
-void EngineVariable::set(int val, bool luaSync)
+void EngineVariable::set(int val, bool luaSync, bool forceCB)
 {
 	if (val < anyint(minv) || val > anyint(maxv))
 	{
@@ -119,11 +119,11 @@ void EngineVariable::set(int val, bool luaSync)
 	}
 	prev = curv;
 	curv = val;
-	callCB(luaSync);
+	callCB(luaSync, forceCB);
 }
 
 // float variables
-void EngineVariable::set(double val, bool luaSync)
+void EngineVariable::set(double val, bool luaSync, bool forceCB)
 {
 	if (val < anydouble(minv) || val > anydouble(maxv))
 	{
@@ -132,15 +132,15 @@ void EngineVariable::set(double val, bool luaSync)
 	}
 	prev = curv;
 	curv = val;
-	callCB(luaSync);
+	callCB(luaSync, forceCB);
 }
 
 // string variables
-void EngineVariable::set(std::string val, bool luaSync)
+void EngineVariable::set(std::string val, bool luaSync, bool forceCB)
 {
 	prev = curv;
 	curv = val;
-	callCB(luaSync);
+	callCB(luaSync, forceCB);
 }
 
 // check if variable is persistent, publicly available
@@ -191,7 +191,7 @@ void EngineVariable::registerLuaSVAR()
  */
 
 // this one can call a callback if set; it also does a value sync with Lua which can call lua callback.
-void EngineVariable::callCB(bool luaSync)
+void EngineVariable::callCB(bool luaSync, bool forceCB)
 {
 	#define SYNCV(val) \
 	if (luaSync || LuaEngine::exists()) \
@@ -205,19 +205,19 @@ void EngineVariable::callCB(bool luaSync)
 	{
 		case 'I':
 		{
-			if (hasCB && !luaSync) intCB(anyint(minv), anyint(maxv), anyint(prev), anyint(curv));
+			if (hasCB && (!luaSync || forceCB)) intCB(anyint(minv), anyint(maxv), anyint(prev), anyint(curv));
 			SYNCV(anyint(curv));
 			break;
 		}
 		case 'F':
 		{
-			if (hasCB && !luaSync) doubleCB(anydouble(minv), anydouble(maxv), anydouble(prev), anydouble(curv));
+			if (hasCB && (!luaSync || forceCB)) doubleCB(anydouble(minv), anydouble(maxv), anydouble(prev), anydouble(curv));
 			SYNCV(anydouble(curv));
 			break;
 		}
 		case 'S':
 		{
-			if (hasCB && !luaSync) stringCB(anystring(prev), anystring(curv));
+			if (hasCB && (!luaSync || forceCB)) stringCB(anystring(prev), anystring(curv));
 			SYNCV(anystring(curv));
 			break;
 		}

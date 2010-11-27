@@ -10,6 +10,7 @@ luaL_Reg CAPI[] = {
     STDREG(rsh),
     STDREG(bor),
     STDREG(band),
+    STDREG(bnot),
     // Entity management
     STDREG(unregisterLogicEntity),
     STDREG(placeInWorld),

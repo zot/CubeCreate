@@ -156,15 +156,13 @@ bool ClientSystem::scenarioStarted()
     return _mapCompletelyReceived && _scenarioStarted;
 }
 
-VAR(can_edit, 0, 0, 1);
-
 void ClientSystem::frameTrigger(int curtime)
 {
     if (scenarioStarted())
     {
         PlayerControl::handleExtraPlayerMovements(curtime);
         TargetingControl::determineMouseTarget();
-        can_edit = int(isAdmin());
+        SETV(can_edit, int(isAdmin()));
         IntensityTexture::doBackgroundLoading();
     }
 
@@ -396,7 +394,7 @@ void ClientSystem::drawHUD(int w, int h)
     }
 }
 
-void ClientSystem::drawMinimap(int w, int h, float minmapzoom, float maxmapzoom, float forceminmapzoom, float forcemaxmapzoom, float minimapsize, float minimapxpos, float minimapypos, float minimaprot, int minimapsides, int minimaprightalign)
+void ClientSystem::drawMinimap(int w, int h)
 {
     if (g3d_windowhit(true, false)) return; // Showing sauer GUI - do not show minimap
 
@@ -407,12 +405,12 @@ void ClientSystem::drawMinimap(int w, int h, float minmapzoom, float maxmapzoom,
     glScalef(h / 1000.0f, h / 1000.0f, 1); // we don't want the screen width
 
     // if we want it aligned to right, we need to move stuff through screen .. if not, we just set the x position value
-    if (minimaprightalign)
-        x = (1000 * w) / h - minimapsize * 1000 - minimapxpos * 1000;
+    if (GETIV(minimaprightalign))
+        x = (1000 * w) / h - GETFV(minimapradius) * 1000 - GETFV(minimapxpos) * 1000;
     else
-        x = minimapxpos * 1000;
+        x = GETFV(minimapxpos) * 1000;
 
-    y = minimapypos * 1000;
+    y = GETFV(minimapypos) * 1000;
     glColor3f(1, 1, 1);
 
     glDisable(GL_BLEND);
@@ -420,29 +418,29 @@ void ClientSystem::drawMinimap(int w, int h, float minmapzoom, float maxmapzoom,
     pos = vec(game::hudplayer()->o).sub(minimapcenter).mul(minimapscale).add(0.5f); // hudplayer, because we want minimap also when following someone.
 
     vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
-    float scale = clamp(max(minimapradius.x, minimapradius.y) / 3, (forceminmapzoom < 0) ? minmapzoom : forceminmapzoom, (forcemaxmapzoom < 0) ? maxmapzoom : forcemaxmapzoom);
+    float scale = clamp(max(minimapradius.x, minimapradius.y) / 3, (GETIV(forceminminimapzoom) < 0) ? float(GETIV(minminimapzoom)) : float(GETIV(forceminminimapzoom)), (GETIV(forcemaxminimapzoom) < 0) ? float(GETIV(maxminimapzoom)) : float(GETIV(forcemaxminimapzoom)));
 
     glBegin(GL_TRIANGLE_FAN);
 
-    loopi(minimapsides) // create a triangle for every side, together it makes triangle when minimapsides is 3, square when it's 4 and "circle" for any other value.
+    loopi(GETIV(minimapsides)) // create a triangle for every side, together it makes triangle when minimapsides is 3, square when it's 4 and "circle" for any other value.
     {
         // this part manages texture
-        vec tc = vec(dir).rotate_around_z((i / float(minimapsides)) * 2 * M_PI);
+        vec tc = vec(dir).rotate_around_z((i / float(GETIV(minimapsides))) * 2 * M_PI);
 
-        if (minimaprot > 0) // rotate the minimap if we want to rotate it, if not, just skip this
-            tc.rotate_around_z(minimaprot * (M_PI / 180.0f));
+        if (GETFV(minimaprotation) > 0) // rotate the minimap if we want to rotate it, if not, just skip this
+            tc.rotate_around_z(GETFV(minimaprotation) * (M_PI / 180.0f));
 
         glTexCoord2f(pos.x + (tc.x * scale * minimapscale.x),
                      pos.y + (tc.y * scale * minimapscale.y));
 
         // this part actually creates the triangle which is the texture bind to
-        vec v = vec(0, -1, 0).rotate_around_z((i / float(minimapsides)) * 2 * M_PI);
+        vec v = vec(0, -1, 0).rotate_around_z((i / float(GETIV(minimapsides))) * 2 * M_PI);
 
-        if (minimaprot > 0)
-            v.rotate_around_z(minimaprot * (M_PI / 180.0f));
+        if (GETFV(minimaprotation) > 0)
+            v.rotate_around_z(GETFV(minimaprotation) * (M_PI / 180.0f));
 
-        glVertex2f(x + 500 * minimapsize * (1.0f + v.x),
-                   y + 500 * minimapsize * (1.0f + v.y));
+        glVertex2f(x + 500 * GETFV(minimapradius) * (1.0f + v.x),
+                   y + 500 * GETFV(minimapradius) * (1.0f + v.y));
     }
 
     glEnd();
@@ -647,7 +645,7 @@ void show_instances()
 
     if (instances == None)
     {
-        setsvar("error_message", "Could not get the list of instances");
+        SETVF(error_message, "Could not get the list of instances");
         showgui("error");
         return;
     }
@@ -697,10 +695,6 @@ bool checkCompile(std::string filename)
     }
 }
 
-//! The asset ID of the last saved map. This is useful if we want to reload it (if it
-//! crashed the server, for example
-SVARP(last_uploaded_map_asset, "");
-
 //! The user picks 'upload map' in the GUI.
 //! First we save the map. Then we call Python, which packages the map
 //! and uploads it to the correct asset server, then notify the instance we
@@ -738,7 +732,7 @@ void do_upload()
     // Remember asset
     REFLECT_PYTHON( get_curr_map_asset_id );
     std::string assetId = boost::python::extract<std::string>( get_curr_map_asset_id() );
-    setsvar("last_uploaded_map_asset", assetId.c_str());
+    SETVF(last_uploaded_map_asset, assetId);
 }
 
 COMMAND(do_upload, "");
@@ -750,7 +744,7 @@ COMMAND(do_upload, "");
 //! replacing the .ogz file, etc.
 void repeat_upload()
 {
-    std::string lastUploadedMapAsset = last_uploaded_map_asset;
+    std::string lastUploadedMapAsset = GETSV(last_uploaded_map_asset);
 
     // Acquire the asset info, so we know its file locations, asset server, etc.
     renderprogress(0.2, "getting map asset info...");

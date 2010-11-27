@@ -32,12 +32,10 @@ void setKeyRepeat(int delay, int interval)
     SDL_EnableKeyRepeat(keyRepeatDelay, keyRepeatInterval);
 }
 
-SVAR(message_title, "");
-SVAR(message_content, "");
 void showCubeGuiMessage(std::string title, std::string content)
 {
-    setsvar("message_title", title.c_str());
-    setsvar("message_content", content.c_str());
+    SETVF(message_title, title);
+    SETVF(message_content, content);
     showgui("message");
 }
 
@@ -54,14 +52,11 @@ void showMessage(std::string title, std::string content, int originClientNumber)
     } 
 }
 
-SVAR(input_title, "");
-SVAR(input_content, "");
-SVAR(input_data, "");
 void showInputDialog(std::string title, std::string content)
 {
-    setsvar("input_title", title.c_str());
-    setsvar("input_content", content.c_str());
-    setsvar("input_data", "");
+    SETVF(input_title, title);
+    SETVF(input_content, content);
+    SETVF(input_data, "");
     showgui("input_dialog");
 }
 

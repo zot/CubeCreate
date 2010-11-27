@@ -374,7 +374,6 @@ namespace game
     extern int lasthit;
     extern int respawnent;
     extern int following;
-    extern int smoothmove, smoothdist;
 
     extern bool clientoption(const char *arg);
     extern fpsent *getclient(int cn);

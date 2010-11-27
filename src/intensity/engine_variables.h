@@ -151,7 +151,7 @@ public:
      * 
      * Sets an integer value of the variable.
      */
-	void set(int val, bool luaSync = true);
+	void set(int val, bool luaSync = true, bool forceCB = false);
     /**
      * @brief Set a double value of the variable.
      * @param val The value itself.
@@ -159,7 +159,7 @@ public:
      * 
      * Sets a double value of the variable.
      */
-	void set(double val, bool luaSync = true);
+	void set(double val, bool luaSync = true, bool forceCB = false);
     /**
      * @brief Set a string value of the variable.
      * @param val The value itself.
@@ -167,7 +167,7 @@ public:
      * 
      * Sets a string value of the variable.
      */
-	void set(std::string val, bool luaSync = true);
+	void set(std::string val, bool luaSync = true, bool forceCB = false);
     /**
      * @brief Gets if the variable is persistent.
      * @return If persistent, then true, otherwise false.
@@ -202,7 +202,7 @@ public:
 	void registerLuaSVAR();
 private:
 	// this one can call a callback if set; it also does a value sync with Lua which can call lua callback.
-	void callCB(bool luaSync);
+	void callCB(bool luaSync, bool forceCB);
 
 	// is the var persistent?
 	bool persistent;
@@ -416,6 +416,19 @@ private:
  * @endcode
  */
 #define SETV(name, value) EngineVariables::get(#name).get()->set(value)
+
+/**
+ * @def SETVF
+ * @brief Macro for making setting variable value easier.
+ * @param name Name of the variable to set.
+ * @param value New value to set.
+ * 
+ * Sets value of variable of name @p name, forcing its callback to run (if exists).
+ * @code
+ * SETVF(foo, 15);
+ * @endcode
+ */
+#define SETVF(name, value) EngineVariables::get(#name).get()->set(value, true)
 
 /**
  * @}

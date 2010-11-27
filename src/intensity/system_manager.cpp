@@ -29,10 +29,10 @@ void SystemManager::init()
 
     #ifdef CLIENT
         int haveMaster = (Utility::Config::getString("Network", "master_server", "") != "");
-        setvar("have_master", haveMaster);
+        SETVF(have_master, haveMaster);
         if (!haveMaster)
         {
-            setvar("logged_into_master", 1);
+			SETVF(logged_into_master, 1);
             execute("setup_main_menu");
             Logging::log(Logging::DEBUG, "No master server; working entirely remotely\r\n");
         }

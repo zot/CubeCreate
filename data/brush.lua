@@ -1,3 +1,4 @@
+CV:run([[
 // this config defines various heightmap brushes
 
 // a brush has two parts: the brushmap and the brushhandle
@@ -47,7 +48,7 @@ newbrush = [
     brush_@brushmax = [
       brushname = [@@@arg1]
       clearbrush
-      @@(if (> $numargs 1) [result [brushhandle @arg2 @arg3; brushverts [@@arg4]]])
+      @@(if (> $numargs 1) [result [ brushhandle @arg2 @arg3; brushverts [@@arg4] ] ])
     ]
   ]
 ]
@@ -169,4 +170,4 @@ addblendbrush "Gradient 16px" "packages/brushes/gradient_16.png"
 addblendbrush "Gradient 32px" "packages/brushes/gradient_32.png"
 addblendbrush "Gradient 64px" "packages/brushes/gradient_64.png"
 addblendbrush "Gradient 128px" "packages/brushes/gradient_128.png"
-
+]])

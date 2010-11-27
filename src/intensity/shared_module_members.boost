@@ -39,6 +39,7 @@ exposeToPython("render_progress", render_progress);
 
 // Scripting
 
+exposeToPython("create_engine", &LuaEngine::create);
 exposeToPython("has_engine", &LuaEngine::exists);
 exposeToPython("run_script", &LuaEngine::runScript);
 exposeToPython("run_script_string", &LuaEngine::runScriptString);

@@ -321,7 +321,7 @@ Shader.defer(4, "glowworld",
 				glow *= glowcolor.rgb;
 				float k = max(glow.r, max(glow.g, glow.b)); 
 				gl_FragColor.rgb = min(k*k*32.0, 1.0) * glow;
-				#pragma CUBE2_variantoverride gl_FragColor.a = texture2D(lightmap, gl_TexCoord[1].xy).a; --
+				#pragma CUBE2_variantoverride gl_FragColor.a = texture2D(lightmap, gl_TexCoord[1].xy).a; //
 				gl_FragColor.a = colorparams.a;
 			]=], "",
 			[=[
@@ -370,7 +370,7 @@ Shader.defer(4, "pulseglowworld",
 				glow *= pulse;
 				float k = max(glow.r, max(glow.g, glow.b)); 
 				gl_FragColor.rgb = min(k*k*32.0, 1.0) * glow;
-				#pragma CUBE2_variantoverride gl_FragColor.a = texture2D(lightmap, gl_TexCoord[1].xy).a; --
+				#pragma CUBE2_variantoverride gl_FragColor.a = texture2D(lightmap, gl_TexCoord[1].xy).a; //
 				gl_FragColor.a = colorparams.a;
 			]=], "uniform vec4 millis; varying vec3 pulse;",
 			[=[
@@ -540,8 +540,6 @@ Shader.normal(4, "depthfxsplitworld",
 --	G -> pulse glow
 --	i -> glare intensity
 
-bumpvariantargs = {}
-
 function btopt(arg)
 	return string.find(bumpvariantargs[2], arg) ~= nil
 end
@@ -589,10 +587,10 @@ function bumpvariantshader(...)
 			{
 				gl_Position = ftransform();
 				gl_TexCoord[0].xy = gl_MultiTexCoord0.xy + texgenscroll.xy;
-				-- need to store these in Z/W to keep texcoords < 6, otherwise kills performance on Radeons
-				-- but slows lightmap access in fragment shader a bit, so avoid when possible
+				// need to store these in Z/W to keep texcoords < 6, otherwise kills performance on Radeons
+				// but slows lightmap access in fragment shader a bit, so avoid when possible
 				<%
-					if btopt("r") or CV.minimizetcusage then
+					if btopt("r") or CV.minimizetcusage ~= 0 then
 						return [=[ gl_TexCoord[0].zw = gl_MultiTexCoord1.yx * ]=] .. lmcoordscale
 					else
 						return [=[ gl_TexCoord[1].xy = gl_MultiTexCoord1.xy * ]=] .. lmcoordscale
@@ -607,7 +605,7 @@ function bumpvariantshader(...)
 						]=]}
 						if btopt("t") then
 							table.insert(r, [=[
-								-- trans eye vector into TS
+								// trans eye vector into TS
 								vec3 camobj = camera.xyz - gl_Vertex.xyz;
 								camvec = vec3(dot(camobj, tangent.xyz), dot(camobj, binormal), dot(camobj, gl_Normal));
 							]=])
@@ -622,7 +620,6 @@ function bumpvariantshader(...)
 								// calculate tangent -> world transform
 								world = mat3(tangent.xyz, binormal, gl_Normal);
 							]=]
-							end
 						end
 						return table.concat(r, '\n')
 					end
@@ -664,7 +661,7 @@ function bumpvariantshader(...)
 
 			void main(void)
 			{
-				#define lmtc <% return (CV.minimizetcusage or btopt("r")) and "gl_TexCoord[0].wz" or "gl_TexCoord[1].xy" %>
+				#define lmtc <% return (CV.minimizetcusage ~= 0 or btopt("r")) and "gl_TexCoord[0].wz" or "gl_TexCoord[1].xy" %>
 				<%
 					if not btopt("i") or btopt("s") then
 						return [=[
@@ -711,22 +708,23 @@ function bumpvariantshader(...)
 					end
 				%>
 
-				<% if not btopt("p") or not btopt("P") then return "#define dtc gl_TexCoord[0].xy" end %>
+				<% if btopt("p") or not btopt("P") then return "#define dtc gl_TexCoord[0].xy" end %>
 				<% if not btopt("i") or btopt("S") then return "vec4 diffuse = texture2D(diffusemap, dtc);" end %>
 				<% if not btopt("i") then return "diffuse.rgb *= colorparams.rgb;" end %>
 
 				<%
 					if not btopt("i") or btopt("s") then
+						local r = {}
 						if not btopt("P") then
-							return [=[
+							table.insert(r, [=[
 								vec3 bump = texture2D(normalmap, dtc).rgb;
 								bump = bump*2.0 - 1.0;
-							]=]
-						else
-							return [=[
-								bump = bump*2.0 - 1.0;
-							]=]
+							]=])
 						end
+						table.insert(r, [=[
+							bump = bump*2.0 - 1.0;
+						]=])
+						return table.concat(r, '\n')
 					end
 				%>
 
@@ -831,7 +829,7 @@ function bumpvariantshader(...)
 							else
 								table.insert(ret, [=[
 									gl_FragColor.rgb = glow*k;
-									#pragma CUBE2_variantoverride gl_FragColor.a = texture2D(lmcolor, lmtc).a; --
+									#pragma CUBE2_variantoverride gl_FragColor.a = texture2D(lmcolor, lmtc).a; //
 									gl_FragColor.a = colorparams.a;
 								]=])
 							end
@@ -854,18 +852,21 @@ function bumpvariantshader(...)
 			}
 		]]
 	)
+	bumpvariantargs = nil
 end
 
+bumpshaderargs = {}
 function bumpshader (...)
-	bumpvariantargs = { ... }
-	Shader.defer(string.find(bumpvariantargs[2], "e") and 7 or 5, bumpvariantargs[1],
+	bumpshaderargs = { ... }
+	Shader.defer(string.find(bumpshaderargs[2], "e") and 7 or 5, bumpshaderargs[1],
 		[[
-			bumpvariantshader(bumpvariantargs[1], bumpvariantargs[2])
+			bumpvariantshader(bumpshaderargs[1], bumpshaderargs[2])
 			if btopt("g") or btopt("s") then
-				bumpvariantshader(bumpvariantargs[1], string.gsub(bumpvariantargs[2], "i", "r"))
+				bumpvariantshader(bumpshaderargs[1], string.gsub(bumpshaderargs[2], "i", "r"))
 			end
 		]]
 	)
+	bumpshaderargs = nil
 end
 
 bumpshader("bumpworld", "")
@@ -1016,7 +1017,7 @@ Shader.fast("bumpenvspecmapparallaxpulseglowworld", "bumpenvpulseglowworldalt", 
 
 skelanimdefs = [[
 	<%
-		if CV.useubo then
+		if CV.useubo ~= 0 then
 			return [=[
 				#ifdef GL_ARB_uniform_buffer_object
 				#extension GL_ARB_uniform_buffer_object : enable
@@ -1028,7 +1029,7 @@ skelanimdefs = [[
 		end
 	%>
 	<%
-		if CV.usebue then
+		if CV.usebue ~= 0 then
 			return "#extension GL_EXT_bindable_uniform : enable"
 		end
 	%>
@@ -1038,7 +1039,7 @@ skelanimdefs = [[
 	attribute vec4 vbones;
 	#pragma CUBE2_uniform animdata AnimData 0 16
 	<%
-		if CV.useubo then
+		if CV.useubo ~= 0 then
 			return string.format([=[
 				#if defined(GL_ARB_uniform_buffer_object) || __VERSION__ >= 140
 					layout(std140) uniform AnimData
@@ -1050,7 +1051,7 @@ skelanimdefs = [[
 		end
 	%>
 	<%
-		if CV.usebue then
+		if CV.usebue ~= 0 then
 			return [=[
 				#ifdef GL_EXT_bindable_uniform
 					bindable
@@ -1060,13 +1061,13 @@ skelanimdefs = [[
 	%>
 
 	uniform vec4 animdata[<% return ( math.min( ( CV.maxvsuniforms - CV.reservevpparams ), 256) - 10 ) %>];
-	<% if CV.useubo then return "#endif" end %>
+	<% if CV.useubo ~= 0 then return "#endif" end %>
 ]]
 
 skelanimfragdefs = [[
 <%
-	if CV.ati_ubo_bug then
-		if CV.useubo then
+	if CV.ati_ubo_bug ~= 0 then
+		if CV.useubo ~= 0 then
 			return string.format([=[
 				#ifdef GL_ARB_uniform_buffer_object
 					#extension GL_ARB_uniform_buffer_object : enable
@@ -1593,7 +1594,7 @@ function modelanimshader (...)
 	local args = { ... }
 	fraganimshader =  args[2] > 0 and args[2]
 	reuseanimshader = fraganimshader
-	if CV.ati_ubo_bug then
+	if CV.ati_ubo_bug ~= 0 then
 		reuseanimshader = string.format("%i , %i", args[2], tonumber(args[2] > 0))
 		if args[4] == 1 then
 			modelvfargs = { "bB" .. args[3] }
@@ -1744,7 +1745,7 @@ for i = 1, 7 do
 		Shader.alt(string.format("blurx%i", i), string.format("blurx%i", i - 1))
 		Shader.alt(string.format("blury%i", i), string.format("blury%i", i - 1))
 	end
-	if CV.usetexrect then
+	if CV.usetexrect ~= 0 then
 		blurshader(string.format("blurx%irect", i), i, "x", "2DRect")
 		blurshader(string.format("blury%irect", i), i, "y", "2DRect")
 		if i > 0 then
@@ -2153,7 +2154,7 @@ function explosionshader(...)
 	)
 end
 
-for i = 1, (CV.usetexrect and 6 or 4) do
+for i = 1, (CV.usetexrect ~= 0 and 6 or 4) do
 	local list = { "", "glare", "soft", "soft8", "softrect", "soft8rect" }
 	explosionshader("explosion2d" .. list[i],
 		[[
@@ -2245,7 +2246,7 @@ function particleshader(...)
 	)
 end
 
-for i = 1, (CV.usetexrect and 5 or 3) do
+for i = 1, (CV.usetexrect ~= 0 and 5 or 3) do
 	local list = { "", "soft", "soft8", "softrect", "soft8rect" }
 	particleshader("particle" .. list[i])
 end

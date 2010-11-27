@@ -22,7 +22,6 @@ struct CameraControl
 {
     //! How much the camera moves per iteration, as per sauer's system. Each frame, the camera is moved so-and-so iterations
     //! to be behind the PC, but only until it hits a wall
-    static int cameraMoveDist;
     static int cameraMoveIters; //! How many iterations are used by the camera, each of cameraMoveDist size
 
     // Increments or decrements the distance of the camera from the PC (to zoom in or out on the PC)
