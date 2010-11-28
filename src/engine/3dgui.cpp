@@ -1031,7 +1031,7 @@ bool g3d_movecursor(int dx, int dy)
 
 void g3d_addgui(g3d_callback *cb, vec &origin, int flags)
 {
-    bool gui2d = flags&GUI_FORCE_2D || (flags&GUI_2D && GETIV(gui2d)) || mainmenu;
+    bool gui2d = flags&GUI_FORCE_2D || (flags&GUI_2D && GETIV(gui2d)) || GETIV(mainmenu);
     if(!gui2d && flags&GUI_FOLLOW && GETIV(guifollow)) origin.z = player->o.z-(player->eyeheight-1);
     gui &g = (gui2d ? guis2d : guis3d).add();
     g.cb = cb;
@@ -1074,9 +1074,9 @@ void g3d_render()
     // call all places in the engine that may want to render a gui from here, they call g3d_addgui()
     extern void g3d_texturemenu();
     
-    if(!mainmenu) g3d_texturemenu();
+    if(!GETIV(mainmenu)) g3d_texturemenu();
     g3d_mainmenu();
-    if(!mainmenu) game::g3d_gamemenus();
+    if(!GETIV(mainmenu)) game::g3d_gamemenus();
 
     guis2d.sort(g3d_sort);
     guis3d.sort(g3d_sort);

@@ -2117,7 +2117,7 @@ JSONObject writecrosshairs()
 void drawcrosshair(int w, int h)
 {
     bool windowhit = g3d_windowhit(true, false) || !GuiControl::isMouselooking(); // INTENSITY: Mouselooking
-    if(!windowhit && (hidehud || mainmenu)) return; //(hidehud || player->state==CS_SPECTATOR || player->state==CS_DEAD)) return;
+    if(!windowhit && (hidehud || GETIV(mainmenu))) return; //(hidehud || player->state==CS_SPECTATOR || player->state==CS_DEAD)) return;
 
     float r = 1, g = 1, b = 1, cx = 0.5f, cy = 0.5f, chsize;
     Texture *crosshair;
@@ -2191,7 +2191,7 @@ FVARP(conscale, 1e-3f, 0.33f, 1e3f);
 
 void gl_drawhud(int w, int h)
 {
-    if(editmode && !hidehud && !mainmenu)
+    if(editmode && !hidehud && !GETIV(mainmenu))
     {
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
@@ -2235,7 +2235,7 @@ void gl_drawhud(int w, int h)
 
     glEnable(GL_BLEND);
     
-    if(!mainmenu)
+    if(!GETIV(mainmenu))
     {
         drawdamagescreen(w, h);
         drawdamagecompass(w, h);
@@ -2245,7 +2245,7 @@ void gl_drawhud(int w, int h)
     defaultshader->set();
 
     int conw = int(w/conscale), conh = int(h/conscale), abovehud = conh - FONTH, limitgui = abovehud;
-    if(!hidehud && !mainmenu)
+    if(!hidehud && !GETIV(mainmenu))
     {
         if(!hidestats)
         {

@@ -14,8 +14,6 @@
 #include "engine.h"
 #include "SDL_mixer.h"
 
-VAR(dbgmovie, 0, 0, 1);
-
 struct aviindexentry
 {
     int type, size;
@@ -124,7 +122,7 @@ struct aviwriter
                 videoframes++;
             }
         }
-        if(dbgmovie) conoutf(CON_DEBUG, "fileframes: sound=%d, video=%d+%d(dups)\n", soundframes, videoframes, index.length()-(soundframes+videoframes));
+        if(GETIV(dbgmovie)) conoutf(CON_DEBUG, "fileframes: sound=%d, video=%d+%d(dups)\n", soundframes, videoframes, index.length()-(soundframes+videoframes));
 
         f->seek(fileframesoffset, SEEK_SET);
         f->putlil(index.length()-soundframes); // videoframes including duplicates        
@@ -161,7 +159,7 @@ struct aviwriter
                 case AUDIO_S16MSB: desc = "s16b"; break;
                 default:           desc = "unkn";
             }
-            if(dbgmovie) conoutf(CON_DEBUG, "soundspec: %dhz %s x %d", soundfrequency, desc, soundchannels);
+            if(GETIV(dbgmovie)) conoutf(CON_DEBUG, "soundspec: %dhz %s x %d", soundfrequency, desc, soundchannels);
         }
     }
     
@@ -571,7 +569,7 @@ struct aviwriter
             while(vpos > snum && index[vpos-snum-1].type == 1) snum++;
             if(snum > 1)
             {
-                if(dbgmovie) conoutf(CON_DEBUG, "movie: interleaving sound=%d x%d video=%d x%d\n", vpos-snum, snum, vpos, vnum);
+                if(GETIV(dbgmovie)) conoutf(CON_DEBUG, "movie: interleaving sound=%d x%d video=%d x%d\n", vpos-snum, snum, vpos, vnum);
                 int frac = 0, pos = index.length();
                 loopi(snum)
                 {
@@ -590,11 +588,6 @@ struct aviwriter
     }
     
 };
-
-VAR(movieaccelblit, 0, 0, 1);
-VAR(movieaccelyuv, 0, 1, 1);
-VARP(movieaccel, 0, 1, 1);
-VARP(moviesync, 0, 0, 1);
 
 namespace recorder
 {
@@ -836,8 +829,8 @@ namespace recorder
 
     void readbuffer(videobuffer &m, uint nextframe)
     {
-        bool accelyuv = movieaccelyuv && renderpath!=R_FIXEDFUNCTION && !(m.w%8),
-             usefbo = movieaccel && hasFBO && hasTR && file->videow <= (uint)screen->w && file->videoh <= (uint)screen->h && (accelyuv || file->videow < (uint)screen->w || file->videoh < (uint)screen->h);
+        bool accelyuv = GETIV(movieaccelyuv) && renderpath!=R_FIXEDFUNCTION && !(m.w%8),
+             usefbo = GETIV(movieaccel) && hasFBO && hasTR && file->videow <= (uint)screen->w && file->videoh <= (uint)screen->h && (accelyuv || file->videow < (uint)screen->w || file->videoh < (uint)screen->h);
         uint w = screen->w, h = screen->h;
         if(usefbo) { w = file->videow; h = file->videoh; }
         if(w != m.w || h != m.h) m.init(w, h, 4);
@@ -848,7 +841,7 @@ namespace recorder
         if(usefbo)
         {
             uint tw = screen->w, th = screen->h;
-            if(hasFBB && movieaccelblit) { tw = max(tw/2, m.w); th = max(th/2, m.h); }
+            if(hasFBB && GETIV(movieaccelblit)) { tw = max(tw/2, m.w); th = max(th/2, m.h); }
             if(tw != scalew || th != scaleh)
             {
                 if(!scalefb) glGenFramebuffers_(1, &scalefb);
@@ -957,7 +950,7 @@ namespace recorder
             return false;
         }
         SDL_LockMutex(videolock);
-        if(moviesync && videobuffers.full()) SDL_CondWait(shouldread, videolock);
+        if(GETIV(moviesync) && videobuffers.full()) SDL_CondWait(shouldread, videolock);
         uint nextframe = ((totalmillis - starttime)*file->videofps)/1000;
         if(!videobuffers.full() && (lastframe == ~0U || nextframe > lastframe))
         {
@@ -1013,15 +1006,10 @@ namespace recorder
     }
 }
 
-VARP(moview, 0, 320, 10000);
-VARP(movieh, 0, 240, 10000);
-VARP(moviefps, 1, 24, 1000);
-VARP(moviesound, 0, 1, 1);
-
 void movie(char *name)
 {
     if(name[0] == '\0') recorder::stop();
-    else if(!recorder::isrecording()) recorder::start(name, moviefps, moview ? moview : screen->w, movieh ? movieh : screen->h, moviesound!=0);
+    else if(!recorder::isrecording()) recorder::start(name, GETIV(moviefps), GETIV(moview) ? GETIV(moview) : screen->w, GETIV(movieh) ? GETIV(movieh) : screen->h, GETIV(moviesound)!=0);
 }
 
 COMMAND(movie, "s");

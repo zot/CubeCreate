@@ -316,7 +316,7 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
         int entorient = 0, ent = -1;
        
         wdist = rayent(camera1->o, camdir, 1e16f, 
-                       (editmode && showmat ? RAY_EDITMAT : 0)   // select cubes first
+                       (editmode && GETIV(showmat) ? RAY_EDITMAT : 0)   // select cubes first
                        | (!dragging && entediting ? RAY_ENTS : 0)
                        | RAY_SKIPFIRST 
                        | (passthroughcube==1 ? RAY_PASS : 0), gridsize, entorient, ent);
@@ -467,7 +467,7 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
 void tryedit()
 {
     extern int hidehud;
-    if(!editmode || hidehud || mainmenu) return;
+    if(!editmode || hidehud || GETIV(mainmenu)) return;
     if(GETIV(blendpaintmode)) trypaintblendmap();
 }
 
@@ -2029,8 +2029,6 @@ void editmat(char *name, char *filtername)
 
 COMMAND(editmat, "ss");
 
-extern int menudistance, menuautoclose;
-
 VARP(texguiwidth, 1, 12, 1000);
 VARP(texguiheight, 1, 8, 1000);
 VARP(texguitime, 0, 25, 1000);
@@ -2106,7 +2104,7 @@ struct texturegui : g3d_callback
     {   
         if(!menuon) return;
         filltexlist();
-        if(!editmode || ((!texgui2d || !GETIV(gui2d)) && camera1->o.dist(menupos) > menuautoclose)) menuon = false;
+        if(!editmode || ((!texgui2d || !GETIV(gui2d)) && camera1->o.dist(menupos) > GETIV(menuautoclose))) menuon = false;
         else g3d_addgui(this, menupos, texgui2d ? GUI_2D : 0);
     }
 } gui;

@@ -559,14 +559,13 @@ void preloadwatershaders(bool force)
 
     useshaderbyname(waterrefract ? (waterfade && hasFBO ? "underwaterfade" : "underwaterrefract") : "underwater");
 
-    extern int waterfallenv;
-    if(waterfallenv && hasCM) useshaderbyname("waterfallenv");
-    if(waterfallrefract) useshaderbyname(waterfallenv && hasCM ? "waterfallenvrefract" : "waterfallrefract");
+    if(GETIV(waterfallenv) && hasCM) useshaderbyname("waterfallenv");
+    if(waterfallrefract) useshaderbyname(GETIV(waterfallenv) && hasCM ? "waterfallenvrefract" : "waterfallrefract");
 }
 
 void renderwater()
 {
-    if(editmode && showmat && !envmapping) return;
+    if(editmode && GETIV(showmat) && !envmapping) return;
     if(!rplanes) return;
 
     if(renderpath==R_FIXEDFUNCTION) { renderwaterff(); return; }
@@ -1037,7 +1036,7 @@ void queryreflections()
 
     lastquery = totalmillis;
 
-    if((editmode && showmat && !envmapping) || !hasOQ || !oqfrags || !oqwater || nowater || minimapping) return;
+    if((editmode && GETIV(showmat) && !envmapping) || !hasOQ || !oqfrags || !oqwater || nowater || minimapping) return;
 
     varray::enable();
 
@@ -1208,7 +1207,7 @@ VARR(refractclear, 0, 0, 1);
 
 void drawreflections()
 {
-    if((editmode && showmat && !envmapping) || nowater || minimapping) return;
+    if((editmode && GETIV(showmat) && !envmapping) || nowater || minimapping) return;
 
     extern int nvidia_scissor_bug;
 

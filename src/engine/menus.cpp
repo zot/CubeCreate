@@ -108,14 +108,11 @@ static vector<menu *> guistack;
 static vector<delayedupdate> updatelater;
 static bool shouldclearmenu = true, clearlater = false;
 
-VARP(menudistance,  16, 40,  256);
-VARP(menuautoclose, 32, 120, 4096);
-
 vec menuinfrontofplayer()
 { 
     vec dir;
     vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
-    dir.mul(menudistance).add(camera1->o);
+    dir.mul(GETIV(menudistance)).add(camera1->o);
     dir.z -= player->eyeheight-1;
     return dir;
 }
@@ -172,7 +169,7 @@ void showgui(const char *name)
 int cleargui(int n)
 {
     int clear = guistack.length();
-    if(mainmenu && !isconnected(true) && clear > 0 && guistack[0]->name && !strcmp(guistack[0]->name, "main")) 
+    if(GETIV(mainmenu) && !isconnected(true) && clear > 0 && guistack[0]->name && !strcmp(guistack[0]->name, "main")) 
     {
         clear--;
         if(!clear) return 1;
@@ -565,13 +562,11 @@ static struct applymenu : menu
     }
 } applymenu;
 
-VARP(applydialog, 0, 1, 1);
-
 static bool processingmenu = false;
 
 void addchange(const char *desc, int type)
 {
-    if(!applydialog) return;
+    if(!GETIV(applydialog)) return;
     loopv(needsapply) if(!strcmp(needsapply[i].desc, desc)) return;
     needsapply.add(change(type, desc));
     if(needsapply.length() && guistack.find(&applymenu) < 0)
@@ -594,12 +589,12 @@ void clearchanges(int type)
 void menuprocess()
 {
     processingmenu = true;
-    int wasmain = mainmenu, level = guistack.length();
+    int wasmain = GETIV(mainmenu), level = guistack.length();
     loopv(updatelater) updatelater[i].run();
     updatelater.shrink(0);
-    if(wasmain > mainmenu || clearlater)
+    if(wasmain > GETIV(mainmenu) || clearlater)
     {
-        if(wasmain > mainmenu || level==guistack.length()) 
+        if(wasmain > GETIV(mainmenu) || level==guistack.length()) 
         {
             loopvrev(guistack)
             {
@@ -616,17 +611,15 @@ void menuprocess()
         }
         clearlater = false;
     }
-    if(mainmenu && !isconnected(true) && guistack.empty()) showgui("main");
+    if(GETIV(mainmenu) && !isconnected(true) && guistack.empty()) showgui("main");
     processingmenu = false;
 }
 
-VAR(mainmenu, 1, 1, 0);
-
 void clearmainmenu()
 {
-    if(mainmenu && (isconnected() || haslocalclients()))
+    if(GETIV(mainmenu) && (isconnected() || haslocalclients()))
     {
-        mainmenu = 0;
+        SETV(mainmenu, 0);
         if(!processingmenu) cleargui();
     }
 }
@@ -635,7 +628,7 @@ void g3d_mainmenu()
 {
     if(!guistack.empty()) 
     {   
-        if(!mainmenu && !GETIV(gui2d) && camera1->o.dist(menupos) > menuautoclose) cleargui();
+        if(!GETIV(mainmenu) && !GETIV(gui2d) && camera1->o.dist(menupos) > GETIV(menuautoclose)) cleargui();
         else g3d_addgui(guistack.last(), menupos, GUI_2D | GUI_FOLLOW);
     }
 }

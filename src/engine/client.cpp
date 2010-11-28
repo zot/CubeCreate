@@ -142,7 +142,7 @@ void disconnect(bool async, bool cleanup)
         discmillis = 0;
         conoutf("disconnected");
         game::gamedisconnect(cleanup);
-        mainmenu = 1;
+        SETV(mainmenu, 1);
     }
     if(!connpeer && clienthost)
     {

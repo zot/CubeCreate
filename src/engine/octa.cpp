@@ -411,8 +411,6 @@ int visibleorient(cube &c, int orient)
     return orient;
 }
 
-VAR(mipvis, 0, 0, 1);
-
 static int remipprogress = 0, remiptotal = 0;
 
 bool remip(cube &c, int x, int y, int z, int size)
@@ -492,7 +490,7 @@ bool remip(cube &c, int x, int y, int z, int size)
                 vis[orient] |= 1<<i;
             }
     }
-    if(mipvis) loop(orient, 6)
+    if(GETIV(mipvis)) loop(orient, 6)
     {
         int mask = 0;
         loop(x, 2) loop(y, 2) mask |= 1<<octaindex(dimension(orient), x, y, dimcoord(orient));
@@ -1295,8 +1293,6 @@ bool mincubeface(cube &cu, int orient, const ivec &co, int size, mergeinfo &orig
     return smaller;
 }
 
-VAR(minface, 0, 1, 1);
-
 bool gencubeface(cube &cu, int orient, const ivec &co, int size, ivec &n, int &offset, cubeface &cf)
 {
     uchar cfe[4];
@@ -1363,7 +1359,7 @@ bool gencubeface(cube &cu, int orient, const ivec &co, int size, ivec &n, int &o
     v[3].add(vo);
     offset = -n.dot(v[3]);
 
-    if(minface && touchingface(cu, orient) && mincubeface(cu, orient, co, size, cf))
+    if(GETIV(minface) && touchingface(cu, orient) && mincubeface(cu, orient, co, size, cf))
     {
         ext(cu).merged |= 1<<orient;
     }
@@ -1398,8 +1394,6 @@ void freemergeinfo(cube &c)
     DELETEA(c.ext->merges);
 }
 
-VAR(maxmerge, 0, 6, 12);
-
 static int genmergeprogress = 0;
 
 void genmergeinfo(cube *c = worldroot, const ivec &o = ivec(0, 0, 0), int size = worldsize>>1)
@@ -1421,7 +1415,7 @@ void genmergeinfo(cube *c = worldroot, const ivec &o = ivec(0, 0, 0), int size =
             cubeface cf;
             if(gencubeface(c[i], j, co, size, k.n, k.offset, cf))
             {
-                if(size >= 1<<maxmerge || c == worldroot)
+                if(size >= 1<<GETIV(maxmerge) || c == worldroot)
                 {
                     if(c[i].ext && c[i].ext->merged&(1<<j)) addmergeinfo(c[i], j, cf);
                     continue;
@@ -1432,9 +1426,9 @@ void genmergeinfo(cube *c = worldroot, const ivec &o = ivec(0, 0, 0), int size =
                 cfaces[k].faces.add(cf);
             }
         }
-        if((size == 1<<maxmerge || c == worldroot) && cfaces.numelems)
+        if((size == 1<<GETIV(maxmerge) || c == worldroot) && cfaces.numelems)
         {
-            ASSERT(size <= 1<<maxmerge);
+            ASSERT(size <= 1<<GETIV(maxmerge));
             enumeratekt(cfaces, cfkey, key, cfval, val,
                 val.faces.shrink(mergefaces(key.orient, val.faces.getbuf(), val.faces.length()));
                 loopvj(val.faces) if(val.faces[j].c->ext && val.faces[j].c->ext->merged&(1<<key.orient))

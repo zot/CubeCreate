@@ -203,7 +203,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
 {
     if(!inbetweenframes && !force) return;
 
-  if (!mainmenu) // INTENSITY: Keep playing sounds over main menu
+    if (!GETIV(mainmenu)) // INTENSITY: Keep playing sounds over main menu
     stopsounds(); // stop sounds while loading
  
     int w = screen->w, h = screen->h;
@@ -223,7 +223,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
     static float backgroundu = 0, backgroundv = 0, detailu = 0, detailv = 0;
     static int numdecals = 0;
     static struct decal { float x, y, size; int side; } decals[12];
-    if((renderedframe && !mainmenu && lastupdate != lastmillis) || lastw != w || lasth != h)
+    if((renderedframe && !GETIV(mainmenu) && lastupdate != lastmillis) || lastw != w || lasth != h)
     {
         lastupdate = lastmillis;
         lastw = w;
@@ -1010,7 +1010,7 @@ void swapbuffers()
  
 void limitfps(int &millis, int curmillis)
 {
-    int limit = mainmenu && GETIV(mainmenufps) ? (GETIV(maxfps) ? min(GETIV(maxfps), GETIV(mainmenufps)) : GETIV(mainmenufps)) : GETIV(maxfps);
+    int limit = GETIV(mainmenu) && GETIV(mainmenufps) ? (GETIV(maxfps) ? min(GETIV(maxfps), GETIV(mainmenufps)) : GETIV(mainmenufps)) : GETIV(maxfps);
     if(!limit) return;
     static int fpserror = 0;
     int delay = 1000/limit - (millis-curmillis);
@@ -1348,7 +1348,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
         if(minimized) continue;
 
         inbetweenframes = false;
-        if(mainmenu) gl_drawmainmenu(screen->w, screen->h);
+        if(GETIV(mainmenu)) gl_drawmainmenu(screen->w, screen->h);
         else
         {
             // INTENSITY: If we have all the data we need from the server to run the game, then we can actually draw
