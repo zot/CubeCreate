@@ -103,7 +103,7 @@ void show_calclight_progress()
     float bar1 = float(progress) / float(allocnodes);
     defformatstring(text1)("%d%% using %d textures", int(bar1 * 100), lightmaps.length());
 
-    if(LM_PACKW <= hwtexsize && !progresstex)
+    if(LM_PACKW <= GETIV(hwtexsize) && !progresstex)
     {
         glGenTextures(1, &progresstex);
         createtexture(progresstex, LM_PACKW, LM_PACKH, NULL, 3, 1, GL_RGB);
@@ -329,7 +329,7 @@ static bool packlightmap(lightmapinfo &l, surfaceinfo &surface)
 
 static void updatelightmap(const surfaceinfo &surface)
 {
-    if(max(LM_PACKW, LM_PACKH) > hwtexsize) return;
+    if(max(LM_PACKW, LM_PACKH) > GETIV(hwtexsize)) return;
 
     LightMap &lm = lightmaps[surface.lmid-LMID_RESERVED];
     if(lm.tex < 0)
@@ -2277,7 +2277,7 @@ void genlightmaptexs(int flagmask, int flagval)
         remaining[LM_BUMPMAP0] = remaining[LM_BUMPMAP1] = 0;
     }
 
-    int sizelimit = (maxtexsize ? min(maxtexsize, hwtexsize) : hwtexsize)/max(LM_PACKW, LM_PACKH);
+    int sizelimit = (GETIV(maxtexsize) ? min(GETIV(maxtexsize), GETIV(hwtexsize)) : GETIV(hwtexsize))/max(LM_PACKW, LM_PACKH);
     sizelimit = min(GETIV(batchlightmaps), sizelimit*sizelimit);
     while(total)
     {

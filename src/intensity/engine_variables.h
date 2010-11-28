@@ -64,6 +64,7 @@ public:
      * @param maxvi Maximal value of variable.
      * @param cb Callback to be run on value change. Optional. Can be either lambda or standard function.
      * @param persist Sets if the future variable is going to be persistent through script engine restarts.
+     * @param override Sets if the variable is overridable (i.e. gets re-set through lua reinitializations). Defaults to false.
      * 
      * Construct an integer variable.
      */
@@ -73,7 +74,8 @@ public:
 		int curvi,
 		int maxvi,
 		void (_cb_ cb)(int, int, int, int) = NULL,
-		bool persist = false
+		bool persist = false,
+		bool override = false
 	);
     /**
      * @brief Double variable constructor.
@@ -83,6 +85,7 @@ public:
      * @param maxvf Maximal value of variable.
      * @param cb Callback to be run on value change. Optional. Can be either lambda or standard function.
      * @param persist Sets if the future variable is going to be persistent through script engine restarts.
+     * @param override Sets if the variable is overridable (i.e. gets re-set through lua reinitializations). Defaults to false.
      * 
      * Construct a double variable.
      */
@@ -92,7 +95,8 @@ public:
 		double curvf,
 		double maxvf,
 		void (_cb_ cb)(double, double, double, double) = NULL,
-		bool persist = false
+		bool persist = false,
+		bool override = false
 	);
     /**
      * @brief String variable constructor.
@@ -100,6 +104,7 @@ public:
      * @param curvs Default value of variable.
      * @param cb Callback to be run on value change. Optional. Can be either lambda or standard function.
      * @param persist Sets if the future variable is going to be persistent through script engine restarts.
+     * @param override Sets if the variable is overridable (i.e. gets re-set through lua reinitializations). Defaults to false.
      * 
      * Construct a string variable. Doesn't have min, max because it makes no sense for strings.
      */
@@ -107,7 +112,8 @@ public:
 		const std::string& vname,
 		const std::string& curvs,
 		void (_cb_ cb)(const std::string&, const std::string&) = NULL,
-		bool persist = false
+		bool persist = false,
+		bool override = false
 	);
     /**
      * @brief Get a name of the variable.
@@ -172,7 +178,7 @@ public:
      * 
      * Sets a string value of the variable.
      */
-	void set(std::string val, bool luaSync = true, bool forceCB = false);
+	void set(std::string val, bool luaSync = true, bool forceCB = false, _UNUSED_ bool dummy = true); // EEEEEK HACK DETECTED, find a better way! lazy coder
     /**
      * @brief Gets if the variable is persistent.
      * @return If persistent, then true, otherwise false.
@@ -187,6 +193,13 @@ public:
      * Gets if the variable is read only (only from Lua though!).
      */
 	bool isReadOnly();
+    /**
+     * @brief Gets if the variable is overridable.
+     * @return If overridable, then true, otherwise false.
+     * 
+     * Gets if the variable is overridable. That means, if it gets re-set through Lua engine reinitializations.
+     */
+	bool isOverridable();
     /**
      * @brief Registers integer Lua variable based on C++ representation it's ran for.
      * 
@@ -219,6 +232,8 @@ private:
 	std::string type;
 	// is readonly (only from lua, C++ is writable)?
 	bool readOnly;
+	// is overridable
+	bool override;
 
 	// anytypes storing the values
 	boost::any prev;
@@ -434,7 +449,7 @@ private:
  * SETVN(foo, 65536);
  * @endcode
  */
-#define SETVN(name, value) EngineVariables::get(#name).get()->set(value, false, false)
+#define SETVN(name, value) EngineVariables::get(#name).get()->set(value, true, false, false)
 
 /**
  * @def SETVF
@@ -447,7 +462,7 @@ private:
  * SETVF(foo, 15);
  * @endcode
  */
-#define SETVF(name, value) EngineVariables::get(#name).get()->set(value, true)
+#define SETVF(name, value) EngineVariables::get(#name).get()->set(value, true, true, true)
 
 /**
  * @def SETVFN
@@ -461,7 +476,7 @@ private:
  * SETVFN(foo, 65536);
  * @endcode
  */
-#define SETVFN(name, value) EngineVariables::get(#name).get()->set(value, true, false)
+#define SETVFN(name, value) EngineVariables::get(#name).get()->set(value, true, true, false)
 
 /**
  * @}

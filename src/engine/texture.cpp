@@ -254,24 +254,12 @@ void texgrey(ImageData &s)
     s.replace(d);
 }
 
-VAR(hwtexsize, 1, 0, 0);
-VAR(hwcubetexsize, 1, 0, 0);
-VAR(hwmaxaniso, 1, 0, 0);
-VARFP(maxtexsize, 0, 0, 1<<12, initwarning("texture quality", INIT_LOAD));
-VARFP(reducefilter, 0, 1, 1, initwarning("texture quality", INIT_LOAD));
-VARFP(texreduce, 0, 0, 12, initwarning("texture quality", INIT_LOAD));
-VARFP(texcompress, 0, 1<<10, 1<<12, initwarning("texture quality", INIT_LOAD));
-VARFP(texcompressquality, -1, -1, 1, setuptexcompress());
-VARFP(trilinear, 0, 1, 1, initwarning("texture filtering", INIT_LOAD));
-VARFP(bilinear, 0, 1, 1, initwarning("texture filtering", INIT_LOAD));
-VARFP(aniso, 0, 0, 16, initwarning("texture filtering", INIT_LOAD));
-
 void setuptexcompress()
 {
     if(!hasTC) return;
 
     GLenum hint = GL_DONT_CARE;
-    switch(texcompressquality)
+    switch(GETIV(texcompressquality))
     {
         case 1: hint = GL_NICEST; break;
         case 0: hint = GL_FASTEST; break;
@@ -281,7 +269,7 @@ void setuptexcompress()
 
 GLenum compressedformat(GLenum format, int w, int h, int force = 0)
 {
-    if(hasTC && texcompress && force >= 0 && (force || max(w, h) >= texcompress)) switch(format)
+    if(hasTC && GETIV(texcompress) && force >= 0 && (force || max(w, h) >= GETIV(texcompress))) switch(format)
     {
         case GL_RGB5:
         case GL_RGB8:
@@ -309,26 +297,23 @@ int formatsize(GLenum format)
     }
 }
 
-VARFP(hwmipmap, 0, 0, 1, initwarning("texture filtering", INIT_LOAD));
-VARFP(usenp2, 0, 0, 1, initwarning("texture quality", INIT_LOAD));
-
 void resizetexture(int w, int h, bool mipmap, bool canreduce, GLenum target, int compress, int &tw, int &th)
 {
-    int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? hwcubetexsize : hwtexsize,
-        sizelimit = mipmap && maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
+    int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? GETIV(hwcubetexsize) : GETIV(hwtexsize),
+        sizelimit = mipmap && GETIV(maxtexsize) ? min(GETIV(maxtexsize), hwlimit) : hwlimit;
     if(compress > 0 && !hasTC)
     {
         w = max(w/compress, 1);
         h = max(h/compress, 1);
     }
-    if(canreduce && texreduce)
+    if(canreduce && GETIV(texreduce))
     {
-        w = max(w>>texreduce, 1);
-        h = max(h>>texreduce, 1);
+        w = max(w>>GETIV(texreduce), 1);
+        h = max(h>>GETIV(texreduce), 1);
     }
     w = min(w, sizelimit);
     h = min(h, sizelimit);
-    if((!hasNP2 || !usenp2) && target!=GL_TEXTURE_RECTANGLE_ARB && (w&(w-1) || h&(h-1)))
+    if((!hasNP2 || !GETIV(usenp2)) && target!=GL_TEXTURE_RECTANGLE_ARB && (w&(w-1) || h&(h-1)))
     {
         tw = th = 1;
         while(tw < w) tw *= 2;
@@ -389,7 +374,7 @@ void uploadtexture(GLenum target, GLenum internal, int tw, int th, GLenum format
         else if(target==GL_TEXTURE_1D) glTexImage1D(target, level, internal, tw, 0, format, type, src);
         else glTexImage2D(target, level, internal, tw, th, 0, format, type, src);
         if(row > 0) glPixelStorei(GL_UNPACK_ROW_LENGTH, row = 0);
-        if(!mipmap || (hasGM && hwmipmap) || max(tw, th) <= 1) break;
+        if(!mipmap || (hasGM && GETIV(hwmipmap)) || max(tw, th) <= 1) break;
         int srcw = tw, srch = th;
         if(tw > 1) tw /= 2;
         if(th > 1) th /= 2;
@@ -401,8 +386,8 @@ void uploadtexture(GLenum target, GLenum internal, int tw, int th, GLenum format
 
 void uploadcompressedtexture(GLenum target, GLenum format, int w, int h, uchar *data, int align, int blocksize, int levels, bool mipmap)
 {
-    int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? hwcubetexsize : hwtexsize,
-        sizelimit = levels > 1 && maxtexsize ? min(maxtexsize, hwlimit) : hwlimit;
+    int hwlimit = target==GL_TEXTURE_CUBE_MAP_ARB ? GETIV(hwcubetexsize) : GETIV(hwtexsize),
+        sizelimit = levels > 1 && GETIV(maxtexsize) ? min(GETIV(maxtexsize), hwlimit) : hwlimit;
     int level = 0;
     loopi(levels)
     {
@@ -458,15 +443,15 @@ void setuptexparameters(int tnum, void *pixels, int clamp, int filter, GLenum fo
     glBindTexture(target, tnum);
     glTexParameteri(target, GL_TEXTURE_WRAP_S, clamp&1 ? GL_CLAMP_TO_EDGE : GL_REPEAT);
     if(target!=GL_TEXTURE_1D) glTexParameteri(target, GL_TEXTURE_WRAP_T, clamp&2 ? GL_CLAMP_TO_EDGE : GL_REPEAT);
-    if(target==GL_TEXTURE_2D && hasAF && min(aniso, hwmaxaniso) > 0 && filter > 1) glTexParameteri(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, min(aniso, hwmaxaniso));
-    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, filter && bilinear ? GL_LINEAR : GL_NEAREST);
+    if(target==GL_TEXTURE_2D && hasAF && min(GETIV(aniso), GETIV(hwmaxaniso)) > 0 && filter > 1) glTexParameteri(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, min(GETIV(aniso), GETIV(hwmaxaniso)));
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, filter && GETIV(bilinear) ? GL_LINEAR : GL_NEAREST);
     glTexParameteri(target, GL_TEXTURE_MIN_FILTER,
         filter > 1 ?
-            (trilinear ?
-                (bilinear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR) :
-                (bilinear ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_NEAREST)) :
-            (filter && bilinear ? GL_LINEAR : GL_NEAREST));
-    if(hasGM && filter > 1 && pixels && hwmipmap && !uncompressedformat(format))
+            (GETIV(trilinear) ?
+                (GETIV(bilinear) ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR) :
+                (GETIV(bilinear) ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_NEAREST)) :
+            (filter && GETIV(bilinear) ? GL_LINEAR : GL_NEAREST));
+    if(hasGM && filter > 1 && pixels && GETIV(hwmipmap) && !uncompressedformat(format))
         glTexParameteri(target, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
 }
 
@@ -581,20 +566,20 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
     t->w = t->xs = s.w;
     t->h = t->ys = s.h;
 
-    int filter = !canreduce || reducefilter ? (mipit ? 2 : 1) : 0;
+    int filter = !canreduce || GETIV(reducefilter) ? (mipit ? 2 : 1) : 0;
     glGenTextures(1, &t->id);
     if(s.compressed)
     {
         uchar *data = s.data;
         int levels = s.levels, level = 0;
-        if(canreduce && texreduce) loopi(min(texreduce, s.levels-1))
+        if(canreduce && GETIV(texreduce)) loopi(min(GETIV(texreduce), s.levels-1))
         {
             data += s.calclevelsize(level++);
             levels--;
             if(t->w > 1) t->w /= 2;
             if(t->h > 1) t->h /= 2;
         } 
-        int sizelimit = mipit && maxtexsize ? min(maxtexsize, hwtexsize) : hwtexsize;
+        int sizelimit = mipit && GETIV(maxtexsize) ? min(GETIV(maxtexsize), GETIV(hwtexsize)) : GETIV(hwtexsize);
         while(t->w > sizelimit || t->h > sizelimit)
         {
             data += s.calclevelsize(level++);
@@ -835,9 +820,6 @@ static vec parsevec(const char *arg)
     return v;
 }
 
-VAR(usedds, 0, 1, 1);
-VAR(dbgdds, 0, 0, 1);
-
 static bool texturedata(ImageData &d, const char *tname, Slot::Tex *tex = NULL, bool msg = true, int *compress = NULL)
 {
     const char *cmds = NULL, *file = tname;
@@ -866,7 +848,7 @@ static bool texturedata(ImageData &d, const char *tname, Slot::Tex *tex = NULL, 
         file++;
     }
 
-    bool raw = !usedds || !compress, dds = false;
+    bool raw = !GETIV(usedds) || !compress, dds = false;
     for(const char *pcmds = cmds; pcmds;)
     {
         #define PARSETEXCOMMANDS(cmds) \
@@ -909,7 +891,7 @@ static bool texturedata(ImageData &d, const char *tname, Slot::Tex *tex = NULL, 
         copystring(dfile, file);
         memcpy(dfile + flen - 4, ".dds", 4);
         if(!raw && hasTC && loaddds(dfile, d)) return true;
-        if(!dds || dbgdds) { if(msg) conoutf(CON_ERROR, "could not load texture %s", dfile); return false; }
+        if(!dds || GETIV(dbgdds)) { if(msg) conoutf(CON_ERROR, "could not load texture %s", dfile); return false; }
     }
         
     SDL_Surface *s = loadsurface(file);
@@ -1334,8 +1316,6 @@ static VSlot *clonevslot(const VSlot &src, const VSlot &delta)
     return dst;
 }
 
-VARP(autocompactvslots, 0, 256, 0x10000);
-
 VSlot *editvslot(const VSlot &src, const VSlot &delta)
 {
     VSlot *exists = findvslot(*src.slot, src, delta);
@@ -1346,7 +1326,7 @@ VSlot *editvslot(const VSlot &src, const VSlot &delta)
         allchanged();
         if(vslots.length()>=0x10000) return NULL;
     }
-    if(autocompactvslots && ++clonedvslots >= autocompactvslots)
+    if(GETIV(autocompactvslots) && ++clonedvslots >= GETIV(autocompactvslots))
     {
         compactvslots();
         allchanged();
@@ -1917,8 +1897,6 @@ cubemapside cubemapsides[6] =
     { GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB, "up", false, false, true  },
 };
 
-VARFP(envmapsize, 4, 7, 10, setupmaterials());
-
 Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg, bool transient = false)
 {
     if(!hasCM) return NULL;
@@ -1975,7 +1953,7 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg,
     t->clamp = 3;
     t->type = Texture::CUBEMAP | (transient ? Texture::TRANSIENT : 0);
     t->xs = t->ys = tsize;
-    t->w = t->h = min(1<<envmapsize, tsize);
+    t->w = t->h = min(1<<GETIV(envmapsize), tsize);
     resizetexture(t->w, t->h, mipit, false, GL_TEXTURE_CUBE_MAP_ARB, compress, t->w, t->h);
     format = compressedformat(format, t->w, t->h, compress);
     switch(format)
@@ -1983,7 +1961,7 @@ Texture *cubemaploadwildcard(Texture *t, const char *name, bool mipit, bool msg,
         case GL_RGB: format = GL_RGB5; break;
     }
     glGenTextures(1, &t->id);
-    int sizelimit = mipit && maxtexsize ? min(maxtexsize, hwcubetexsize) : hwcubetexsize;
+    int sizelimit = mipit && GETIV(maxtexsize) ? min(GETIV(maxtexsize), GETIV(hwcubetexsize)) : GETIV(hwcubetexsize);
     loopi(6)
     {
         ImageData &s = surface[i];
@@ -2033,8 +2011,6 @@ Texture *cubemapload(const char *name, bool mipit, bool msg, bool transient)
     return t;
 }
 
-VAR(envmapradius, 0, 128, 10000);
-
 struct envmap
 {
     int radius, size;
@@ -2056,15 +2032,13 @@ void clearenvmaps()
     envmaps.shrink(0);
 }
 
-VAR(aaenvmap, 0, 2, 4);
-
 GLuint genenvmap(const vec &o, int envmapsize)
 {
-    int rendersize = 1<<(envmapsize+aaenvmap), sizelimit = min(hwcubetexsize, min(screen->w, screen->h));
-    if(maxtexsize) sizelimit = min(sizelimit, maxtexsize);
+    int rendersize = 1<<(envmapsize+GETIV(aaenvmap)), sizelimit = min(GETIV(hwcubetexsize), min(screen->w, screen->h));
+    if(GETIV(maxtexsize)) sizelimit = min(sizelimit, GETIV(maxtexsize));
     while(rendersize > sizelimit) rendersize /= 2;
     int texsize = min(rendersize, 1<<envmapsize);
-    if(!aaenvmap) rendersize = texsize;
+    if(!GETIV(aaenvmap)) rendersize = texsize;
     GLuint tex;
     glGenTextures(1, &tex);
     glViewport(0, 0, rendersize, rendersize);
@@ -2114,7 +2088,7 @@ void initenvmaps()
         const extentity &ent = *ents[i];
         if(ent.type != ET_ENVMAP) continue;
         envmap &em = envmaps.add();
-        em.radius = ent.attr1 ? max(0, min(10000, int(ent.attr1))) : envmapradius;
+        em.radius = ent.attr1 ? max(0, min(10000, int(ent.attr1))) : GETIV(envmapradius);
         em.size = ent.attr2 ? max(4, min(9, int(ent.attr2))) : 0;
         em.o = ent.o;
         em.tex = 0;
@@ -2129,7 +2103,7 @@ void genenvmaps()
     loopv(envmaps)
     {
         envmap &em = envmaps[i];
-        em.tex = genenvmap(em.o, em.size ? em.size : envmapsize);
+        em.tex = genenvmap(em.o, em.size ? em.size : GETIV(envmapsize));
         if(renderedframe) continue;
         int millis = SDL_GetTicks();
         if(millis - lastprogress >= 250)
@@ -2335,7 +2309,7 @@ bool loaddds(const char *filename, ImageData &image)
         }        
     }
     if(!format) { delete f; return false; }
-    if(dbgdds) conoutf(CON_DEBUG, "%s: format 0x%X, %d x %d, %d mipmaps", filename, format, d.dwWidth, d.dwHeight, d.dwMipMapCount);
+    if(GETIV(dbgdds)) conoutf(CON_DEBUG, "%s: format 0x%X, %d x %d, %d mipmaps", filename, format, d.dwWidth, d.dwHeight, d.dwMipMapCount);
     int bpp = 0;
     switch(format)
     {
@@ -2465,8 +2439,6 @@ void writepngchunk(stream *f, const char *type, uchar *data = NULL, uint len = 0
     f->putbig<uint>(crc);
 }
 
-VARP(compresspng, 0, 9, 9);
-
 void savepng(const char *filename, ImageData &image, bool flip)
 {
     uchar ctype = 0;
@@ -2502,7 +2474,7 @@ void savepng(const char *filename, ImageData &image, bool flip)
     z.zfree = NULL;
     z.opaque = NULL;
 
-    if(deflateInit(&z, compresspng) != Z_OK)
+    if(deflateInit(&z, GETIV(compresspng)) != Z_OK)
         goto error;
 
     uchar buf[1<<12];
@@ -2577,8 +2549,6 @@ struct tgaheader
     uchar  descbyte;
 };
 
-VARP(compresstga, 0, 1, 1);
-
 void savetga(const char *filename, ImageData &image, bool flip)
 {
     switch(image.bpp)
@@ -2597,7 +2567,7 @@ void savetga(const char *filename, ImageData &image, bool flip)
     hdr.width[1] = (image.w>>8)&0xFF;
     hdr.height[0] = image.h&0xFF;
     hdr.height[1] = (image.h>>8)&0xFF;
-    hdr.imagetype = compresstga ? 10 : 2;
+    hdr.imagetype = GETIV(compresstga) ? 10 : 2;
     f->write(&hdr, sizeof(hdr));
 
     uchar buf[128*4];
@@ -2607,7 +2577,7 @@ void savetga(const char *filename, ImageData &image, bool flip)
         for(int remaining = image.w; remaining > 0;)
         {
             int raw = 1;
-            if(compresstga)
+            if(GETIV(compresstga))
             {
                 int run = 1;
                 for(uchar *scan = src; run < min(remaining, 128); run++)
@@ -2658,8 +2628,6 @@ enum
     NUMIMG
 };
  
-VARP(screenshotformat, 0, IMG_PNG, NUMIMG-1);
-
 const char *imageexts[NUMIMG] = { ".bmp", ".tga", ".png" };
 
 int guessimageformat(const char *filename, int format = IMG_BMP)
@@ -2705,14 +2673,12 @@ bool loadimage(const char *filename, ImageData &image)
     return true;
 }
 
-SVARP(screenshotdir, "");
-
 void screenshot(char *filename)
 {
     static string buf;
     int format = -1;
-    copystring(buf, screenshotdir);
-    if(screenshotdir[0])
+    copystring(buf, GETSV(screenshotdir).c_str());
+    if(!GETSV(screenshotdir).empty())
     {
         int len = strlen(buf);
         if(buf[len] != '/' && buf[len] != '\\' && len+1 < (int)sizeof(buf)) { buf[len] = '/'; buf[len+1] = '\0'; }
@@ -2731,7 +2697,7 @@ void screenshot(char *filename)
     }
     if(format < 0)
     {
-        format = screenshotformat;
+        format = GETIV(screenshotformat);
         concatstring(buf, imageexts[format]);         
     }
 

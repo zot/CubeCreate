@@ -648,9 +648,8 @@ void renderentradius(extentity &e, bool color)
 
         case ET_ENVMAP:
         {
-            extern int envmapradius;
             if(color) glColor3f(0, 1, 1);
-            renderentsphere(e, e.attr1 ? max(0, min(10000, int(e.attr1))) : envmapradius);
+            renderentsphere(e, e.attr1 ? max(0, min(10000, int(e.attr1))) : GETIV(envmapradius));
             break;
         }
 

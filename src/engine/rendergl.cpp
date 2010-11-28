@@ -376,7 +376,7 @@ void gl_checkextensions()
     {
         avoidshaders = 1;
         intel_quadric_bug = 1;
-        maxtexsize = 256;
+        SETV(maxtexsize, 256);
         reservevpparams = 20;
         SETV(batchlightmaps, 0);
         SETV(ffdynlights, 0);
@@ -390,7 +390,7 @@ void gl_checkextensions()
     else if(strstr(vendor, "Tungsten") || strstr(vendor, "Mesa") || strstr(vendor, "DRI") || strstr(vendor, "Microsoft") || strstr(vendor, "S3 Graphics"))
     {
         avoidshaders = 1;
-        maxtexsize = 256;
+        SETV(maxtexsize, 256);
         reservevpparams = 20;
         SETV(batchlightmaps, 0);
         SETV(ffdynlights, 0);
@@ -471,8 +471,7 @@ void gl_checkextensions()
     bool hasshaders = (hasVP && hasFP) || hasGLSL;
     if(hasshaders)
     {
-        extern int matskel;
-        if(!avoidshaders) matskel = 0;
+        if(!avoidshaders) SETV(matskel, 0);
     }
 
     if(strstr(exts, "GL_NV_vertex_program2_option")) { usevp2 = 1; hasVP2 = true; }
@@ -553,7 +552,7 @@ void gl_checkextensions()
     {
         GLint val;
         glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE_ARB, &val);
-        hwcubetexsize = val;
+        SETVN(hwcubetexsize, val);
         hasCM = true;
         // On Catalyst 10.2, issuing an occlusion query on the first draw using a given cubemap texture causes a nasty crash
         if(strstr(vendor, "ATI")) ati_cubemap_bug = 1;
@@ -561,13 +560,12 @@ void gl_checkextensions()
     }
     else conoutf(CON_WARN, "WARNING: No cube map texture support. (no reflective glass)");
 
-    extern int usenp2;
     if(strstr(exts, "GL_ARB_texture_non_power_of_two"))
     {
         hasNP2 = true;
         if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_texture_non_power_of_two extension.");
     }
-    else if(usenp2) conoutf(CON_WARN, "WARNING: Non-power-of-two textures not supported!");
+    else if(GETIV(usenp2)) conoutf(CON_WARN, "WARNING: Non-power-of-two textures not supported!");
 
     if(strstr(exts, "GL_ARB_texture_compression") && strstr(exts, "GL_EXT_texture_compression_s3tc"))
     {
@@ -587,7 +585,7 @@ void gl_checkextensions()
     {
        GLint val;
        glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &val);
-       hwmaxaniso = val;
+       SETVN(hwmaxaniso, val);
        hasAF = true;
        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_texture_filter_anisotropic extension.");
     }
@@ -650,7 +648,7 @@ void gl_checkextensions()
 
     GLint val;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &val);
-    hwtexsize = val;
+    SETVN(hwtexsize, val);
 }
 
 void glext(char *ext)
@@ -1625,7 +1623,7 @@ void drawminimap()
 
     renderprogress(0, "generating mini-map...", 0, !renderedframe);
 
-    int size = 1<<minimapsize, sizelimit = min(hwtexsize, min(screen->w, screen->h));
+    int size = 1<<minimapsize, sizelimit = min(GETIV(hwtexsize), min(screen->w, screen->h));
     while(size > sizelimit) size /= 2;
     if(!minimaptex) glGenTextures(1, &minimaptex);
 
@@ -1753,7 +1751,7 @@ FVARP(motionblurscale, 0, 0.5f, 1);
 
 void addmotionblur()
 {
-    if(!motionblur || !hasTR || max(screen->w, screen->h) > hwtexsize) return;
+    if(!motionblur || !hasTR || max(screen->w, screen->h) > GETIV(hwtexsize)) return;
 
     if(GETIV(paused) || game::ispaused()) { lastmotion = 0; return; }
 

@@ -42,7 +42,7 @@
 
 // this one is used for any type of integer variables. Arguments "cb" and "persist" are optional.
 EngineVariable::EngineVariable
-(const std::string& vname, int minvi, int curvi, int maxvi, void (_cb_ cb)(int, int, int, int), bool persist)
+(const std::string& vname, int minvi, int curvi, int maxvi, void (_cb_ cb)(int, int, int, int), bool persist, bool override)
 {
 	name = vname;
 	if (minvi > maxvi)
@@ -63,7 +63,7 @@ EngineVariable::EngineVariable
 
 // this one is used for double variables. Arguments cb and persist are also optional.
 EngineVariable::EngineVariable
-(const std::string& vname, double minvf, double curvf, double maxvf, void (_cb_ cb)(double, double, double, double), bool persist)
+(const std::string& vname, double minvf, double curvf, double maxvf, void (_cb_ cb)(double, double, double, double), bool persist, bool override)
 {
 	name = vname;
 	if (minvf > maxvf)
@@ -84,7 +84,7 @@ EngineVariable::EngineVariable
 
 // string variables. cb and persist are optional
 EngineVariable::EngineVariable
-(const std::string& vname, const std::string& curvs, void (_cb_ cb)(const std::string&, const std::string&), bool persist)
+(const std::string& vname, const std::string& curvs, void (_cb_ cb)(const std::string&, const std::string&), bool persist, bool override)
 {
 	name = vname;
 	readOnly = false;
@@ -128,7 +128,7 @@ void EngineVariable::set(double val, bool luaSync, bool forceCB, bool clamp)
 }
 
 // string variables
-void EngineVariable::set(std::string val, bool luaSync, bool forceCB)
+void EngineVariable::set(std::string val, bool luaSync, bool forceCB, _UNUSED_ bool dummy) // EEEEEK HACK DETECTED, find a better way! lazy coder
 {
 	prev = curv;
 	curv = val;
@@ -145,6 +145,12 @@ bool EngineVariable::isPersistent()
 bool EngineVariable::isReadOnly()
 {
 	return readOnly;
+}
+
+// check if it's overridable
+bool EngineVariable::isOverridable()
+{
+	return override;
 }
 
 // these are used for registration of Lua variables after one is registered in C++
@@ -227,7 +233,7 @@ void EngineVariable::callCB(bool luaSync, bool forceCB)
 
 // storage for vars - used most of time
 EVMap EngineVariables::storage;
-// here, persistent variables are moved on clear, then re-used on next initialization
+// here, non-overridable variables are moved on clear, then re-used on next initialization
 EVMap EngineVariables::persistentStorage;
 
 /*
@@ -276,18 +282,18 @@ void EngineVariables::fillLua()
 	}
 }
 
-// clears the storage, but keeps persistent variables in persistentStorage
+// clears the storage, but keeps non-overridable variables in persistentStorage
 void EngineVariables::clear()
 {
 	for (EVMap::iterator it = storage.begin(); it != storage.end(); it++)
-		if (it->second.get()->isPersistent())
+		if (!it->second.get()->isOverridable())
 			persistentStorage.insert(*it);
 
 	storage.clear();
 }
 
 // fills empty storage from persistentStorage, does simple assignment.
-// used on script engine reinitialization to set persistents from last time
+// used on script engine reinitialization to reset overridable vars
 void EngineVariables::fillFromPersistent()
 {
 	storage = persistentStorage;

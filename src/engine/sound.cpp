@@ -101,8 +101,6 @@ void stopchannels()
 }
 
 void setmusicvol(int musicvol);
-VARFP(soundvol, 0, 255, 255, if(!soundvol) { stopchannels(); setmusicvol(0); });
-VARFP(musicvol, 0, 128, 255, setmusicvol(soundvol ? musicvol : 0));
 
 char *musicfile = NULL, *musicdonecmd = NULL;
 
@@ -131,21 +129,17 @@ void stopmusic()
     DELETEP(musicstream);
 }
 
-VARF(soundchans, 1, 32, 128, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundfreq, 0, MIX_DEFAULT_FREQUENCY, 44100, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-VARF(soundbufferlen, 128, 1024, 4096, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
-
 void initsound()
 {
-    if(Mix_OpenAudio(soundfreq, MIX_DEFAULT_FORMAT, 2, soundbufferlen)<0)
+    if(Mix_OpenAudio(GETIV(soundfreq), MIX_DEFAULT_FORMAT, 2, GETIV(soundbufferlen))<0)
     {
         nosound = true;
         conoutf(CON_ERROR, "sound init failed (SDL_mixer): %s", (size_t)Mix_GetError());
         return;
     }
-    Mix_AllocateChannels(soundchans);    
+    Mix_AllocateChannels(GETIV(soundchans));    
     Mix_ChannelFinished(freechannel);
-    maxchannels = soundchans;
+    maxchannels = GETIV(soundchans);
     nosound = false;
 }
 
@@ -184,7 +178,7 @@ void startmusic(char *name, char *cmd)
 {
     if(nosound) return;
     stopmusic();
-    if(soundvol && musicvol && *name)
+    if(GETIV(soundvol) && GETIV(musicvol) && *name)
     {
         defformatstring(file)("packages/%s", name);
         path(file);
@@ -195,7 +189,7 @@ void startmusic(char *name, char *cmd)
             musicfile = newstring(file);
             if(cmd[0]) musicdonecmd = newstring(cmd);
             Mix_PlayMusic(music, cmd[0] ? 0 : -1);
-            Mix_VolumeMusic((musicvol*MAXVOL)/255);
+            Mix_VolumeMusic((GETIV(musicvol)*MAXVOL)/255);
             intret(1);
         }
         else
@@ -303,12 +297,11 @@ void stopmapsound(extentity *e)
 }
 
 int waterchan = -1; // SAUER ENHANCED - underwater ambient channel
-VAR(uwambient, 0, 0, 1);
 
 void checkmapsounds()
 {
     const vector<extentity *> &ents = entities::getents();
-    if(lookupmaterial(camera1->o)==MAT_WATER && uwambient) // SAUER ENHANCED start - underwater sound
+    if(lookupmaterial(camera1->o)==MAT_WATER && GETIV(uwambient)) // SAUER ENHANCED start - underwater sound
     {
         if(waterchan==-1) waterchan = playsound(6, NULL, NULL, -1, NULL, NULL, waterchan);
     }
@@ -331,19 +324,15 @@ void checkmapsounds()
     }
 }
 
-VAR(stereo, 0, 1, 1);
-
-VARP(maxsoundradius, 0, 340, 10000);
-
 bool updatechannel(soundchannel &chan)
 {
     if(!chan.slot) return false;
-    int vol = soundvol, pan = 255/2;
+    int vol = GETIV(soundvol), pan = 255/2;
     if(chan.hasloc())
     {
         vec v;
         float dist = chan.loc.dist(camera1->o, v);
-        int rad = maxsoundradius;
+        int rad = GETIV(maxsoundradius);
         if(chan.ent)
         {
             rad = chan.ent->attr2;
@@ -353,9 +342,9 @@ bool updatechannel(soundchannel &chan)
                 dist -= chan.ent->attr3;
             }
         }
-        else if(chan.radius > 0) rad = maxsoundradius ? min(maxsoundradius, chan.radius) : chan.radius;
-        if(rad > 0) vol -= int(clamp(dist/rad, 0.0f, 1.0f)*soundvol); // simple mono distance attenuation
-        if(stereo && (v.x != 0 || v.y != 0) && dist>0)
+        else if(chan.radius > 0) rad = GETIV(maxsoundradius) ? min(GETIV(maxsoundradius), chan.radius) : chan.radius;
+        if(rad > 0) vol -= int(clamp(dist/rad, 0.0f, 1.0f)*GETIV(soundvol)); // simple mono distance attenuation
+        if(GETIV(stereo) && (v.x != 0 || v.y != 0) && dist>0)
         {
             v.rotate_around_z(-camera1->yaw*RAD);
             pan = int(255.9f*(0.5f - 0.5f*v.x/v.magnitude2())); // range is from 0 (left) to 255 (right)
@@ -398,10 +387,6 @@ void updatesounds()
     }
 }
 
-VARP(maxsoundsatonce, 0, 5, 100);
-
-VAR(dbgsound, 0, 0, 1);
-
 static Mix_Chunk *loadwav(const char *name)
 {
     Mix_Chunk *c = NULL;
@@ -422,17 +407,17 @@ static Mix_Chunk *loadwav(const char *name)
 
 int playsound(int n, const vec *loc, extentity *ent, int loops, int fade, int chanid, int radius, int expire, int vol) // SAUER ENHANCED - volume for playsound
 {
-    if(nosound || !soundvol) return -1;
+    if(nosound || !GETIV(soundvol)) return -1;
 
     vector<soundslot> &sounds = ent ? mapsounds : gamesounds;
     if(!sounds.inrange(n)) { conoutf(CON_WARN, "unregistered sound: %d", n); return -1; }
     soundslot &slot = sounds[n];
     if(vol) slot.volume = vol;
 
-    if(loc && (maxsoundradius || radius > 0))
+    if(loc && (GETIV(maxsoundradius) || radius > 0))
     {
         // cull sounds that are unlikely to be heard
-        int rad = radius > 0 ? (maxsoundradius ? min(maxsoundradius, radius) : radius) : maxsoundradius;
+        int rad = radius > 0 ? (GETIV(maxsoundradius) ? min(GETIV(maxsoundradius), radius) : radius) : GETIV(maxsoundradius);
         if(camera1->o.dist(*loc) > 1.5f*rad)
         {
             if(channels.inrange(chanid) && channels[chanid].inuse && channels[chanid].slot == &slot)
@@ -456,7 +441,7 @@ int playsound(int n, const vec *loc, extentity *ent, int loops, int fade, int ch
         static int soundsatonce = 0, lastsoundmillis = 0;
         if(totalmillis == lastsoundmillis) soundsatonce++; else soundsatonce = 1;
         lastsoundmillis = totalmillis;
-        if(maxsoundsatonce && soundsatonce > maxsoundsatonce) return -1;
+        if(GETIV(maxsoundsatonce) && soundsatonce > GETIV(maxsoundsatonce)) return -1;
     }
 
 // INTENSITY: Make this a macro, so it can be reused in preload_sound
@@ -492,7 +477,7 @@ int playsound(int n, const vec *loc, extentity *ent, int loops, int fade, int ch
     }
     if(fade < 0) return -1;
            
-    if(dbgsound) conoutf("sound: %s", slot.sample->name);
+    if(GETIV(dbgsound)) conoutf("sound: %s", slot.sample->name);
  
     chanid = -1;
     loopv(channels) if(!channels[i].inuse) { chanid = i; break; }
@@ -564,7 +549,7 @@ void stopsounds()
 bool stopsound(int n, int chanid, int fade)
 {
     if(!channels.inrange(chanid) || !channels[chanid].inuse || !gamesounds.inrange(n) || channels[chanid].slot != &gamesounds[n]) return false;
-    if(dbgsound) conoutf("stopsound: %s", channels[chanid].slot->sample->name);
+    if(GETIV(dbgsound)) conoutf("stopsound: %s", channels[chanid].slot->sample->name);
     if(!fade || !Mix_FadeOutChannel(chanid, fade))
     {
         Mix_HaltChannel(chanid);
@@ -619,7 +604,7 @@ void resetsound()
     if(music && loadmusic(musicfile))
     {
         Mix_PlayMusic(music, musicdonecmd ? 0 : -1);
-        Mix_VolumeMusic((musicvol*MAXVOL)/255);
+        Mix_VolumeMusic((GETIV(musicvol)*MAXVOL)/255);
     }
     else
     {
@@ -667,15 +652,9 @@ static MumbleInfo *mumbleinfo = (MumbleInfo *)-1;
 #define VALID_MUMBLELINK (mumblelink >= 0 && mumbleinfo != (MumbleInfo *)-1)
 #endif
 
-#ifdef VALID_MUMBLELINK
-VARFP(mumble, 0, 1, 1, { if(mumble) initmumble(); else closemumble(); });
-#else
-VARFP(mumble, 0, 0, 1, { if(mumble) initmumble(); else closemumble(); });
-#endif
-
 void initmumble()
 {
-    if(!mumble) return;
+    if(!GETIV(mumble)) return;
 #ifdef VALID_MUMBLELINK
     if(VALID_MUMBLELINK) return;
 

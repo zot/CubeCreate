@@ -805,7 +805,7 @@ void genwatertex(GLuint &tex, GLuint &fb, GLuint &db, bool refract = false)
     }
     int size = 1<<GETIV(reflectsize);
     if(!hasFBO) while(size>screen->w || size>screen->h) size /= 2;
-    while(size>hwtexsize) size /= 2;
+    while(size>GETIV(hwtexsize)) size /= 2;
 
     glGenTextures(1, &tex);
     char *buf = new char[size*size*4];
@@ -962,7 +962,7 @@ void queryreflections()
     static int lastsize = 0;
     int size = 1<<GETIV(reflectsize);
     if(!hasFBO) while(size>screen->w || size>screen->h) size /= 2;
-    while(size>hwtexsize) size /= 2;
+    while(size>GETIV(hwtexsize)) size /= 2;
     if(size!=lastsize) { if(lastsize) cleanreflections(); lastsize = size; }
 
     bool shouldrefract = GETIV(waterfallrefract) && renderpath!=R_FIXEDFUNCTION;
@@ -1170,7 +1170,7 @@ void drawreflections()
     float offset = -WATER_OFFSET;
     int size = 1<<GETIV(reflectsize);
     if(!hasFBO) while(size>screen->w || size>screen->h) size /= 2;
-    while(size>hwtexsize) size /= 2;
+    while(size>GETIV(hwtexsize)) size /= 2;
 
     if(GETIV(waterreflect) || GETIV(waterrefract)) loopi(MAXREFLECTIONS)
     {

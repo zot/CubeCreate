@@ -1,6 +1,3 @@
-VARP(gpuskel, 0, 1, 1);
-VARP(matskel, 0, 1, 1);
-
 #define BONEMASK_NOT  0x8000
 #define BONEMASK_END  0xFFFF
 #define BONEMASK_BONE 0x7FFF
@@ -97,7 +94,7 @@ struct skelmodel : animmodel
             {
                 v.weights[0] = 255;
                 loopk(3) v.weights[k+1] = 0;
-                v.bones[0] = (matskel ? 3 : 2)*interpindex;
+                v.bones[0] = (GETIV(matskel) ? 3 : 2)*interpindex;
                 loopk(3) v.bones[k+1] = v.bones[0];
             }
             else
@@ -112,7 +109,7 @@ struct skelmodel : animmodel
                 {
                     loopk(4) if(v.weights[k] < 255 && total < 255) { v.weights[k]++; total++; }
                 }
-                loopk(4) v.bones[k] = (matskel ? 3 : 2)*interpbones[k];
+                loopk(4) v.bones[k] = (GETIV(matskel) ? 3 : 2)*interpbones[k];
             }
         }
     };
@@ -935,8 +932,8 @@ struct skelmodel : animmodel
                 default: return 0;
             }
         }
-        int availgpubones() const { return (min(maxgpuparams() - reservevpparams, 256) - 10) / (matskel ? 3 : 2); }
-        bool gpuaccelerate() const { return renderpath!=R_FIXEDFUNCTION && numframes && gpuskel && numgpubones<=availgpubones(); }
+        int availgpubones() const { return (min(maxgpuparams() - reservevpparams, 256) - 10) / (GETIV(matskel) ? 3 : 2); }
+        bool gpuaccelerate() const { return renderpath!=R_FIXEDFUNCTION && numframes && GETIV(gpuskel) && numgpubones<=availgpubones(); }
 
         void interpmatbones(const animstate *as, float pitch, const vec &axis, int numanimparts, const uchar *partmask, skelcacheentry &sc)
         {
@@ -1211,7 +1208,7 @@ struct skelmodel : animmodel
             if(skelcache.empty()) 
             {
                 usegpuskel = gpuaccelerate();
-                usematskel = matskel!=0;
+                usematskel = GETIV(matskel)!=0;
             }
 
             int numanimparts = ((skelpart *)as->owner)->numanimparts;
@@ -1238,10 +1235,10 @@ struct skelmodel : animmodel
                 sc->ragdoll = rdata;
                 if(rdata)
                 {
-                    if(matskel) genmatragdollbones(*rdata, *sc, p);
+                    if(GETIV(matskel)) genmatragdollbones(*rdata, *sc, p);
                     else genragdollbones(*rdata, *sc, p);
                 }
-                else if(matskel) interpmatbones(as, pitch, axis, numanimparts, partmask, *sc);
+                else if(GETIV(matskel)) interpmatbones(as, pitch, axis, numanimparts, partmask, *sc);
                 else interpbones(as, pitch, axis, numanimparts, partmask, *sc);
             }
             sc->millis = lastmillis;
@@ -1352,7 +1349,7 @@ struct skelmodel : animmodel
     
         bool shouldcleanup() const
         {
-            return numframes && (skelcache.empty() || gpuaccelerate()!=usegpuskel || (matskel!=0)!=usematskel);
+            return numframes && (skelcache.empty() || gpuaccelerate()!=usegpuskel || (GETIV(matskel)!=0)!=usematskel);
         }
     };
 
@@ -1833,7 +1830,7 @@ struct skelmodel : animmodel
             if(as->anim&ANIM_RAGDOLL && skel->ragdoll && !d->ragdoll)
             {
                 d->ragdoll = new ragdolldata(skel->ragdoll, p->model->scale);
-                if(matskel) skel->initmatragdoll(*d->ragdoll, sc, p);
+                if(GETIV(matskel)) skel->initmatragdoll(*d->ragdoll, sc, p);
                 else skel->initragdoll(*d->ragdoll, sc, p);
                 d->ragdoll->init(d);
             }

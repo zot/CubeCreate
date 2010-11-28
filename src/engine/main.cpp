@@ -123,10 +123,9 @@ void writeinitcfg()
     root[L"shaders"] = new JSONValue((double)useshaders);
     root[L"shaderprecision"] = new JSONValue((double)shaderprecision);
     //root[L"forceglsl"] = new JSONValue((double)forceglsl);
-    extern int soundchans, soundfreq, soundbufferlen;
-    root[L"soundchans"] = new JSONValue((double)soundchans);
-    root[L"soundfreq"] = new JSONValue((double)soundfreq);
-    root[L"soundbufferlen"] = new JSONValue((double)soundbufferlen);
+    root[L"soundchans"] = new JSONValue((double)GETIV(soundchans));
+    root[L"soundfreq"] = new JSONValue((double)GETIV(soundfreq));
+    root[L"soundbufferlen"] = new JSONValue((double)GETIV(soundbufferlen));
 
     JSONValue *value = new JSONValue(root);
     f->printf("%ls", value->Stringify().c_str());

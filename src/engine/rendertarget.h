@@ -357,8 +357,8 @@ struct rendertarget
 
     void render(int w, int h, int blursize = 0, float blursigma = 0)
     {
-        w = min(w, hwtexsize);
-        h = min(h, hwtexsize);
+        w = min(w, GETIV(hwtexsize));
+        h = min(h, GETIV(hwtexsize));
         if(texrect())
         {
             if(w > screen->w) w = screen->w;

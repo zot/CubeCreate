@@ -120,9 +120,9 @@ REGVAR("grassdist", 0, 256, 10000, NULL, true);
 REGVAR("grasstaper", 0.0f, 0.2f, 1.0f, NULL, true);
 REGVAR("grassstep", 0.5f, 2.0f, 8.0f, NULL, true);
 REGVAR("grassheight", 1, 4, 64, NULL, true);
-REGVAR("grassanimmillis", 0, 3000, 60000); // override
-REGVAR("grassanimscale", 0.0f, 0.03f, 1.0f); // override
-REGVAR("grassscale", 1, 2, 64); // override
+REGVAR("grassanimmillis", 0, 3000, 60000, NULL, false, true);
+REGVAR("grassanimscale", 0.0f, 0.03f, 1.0f, NULL, false, true);
+REGVAR("grassscale", 1, 2, 64, NULL, false, true);
 REGVAR("grasscolour", 0, 0xFFFFFF, 0xFFFFFF, ICB({
 	int c = curv;
     if(!curv)
@@ -131,8 +131,8 @@ REGVAR("grasscolour", 0, 0xFFFFFF, 0xFFFFFF, ICB({
 		c = 0xFFFFFF;
 	}
     grasscolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
-})); // override
-REGVAR("grassalpha", 0, 1, 1); // override
+}), false, true);
+REGVAR("grassalpha", 0, 1, 1, NULL, false, true);
 
 // engine/lensflare.h
 
@@ -145,10 +145,10 @@ REGVAR("flaresize", 20, 100, 500, NULL, true);
 void setfullbrightlevel(int fullbrightlevel);
 void cleanuplightmaps();
 
-REGVAR("lightprecision", 1, 32, 1024); // override
-REGVAR("lighterror", 1, 8, 16); // override
-REGVAR("bumperror", 1, 3, 16); // override
-REGVAR("lightlod", 0, 0, 10); // override
+REGVAR("lightprecision", 1, 32, 1024, NULL, false, true);
+REGVAR("lighterror", 1, 8, 16, NULL, false, true);
+REGVAR("bumperror", 1, 3, 16, NULL, false, true);
+REGVAR("lightlod", 0, 0, 10, NULL, false, true);
 REGVAR("ambient", 1, 0x191919, 0xFFFFFF, ICB({
 	int c = curv;
     if(curv <= 255)
@@ -157,7 +157,7 @@ REGVAR("ambient", 1, 0x191919, 0xFFFFFF, ICB({
 		c = curv | (curv<<8) | (curv<<16);
 	}
     ambientcolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
-})); // override
+}), false, true);
 REGVAR("skylight", 0, 0, 0xFFFFFF, ICB({
 	int c = curv;
     if(curv <= 255)
@@ -166,13 +166,13 @@ REGVAR("skylight", 0, 0, 0xFFFFFF, ICB({
 		c = curv | (curv<<8) | (curv<<16);
 	}
     skylightcolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
-})); // override
+}), false, true);
 REGVAR("lmshadows", 0, 2, 2); // global name was lmshadows_
 REGVAR("lmaa", 0, 3, 3); // global name was lmaa_
 REGVAR("lightcompress", 0, 3, 6);
-REGVAR("skytexturelight", 0, 1, 1); // override
-REGVAR("blurlms", 0, 0, 2); // override
-REGVAR("blurskylight", 0, 0, 2); // override
+REGVAR("skytexturelight", 0, 1, 1, NULL, false, true);
+REGVAR("blurlms", 0, 0, 2, NULL, false, true);
+REGVAR("blurskylight", 0, 0, 2, NULL, false, true);
 REGVAR("edgetolerance", 1, 4, 8);
 REGVAR("adaptivesample", 0, 2, 2);
 REGVAR("lightcachesize", 4, 6, 12, ICB({ clearlightcache(); }));
@@ -260,9 +260,9 @@ REGVAR("moviesound", 0, 1, 1, NULL, true);
 #endif
 
 // engine/normal.cpp
-REGVAR("lerpangle", 0, 44, 180); // override
-REGVAR("lerpsubdiv", 0, 2, 4); // override
-REGVAR("lerpsubdivsize", 4, 4, 128); // override
+REGVAR("lerpangle", 0, 44, 180, NULL, false, true);
+REGVAR("lerpsubdiv", 0, 2, 4, NULL, false, true);
+REGVAR("lerpsubdivsize", 4, 4, 128, NULL, false, true);
 
 // engine/octa.cpp
 REGVAR("mipvis", 0, 0, 1);
@@ -430,14 +430,14 @@ REGVAR("reflectclipavatar", -64, 0, 64);
 REGVAR("polygonoffsetfactor", -1e4f, -3.0f, 1e4f);
 REGVAR("polygonoffsetunits", -1e4f, -3.0f, 1e4f);
 REGVAR("depthoffset", -1e4f, -0.01f, 1e4f);
-REGVAR("fog", 16, 4000, 1000024); // override
-REGVAR("fogcolour", 0, 0x8099B3, 0xFFFFFF, ICB({ fogcolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF); })); // override
+REGVAR("fog", 16, 4000, 1000024, NULL, false, true);
+REGVAR("fogcolour", 0, 0x8099B3, 0xFFFFFF, ICB({ fogcolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF); }), false, true);
 REGVAR("skyboxglare", 0, 1, 1, NULL, true);
 REGVAR("reflectmms", 0, 1, 1, NULL, true);
-REGVAR("refractsky", 0, 0, 1); // override
-REGVAR("minimapheight", 0, 0, 2<<16); // override
-REGVAR("minimapcolour", 0, 0, 0xFFFFFF, ICB({ minimapcolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF); })); // override
-REGVAR("minimapclip", 0, 0, 1); // override
+REGVAR("refractsky", 0, 0, 1, NULL, false, true);
+REGVAR("minimapheight", 0, 0, 2<<16, NULL, false, true);
+REGVAR("minimapcolour", 0, 0, 0xFFFFFF, ICB({ minimapcolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF); }), false, true);
+REGVAR("minimapclip", 0, 0, 1, NULL, false, true);
 REGVAR("minimapsize", 7, 8, 10, ICB({ if (minimaptex) drawminimap(); }), true);
 REGVAR("motionblur", 0, 0, 1, ICB({ if (!curv) cleanupmotionblur(); }), true);
 REGVAR("motionblurmillis", 1, 5, 1000, NULL, true);
@@ -480,11 +480,12 @@ REGVAR("tweakmodelambient", 0.0f, 1.0f, 100.0f);
 REGVAR("tweakmodelglow", 0.0f, 1.0f, 100.0f);
 REGVAR("tweakmodelspecglare", 0.0f, 1.0f, 100.0f);
 REGVAR("tweakmodelglowglare", 0.0f, 1.0f, 100.0f);
-REGVAR("tweakmodelscale", 0.001f, 1.0f, 100.0f); // override // end INTENSITY
+REGVAR("tweakmodelscale", 0.001f, 1.0f, 100.0f, NULL, false, true); // end INTENSITY
 REGVAR("maxmodelradiusdistance", 10, 200, 1000, NULL, true);
 REGVAR("animoverride", -1, 0, NUMANIMS-1);
 REGVAR("testanims", 0, 0, 1);
 REGVAR("testpitch", -90, 0, 90);
+
 #ifdef CLIENT
 // engine/renderparticles.cpp
 
@@ -515,60 +516,60 @@ void loadsky(const char *basename, Texture *texs[6]);
 Texture *loadskyoverlay(const char *basename);
 extern bvec fogdomecolor;
 
-REGVAR("starbox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), stars); })); // override // INTENSITY: SkyManager: various star and sun variables
-REGVAR("starboxtint", 0, 0xFFFFFF, 0xFFFFFF); // override
-REGVAR("spinstars", -720.0f, 0.0f, 720.0f); // override
-REGVAR("yawstars", 0, 0, 360); // override // end INTENSITY
-REGVAR("skybox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), sky); })); // override
-REGVAR("skyboxalpha", 0.0f, 0.999f, 1.0f); // override // INTENSITY: Less than one so it won't occlude and cause starbox to be culled.
+REGVAR("starbox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), stars); }), false, true); // INTENSITY: SkyManager: various star and sun variables
+REGVAR("starboxtint", 0, 0xFFFFFF, 0xFFFFFF, NULL, false, true);
+REGVAR("spinstars", -720.0f, 0.0f, 720.0f, NULL, false, true);
+REGVAR("yawstars", 0, 0, 360, NULL, false, true); // end INTENSITY
+REGVAR("skybox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), sky); }), false, true);
+REGVAR("skyboxalpha", 0.0f, 0.999f, 1.0f, NULL, false, true); // INTENSITY: Less than one so it won't occlude and cause starbox to be culled.
 REGVAR("skyboxtint", 0, 0xFFFFFF, 0xFFFFFF); // INTENSITY: was skyboxcolour
-REGVAR("spinsky", -720.0f, 0.0f, 720.0f); // override
-REGVAR("yawsky", 0, 0, 360); // override
-REGVAR("sunbox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), sun); })); // override
-REGVAR("sunboxalpha", 0.0f, 1.0f, 1.0f); // override
-REGVAR("sunboxtint", 0, 0xFFFFFF, 0xFFFFFF); // override
-REGVAR("spinsun", -720.0f, 0.0f, 720.0f); // override
-REGVAR("yawsun", 0, 0, 360, ICB({ skymillis = 1; })); // override
-REGVAR("cloudbox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), clouds); })); // override
-REGVAR("cloudboxalpha", 0.0f, 0.999f, 1.0f); // override // INTENSITY: was 1
-REGVAR("cloudboxtint", 0, 0xFFFFFF, 0xFFFFFF); // override
-REGVAR("spinclouds", -720.0f, 0.0f, 720.0f); // override
-REGVAR("yawclouds", 0, 0, 360); // override
-REGVAR("cloudclip", 0.0f, 0.5f, 1.0f); // override
-REGVAR("cloudlayer", "", SCB({ if (!curv.empty()) cloudoverlay = loadskyoverlay(curv.c_str()); })); // override
-REGVAR("cloudscrollx", -16.0f, 0.0f, 16.0f); // override
-REGVAR("cloudscrolly", -16.0f, 0.0f, 16.0f); // override
-REGVAR("cloudscale", 0.001f, 1.0f, 64.0f); // override
-REGVAR("spincloudlayer", -720.0f, 0.0f, 720.0f); // override
-REGVAR("yawcloudlayer", 0, 0, 360); // override
-REGVAR("cloudheight", -1.0f, 0.2f, 1.0f); // override
-REGVAR("cloudfade", 0.0f, 0.2f, 1.0f); // override
-REGVAR("cloudalpha", 0.0f, 1.0f, 1.0f); // override
-REGVAR("cloudsubdiv", 4, 16, 64); // override
-REGVAR("cloudtint", 0, 0xFFFFFF, 0xFFFFFF); // override
-REGVAR("altcloudlayer", "", SCB({ if (!curv.empty()) altcloudoverlay = loadskyoverlay(curv.c_str()); })); // override
-REGVAR("altcloudscrollx", -16.0f, 0.0f, 16.0f); // override
-REGVAR("altcloudscrolly", -16.0f, 0.0f, 16.0f); // override
-REGVAR("altcloudscale", 0.001f, 1.0f, 64.0f); // override
-REGVAR("spinaltcloudlayer", -720.0f, 0.0f, 720.0f); // override
-REGVAR("yawaltcloudlayer", 0, 0, 360); // override
-REGVAR("altcloudheight", -1.0f, 0.1f, 1.0f); // override
-REGVAR("altcloudfade", 0.0f, 0.1f, 1.0f); // override
-REGVAR("altcloudalpha", 0.0f, 0.0f, 1.0f); // override
-REGVAR("altcloudsubdiv", 4, 16, 64); // override
-REGVAR("altcloudtint", 0, 0xFFFFFF, 0xFFFFFF); // override
-REGVAR("fogdomeheight", -1.0f, -0.5f, 1.0f); // override
-REGVAR("fogdomemin", 0.0f, 0.0f, 1.0f); // override
-REGVAR("fogdomemax", 0.0f, 0.0f, 1.0f); // override
-REGVAR("fogdomecap", 0, 1, 1); // override
-REGVAR("fogdomeclip", 0.0f, 1.0f, 1.0f); // override
-REGVAR("fogdomecolour", 0, 0, 0xFFFFFF, ICB({ fogdomecolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF); })); // override
+REGVAR("spinsky", -720.0f, 0.0f, 720.0f, NULL, false, true);
+REGVAR("yawsky", 0, 0, 360, NULL, false, true);
+REGVAR("sunbox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), sun); }), false, true);
+REGVAR("sunboxalpha", 0.0f, 1.0f, 1.0f, NULL, false, true);
+REGVAR("sunboxtint", 0, 0xFFFFFF, 0xFFFFFF, NULL, false, true);
+REGVAR("spinsun", -720.0f, 0.0f, 720.0f, NULL, false, true);
+REGVAR("yawsun", 0, 0, 360, ICB({ skymillis = 1; }), false, true);
+REGVAR("cloudbox", "", SCB({ if (!curv.empty()) loadsky(curv.c_str(), clouds); }), false, true);
+REGVAR("cloudboxalpha", 0.0f, 0.999f, 1.0f, NULL, false, true); // INTENSITY: was 1
+REGVAR("cloudboxtint", 0, 0xFFFFFF, 0xFFFFFF, NULL, false, true);
+REGVAR("spinclouds", -720.0f, 0.0f, 720.0f, NULL, false, true);
+REGVAR("yawclouds", 0, 0, 360, NULL, false, true);
+REGVAR("cloudclip", 0.0f, 0.5f, 1.0f, NULL, false, true);
+REGVAR("cloudlayer", "", SCB({ if (!curv.empty()) cloudoverlay = loadskyoverlay(curv.c_str()); }), false, true);
+REGVAR("cloudscrollx", -16.0f, 0.0f, 16.0f, NULL, false, true);
+REGVAR("cloudscrolly", -16.0f, 0.0f, 16.0f, NULL, false, true);
+REGVAR("cloudscale", 0.001f, 1.0f, 64.0f, NULL, false, true);
+REGVAR("spincloudlayer", -720.0f, 0.0f, 720.0f, NULL, false, true);
+REGVAR("yawcloudlayer", 0, 0, 360, NULL, false, true);
+REGVAR("cloudheight", -1.0f, 0.2f, 1.0f, NULL, false, true);
+REGVAR("cloudfade", 0.0f, 0.2f, 1.0f, NULL, false, true);
+REGVAR("cloudalpha", 0.0f, 1.0f, 1.0f, NULL, false, true);
+REGVAR("cloudsubdiv", 4, 16, 64, NULL, false, true);
+REGVAR("cloudtint", 0, 0xFFFFFF, 0xFFFFFF, NULL, false, true);
+REGVAR("altcloudlayer", "", SCB({ if (!curv.empty()) altcloudoverlay = loadskyoverlay(curv.c_str()); }), false, true);
+REGVAR("altcloudscrollx", -16.0f, 0.0f, 16.0f, NULL, false, true);
+REGVAR("altcloudscrolly", -16.0f, 0.0f, 16.0f, NULL, false, true);
+REGVAR("altcloudscale", 0.001f, 1.0f, 64.0f, NULL, false, true);
+REGVAR("spinaltcloudlayer", -720.0f, 0.0f, 720.0f, NULL, false, true);
+REGVAR("yawaltcloudlayer", 0, 0, 360, NULL, false, true);
+REGVAR("altcloudheight", -1.0f, 0.1f, 1.0f, NULL, false, true);
+REGVAR("altcloudfade", 0.0f, 0.1f, 1.0f, NULL, false, true);
+REGVAR("altcloudalpha", 0.0f, 0.0f, 1.0f, NULL, false, true);
+REGVAR("altcloudsubdiv", 4, 16, 64, NULL, false, true);
+REGVAR("altcloudtint", 0, 0xFFFFFF, 0xFFFFFF, NULL, false, true);
+REGVAR("fogdomeheight", -1.0f, -0.5f, 1.0f, NULL, false, true);
+REGVAR("fogdomemin", 0.0f, 0.0f, 1.0f, NULL, false, true);
+REGVAR("fogdomemax", 0.0f, 0.0f, 1.0f, NULL, false, true);
+REGVAR("fogdomecap", 0, 1, 1, NULL, false, true);
+REGVAR("fogdomeclip", 0.0f, 1.0f, 1.0f, NULL, false, true);
+REGVAR("fogdomecolour", 0, 0, 0xFFFFFF, ICB({ fogdomecolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF); }), false, true);
 REGVAR("sparklyfix", 0, 0, 1, NULL, true);
 REGVAR("showsky", 0, 1, 1);
 REGVAR("clipsky", 0, 1, 1);
 REGVAR("clampsky", 0, 1, 1);
-REGVAR("fogdomeclouds", 0, 1, 1); // override
-REGVAR("skytexture", 0, 1, 1); // override // globalname was useskytexture
+REGVAR("fogdomeclouds", 0, 1, 1, NULL, false, true);
+REGVAR("skytexture", 0, 1, 1, NULL, false, true); // globalname was useskytexture
 
 // engine/renderva.cpp
 
@@ -583,8 +584,8 @@ REGVAR("zpass", 0, 1, 1);
 REGVAR("glowpass", 0, 1, 1);
 REGVAR("envpass", 0, 1, 1);
 REGVAR("batchgeom", 0, 1, 1);
-REGVAR("causticscale", 0, 100, 10000); // override
-REGVAR("causticmillis", 0, 75, 1000); // override
+REGVAR("causticscale", 0, 100, 10000, NULL, false, true);
+REGVAR("causticmillis", 0, 75, 1000, NULL, false, true);
 REGVAR("caustics", 0, 1, 1, ICB({ loadcaustics(); }), true);
 REGVAR("oqgeom", 0, 1, 1);
 REGVAR("dbgffsm", 0, 0, 1);
@@ -607,6 +608,7 @@ REGVAR("mastername", std::string(server::defaultmaster()), SCB({ disconnectmaste
 REGVAR("serveruprate", 0, 0, INT_MAX);
 REGVAR("serverip", "");
 REGVAR("serverport", 0, server::serverport(), 0xFFFF, ICB({ if(!curv) EngineVariables::get("serverport").get()->set(server::serverport()); })); // not hex var
+
 #ifdef CLIENT
 // engine/shader.cpp
 
@@ -655,12 +657,12 @@ REGVAR("shadowmapambient", 0, 0, 0xFFFFFF, ICB({
     if(v <= 255) v |= (v<<8) | (v<<16);
     shadowmapambientcolor = bvec((v>>16)&0xFF, (v>>8)&0xFF, v&0xFF);
     EngineVariables::get("shadowmapambient").get()->set(v);
-})); // override
+}), false, true);
 REGVAR("shadowmapintensity", 0, 40, 100, NULL, true);
 REGVAR("blurshadowmap", 0, 1, 3, NULL, true);
 REGVAR("blursmsigma", 1, 100, 200, NULL, true);
 REGVAR("shadowmapcasters", 1, 0, 0);
-REGVAR("shadowmapangle", 0, 0, 360, ICB({ setshadowdir(curv); })); // override
+REGVAR("shadowmapangle", 0, 0, 360, ICB({ setshadowdir(curv); }), false, true);
 REGVAR("shadowmapbias", 0, 5, 1024, NULL, true);
 REGVAR("shadowmappeelbias", 0, 20, 1024, NULL, true);
 REGVAR("smdepthpeel", 0, 1, 1);
@@ -685,7 +687,7 @@ REGVAR("musicvol", 0, 128, 255, ICB({ setmusicvol(EngineVariables::get("soundvol
 REGVAR("soundchans", 1, 32, 128, ICB({ initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); }));
 REGVAR("soundfreq", 0, MIX_DEFAULT_FREQUENCY, 44100, ICB({ initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); }));
 REGVAR("soundbufferlen", 128, 1024, 4096, ICB({ initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); }));
-REGVAR("uwambient", 0, 0, 1);
+REGVAR("uwambient", 0, 0, 1, NULL, false, true);
 REGVAR("stereo", 0, 1, 1);
 REGVAR("maxsoundradius", 0, 340, 10000, NULL, true);
 REGVAR("maxsoundsatonce", 0, 5, 100, NULL, true);
@@ -739,6 +741,7 @@ REGVAR("waterreflect", 0, 1, 1, ICB({ cleanreflections(); preloadwatershaders();
 REGVAR("waterrefract", 0, 1, 1, ICB({ cleanreflections(); preloadwatershaders(); }), true);
 REGVAR("waterenvmap", 0, 1, 1, ICB({ cleanreflections(); preloadwatershaders(); }), true);
 REGVAR("waterfallrefract", 0, 0, 1, ICB({ cleanreflections(); preloadwatershaders(); }), true);
+/* vertex water */
 REGVAR("watersubdiv", 0, 2, 3, NULL, true);
 REGVAR("waterlod", 0, 1, 3, NULL, true);
 REGVAR("vertwater", 0, 1, 1, ICB({ allchanged(); }), true);
@@ -748,19 +751,19 @@ REGVAR("watercolour", 0, 0x144650, 0xFFFFFF, ICB({
     if(!c) c = 0x144650;
     watercolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
     EngineVariables::get("watercolour").get()->set(c);
-})); // override
-REGVAR("waterfog", 0, 150, 10000); // override
+}), false, true);
+REGVAR("waterfog", 0, 150, 10000, NULL, false, true);
 REGVAR("waterfallcolour", 0, 0, 0xFFFFFF, ICB({
 	waterfallcolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF);
-})); // override
+}), false, true);
 REGVAR("lavacolour", 0, 0xFF4000, 0xFFFFFF, ICB({
 	int c = curv;
     if(!c) c = 0xFF4000;
     lavacolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
     EngineVariables::get("lavacolour").get()->set(c);
-})); // override
-REGVAR("lavafog", 0, 50, 10000); // override
-REGVAR("waterspec", 0, 150, 1000); // override
+}), false, true);
+REGVAR("lavafog", 0, 50, 10000, NULL, false, true);
+REGVAR("waterspec", 0, 150, 1000, NULL, false, true);
 REGVAR("oqwater", 0, 2, 2);
 REGVAR("waterfade", 0, 1, 1, ICB({ cleanreflections(); preloadwatershaders(); }), true);
 REGVAR("reflectsize", 6, 8, 10, ICB({ cleanreflections(); }), true);
@@ -768,7 +771,7 @@ REGVAR("maxreflect", 1, 1, 8, NULL, true);
 REGVAR("maskreflect", 0, 2, 16);
 REGVAR("reflectscissor", 0, 1, 1);
 REGVAR("reflectvfc", 0, 1, 1);
-REGVAR("refractclear", 0, 0, 1); // override
+REGVAR("refractclear", 0, 0, 1, NULL, false, true);
 #endif
 
 // engine/world.cpp
@@ -779,10 +782,10 @@ bool noentedit();
 bool enttoggle(int id);
 void entadd(int id);
 
-REGVAR("mapversion", 1, MAPVERSION, 0); // override
-REGVAR("mapscale", 1, 0, 0); // override, globalname was worldscale
-REGVAR("mapsize", 1, 0, 0); // override, globalname was worldsize
-REGVAR("maptitle", "Untitled Map by Unknown"); // override
+REGVAR("mapversion", 1, MAPVERSION, 0, NULL, false, true);
+REGVAR("mapscale", 1, 0, 0, NULL, false, true); // globalname was worldscale
+REGVAR("mapsize", 1, 0, 0, NULL, false, true); // globalname was worldsize
+REGVAR("maptitle", "Untitled Map by Unknown", NULL, false, true);
 REGVAR("octaentsize", 0, 128, 1024);
 REGVAR("entselradius", 0, 2, 10);
 REGVAR("entediting", 0, 0, 1, ICB({ if(!curv) { entcancel(); efocus = enthover = -1; } }));
@@ -898,7 +901,7 @@ REGVAR("ragdoll", 0, 1, 1, NULL, true);
 #ifdef SERVER
 // intensity/server_system.cpp
 
-REGVAR("fog", 1, 2, 300000); // override
+REGVAR("fog", 1, 2, 300000, NULL, false, true);
 REGVAR("thirdperson", 0, 1, 2);
 REGVAR("gui2d", 1, 1, 0);
 REGVAR("gamespeed", 0, 100, 100);
