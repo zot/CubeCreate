@@ -342,7 +342,7 @@ void gl_checkextensions()
         waterreflect = 0;
     }
 
-    extern int reservedynlighttc, reserveshadowmaptc, batchlightmaps, ffdynlights;
+    extern int reservedynlighttc, reserveshadowmaptc;
     if(strstr(vendor, "ATI"))
     {
         //conoutf(CON_WARN, "WARNING: ATI cards may show garbage in skybox. (use \"/ati_skybox_bug 1\" to fix)");
@@ -351,8 +351,7 @@ void gl_checkextensions()
         reserveshadowmaptc = 3;
         minimizetcusage = 1;
         emulatefog = 1;
-        extern int depthfxprecision;
-        if(hasTF) depthfxprecision = 1;
+        if(hasTF) SETV(depthfxprecision, 1);
 
 #if 0
         //causes problems with Catalyst AI advanced setting, hope this is fixed by now - 11-21-09
@@ -372,9 +371,8 @@ void gl_checkextensions()
         if(!strstr(exts, "GL_EXT_gpu_shader4")) filltjoints = 0; // DX9 or less NV cards seem to not cause many sparklies
         
         if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too 
-        extern int fpdepthfx;
         if(hasTF && (!strstr(renderer, "GeForce") || !checkseries(renderer, 6000, 6600)))
-            fpdepthfx = 1; // FP filtering causes software fallback on 6200?
+            SETV(fpdepthfx, 1); // FP filtering causes software fallback on 6200?
     }
     else if(strstr(vendor, "Intel"))
     {
@@ -382,8 +380,8 @@ void gl_checkextensions()
         intel_quadric_bug = 1;
         maxtexsize = 256;
         reservevpparams = 20;
-        batchlightmaps = 0;
-        ffdynlights = 0;
+        SETV(batchlightmaps, 0);
+        SETV(ffdynlights, 0);
 
         if(!hasOQ) waterrefract = 0;
 
@@ -396,8 +394,8 @@ void gl_checkextensions()
         avoidshaders = 1;
         maxtexsize = 256;
         reservevpparams = 20;
-        batchlightmaps = 0;
-        ffdynlights = 0;
+        SETV(batchlightmaps, 0);
+        SETV(ffdynlights, 0);
 
         if(!hasOQ) waterrefract = 0;
     }
@@ -636,19 +634,18 @@ void gl_checkextensions()
     if(strstr(exts, "GL_EXT_gpu_shader4") && !avoidshaders)
     {
         // on DX10 or above class cards (i.e. GF8 or RadeonHD) enable expensive features
-        extern int grass, glare, maxdynlights, depthfxsize, depthfxrect, depthfxfilter, blurdepthfx;
-        grass = 1;
+        SETV(grass, 1);
         if(hasOQ)
         {
             waterfallrefract = 1;
-            glare = 1;
-            maxdynlights = MAXDYNLIGHTS;
+            SETV(glare, 1);
+            SETV(maxdynlights, MAXDYNLIGHTS);
             if(hasTR)
             {
-                depthfxsize = 10;
-                depthfxrect = 1;
-                depthfxfilter = 0;
-                blurdepthfx = 0;
+                SETV(depthfxsize, 10);
+                SETV(depthfxrect, 1);
+                SETV(depthfxfilter, 0);
+                SETV(blurdepthfx, 0);
             }
         }
     }
@@ -2224,15 +2221,13 @@ void gl_drawhud(int w, int h)
         viewshadowmap();
     }
 
-    extern int debugglare;
-    if(debugglare)
+    if(GETIV(debugglare))
     {
         extern void viewglaretex();
         viewglaretex();
     }
 
-    extern int debugdepthfx;
-    if(debugdepthfx)
+    if(GETIV(debugdepthfx))
     {
         extern void viewdepthfxtex();
         viewdepthfxtex();

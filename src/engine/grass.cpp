@@ -1,12 +1,5 @@
 #include "engine.h"
 
-VARP(grass, 0, 0, 1);
-VAR(dbggrass, 0, 0, 1);
-VARP(grassdist, 0, 256, 10000);
-FVARP(grasstaper, 0, 0.2, 1);
-FVARP(grassstep, 0.5, 2, 8);
-VARP(grassheight, 1, 4, 64);
-
 #define NUMGRASSWEDGES 8
 
 static struct grasswedge
@@ -46,12 +39,9 @@ static vector<grassgroup> grassgroups;
 static float grassoffsets[NUMGRASSOFFSETS] = { -1 }, grassanimoffsets[NUMGRASSOFFSETS];
 static int lastgrassanim = -1;
 
-VARR(grassanimmillis, 0, 3000, 60000);
-FVARR(grassanimscale, 0, 0.03f, 1);
-
 static void animategrass()
 {
-    loopi(NUMGRASSOFFSETS) grassanimoffsets[i] = grassanimscale*sinf(2*M_PI*(grassoffsets[i] + lastmillis/float(grassanimmillis)));
+    loopi(NUMGRASSOFFSETS) grassanimoffsets[i] = float(GETFV(grassanimscale))*sinf(2*M_PI*(grassoffsets[i] + lastmillis/float(GETIV(grassanimmillis))));
     lastgrassanim = lastmillis;
 }
 
@@ -71,20 +61,13 @@ static inline bool clipgrassquad(const grasstri &g, vec &p1, vec &p2)
     return true;
 }
 
-VARR(grassscale, 1, 2, 64);
 bvec grasscolor(255, 255, 255);
-HVARFR(grasscolour, 0, 0xFFFFFF, 0xFFFFFF,
-{
-    if(!grasscolour) grasscolour = 0xFFFFFF;
-    grasscolor = bvec((grasscolour>>16)&0xFF, (grasscolour>>8)&0xFF, grasscolour&0xFF);
-});
-FVARR(grassalpha, 0, 1, 1);
- 
+
 static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstri &g, Texture *tex)
 {
     float t = camera1->o.dot(w.dir);
-    int tstep = int(ceil(t/grassstep));
-    float tstart = tstep*grassstep, tfrac = tstart - t;
+    int tstep = int(ceil(t/float(GETFV(grassstep))));
+    float tstart = tstep*float(GETFV(grassstep)), tfrac = tstart - t;
 
     float t1 = w.dir.dot(g.v[0]), t2 = w.dir.dot(g.v[1]), t3 = w.dir.dot(g.v[2]),
           tmin = min(t1, min(t2, t3)),
@@ -96,13 +79,13 @@ static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstr
         tmax = max(tmax, t4);
     }
  
-    if(tmax < tstart || tmin > t + grassdist) return;
+    if(tmax < tstart || tmin > t + GETIV(grassdist)) return;
 
-    int minstep = max(int(ceil(tmin/grassstep)) - tstep, 1),
-        maxstep = int(floor(min(tmax, t + grassdist)/grassstep)) - tstep,
+    int minstep = max(int(ceil(tmin/float(GETFV(grassstep)))) - tstep, 1),
+        maxstep = int(floor(min(tmax, t + GETIV(grassdist))/float(GETFV(grassstep)))) - tstep,
         numsteps = maxstep - minstep + 1;
 
-    float texscale = (grassscale*tex->ys)/float(grassheight*tex->xs), animscale = grassheight*texscale;
+    float texscale = (GETIV(grassscale)*tex->ys)/float(GETIV(grassheight)*tex->xs), animscale = GETIV(grassheight)*texscale;
     vec tc;
     tc.cross(g.surface, w.dir).mul(texscale);
 
@@ -110,12 +93,12 @@ static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstr
     if(color < 0) color = NUMGRASSOFFSETS - (-color)%NUMGRASSOFFSETS;
     color += numsteps + NUMGRASSOFFSETS - numsteps%NUMGRASSOFFSETS;
 
-    float taperdist = grassdist*grasstaper,
-          taperscale = 1.0f / (grassdist - taperdist);
+    float taperdist = GETIV(grassdist)*float(GETFV(grasstaper)),
+          taperscale = 1.0f / (GETIV(grassdist) - taperdist);
 
     for(int i = maxstep; i >= minstep; i--, color--)
     {
-        float dist = i*grassstep + tfrac;
+        float dist = i*float(GETFV(grassstep)) + tfrac;
         vec p1 = vec(w.edge1).mul(dist).add(camera1->o),
             p2 = vec(w.edge2).mul(dist).add(camera1->o);
         p1.z = g.surface.zintersect(p1);
@@ -141,9 +124,9 @@ static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstr
               tc1 = tc.dot(p1) + offset, tc2 = tc.dot(p2) + offset,
               lm1u = g.tcu.dot(p1), lm1v = g.tcv.dot(p1),
               lm2u = g.tcu.dot(p2), lm2v = g.tcv.dot(p2),
-              fade = dist > taperdist ? (grassdist - dist)*taperscale : 1,
-              height = grassheight * fade;
-        uchar color[4] = { grasscolor.x, grasscolor.y, grasscolor.z, uchar(fade*grassalpha*255) };
+              fade = dist > taperdist ? (GETIV(grassdist) - dist)*taperscale : 1,
+              height = GETIV(grassheight) * fade;
+        uchar color[4] = { grasscolor.x, grasscolor.y, grasscolor.z, uchar(fade*float(GETFV(grassalpha))*255) };
 
         #define GRASSVERT(n, tcv, modify) { \
             grassvert &gv = grassverts.add(); \
@@ -168,7 +151,7 @@ static void gengrassquads(vtxarray *va)
         grasstri &g = va->grasstris[i];
         if(isfoggedsphere(g.radius, g.center)) continue;
         float dist = g.center.dist(camera1->o);
-        if(dist - g.radius > grassdist) continue;
+        if(dist - g.radius > GETIV(grassdist)) continue;
             
         Slot &s = *lookupvslot(g.texture, false).slot;
         if(!s.grasstex) 
@@ -197,7 +180,7 @@ static inline int comparegrassgroups(const grassgroup *x, const grassgroup *y)
 
 void generategrass()
 {
-    if(!grass || !grassdist) return;
+    if(!GETIV(grass) || !GETIV(grassdist)) return;
 
     grassgroups.setsize(0);
     grassverts.setsize(0);
@@ -215,7 +198,7 @@ void generategrass()
     for(vtxarray *va = visibleva; va; va = va->next)
     {
         if(va->grasstris.empty() || va->occluded >= OCCLUDE_GEOM) continue;
-        if(va->distance > grassdist) continue;
+        if(va->distance > GETIV(grassdist)) continue;
         if(reflecting || refracting>0 ? va->o.z+va->size<reflectz : va->o.z>=reflectz) continue;
         gengrassquads(va);
     }
@@ -225,7 +208,7 @@ void generategrass()
 
 void rendergrass()
 {
-    if(!grass || !grassdist || grassgroups.empty() || dbggrass) return;
+    if(!GETIV(grass) || !GETIV(grassdist) || grassgroups.empty() || GETIV(dbggrass)) return;
 
     glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -264,7 +247,7 @@ void rendergrass()
         {
             if(refracting < 0 ?
                 min(g.tri->numv>3 ? min(g.tri->v[0].z, g.tri->v[3].z) : g.tri->v[0].z, min(g.tri->v[1].z, g.tri->v[2].z)) > reflectz :
-                max(g.tri->numv>3 ? max(g.tri->v[0].z, g.tri->v[3].z) : g.tri->v[0].z, max(g.tri->v[1].z, g.tri->v[2].z)) + grassheight < reflectz) 
+                max(g.tri->numv>3 ? max(g.tri->v[0].z, g.tri->v[3].z) : g.tri->v[0].z, max(g.tri->v[1].z, g.tri->v[2].z)) + GETIV(grassheight) < reflectz) 
                 continue;
             if(isfoggedsphere(g.tri->radius, g.tri->center)) continue;
         }

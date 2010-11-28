@@ -355,11 +355,6 @@ void optimizeblendmap()
     optimizeblendmap(blendmap.type, blendmap);
 }
 
-VARF(blendpaintmode, 0, 0, 5,
-{
-    if(!blendpaintmode) stoppaintblendmap();
-});
-
 static void blitblendmap(uchar &type, BlendMapNode &node, int bmx, int bmy, int bmsize, uchar *src, int sx, int sy, int sw, int sh)
 {
     if(type==BM_BRANCH)
@@ -398,7 +393,7 @@ static void blitblendmap(uchar &type, BlendMapNode &node, int bmx, int bmy, int 
     src += max(bmy - sy, 0)*sw + max(bmx - sx, 0);
     loopi(y2-y1)
     {
-        switch(blendpaintmode)
+        switch(GETIV(blendpaintmode))
         {
             case 1:
                 memcpy(dst, src, x2 - x1);
@@ -617,7 +612,7 @@ extern int nompedit;
 bool canpaintblendmap(bool brush = true, bool sel = false, bool msg = true)
 {
     if(noedit(!sel, msg) || (nompedit && multiplayer())) return false;
-    if(!blendpaintmode)
+    if(!GETIV(blendpaintmode))
     {
         if(msg) conoutf(CON_ERROR, "operation only allowed in blend paint mode");
         return false;
@@ -653,9 +648,6 @@ void paintblendmap(bool msg)
                   ivec((brush->w+2)<<BM_SCALE, (brush->h+2)<<BM_SCALE, worldsize));
 }
 
-VAR(paintblendmapdelay, 1, 500, 3000);
-VAR(paintblendmapinterval, 1, 30, 3000);
-
 int paintingblendmap = 0, lastpaintblendmap = 0;
 
 void stoppaintblendmap()
@@ -666,12 +658,12 @@ void stoppaintblendmap()
 
 void trypaintblendmap()
 {
-    if(!paintingblendmap || totalmillis - paintingblendmap < paintblendmapdelay) return;
+    if(!paintingblendmap || totalmillis - paintingblendmap < GETIV(paintblendmapdelay)) return;
     if(lastpaintblendmap)
     {
         int diff = totalmillis - lastpaintblendmap;
-        if(diff < paintblendmapinterval) return;
-        lastpaintblendmap = (diff - diff%paintblendmapinterval) + lastpaintblendmap;
+        if(diff < GETIV(paintblendmapinterval)) return;
+        lastpaintblendmap = (diff - diff%GETIV(paintblendmapinterval)) + lastpaintblendmap;
     }
     else lastpaintblendmap = totalmillis;
     paintblendmap(false);
@@ -740,7 +732,7 @@ ICOMMAND(clearblendmap, "", (),
 
 void renderblendbrush()
 {
-    if(!blendpaintmode || !brushes.inrange(curbrush)) return;
+    if(!GETIV(blendpaintmode) || !brushes.inrange(curbrush)) return;
 
     BlendBrush *brush = brushes[curbrush];
     int x1 = (int)floor(clamp(worldpos.x, 0.0f, float(worldsize))/(1<<BM_SCALE) - 0.5f*(brush->w+2)) << BM_SCALE,

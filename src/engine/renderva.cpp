@@ -1150,8 +1150,7 @@ static void changebatchtmus(renderstate &cur, int pass, geombatch &b)
 {
     bool changed = false;
     extern bool brightengeom;
-    extern int fullbright;
-    int lmid = brightengeom && (b.es.lmid < LMID_RESERVED || (fullbright && editmode)) ? LMID_BRIGHT : b.es.lmid; 
+    int lmid = brightengeom && (b.es.lmid < LMID_RESERVED || (GETIV(fullbright) && editmode)) ? LMID_BRIGHT : b.es.lmid; 
     if(cur.textures[cur.lightmaptmu]!=lightmaptexs[lmid].id)
     {
         glActiveTexture_(GL_TEXTURE0_ARB+cur.lightmaptmu);

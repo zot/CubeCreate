@@ -137,8 +137,7 @@ void toggleedit(bool force)
     stoppaintblendmap();
     keyrepeat(editmode);
     editing = entediting = editmode;
-    extern int fullbright;
-    if(fullbright) initlights();
+    if(GETIV(fullbright)) initlights();
     if(!force) game::edittoggled(editmode);
 }
 
@@ -286,7 +285,7 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
         od  = dimension(orient),
         odc = dimcoord(orient);
 
-    bool hidecursor = g3d_windowhit(true, false) || blendpaintmode, hovering = false;
+    bool hidecursor = g3d_windowhit(true, false) || GETIV(blendpaintmode), hovering = false;
     hmapsel = false;
            
     if(moving)
@@ -469,7 +468,7 @@ void tryedit()
 {
     extern int hidehud;
     if(!editmode || hidehud || mainmenu) return;
-    if(blendpaintmode) trypaintblendmap();
+    if(GETIV(blendpaintmode)) trypaintblendmap();
 }
 
 //////////// ready changes to vertex arrays ////////////

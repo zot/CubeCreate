@@ -2169,8 +2169,7 @@ void inittmus()
         if(maxtmus<2)
         {
             nolights = nowater = nomasks = 1;
-            extern int lightmodels;
-            lightmodels = 0;
+            SETV(lightmodels, 0);
         }
     }
 }

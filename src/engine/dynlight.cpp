@@ -1,9 +1,5 @@
 #include "engine.h"
 
-VARP(ffdynlights, 0, min(5, DYNLIGHTMASK), DYNLIGHTMASK);
-VARP(maxdynlights, 0, min(3, MAXDYNLIGHTS), MAXDYNLIGHTS);
-VARP(dynlightdist, 0, 1024, 10000);
-
 struct dynlight
 {
     vec o;
@@ -55,8 +51,8 @@ vector<dynlight *> closedynlights;
 
 void adddynlight(const vec &o, float radius, const vec &color, int fade, int peak, int flags, float initradius, const vec &initcolor, physent *owner)
 {
-    if(renderpath==R_FIXEDFUNCTION ? !ffdynlights || maxtmus<3 : !maxdynlights) return;
-    if(o.dist(camera1->o) > dynlightdist) return;
+    if(renderpath==R_FIXEDFUNCTION ? !GETIV(ffdynlights) || maxtmus<3 : !GETIV(maxdynlights)) return;
+    if(o.dist(camera1->o) > GETIV(dynlightdist)) return;
 
     int insert = 0, expire = fade + peak + lastmillis;
     loopvrev(dynlights) if(expire>=dynlights[i].expire) { insert = i+1; break; }
@@ -104,7 +100,7 @@ void updatedynlights()
 int finddynlights()
 {
     closedynlights.setsize(0);
-    if(renderpath==R_FIXEDFUNCTION ? !ffdynlights || maxtmus<3 : !maxdynlights) return 0;
+    if(renderpath==R_FIXEDFUNCTION ? !GETIV(ffdynlights) || maxtmus<3 : !GETIV(maxdynlights)) return 0;
     physent e;
     e.type = ENT_CAMERA;
     e.collidetype = COLLIDE_AABB;
@@ -113,7 +109,7 @@ int finddynlights()
         dynlight &d = dynlights[j];
         if(d.curradius <= 0) continue;
         d.dist = camera1->o.dist(d.o) - d.curradius;
-        if(d.dist > dynlightdist || isfoggedsphere(d.curradius, d.o) || pvsoccluded(d.o, 2*int(d.curradius+1))) 
+        if(d.dist > GETIV(dynlightdist) || isfoggedsphere(d.curradius, d.o) || pvsoccluded(d.o, 2*int(d.curradius+1))) 
             continue;
         if(reflecting || refracting > 0)
         {
@@ -129,8 +125,8 @@ int finddynlights()
         closedynlights.insert(insert, &d);
         if(closedynlights.length() >= DYNLIGHTMASK) break;
     }
-    if(renderpath==R_FIXEDFUNCTION && closedynlights.length() > ffdynlights)
-        closedynlights.setsize(ffdynlights);
+    if(renderpath==R_FIXEDFUNCTION && closedynlights.length() > GETIV(ffdynlights))
+        closedynlights.setsize(GETIV(ffdynlights));
     return closedynlights.length();
 }
 
@@ -191,7 +187,7 @@ void calcdynlightmask(vtxarray *va)
 
         mask |= (i+1)<<offset;
         offset += DYNLIGHTBITS;
-        if(offset >= maxdynlights*DYNLIGHTBITS) break;
+        if(offset >= GETIV(maxdynlights)*DYNLIGHTBITS) break;
     }
     va->dynlightmask = mask;
 }

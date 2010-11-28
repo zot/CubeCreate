@@ -110,28 +110,20 @@ std::string EngineVariable::getString()  { return anystring(curv); }
  */
 
 // you use this one for integer variables; checking for right value is done in both here and lua to save stack manipulation
-void EngineVariable::set(int val, bool luaSync, bool forceCB)
+void EngineVariable::set(int val, bool luaSync, bool forceCB, bool clamp)
 {
-	if (val < anyint(minv) || val > anyint(maxv))
-	{
-		Logging::log(Logging::ERROR, "Variable accepts only values of range %i to %i", anyint(minv), anyint(maxv));
-		return;
-	}
 	prev = curv;
-	curv = val;
+	if (clamp && (val < anyint(minv) || val > anyint(maxv))) curv = clamp(val, anyint(minv), anyint(maxv));
+	else curv = val;
 	callCB(luaSync, forceCB);
 }
 
 // float variables
-void EngineVariable::set(double val, bool luaSync, bool forceCB)
+void EngineVariable::set(double val, bool luaSync, bool forceCB, bool clamp)
 {
-	if (val < anydouble(minv) || val > anydouble(maxv))
-	{
-		Logging::log(Logging::ERROR, "Variable accepts only values of range %f to %f", anydouble(minv), anydouble(maxv));
-		return;
-	}
 	prev = curv;
-	curv = val;
+	if (clamp && (val < anydouble(minv) || val > anydouble(maxv))) curv = clamp(val, anydouble(minv), anydouble(maxv));
+	else curv = val;
 	callCB(luaSync, forceCB);
 }
 

@@ -822,7 +822,7 @@ struct softquadrenderer : quadrenderer
             vec o, d;
             int blend, ts;
             calc(&p, blend, ts, o, d, false);
-            if(!isfoggedsphere(radius, p.o) && (depthfxscissor!=2 || depthfxtex.addscissorbox(p.o, radius))) 
+            if(!isfoggedsphere(radius, p.o) && (GETIV(depthfxscissor)!=2 || depthfxtex.addscissorbox(p.o, radius))) 
             {
                 numsoft++;
                 loopk(3)
@@ -895,10 +895,10 @@ void finddepthfxranges()
     numdepthfxranges = bluefireballs.finddepthfxranges(depthfxowners, depthfxranges, numdepthfxranges, MAXDFXRANGES, depthfxmin, depthfxmax);
     loopk(3)
     {
-        depthfxmin[k] -= depthfxmargin;
-        depthfxmax[k] += depthfxmargin;
+        depthfxmin[k] -= GETIV(depthfxmargin);
+        depthfxmax[k] += GETIV(depthfxmargin);
     }
-    if(depthfxparts)
+    if(GETIV(depthfxparts))
     {
         loopi(sizeof(parts)/sizeof(parts[0]))
         {
@@ -914,7 +914,7 @@ void finddepthfxranges()
             }
         }
     }              
-    if(depthfxscissor<2 && numdepthfxranges>0) depthfxtex.addscissorbox(depthfxmin, depthfxmax);
+    if(GETIV(depthfxscissor)<2 && numdepthfxranges>0) depthfxtex.addscissorbox(depthfxmin, depthfxmax);
 }
  
 VARFP(maxparticles, 10, 4000, 40000, particleinit());
@@ -1065,7 +1065,7 @@ void renderparticles(bool mainpass)
                         else SETSHADER(particlesoft);
                     }
 
-                    binddepthfxparams(depthfxpartblend);
+                    binddepthfxparams(GETIV(depthfxpartblend));
                 }
                 else particleshader->set();
             }

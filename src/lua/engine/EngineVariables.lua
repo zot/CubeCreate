@@ -22,13 +22,14 @@ function _VARS:reg(var, skipReg)
 	self.storage[var.name] = var
 	self:__defineGetter(var.name, function (self, var) return var.curv end, var)
 	self:__defineSetter(var.name .. "_ns", function (self, var, val)
-		if var:isInReach(val) then
-			local oval = var.curv
-			var.curv = val
-			if var.chng and type(var.chng) == "function" then
-				var:chng(oval, val)
-			end
+		--if var:isInReach(val) then -- do not check for minimal or maximal value on _ns, because c++ should've already done the job
+		-- if it's not clamped (smaller than minval or bigger than maxval) then it means the engine wanted to set the value like that
+		local oval = var.curv
+		var.curv = val
+		if var.chng and type(var.chng) == "function" then
+			var:chng(oval, val)
 		end
+		--end
 	end, var)
 	self:__defineSetter(var.name, function (self, var, val)
 		if var:isInReach(val) then

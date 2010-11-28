@@ -1,9 +1,3 @@
-VARFP(lightmodels, 0, 1, 1, preloadmodelshaders());
-VARFP(envmapmodels, 0, 1, 1, preloadmodelshaders());
-VARFP(glowmodels, 0, 1, 1, preloadmodelshaders());
-VARFP(bumpmodels, 0, 1, 1, preloadmodelshaders());
-VARP(fullbrightmodels, 0, 0, 200);
-
 struct animmodel : model
 {
     struct animspec
@@ -82,9 +76,9 @@ struct animmodel : model
         skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), specglare(1), glowglare(1), fullbright(0), envmapmin(0), envmapmax(0), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true), cullface(true) {}
 
         bool multitextured() { return enableglow; }
-        bool envmapped() { return hasCM && envmapmax>0 && envmapmodels && (renderpath!=R_FIXEDFUNCTION || maxtmus >= 3); }
-        bool bumpmapped() { return renderpath!=R_FIXEDFUNCTION && normalmap && bumpmodels; }
-        bool normals() { return renderpath!=R_FIXEDFUNCTION || (lightmodels && !fullbright) || envmapped() || bumpmapped(); }
+        bool envmapped() { return hasCM && envmapmax>0 && GETIV(envmapmodels) && (renderpath!=R_FIXEDFUNCTION || maxtmus >= 3); }
+        bool bumpmapped() { return renderpath!=R_FIXEDFUNCTION && normalmap && GETIV(bumpmodels); }
+        bool normals() { return renderpath!=R_FIXEDFUNCTION || (GETIV(lightmodels) && !fullbright) || envmapped() || bumpmapped(); }
         bool tangents() { return bumpmapped(); }
 
         void setuptmus(const animstate *as, bool masked)
@@ -93,14 +87,14 @@ struct animmodel : model
             {
                 if(enablelighting) { glDisable(GL_LIGHTING); enablelighting = false; }
             }
-            else if(lightmodels && !enablelighting)
+            else if(GETIV(lightmodels) && !enablelighting)
             {
                 glEnable(GL_LIGHTING); 
                 enablelighting = true;
                 if(!enablerescale) { glEnable(hasRN ? GL_RESCALE_NORMAL_EXT : GL_NORMALIZE); enablerescale = true; }
             }
             if(masked!=enableglow) lasttex = lastmasks = NULL;
-            float mincolor = as->anim&ANIM_FULLBRIGHT ? fullbrightmodels/100.0f : 0.0f;
+            float mincolor = as->anim&ANIM_FULLBRIGHT ? GETIV(fullbrightmodels)/100.0f : 0.0f;
             vec color = vec(lightcolor).max(mincolor), matcolor(1, 1, 1);
             if(masked)
             {
@@ -132,13 +126,13 @@ struct animmodel : model
                 else if(enableoverbright) disableoverbright();
             }
             if(fullbright) glColor4f(matcolor.x*fullbright, matcolor.y*fullbright, matcolor.z*fullbright, transparent);
-            else if(lightmodels)
+            else if(GETIV(lightmodels))
             {
                 GLfloat material[4] = { matcolor.x, matcolor.y, matcolor.z, transparent };
                 glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, material);
             }
             else glColor4f(matcolor.x*color.x, matcolor.y*color.y, matcolor.z*color.z, transparent);
-            if(lightmodels && !fullbright)
+            if(GETIV(lightmodels) && !fullbright)
             {
                 float ambientk = min(max(ambient, mincolor)*0.75f, 1.0f),
                       diffusek = 1-ambientk;
@@ -163,7 +157,7 @@ struct animmodel : model
             }
             else
             {
-                float mincolor = as->anim&ANIM_FULLBRIGHT ? fullbrightmodels/100.0f : 0.0f, minshade = max(ambient, mincolor);
+                float mincolor = as->anim&ANIM_FULLBRIGHT ? GETIV(fullbrightmodels)/100.0f : 0.0f, minshade = max(ambient, mincolor);
                 vec color = vec(lightcolor).max(mincolor);
                 glColor4f(color.x, color.y, color.z, transparent);
                 setenvparamf("lightscale", SHPARAM_VERTEX, 2, spec, minshade, glow);
@@ -189,22 +183,22 @@ struct animmodel : model
             {
                 if(shouldenvmap)
                 {
-                    if(lightmodels && !fullbright && (masked || spec>=0.01f)) LOADMODELSHADER(bumpenvmapmodel);
+                    if(GETIV(lightmodels) && !fullbright && (masked || spec>=0.01f)) LOADMODELSHADER(bumpenvmapmodel);
                     else LOADMODELSHADER(bumpenvmapnospecmodel);
                 }
-                else if(masked && lightmodels && !fullbright) LOADMODELSHADER(bumpmasksmodel);
-                else if(masked && glowmodels) LOADMODELSHADER(bumpmasksnospecmodel);
-                else if(spec>=0.01f && lightmodels && !fullbright) LOADMODELSHADER(bumpmodel);
+                else if(masked && GETIV(lightmodels) && !fullbright) LOADMODELSHADER(bumpmasksmodel);
+                else if(masked && GETIV(glowmodels)) LOADMODELSHADER(bumpmasksnospecmodel);
+                else if(spec>=0.01f && GETIV(lightmodels) && !fullbright) LOADMODELSHADER(bumpmodel);
                 else LOADMODELSHADER(bumpnospecmodel);
             }
             else if(shouldenvmap)
             {
-                if(lightmodels && !fullbright && (masked || spec>=0.01f)) LOADMODELSHADER(envmapmodel);
+                if(GETIV(lightmodels) && !fullbright && (masked || spec>=0.01f)) LOADMODELSHADER(envmapmodel);
                 else LOADMODELSHADER(envmapnospecmodel);
             }
-            else if(masked && lightmodels && !fullbright) LOADMODELSHADER(masksmodel);
-            else if(masked && glowmodels) LOADMODELSHADER(masksnospecmodel);
-            else if(spec>=0.01f && lightmodels && !fullbright) LOADMODELSHADER(stdmodel);
+            else if(masked && GETIV(lightmodels) && !fullbright) LOADMODELSHADER(masksmodel);
+            else if(masked && GETIV(glowmodels)) LOADMODELSHADER(masksnospecmodel);
+            else if(spec>=0.01f && GETIV(lightmodels) && !fullbright) LOADMODELSHADER(stdmodel);
             else LOADMODELSHADER(nospecmodel);
         }
 
@@ -223,7 +217,7 @@ struct animmodel : model
                 defformatstring(ffmask)("<ffmask:%.2f,%.2f>", floor(glowscale*16 + 0.5f)/16, floor(envscale*16 + 0.5f)/16);
                 masks = textureload(makerelpath(NULL, masks->name + 6, NULL, ffmask), 0, true, false);
             }
-            loadshader(shouldenvmap, masks!=notexture && !(masks->type&Texture::STUB) && (lightmodels || glowmodels || shouldenvmap));
+            loadshader(shouldenvmap, masks!=notexture && !(masks->type&Texture::STUB) && (GETIV(lightmodels) || GETIV(glowmodels) || shouldenvmap));
         }
  
         void setshader(mesh *m, const animstate *as, bool masked)
@@ -251,8 +245,8 @@ struct animmodel : model
             Texture *s = bumpmapped() && unlittex ? unlittex : tex, 
                     *m = masks->type&Texture::STUB ? notexture : masks, 
                     *n = bumpmapped() ? normalmap : NULL;
-            if((renderpath==R_FIXEDFUNCTION || !lightmodels) &&
-               !glowmodels && (!envmapmodels || envmaptmu<0 || envmapmax<=0))
+            if((renderpath==R_FIXEDFUNCTION || !GETIV(lightmodels)) &&
+               !GETIV(glowmodels) && (!GETIV(envmapmodels) || envmaptmu<0 || envmapmax<=0))
                 m = notexture;
             if(renderpath==R_FIXEDFUNCTION) setuptmus(as, m!=notexture);
             else
@@ -901,7 +895,7 @@ struct animmodel : model
 
         if(!(anim&ANIM_NOSKIN))
         {
-            if(renderpath==R_FIXEDFUNCTION && lightmodels)
+            if(renderpath==R_FIXEDFUNCTION && GETIV(lightmodels))
             {
                 GLfloat pos[4] = { dir.x*1000, dir.y*1000, dir.z*1000, 0 };
                 glLightfv(GL_LIGHT0, GL_POSITION, pos);
@@ -1187,7 +1181,7 @@ struct animmodel : model
         envmaptmu = -1;
         transparent = 1;
 
-        if(renderpath==R_FIXEDFUNCTION && lightmodels && !enablelight0)
+        if(renderpath==R_FIXEDFUNCTION && GETIV(lightmodels) && !enablelight0)
         {
             glEnable(GL_LIGHT0);
             static const GLfloat zero[4] = { 0, 0, 0, 0 };

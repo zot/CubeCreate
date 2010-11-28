@@ -25,10 +25,6 @@ enum
     DF_SATURATE   = 1<<5
 };
 
-VARFP(maxdecaltris, 1, 1024, 16384, initdecals());
-VARP(decalfade, 1000, 10000, 60000);
-VAR(dbgdec, 0, 0, 1);
-
 struct decalrenderer
 {
     const char *texname;
@@ -134,7 +130,7 @@ struct decalrenderer
 
     void clearfadeddecals()
     {
-        int threshold = lastmillis - (timetolive>=0 ? timetolive : decalfade) - fadeouttime;
+        int threshold = lastmillis - (timetolive>=0 ? timetolive : GETIV(decalfade)) - fadeouttime;
         decalinfo *d = &decals[startdecal],
                   *end = &decals[enddecal < startdecal ? maxdecals : enddecal];
         while(d < end && d->millis <= threshold) d++;
@@ -180,7 +176,7 @@ struct decalrenderer
     {
         decalinfo *d = &decals[startdecal],
                   *end = &decals[enddecal < startdecal ? maxdecals : enddecal];
-        int offset = (timetolive>=0 ? timetolive : decalfade) + fadeouttime - lastmillis;
+        int offset = (timetolive>=0 ? timetolive : GETIV(decalfade)) + fadeouttime - lastmillis;
         while(d < end)
         {
             int fade = d->millis + offset;
@@ -347,7 +343,7 @@ struct decalrenderer
 
         ushort dstart = endvert;
         gendecaltris(worldroot, ivec(0, 0, 0), worldsize>>1);
-        if(dbgdec)
+        if(GETIV(dbgdec))
         {
             int nverts = endvert < dstart ? endvert + maxverts - dstart : endvert - dstart;
             conoutf(CON_DEBUG, "tris = %d, verts = %d, total tris = %d", nverts/3, nverts, (maxverts - 3 - availverts)/3);
@@ -501,15 +497,13 @@ decalrenderer decals[] =
 
 void initdecals()
 {
-    loopi(sizeof(decals)/sizeof(decals[0])) decals[i].init(maxdecaltris);
+    loopi(sizeof(decals)/sizeof(decals[0])) decals[i].init(GETIV(maxdecaltris));
 }
 
 void cleardecals()
 {
     loopi(sizeof(decals)/sizeof(decals[0])) decals[i].cleardecals();
 }
-
-VARNP(decals, showdecals, 0, 1, 1);
 
 void renderdecals(bool mainpass)
 {
@@ -523,7 +517,7 @@ void renderdecals(bool mainpass)
             d.fadeindecals();
             d.fadeoutdecals();
         }
-        if(!showdecals || !d.hasdecals()) continue;
+        if(!GETIV(decals) || !d.hasdecals()) continue;
         if(!rendered)
         {
             rendered = true;
@@ -535,11 +529,9 @@ void renderdecals(bool mainpass)
     decalrenderer::cleanuprenderstate();
 }
 
-VARP(maxdecaldistance, 1, 512, 10000);
-
 void adddecal(int type, const vec &center, const vec &surface, float radius, const bvec &color, int info)
 {
-    if(!showdecals || type<0 || (size_t)type>=sizeof(decals)/sizeof(decals[0]) || center.dist(camera1->o) - radius > maxdecaldistance) return;
+    if(!GETIV(decals) || type<0 || (size_t)type>=sizeof(decals)/sizeof(decals[0]) || center.dist(camera1->o) - radius > GETIV(maxdecaldistance)) return;
     decalrenderer &d = decals[type];
     d.adddecal(center, surface, radius, color, info);
 }

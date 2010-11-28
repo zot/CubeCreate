@@ -16,16 +16,9 @@ void cleanupglare()
     glaretex.cleanup(true);
 }
 
-VARFP(glaresize, 6, 8, 10, cleanupglare());
-VARP(glare, 0, 0, 1);
-VARP(blurglare, 0, 4, 7);
-VARP(blurglaresigma, 1, 50, 200);
-
-VAR(debugglare, 0, 0, 1);
-
 void viewglaretex()
 {
-    if(!glare) return;
+    if(!GETIV(glare)) return;
     glaretex.debug();
 }
 
@@ -33,16 +26,14 @@ bool glaring = false;
 
 void drawglaretex()
 {
-    if(!glare || renderpath==R_FIXEDFUNCTION) return;
+    if(!GETIV(glare) || renderpath==R_FIXEDFUNCTION) return;
 
-    glaretex.render(1<<glaresize, 1<<glaresize, blurglare, blurglaresigma/100.0f);
+    glaretex.render(1<<GETIV(glaresize), 1<<GETIV(glaresize), GETIV(blurglare), GETIV(blurglaresigma)/100.0f);
 }
-
-FVARP(glarescale, 0, 1, 8);
 
 void addglare()
 {
-    if(!glare || renderpath==R_FIXEDFUNCTION) return;
+    if(!GETIV(glare) || renderpath==R_FIXEDFUNCTION) return;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
@@ -51,7 +42,7 @@ void addglare()
 
     glBindTexture(GL_TEXTURE_2D, glaretex.rendertex);
 
-    setlocalparamf("glarescale", SHPARAM_PIXEL, 0, glarescale, glarescale, glarescale);
+    setlocalparamf("glarescale", SHPARAM_PIXEL, 0, float(GETFV(glarescale)), float(GETFV(glarescale)), float(GETFV(glarescale)));
 
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(0, 0); glVertex3f(-1, -1, 0);

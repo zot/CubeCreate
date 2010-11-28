@@ -148,22 +148,27 @@ public:
      * @brief Set an integer value of the variable.
      * @param val The value itself.
      * @param luaSync Defaults to true, optional, if true, syncing with Lua will be done after change.
+     * @param forceCB Forces running a callback after value set. Defaults to false.
+     * @param clamp If value is bigger than max or smaller than min, then it gets clamped. Defaults to true.
      * 
      * Sets an integer value of the variable.
      */
-	void set(int val, bool luaSync = true, bool forceCB = false);
+	void set(int val, bool luaSync = true, bool forceCB = false, bool clamp = true);
     /**
      * @brief Set a double value of the variable.
      * @param val The value itself.
      * @param luaSync Defaults to true, optional, if true, syncing with Lua will be done after change.
+     * @param forceCB Forces running a callback after value set. Defaults to false.
+     * @param clamp If value is bigger than max or smaller than min, then it gets clamped. Defaults to true.
      * 
      * Sets a double value of the variable.
      */
-	void set(double val, bool luaSync = true, bool forceCB = false);
+	void set(double val, bool luaSync = true, bool forceCB = false, bool clamp = true);
     /**
      * @brief Set a string value of the variable.
      * @param val The value itself.
      * @param luaSync Defaults to true, optional, if true, syncing with Lua will be done after change.
+     * @param forceCB Forces running a callback after value set. Defaults to false.
      * 
      * Sets a string value of the variable.
      */
@@ -418,6 +423,20 @@ private:
 #define SETV(name, value) EngineVariables::get(#name).get()->set(value)
 
 /**
+ * @def SETVN
+ * @brief Macro for making setting variable value easier.
+ * @param name Name of the variable to set.
+ * @param value New value to set.
+ * 
+ * Sets value of variable of name @p name, not clamping its value
+ * (allowing values smaller than min or bigger than max).
+ * @code
+ * SETVN(foo, 65536);
+ * @endcode
+ */
+#define SETVN(name, value) EngineVariables::get(#name).get()->set(value, false, false)
+
+/**
  * @def SETVF
  * @brief Macro for making setting variable value easier.
  * @param name Name of the variable to set.
@@ -429,6 +448,20 @@ private:
  * @endcode
  */
 #define SETVF(name, value) EngineVariables::get(#name).get()->set(value, true)
+
+/**
+ * @def SETVFN
+ * @brief Macro for making setting variable value easier.
+ * @param name Name of the variable to set.
+ * @param value New value to set.
+ * 
+ * Sets value of variable of name @p name, forcing its callback to run (if exists)
+ * and not clamping its value (allowing values smaller than min or bigger than max).
+ * @code
+ * SETVFN(foo, 65536);
+ * @endcode
+ */
+#define SETVFN(name, value) EngineVariables::get(#name).get()->set(value, true, false)
 
 /**
  * @}

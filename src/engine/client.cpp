@@ -32,19 +32,11 @@ void setrate(int rate)
    enet_host_bandwidth_limit(clienthost, rate, rate);
 }
 
-VARF(rate, 0, 0, 25000, setrate(rate));
-
-void throttle();
-
-VARF(throttle_interval, 0, 5, 30, throttle());
-VARF(throttle_accel,    0, 2, 32, throttle());
-VARF(throttle_decel,    0, 2, 32, throttle());
-
 void throttle()
 {
     if(!curpeer) return;
     ASSERT(ENET_PEER_PACKET_THROTTLE_SCALE==32);
-    enet_peer_throttle_configure(curpeer, throttle_interval*1000, throttle_accel, throttle_decel);
+    enet_peer_throttle_configure(curpeer, GETIV(throttle_interval)*1000, GETIV(throttle_accel), GETIV(throttle_decel));
 }
 
 bool isconnected(bool attempt)
@@ -83,9 +75,6 @@ void abortconnect()
     clienthost = NULL;
 }
 
-SVAR(connectname, "");
-VAR(connectport, 0, 0, 0xFFFF);
-
 void connectserv(const char *servername, int serverport, const char *serverpassword)
 {   
     if(connpeer)
@@ -101,8 +90,8 @@ void connectserv(const char *servername, int serverport, const char *serverpassw
 
     if(servername)
     {
-        if(strcmp(servername, connectname)) setsvar("connectname", servername);
-        if(serverport != connectport) setvar("connectport", serverport);
+        if(strcmp(servername, GETSV(connectname).c_str())) SETVF(connectname, std::string(servername));
+        if(serverport != GETIV(connectport)) SETVF(connectport, serverport);
         addserver(servername, serverport, serverpassword && serverpassword[0] ? serverpassword : NULL); // INTENSITY: Remove?
         conoutf("attempting to connect to %s:%d", servername, serverport);
         if(!resolverwait(servername, &address))
@@ -113,14 +102,14 @@ void connectserv(const char *servername, int serverport, const char *serverpassw
     }
     else
     {
-        setsvar("connectname", "");
-        setvar("connectport", 0);
+        SETVF(connectname, "");
+        SETVF(connectport, 0);
         conoutf("attempting to connect over LAN");
         address.host = ENET_HOST_BROADCAST;
     }
 
     if(!clienthost) 
-        clienthost = enet_host_create(NULL, 2, server::numchannels(), rate, rate);
+        clienthost = enet_host_create(NULL, 2, server::numchannels(), GETIV(rate), GETIV(rate));
 
     if(clienthost)
     {
@@ -236,7 +225,7 @@ void gets2c()           // get updates from the server
             connpeer = NULL;
             conoutf("connected to server");
             throttle();
-            if(rate) setrate(rate);
+            if(GETIV(rate)) setrate(GETIV(rate));
             game::gameconnect(true);
             break;
          
