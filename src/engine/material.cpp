@@ -99,7 +99,7 @@ void renderwaterfall(const materialsurface &m, Texture *tex, float scale, float 
         varray::defattrib(varray::ATTRIB_TEXCOORD0, 2, GL_FLOAT);
         varray::begin(GL_QUADS);
     }
-    float wave = m.ends&2 ? (vertwater ? WATER_AMPLITUDE*sinf(t)-WATER_OFFSET : -WATER_OFFSET) : 0;
+    float wave = m.ends&2 ? (GETIV(vertwater) ? WATER_AMPLITUDE*sinf(t)-WATER_OFFSET : -WATER_OFFSET) : 0;
     loopi(4)
     {
         vec v(m.o.tovec());
@@ -308,7 +308,7 @@ int optimizematsurfs(materialsurface *matbuf, int matsurfs)
                cur->flags == start->flags && 
                cur->o[dim] == start->o[dim])
             ++cur;
-         if(!isliquid(start->material) || start->orient != O_TOP || !vertwater)
+         if(!isliquid(start->material) || start->orient != O_TOP || !GETIV(vertwater))
          {
             if(start!=matbuf) memmove(matbuf, start, (cur-start)*sizeof(materialsurface));
             matbuf += mergemats(matbuf, cur-start);
@@ -663,7 +663,7 @@ void rendermaterials()
                             if(!blended) { glEnable(GL_BLEND); blended = true; }
                             if(depth) { glDepthMask(GL_FALSE); depth = false; }
                         }
-                        else if(renderpath==R_FIXEDFUNCTION || ((!waterfallrefract || reflecting || refracting) && (!hasCM || !GETIV(waterfallenv))))
+                        else if(renderpath==R_FIXEDFUNCTION || ((!GETIV(waterfallrefract) || reflecting || refracting) && (!hasCM || !GETIV(waterfallenv))))
                         {
                             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
                             glColor3ubv(wfcol);
@@ -690,7 +690,7 @@ void rendermaterials()
                                 name##shader->set(); \
                             } while(0)
 
-                            if(waterfallrefract && !reflecting && !refracting)
+                            if(GETIV(waterfallrefract) && !reflecting && !refracting)
                             {
                                 if(hasCM && GETIV(waterfallenv)) SETWATERFALLSHADER(waterfallenvrefract);    
                                 else SETWATERFALLSHADER(waterfallrefract);
@@ -720,7 +720,7 @@ void rendermaterials()
                                     glActiveTexture_(GL_TEXTURE3_ARB);
                                     glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(wslot));
                                 }
-                                if(waterfallrefract && (!reflecting || !refracting))
+                                if(GETIV(waterfallrefract) && (!reflecting || !refracting))
                                 {
                                     extern void setupwaterfallrefract(GLenum tmu1, GLenum tmu2);
                                     setupwaterfallrefract(GL_TEXTURE4_ARB, GL_TEXTURE0_ARB);

@@ -338,7 +338,7 @@ void gl_checkextensions()
     {
         conoutf(CON_WARN, "WARNING: No occlusion query support! (large maps may be SLOW)");
         SETV(vacubesize, 64);
-        waterreflect = 0;
+        SETV(waterreflect, 0);
     }
 
     extern int reservedynlighttc, reserveshadowmaptc;
@@ -381,7 +381,7 @@ void gl_checkextensions()
         SETV(batchlightmaps, 0);
         SETV(ffdynlights, 0);
 
-        if(!hasOQ) waterrefract = 0;
+        if(!hasOQ) SETV(waterrefract, 0);
 
 #ifdef __APPLE__
         apple_vp_bug = 1;
@@ -395,7 +395,7 @@ void gl_checkextensions()
         SETV(batchlightmaps, 0);
         SETV(ffdynlights, 0);
 
-        if(!hasOQ) waterrefract = 0;
+        if(!hasOQ) SETV(waterrefract, 0);
     }
 
     if(strstr(exts, "GL_ARB_vertex_program") && strstr(exts, "GL_ARB_fragment_program"))
@@ -635,7 +635,7 @@ void gl_checkextensions()
         SETV(grass, 1);
         if(hasOQ)
         {
-            waterfallrefract = 1;
+            SETV(waterfallrefract, 1);
             SETV(glare, 1);
             SETV(maxdynlights, MAXDYNLIGHTS);
             if(hasTR)
@@ -1206,12 +1206,12 @@ static void blendfog(int fogmat, float blend, float logblend, float &start, floa
     {
         case MAT_WATER:
             loopk(3) fogc[k] += blend*watercolor[k]/255.0f;
-            end += logblend*min(fog, max(waterfog*4, 32));
+            end += logblend*min(fog, max(GETIV(waterfog)*4, 32));
             break;
 
         case MAT_LAVA:
             loopk(3) fogc[k] += blend*lavacolor[k]/255.0f;
-            end += logblend*min(fog, max(lavafog*4, 32));
+            end += logblend*min(fog, max(GETIV(lavafog)*4, 32));
             break;
 
         default:
@@ -1359,7 +1359,7 @@ void drawreflection(float z, bool refract)
     reflectz = z < 0 ? 1e16f : z;
     reflecting = !refract;
     refracting = refract ? (z < 0 || camera1->o.z >= z ? -1 : 1) : 0;
-    fading = renderpath!=R_FIXEDFUNCTION && waterrefract && waterfade && hasFBO && z>=0;
+    fading = renderpath!=R_FIXEDFUNCTION && GETIV(waterrefract) && GETIV(waterfade) && hasFBO && z>=0;
     fogging = refracting<0 && z>=0;
 
     float oldfogstart, oldfogend, oldfogcolor[4];
@@ -1370,7 +1370,7 @@ void drawreflection(float z, bool refract)
     if(fogging)
     {
         glFogf(GL_FOG_START, camera1->o.z - z);
-        glFogf(GL_FOG_END, camera1->o.z - (z-waterfog));
+        glFogf(GL_FOG_END, camera1->o.z - (z-GETIV(waterfog)));
         GLfloat m[16] =
         {
              1,   0,  0, 0,

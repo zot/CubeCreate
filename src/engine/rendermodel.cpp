@@ -779,10 +779,10 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
                 }
                 else
                 {
-                    if(fogging && center.z+radius<reflectz-waterfog) return;
+                    if(fogging && center.z+radius<reflectz-GETIV(waterfog)) return;
                     if(!shadow && center.z-radius>=reflectz) return;
                 }
-                if(center.dist(camera1->o)-radius>reflectdist) return;
+                if(center.dist(camera1->o)-radius>GETIV(reflectdist)) return;
             }
             if(isfoggedsphere(radius, center)) return;
             if(shadowmapping && !isshadowmapcaster(center, radius)) return;
