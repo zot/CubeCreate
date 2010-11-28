@@ -516,7 +516,7 @@ void ClientSystem::finishLoadWorld()
 
     ClientSystem::editingAlone = false; // Assume not in this mode
 
-    mainmenu = 0; // (see prepareForMap)
+    SETV(mainmenu, 0); // (see prepareForMap)
 }
 
 void ClientSystem::prepareForNewScenario(std::string scenarioCode)
@@ -524,7 +524,7 @@ void ClientSystem::prepareForNewScenario(std::string scenarioCode)
     _mapCompletelyReceived = false; // We no longer have a map. This implies scenarioStarted will return false, thus
                                     // stopping sending of position updates, as well as rendering
 
-    mainmenu = 1; // Keep showing GUI meanwhile (in particular, to show the message about a new map on the way
+    SETV(mainmenu, 1); // Keep showing GUI meanwhile (in particular, to show the message about a new map on the way
 
     // Clear the logic system, as it is no longer valid - were it running, we might try to process messages from
     // the new map being set up on the server, even though they are irrelevant to the existing engine, set up for

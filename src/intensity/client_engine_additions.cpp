@@ -388,7 +388,7 @@ void prepare_entity_gui()
         );
 
         GuiControl::EditedEntity::sortedKeys.push_back( key );
-        SETV(num_entity_gui_fields, GETIV(num_entity_gui_fields)+1); // increment for later loop
+        SETVN(num_entity_gui_fields, GETIV(num_entity_gui_fields)+1); // increment for later loop
     });
 
     LuaEngine::pop(2);

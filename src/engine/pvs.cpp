@@ -286,9 +286,6 @@ static vector<viewcellrequest> viewcellrequests;
 static bool genpvs_canceled = false;
 static int numviewcells = 0;
 
-VAR(maxpvsblocker, 1, 512, 1<<16);
-VAR(pvsleafsize, 1, 64, 1024);
-
 #define MAXWATERPVS 32
 
 static struct
@@ -452,7 +449,7 @@ struct pvsworker
                 rmax[r] = geom.max[r] - 1;
                 int rcenter = (rmin[r] + rmax[r])/2;
                 resetlevels();
-                for(int minstep = -1, maxstep = 1; (minstep || maxstep) && rmax[r] - rmin[r] < maxpvsblocker;)
+                for(int minstep = -1, maxstep = 1; (minstep || maxstep) && rmax[r] - rmin[r] < GETIV(maxpvsblocker);)
                 {
                     if(minstep) minstep = hasvoxel(rmin, r, 0);
                     if(maxstep) maxstep = hasvoxel(rmax, r, 1);
@@ -469,7 +466,7 @@ struct pvsworker
                     cmax[c] = geom.max[c]-1;
                 }
                 int cminstep = -1, cmaxstep = 1;
-                for(; (cminstep || cmaxstep) && cmax[c] - cmin[c] < maxpvsblocker;)
+                for(; (cminstep || cmaxstep) && cmax[c] - cmin[c] < GETIV(maxpvsblocker);)
                 {
                     if(cminstep)
                     {
@@ -505,7 +502,7 @@ struct pvsworker
                     if(emax[r]<geom.max[r]-1) emax[r] = geom.max[r]-1;
                 }
                 int rminstep = -1, rmaxstep = 1;
-                for(; (rminstep || rmaxstep) && emax[r] - emin[r] < maxpvsblocker;)
+                for(; (rminstep || rmaxstep) && emax[r] - emin[r] < GETIV(maxpvsblocker);)
                 {
                     if(rminstep)
                     {
@@ -545,7 +542,7 @@ struct pvsworker
                 {
                     int ddir = bb.min[dim] >= viewcellbb.max[dim] ? 1 : -1,
                         dval = ddir>0 ? USHRT_MAX-1 : 0,
-                        dlimit = maxpvsblocker,
+                        dlimit = GETIV(maxpvsblocker),
                         numsides = 0;
                     loopj(4)
                     {
@@ -731,7 +728,7 @@ struct pvsworker
         waterbytes = 0;
         loopi(4) if(wateroccluded&(0xFF<<(i*8))) waterbytes = i+1;
 
-        compresspvs(pvsnodes[0], worldsize, pvsleafsize);
+        compresspvs(pvsnodes[0], worldsize, GETIV(pvsleafsize));
         outbuf.setsize(0);
         serializepvs(pvsnodes[0]);
     }
@@ -804,7 +801,6 @@ struct viewcellnode
     }
 };
 
-VARP(pvsthreads, 1, 1, 16);
 static vector<pvsworker *> pvsworkers;
 
 static volatile bool check_genpvs_progress = false;
@@ -902,7 +898,7 @@ static void genviewcells(viewcellnode &p, cube *c, const ivec &co, int size, int
             if(isallclip(h.children)) continue;
         }
         else if(isentirelysolid(h) || (h.ext && (h.ext->material&MATF_CLIP)==MAT_CLIP)) continue;
-        if(pvsthreads<=1)
+        if(GETIV(pvsthreads)<=1)
         {
             if(genpvs_canceled) return;
             p.children[i].pvs = pvsworkers[0]->genviewcell(o, size);
@@ -956,14 +952,9 @@ void lockpvs_(bool lock)
     conoutf("locked view cell at %.1f, %.1f, %.1f", camera1->o.x, camera1->o.y, camera1->o.z);
 }
 
-VARF(lockpvs, 0, 0, 1, lockpvs_(lockpvs!=0));
-
-VARN(pvs, usepvs, 0, 1, 1);
-VARN(waterpvs, usewaterpvs, 0, 1, 1);
-
 void setviewcell(const vec &p)
 {
-    if(!usepvs) curpvs = NULL;
+    if(!GETIV(pvs)) curpvs = NULL;
     else if(lockedpvs) 
     {
         curpvs = lockedpvs;
@@ -979,7 +970,7 @@ void setviewcell(const vec &p)
             loopi(d->len%9) curwaterpvs |= *curpvs++ << (i*8);
         }
     }
-    if(!usepvs || !usewaterpvs) curwaterpvs = 0;
+    if(!GETIV(pvs) || !GETIV(waterpvs)) curwaterpvs = 0;
 }
 
 void clearpvs()
@@ -989,7 +980,7 @@ void clearpvs()
     pvsbuf.setsize(0);
     curpvs = NULL;
     numwaterplanes = 0;
-    lockpvs = 0;
+    SETV(lockpvs, 0);
     lockpvs_(false);
 }
 
@@ -1062,7 +1053,7 @@ void testpvs(int *vcsize)
     int len;
     lockedpvs = w.testviewcell(o, size, &lockedwaterpvs, &len);
     loopi(MAXWATERPVS) lockedwaterplanes[i] = waterplanes[i].height;
-    lockpvs = 1;
+    SETV(lockpvs, 1);
     conoutf("generated test view cell of size %d at %.1f, %.1f, %.1f (%d B)", size, camera1->o.x, camera1->o.y, camera1->o.z, len);
 
     origpvsnodes.setsize(0);
@@ -1101,14 +1092,14 @@ void genpvs(int *viewcellsize)
     genpvs_canceled = false;
     check_genpvs_progress = false;
     SDL_TimerID timer = NULL;
-    if(pvsthreads<=1) 
+    if(GETIV(pvsthreads)<=1) 
     {
         pvsworkers.add(new pvsworker);
         timer = SDL_AddTimer(500, genpvs_timer, NULL);
     }
     viewcells = new viewcellnode;
     genviewcells(*viewcells, worldroot, ivec(0, 0, 0), worldsize>>1, *viewcellsize>0 ? *viewcellsize : 32);
-    if(pvsthreads<=1)
+    if(GETIV(pvsthreads)<=1)
     {
         SDL_RemoveTimer(timer);
     }
@@ -1117,7 +1108,7 @@ void genpvs(int *viewcellsize)
         renderprogress(0, "creating threads");
         if(!pvsmutex) pvsmutex = SDL_CreateMutex();
         if(!viewcellmutex) viewcellmutex = SDL_CreateMutex();
-        loopi(pvsthreads)
+        loopi(GETIV(pvsthreads))
         {
             pvsworker *w = pvsworkers.add(new pvsworker);
             w->thread = SDL_CreateThread(pvsworker::run, w);

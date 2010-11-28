@@ -23,9 +23,6 @@ static inline bool htcmp(GLuint x, GLuint y)
 
 hashtable<GLuint, vboinfo> vbos;
 
-VAR(printvbo, 0, 0, 1);
-VARFN(vbosize, maxvbosize, 0, 1<<14, 1<<16, allchanged());
-
 enum
 {
     VBO_VBUF = 0,
@@ -77,7 +74,7 @@ void genvbo(int type, void *buf, int len, vtxarray **vas, int numva)
     vbi.uses = numva;
     vbi.data = data;
  
-    if(printvbo) conoutf(CON_DEBUG, "vbo %d: type %d, size %d, %d uses", vbo, type, len, numva);
+    if(GETIV(printvbo)) conoutf(CON_DEBUG, "vbo %d: type %d, size %d, %d uses", vbo, type, len, numva);
 
     loopi(numva)
     {
@@ -459,7 +456,7 @@ struct vacollect : verthash
         va->voffset = 0;
         if(va->verts)
         {
-            if(vbosize[VBO_VBUF] + verts.length() > maxvbosize || 
+            if(vbosize[VBO_VBUF] + verts.length() > GETIV(vbosize) || 
                vbosize[VBO_EBUF] + worldtris > USHRT_MAX ||
                vbosize[VBO_SKYBUF] + skytris > USHRT_MAX) 
                 flushvbo();
@@ -612,8 +609,6 @@ int calcshadowmask(vec *vv)
     }
     return mask;
 }
-
-VARFP(filltjoints, 0, 1, 1, allchanged());
 
 void reduceslope(ivec &n)
 {
@@ -1552,10 +1547,6 @@ void setva(cube &c, int cx, int cy, int cz, int size, int csi)
     vc.clear();
 }
 
-VARF(vacubemax, 64, 512, 256*256, allchanged());
-VARF(vacubesize, 32, 128, 0x1000, allchanged());
-VARF(vacubemin, 0, 128, 256*256, allchanged());
-
 int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
 {
     progress("recalculating geometry...");
@@ -1579,7 +1570,7 @@ int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
             if(c[i].children) count += updateva(c[i].children, o.x, o.y, o.z, size/2, csi-1);
             else if(!isempty(c[i]) || hasskyfaces(c[i], o.x, o.y, o.z, size, faces)) count++;
             int tcount = count + (csi < int(sizeof(vamerges)/sizeof(vamerges[0])) ? vamerges[csi].length() : 0);
-            if(tcount > vacubemax || (tcount >= vacubemin && size >= vacubesize) || size == min(0x1000, worldsize/2)) 
+            if(tcount > GETIV(vacubemax) || (tcount >= GETIV(vacubemin) && size >= GETIV(vacubesize)) || size == min(0x1000, worldsize/2)) 
             {
                 loadprogress = clamp(recalcprogress/float(allocnodes), 0.0f, 1.0f);
                 setva(c[i], o.x, o.y, o.z, size, csi);
@@ -1768,7 +1759,7 @@ void allchanged(bool load)
     guessshadowdir();
     entitiesinoctanodes();
     tjoints.setsize(0);
-    if(filltjoints)
+    if(GETIV(filltjoints))
     {
         recalcprogress = 0;
         gencubeedges();

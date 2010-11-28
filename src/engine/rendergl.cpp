@@ -337,8 +337,7 @@ void gl_checkextensions()
     if(!hasOQ)
     {
         conoutf(CON_WARN, "WARNING: No occlusion query support! (large maps may be SLOW)");
-        extern int vacubesize;
-        vacubesize = 64;
+        SETV(vacubesize, 64);
         waterreflect = 0;
     }
 
@@ -367,8 +366,7 @@ void gl_checkextensions()
     {
         reservevpparams = 10;
         rtsharefb = 0; // work-around for strange driver stalls involving when using many FBOs
-        extern int filltjoints;
-        if(!strstr(exts, "GL_EXT_gpu_shader4")) filltjoints = 0; // DX9 or less NV cards seem to not cause many sparklies
+        if(!strstr(exts, "GL_EXT_gpu_shader4")) SETV(filltjoints, 0); // DX9 or less NV cards seem to not cause many sparklies
         
         if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too 
         if(hasTF && (!strstr(renderer, "GeForce") || !checkseries(renderer, 6000, 6600)))

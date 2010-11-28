@@ -606,8 +606,6 @@ void cleardynentcache()
     if(!dynentframe) dynentframe = 1;
 }
 
-VARF(dynentsize, 4, 7, 12, cleardynentcache());
-
 #define DYNENTHASH(x, y) (((((x)^(y))<<5) + (((x)^(y))>>5)) & (DYNENTCACHESIZE - 1))
 
 const vector<physent *> &checkdynentcache(int x, int y)
@@ -618,7 +616,7 @@ const vector<physent *> &checkdynentcache(int x, int y)
     dec.y = y;
     dec.frame = dynentframe;
     dec.dynents.shrink(0);
-    int numdyns = game::numdynents(), dsize = 1<<dynentsize, dx = x<<dynentsize, dy = y<<dynentsize;
+    int numdyns = game::numdynents(), dsize = 1<<GETIV(dynentsize), dx = x<<GETIV(dynentsize), dy = y<<GETIV(dynentsize);
     loopi(numdyns)
     {
         dynent *d = game::iterdynents(i);
@@ -632,8 +630,8 @@ const vector<physent *> &checkdynentcache(int x, int y)
 }
 
 #define loopdynentcache(curx, cury, o, radius) \
-    for(int curx = max(int(o.x-radius), 0)>>dynentsize, endx = min(int(o.x+radius), worldsize-1)>>dynentsize; curx <= endx; curx++) \
-    for(int cury = max(int(o.y-radius), 0)>>dynentsize, endy = min(int(o.y+radius), worldsize-1)>>dynentsize; cury <= endy; cury++)
+    for(int curx = max(int(o.x-radius), 0)>>GETIV(dynentsize), endx = min(int(o.x+radius), worldsize-1)>>GETIV(dynentsize); curx <= endx; curx++) \
+    for(int cury = max(int(o.y-radius), 0)>>GETIV(dynentsize), endy = min(int(o.y+radius), worldsize-1)>>GETIV(dynentsize); cury <= endy; cury++)
 
 void updatedynentcache(physent *d)
 {
@@ -1715,10 +1713,6 @@ void vectoyawpitch(const vec &v, float &yaw, float &pitch)
     pitch = asin(v.z/v.magnitude())/RAD;
 }
 
-VARP(maxroll, 0, 3, 20);
-FVAR(straferoll, 0, 0.033f, 90);
-VAR(floatspeed, 10, 100, 1000);
-
 void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime)
 {
     if(floating)
@@ -1767,7 +1761,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
     {
         if(floating)
         {
-            if(pl==player) d.mul(floatspeed/100.0f);
+            if(pl==player) d.mul(GETIV(floatspeed)/100.0f);
         }
         else if(!water && game::allowmove(pl)) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f)); // EXPERIMENTAL
     }
@@ -1872,9 +1866,9 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
     }
     else
     {
-        pl->roll -= pl->strafe*curtime*straferoll;
-        if(pl->roll > maxroll) pl->roll = maxroll;
-        else if(pl->roll < -maxroll) pl->roll = -maxroll;
+        pl->roll -= pl->strafe*curtime*float(GETFV(straferoll));
+        if(pl->roll > GETIV(maxroll)) pl->roll = GETIV(maxroll);
+        else if(pl->roll < -GETIV(maxroll)) pl->roll = -GETIV(maxroll);
     }
 
     // play sounds on water transitions
@@ -1927,14 +1921,12 @@ void physicsframe()          // optimally schedule physics frames inside the gra
     cleardynentcache();
 }
 
-VAR(physinterp, 0, 1, 1);
-
 void interppos(physent *pl)
 {
     pl->o = pl->newpos;
 
     int diff = lastphysframe - lastmillis;
-    if(diff <= 0 || !physinterp) return;
+    if(diff <= 0 || !GETIV(physinterp)) return;
 
     vec deltapos(pl->deltapos);
     deltapos.mul(min(diff, physframetime)/float(physframetime));
@@ -2094,8 +2086,8 @@ bool moveplatform(physent *p, const vec &dir)
 
     static vector<platforment> ents;
     ents.setsize(0);
-    for(int x = int(max(p->o.x-p->radius-PLATFORMBORDER, 0.0f))>>dynentsize, ex = int(min(p->o.x+p->radius+PLATFORMBORDER, worldsize-1.0f))>>dynentsize; x <= ex; x++)
-    for(int y = int(max(p->o.y-p->radius-PLATFORMBORDER, 0.0f))>>dynentsize, ey = int(min(p->o.y+p->radius+PLATFORMBORDER, worldsize-1.0f))>>dynentsize; y <= ey; y++)
+    for(int x = int(max(p->o.x-p->radius-PLATFORMBORDER, 0.0f))>>GETIV(dynentsize), ex = int(min(p->o.x+p->radius+PLATFORMBORDER, worldsize-1.0f))>>GETIV(dynentsize); x <= ex; x++)
+    for(int y = int(max(p->o.y-p->radius-PLATFORMBORDER, 0.0f))>>GETIV(dynentsize), ey = int(min(p->o.y+p->radius+PLATFORMBORDER, worldsize-1.0f))>>GETIV(dynentsize); y <= ey; y++)
     {
         const vector<physent *> &dynents = checkdynentcache(x, y);
         loopv(dynents)
