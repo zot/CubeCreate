@@ -185,7 +185,7 @@ void texcolorify(ImageData &s, const vec &color, vec weights)
 void texffmask(ImageData &s, float glowscale, float envscale)
 {
     if(renderpath!=R_FIXEDFUNCTION) return;
-    if(nomasks || s.bpp<3) { s.cleanup(); return; }
+    if(GETIV(nomasks) || s.bpp<3) { s.cleanup(); return; }
     const int minval = 0x18;
     bool glow = false, envmap = true;
     writetex(s,
@@ -1608,7 +1608,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
     vector<char> key; 
     addname(key, s, t);
     int texmask = 0;
-    bool envmap = renderpath==R_FIXEDFUNCTION && s.shader->type&SHADER_ENVMAP && s.ffenv && hasCM && maxtmus >= 2;
+    bool envmap = renderpath==R_FIXEDFUNCTION && s.shader->type&SHADER_ENVMAP && s.ffenv && hasCM && GETIV(maxtmus) >= 2;
     if(!forceload) switch(t.type)
     {
         case TEX_DIFFUSE:
@@ -1695,7 +1695,7 @@ static Slot &loadslot(Slot &s, bool forceload)
         switch(t.type)
         {
             case TEX_ENVMAP:
-                if(hasCM && (renderpath != R_FIXEDFUNCTION || (s.shader->type&SHADER_ENVMAP && s.ffenv && maxtmus >= 2) || forceload)) t.t = cubemapload(t.name);
+                if(hasCM && (renderpath != R_FIXEDFUNCTION || (s.shader->type&SHADER_ENVMAP && s.ffenv && GETIV(maxtmus) >= 2) || forceload)) t.t = cubemapload(t.name);
                 break;
 
             default:

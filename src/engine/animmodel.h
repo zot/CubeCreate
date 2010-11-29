@@ -76,7 +76,7 @@ struct animmodel : model
         skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), specglare(1), glowglare(1), fullbright(0), envmapmin(0), envmapmax(0), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true), cullface(true) {}
 
         bool multitextured() { return enableglow; }
-        bool envmapped() { return hasCM && envmapmax>0 && GETIV(envmapmodels) && (renderpath!=R_FIXEDFUNCTION || maxtmus >= 3); }
+        bool envmapped() { return hasCM && envmapmax>0 && GETIV(envmapmodels) && (renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus) >= 3); }
         bool bumpmapped() { return renderpath!=R_FIXEDFUNCTION && normalmap && GETIV(bumpmodels); }
         bool normals() { return renderpath!=R_FIXEDFUNCTION || (GETIV(lightmodels) && !fullbright) || envmapped() || bumpmapped(); }
         bool tangents() { return bumpmapped(); }
@@ -118,7 +118,7 @@ struct animmodel : model
             else
             {
                 if(enableglow) disableglow();
-                if(mincolor>1 && maxtmus>=1)
+                if(mincolor>1 && GETIV(maxtmus)>=1)
                 {
                     matcolor.div(2);
                     if(!enableoverbright) { setuptmu(0, "C * T x 2"); enableoverbright = true; }

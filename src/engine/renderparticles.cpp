@@ -5,11 +5,8 @@
 
 Shader *particleshader = NULL, *particlenotextureshader = NULL;
 
-VARP(particlesize, 20, 100, 500);
-    
 // Check emit_particles() to limit the rate that paricles can be emitted for models/sparklies
 // Automatically stops particles being emitted when paused or in reflective drawing
-VARP(emitmillis, 1, 17, 1000);
 static int lastemitframe = 0, emitoffset = 0;
 static bool canemit = false, regenemitters = false, canstep = false;
 
@@ -18,8 +15,6 @@ static bool emit_particles()
     if(reflecting || refracting) return false;
     return canemit || emitoffset;
 }
-
-VAR(dbgpseed, 0, 0, 1);
 
 struct particleemitter
 {
@@ -40,7 +35,7 @@ struct particleemitter
         radius = bbmin.dist(bbmax)/2;
         bborigin = ivec(int(floor(bbmin.x)), int(floor(bbmin.y)), int(floor(bbmin.z)));
         bbsize = ivec(int(ceil(bbmax.x)), int(ceil(bbmax.y)), int(ceil(bbmax.z))).sub(bborigin);
-        if(dbgpseed) conoutf(CON_DEBUG, "radius: %f, maxfade: %d", radius, maxfade);
+        if(GETIV(dbgpseed)) conoutf(CON_DEBUG, "radius: %f, maxfade: %d", radius, maxfade);
     }
     
     void extendbb(const vec &o, float size = 0)
@@ -248,8 +243,6 @@ struct listparticle : particle
     listparticle *next;
 };
 
-VARP(outlinemeters, 0, 0, 1);
-
 struct listrenderer : partrenderer
 {
     static listparticle *parempty;
@@ -416,7 +409,7 @@ struct meterrenderer : listrenderer
         float right = 8*FONTH, left = p->progress/100.0f*right;
         glTranslatef(-right/2.0f, 0, 0);
 
-        if(outlinemeters)
+        if(GETIV(outlinemeters))
         {
             glColor3f(0, 0.8f, 0);
             glBegin(GL_TRIANGLE_STRIP);
@@ -440,7 +433,7 @@ struct meterrenderer : listrenderer
         }
         glEnd();
 
-        if(outlinemeters)
+        if(GETIV(outlinemeters))
         {
             glColor3f(0, 0.8f, 0);
             glBegin(GL_TRIANGLE_FAN);
@@ -917,14 +910,11 @@ void finddepthfxranges()
     if(GETIV(depthfxscissor)<2 && numdepthfxranges>0) depthfxtex.addscissorbox(depthfxmin, depthfxmax);
 }
  
-VARFP(maxparticles, 10, 4000, 40000, particleinit());
-VARFP(fewparticles, 10, 100, 40000, particleinit());
-
 void particleinit() 
 {
     if(!particleshader) particleshader = lookupshaderbyname("particle");
     if(!particlenotextureshader) particlenotextureshader = lookupshaderbyname("particlenotexture");
-    loopi(sizeof(parts)/sizeof(parts[0])) parts[i]->init(parts[i]->type&PT_FEW ? min(fewparticles, maxparticles) : maxparticles);
+    loopi(sizeof(parts)/sizeof(parts[0])) parts[i]->init(parts[i]->type&PT_FEW ? min(GETIV(fewparticles), GETIV(maxparticles)) : GETIV(maxparticles));
 }
 
 void clearparticles()
@@ -943,15 +933,11 @@ void removetrackedparticles(physent *owner)
     loopi(sizeof(parts)/sizeof(parts[0])) parts[i]->resettracked(owner);
 }
 
-VARP(particleglare, 0, 2, 100);
-
-VAR(debugparticles, 0, 0, 1);
-
 void renderparticles(bool mainpass)
 {
     canstep = mainpass;
     //want to debug BEFORE the lastpass render (that would delete particles)
-    if(debugparticles && !glaring && !reflecting && !refracting) 
+    if(GETIV(debugparticles) && !glaring && !reflecting && !refracting) 
     {
         int n = sizeof(parts)/sizeof(parts[0]);
         glMatrixMode(GL_PROJECTION);
@@ -988,7 +974,7 @@ void renderparticles(bool mainpass)
         glPopMatrix();
     }
 
-    if(glaring && !particleglare) return;
+    if(glaring && !GETIV(particleglare)) return;
     
     loopi(sizeof(parts)/sizeof(parts[0])) 
     {
@@ -1016,7 +1002,7 @@ void renderparticles(bool mainpass)
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);             
 
-            if(glaring) setenvparamf("colorscale", SHPARAM_VERTEX, 4, particleglare, particleglare, particleglare, 1);
+            if(glaring) setenvparamf("colorscale", SHPARAM_VERTEX, 4, GETIV(particleglare), GETIV(particleglare), GETIV(particleglare), 1);
             else setenvparamf("colorscale", SHPARAM_VERTEX, 4, 1, 1, 1, 1);
 
             particleshader->set();
@@ -1104,12 +1090,10 @@ static inline particle *newparticle(const vec &o, const vec &d, int fade, int ty
     return parts[type]->addpart(o, d, fade, color, size, gravity, grow); // SAUER ENHANCED - add grow
 }
 
-VARP(maxparticledistance, 256, 1024, 4096);
-
 // SAUER ENHANCED - add regfade, flag, fastsplash, grow - function heavily rewritten
 static void splash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity, bool regfade, int flag, bool fastsplash, int grow)
 {
-    if(camera1->o.dist(p) > maxparticledistance && !seedemitter) return;
+    if(camera1->o.dist(p) > GETIV(maxparticledistance) && !seedemitter) return;
     float collidez = parts[type]->collide ? p.z - raycube(p, vec(0, 0, -1), COLLIDERADIUS, RAY_CLIPMAT) + COLLIDEERROR : -1; 
     int fmin = 1;
     int fmax = fade*3;
@@ -1198,15 +1182,13 @@ void particle_splash(int type, int num, int fade, const vec &p, int color, float
     splash(type, color, radius, num, fade, p, size, gravity, regfade, flag, fastsplash, grow);
 }
 
-VARP(maxtrail, 1, 500, 10000);
-
 // SAUER ENHANCED - add bubbles
 void particle_trail(int type, int fade, const vec &s, const vec &e, int color, float size, int gravity, bool bubbles)
 {
     if(!canaddparticles()) return;
     vec v;
     float d = e.dist(s, v);
-    int steps = clamp(int(d*2), 1, maxtrail);
+    int steps = clamp(int(d*2), 1, GETIV(maxtrail));
     v.div(steps);
     vec p = s;
     loopi(steps)
@@ -1222,13 +1204,10 @@ void particle_trail(int type, int fade, const vec &s, const vec &e, int color, f
     }
 }
 
-VARP(particletext, 0, 1, 1);
-VARP(maxparticletextdistance, 0, 128, 10000);
-
 void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity)
 {
     if(!canaddparticles()) return;
-    if(!particletext || camera1->o.dist(s) > maxparticletextdistance) return;
+    if(!GETIV(particletext) || camera1->o.dist(s) > GETIV(maxparticletextdistance)) return;
     particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
     p->text = t;
 }
@@ -1236,7 +1215,7 @@ void particle_text(const vec &s, const char *t, int type, int fade, int color, f
 void particle_textcopy(const vec &s, const char *t, int type, int fade, int color, float size, int gravity)
 {
     if(!canaddparticles()) return;
-    if(!particletext || camera1->o.dist(s) > maxparticletextdistance) return;
+    if(!GETIV(particletext) || camera1->o.dist(s) > GETIV(maxparticletextdistance)) return;
     particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
     p->text = newstring(t);
     p->flags = 1;
@@ -1364,7 +1343,7 @@ void regularshape(int type, int radius, int color, int dir, int num, int fade, c
         {
             vec o = inv ? to : from;
             o.sub(camera1->o);
-            float dist = clamp(sqrtf(o.x*o.x + o.y*o.y)/maxparticledistance, 0.0f, 1.0f);
+            float dist = clamp(sqrtf(o.x*o.x + o.y*o.y)/GETIV(maxparticledistance), 0.0f, 1.0f);
             if(dist > 0.2f)
             {
                 dist = 1 - (dist - 0.2f)/0.8f;
@@ -1538,12 +1517,6 @@ bool printparticles(extentity &e, char *buf)
     return false;
 }
 
-VARP(showparticles, 0, 1, 1);
-VAR(cullparticles, 0, 1, 1);
-VAR(replayparticles, 0, 1, 1);
-VARN(seedparticles, seedmillis, 0, 3000, 10000);
-VAR(dbgpcull, 0, 0, 1);
-
 void seedparticles()
 {
     renderprogress(0, "seeding particles");
@@ -1554,30 +1527,28 @@ void seedparticles()
         particleemitter &pe = emitters[i];
         extentity &e = *pe.ent;
         seedemitter = &pe;
-        for(int millis = 0; millis < seedmillis; millis += min(emitmillis, seedmillis/10))
+        for(int millis = 0; millis < GETIV(seedparticles); millis += min(GETIV(emitmillis), GETIV(seedparticles)/10))
             makeparticles(e);    
         seedemitter = NULL;
-        pe.lastemit = -seedmillis;
+        pe.lastemit = -GETIV(seedparticles);
         pe.finalize();
     }
 }
-
-FVARFP(editpartsize, 0.0f, 2.0f, 100.0f, particleinit()); // quaker66: control size of editparticles
 
 void updateparticles()
 {
     if(regenemitters) addparticleemitters();
 
-    if(lastmillis - lastemitframe >= emitmillis)
+    if(lastmillis - lastemitframe >= GETIV(emitmillis))
     {
         canemit = true;
-        lastemitframe = lastmillis - (lastmillis%emitmillis);
+        lastemitframe = lastmillis - (lastmillis%GETIV(emitmillis));
     }
     else canemit = false;
    
     flares.makelightflares();
 
-    if(!editmode || showparticles) 
+    if(!editmode || GETIV(showparticles)) 
     {
         int emitted = 0, replayed = 0;
         addedparticles = 0;
@@ -1585,17 +1556,17 @@ void updateparticles()
         {
             particleemitter &pe = emitters[i];
             extentity &e = *pe.ent;
-            if(e.o.dist(camera1->o) > maxparticledistance) { pe.lastemit = lastmillis; continue; } 
-            if(cullparticles && pe.maxfade >= 0)
+            if(e.o.dist(camera1->o) > GETIV(maxparticledistance)) { pe.lastemit = lastmillis; continue; } 
+            if(GETIV(cullparticles) && pe.maxfade >= 0)
             {
                 if(isfoggedsphere(pe.radius, pe.center)) { pe.lastcull = lastmillis; continue; }
                 if(pvsoccluded(pe.bborigin, pe.bbsize)) { pe.lastcull = lastmillis; continue; }
             }
             makeparticles(e);
             emitted++;
-            if(replayparticles && pe.maxfade > 5 && pe.lastcull > pe.lastemit)
+            if(GETIV(replayparticles) && pe.maxfade > 5 && pe.lastcull > pe.lastemit)
             {
-                for(emitoffset = max(pe.lastemit + emitmillis - lastmillis, -pe.maxfade); emitoffset < 0; emitoffset += emitmillis)
+                for(emitoffset = max(pe.lastemit + GETIV(emitmillis) - lastmillis, -pe.maxfade); emitoffset < 0; emitoffset += GETIV(emitmillis))
                 {
                     makeparticles(e);
                     replayed++;
@@ -1604,7 +1575,7 @@ void updateparticles()
             } 
             pe.lastemit = lastmillis;
         }
-        if(dbgpcull && (canemit || replayed) && addedparticles) conoutf(CON_DEBUG, "%d emitters, %d particles", emitted, addedparticles);
+        if(GETIV(dbgpcull) && (canemit || replayed) && addedparticles) conoutf(CON_DEBUG, "%d emitters, %d particles", emitted, addedparticles);
     }
     if(editmode) // show sparkly thingies for map entities in edit mode
     {
@@ -1616,32 +1587,32 @@ void updateparticles()
             extentity &e = *ents[entgroup[i]]; // INTENSITY: Made extentity
             if (!LogicSystem::getLogicEntity(e).get()) continue;
             std::string _class = '@' + LogicSystem::getLogicEntity(e).get()->getClass(); // INTENSITY
-            particle_textcopy(vec(e.o.x, e.o.y, e.o.z + int(editpartsize) * 2), _class.c_str(), PART_TEXT, 1, 0xFF4B19, editpartsize); // INTENSITY: Use class
+            particle_textcopy(vec(e.o.x, e.o.y, e.o.z + int(GETFV(editpartsize)) * 2), _class.c_str(), PART_TEXT, 1, 0xFF4B19, float(GETFV(editpartsize))); // INTENSITY: Use class
             switch (e.type)
             {
                 case ET_LIGHT:
-                    newparticle(e.o, e.o, 1, PART_EDIT_LIGHT, 0xFF4B19, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_LIGHT, 0xFF4B19, float(GETFV(editpartsize)));
                     break;
                 case ET_SPOTLIGHT:
-                    newparticle(e.o, e.o, 1, PART_EDIT_SPOTLIGHT, 0xFF4B19, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_SPOTLIGHT, 0xFF4B19, float(GETFV(editpartsize)));
                     break;
                 case ET_ENVMAP:
-                    newparticle(e.o, e.o, 1, PART_EDIT_ENVMAP, 0xFF4B19, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_ENVMAP, 0xFF4B19, float(GETFV(editpartsize)));
                     break;
                 case ET_SOUND:
-                    newparticle(e.o, e.o, 1, PART_EDIT_SOUND, 0xFF4B19, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_SOUND, 0xFF4B19, float(GETFV(editpartsize)));
                     break;
                 case ET_PLAYERSTART:
-                    newparticle(e.o, e.o, 1, PART_EDIT_MARKER, 0xFF4B19, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_MARKER, 0xFF4B19, float(GETFV(editpartsize)));
                     break;
                 case ET_MAPMODEL:
-                    newparticle(e.o, e.o, 1, PART_EDIT_MAPMODEL, 0xFF4B19, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_MAPMODEL, 0xFF4B19, float(GETFV(editpartsize)));
                     break;
                 case ET_PARTICLES:
-                    newparticle(e.o, e.o, 1, PART_EDIT_PARTICLES, 0xFF4B19, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_PARTICLES, 0xFF4B19, float(GETFV(editpartsize)));
                     break;
                 default:
-                    newparticle(e.o, e.o, 1, PART_EDIT_GENERIC, 0xFF4B19, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_GENERIC, 0xFF4B19, float(GETFV(editpartsize)));
                     break;
             }
             editid = e.uniqueId;
@@ -1652,32 +1623,32 @@ void updateparticles()
             if(e.type==ET_EMPTY || editid==e.uniqueId) continue;
             if (!LogicSystem::getLogicEntity(e).get()) continue;
             std::string _class = '@' + LogicSystem::getLogicEntity(e).get()->getClass(); // INTENSITY
-            particle_textcopy(vec(e.o.x, e.o.y, e.o.z + int(editpartsize) * 2), _class.c_str(), PART_TEXT, 1, 0x1EC850, editpartsize); // INTENSITY: Use class
+            particle_textcopy(vec(e.o.x, e.o.y, e.o.z + int(GETFV(editpartsize)) * 2), _class.c_str(), PART_TEXT, 1, 0x1EC850, float(GETFV(editpartsize))); // INTENSITY: Use class
             switch (e.type)
             {
                 case ET_LIGHT:
-                    newparticle(e.o, e.o, 1, PART_EDIT_LIGHT, (e.attr2 || e.attr3 || e.attr4) ? (e.attr2<<16)+(e.attr3<<8)+e.attr4 : 0xFFFFFF, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_LIGHT, (e.attr2 || e.attr3 || e.attr4) ? (e.attr2<<16)+(e.attr3<<8)+e.attr4 : 0xFFFFFF, float(GETFV(editpartsize)));
                     break;
                 case ET_SPOTLIGHT:
-                    newparticle(e.o, e.o, 1, PART_EDIT_SPOTLIGHT, 0xFFFFFF, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_SPOTLIGHT, 0xFFFFFF, float(GETFV(editpartsize)));
                     break;
                 case ET_ENVMAP:
-                    newparticle(e.o, e.o, 1, PART_EDIT_ENVMAP, 0xFFFFFF, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_ENVMAP, 0xFFFFFF, float(GETFV(editpartsize)));
                     break;
                 case ET_SOUND:
-                    newparticle(e.o, e.o, 1, PART_EDIT_SOUND, 0xFFFFFF, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_SOUND, 0xFFFFFF, float(GETFV(editpartsize)));
                     break;
                 case ET_PLAYERSTART:
-                    newparticle(e.o, e.o, 1, PART_EDIT_MARKER, 0xFFFFFF, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_MARKER, 0xFFFFFF, float(GETFV(editpartsize)));
                     break;
                 case ET_MAPMODEL:
-                    newparticle(e.o, e.o, 1, PART_EDIT_MAPMODEL, 0xFFFFFF, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_MAPMODEL, 0xFFFFFF, float(GETFV(editpartsize)));
                     break;
                 case ET_PARTICLES:
-                    newparticle(e.o, e.o, 1, PART_EDIT_PARTICLES, 0xFFFFFF, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_PARTICLES, 0xFFFFFF, float(GETFV(editpartsize)));
                     break;
                 default:
-                    newparticle(e.o, e.o, 1, PART_EDIT_GENERIC, 0xFFFFFF, editpartsize);
+                    newparticle(e.o, e.o, 1, PART_EDIT_GENERIC, 0xFFFFFF, float(GETFV(editpartsize)));
                     break;
             }
         }

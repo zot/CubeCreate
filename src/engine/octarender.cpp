@@ -557,7 +557,7 @@ struct vacollect : verthash
         {
             Slot &slot = *lookupvslot(va->eslist[i].texture, false).slot;
             loopvj(slot.sts) va->texmask |= 1<<slot.sts[j].type;
-            if(slot.shader->type&SHADER_ENVMAP && (renderpath!=R_FIXEDFUNCTION || (slot.ffenv && hasCM && maxtmus >= 2))) va->texmask |= 1<<TEX_ENVMAP;
+            if(slot.shader->type&SHADER_ENVMAP && (renderpath!=R_FIXEDFUNCTION || (slot.ffenv && hasCM && GETIV(maxtmus) >= 2))) va->texmask |= 1<<TEX_ENVMAP;
         }
 
         if(grasstris.length())
@@ -810,7 +810,7 @@ void addcubeverts(VSlot &vslot, int orient, int size, vec *pos, ushort texture, 
     int shadowmask = texture==DEFAULT_SKY || alpha ? 0 : calcshadowmask(pos);
     LightMap *lm = NULL;
     LightMapTexture *lmtex = NULL;
-    if(!nolights && surface && lightmaps.inrange(surface->lmid-LMID_RESERVED))
+    if(!GETIV(nolights) && surface && lightmaps.inrange(surface->lmid-LMID_RESERVED))
     {
         lm = &lightmaps[surface->lmid-LMID_RESERVED];
         if((lm->type&LM_TYPE)==LM_DIFFUSE ||

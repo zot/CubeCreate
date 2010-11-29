@@ -926,13 +926,13 @@ struct skelmodel : animmodel
         {
             switch(renderpath)
             {
-                case R_GLSLANG: return maxvsuniforms;
+                case R_GLSLANG: return GETIV(maxvsuniforms);
                 case R_ASMGLSLANG:
-                case R_ASMSHADER: return maxvpenvparams;
+                case R_ASMSHADER: return GETIV(maxvpenvparams);
                 default: return 0;
             }
         }
-        int availgpubones() const { return (min(maxgpuparams() - reservevpparams, 256) - 10) / (GETIV(matskel) ? 3 : 2); }
+        int availgpubones() const { return (min(maxgpuparams() - GETIV(reservevpparams), 256) - 10) / (GETIV(matskel) ? 3 : 2); }
         bool gpuaccelerate() const { return renderpath!=R_FIXEDFUNCTION && numframes && GETIV(gpuskel) && numgpubones<=availgpubones(); }
 
         void interpmatbones(const animstate *as, float pitch, const vec &axis, int numanimparts, const uchar *partmask, skelcacheentry &sc)

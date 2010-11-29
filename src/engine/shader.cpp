@@ -20,46 +20,35 @@ static GlobalShaderParamState vertexparamstate[RESERVEDSHADERPARAMS + MAXSHADERP
 static bool dirtyenvparams = false, standardshader = false, initshaders = false, forceshaders = true;
 static uint paramversion = 0;
 
-VAR(reservevpparams, 1, 16, 0);
-VAR(maxvpenvparams, 1, 0, 0);
-VAR(maxvplocalparams, 1, 0, 0);
-VAR(maxfpenvparams, 1, 0, 0);
-VAR(maxfplocalparams, 1, 0, 0);
-VAR(maxtexcoords, 1, 0, 0);
-VAR(maxvsuniforms, 1, 0, 0);
-VAR(maxfsuniforms, 1, 0, 0);
-VAR(maxvaryings, 1, 0, 0);
-VAR(dbgshader, 0, 0, 2);
-
 void loadshaders()
 {
     if(renderpath==R_ASMSHADER || renderpath==R_ASMGLSLANG)
     {
         GLint val;
         glGetProgramiv_(GL_VERTEX_PROGRAM_ARB, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, &val);
-        maxvpenvparams = val; 
+        SETVN(maxvpenvparams, val); 
         glGetProgramiv_(GL_VERTEX_PROGRAM_ARB, GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, &val);
-        maxvplocalparams = val;
+        SETVN(maxvplocalparams, val);
         glGetProgramiv_(GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, &val);
-        maxfpenvparams = val;
+        SETVN(maxfpenvparams, val);
         glGetProgramiv_(GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, &val);
-        maxfplocalparams = val;
+        SETVN(maxfplocalparams, val);
     }
     if(renderpath==R_GLSLANG || renderpath==R_ASMGLSLANG)
     {
         GLint val;
         glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB, &val);
-        maxvsuniforms = val/4;
+        SETVN(maxvsuniforms, val/4);
         glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS_ARB, &val);
-        maxfsuniforms = val/4;
+        SETVN(maxfsuniforms, val/4);
         glGetIntegerv(GL_MAX_VARYING_FLOATS_ARB, &val);
-        maxvaryings = val;
+        SETVN(maxvaryings, val);
     }
     if(renderpath != R_FIXEDFUNCTION)
     {
         GLint val;
         glGetIntegerv(GL_MAX_TEXTURE_COORDS_ARB, &val);
-        maxtexcoords = val;
+        SETVN(maxtexcoords, val);
     }
 
     initshaders = true;
@@ -167,10 +156,8 @@ static void compileglslshader(GLenum type, GLhandleARB &obj, const char *def, co
         glDeleteObject_(obj);
         obj = 0;
     }
-    else if(dbgshader > 1 && msg) showglslinfo(obj, tname, name, source);
+    else if(GETIV(dbgshader) > 1 && msg) showglslinfo(obj, tname, name, source);
 }  
-
-VAR(dbgubo, 0, 0, 1);
 
 static void bindglsluniform(Shader &s, UniformLoc &u)
 {
@@ -195,7 +182,7 @@ static void bindglsluniform(Shader &s, UniformLoc &u)
             u.offset = offsetval;
             u.size = sizeval;
             glUniformBlockBinding_(s.program, bidx, u.binding);
-            if(dbgubo) conoutf(CON_DEBUG, "UBO: %s:%s:%d, offset: %d, size: %d, stride: %d", u.name, u.blockname, u.binding, offsetval, sizeval, strideval);
+            if(GETIV(dbgubo)) conoutf(CON_DEBUG, "UBO: %s:%s:%d, offset: %d, size: %d, stride: %d", u.name, u.blockname, u.binding, offsetval, sizeval, strideval);
         }
     }
     else if(hasBUE)
@@ -214,7 +201,7 @@ static void bindglsluniform(Shader &s, UniformLoc &u)
         }
         u.offset = 0;
         u.size = size;
-        if(dbgubo) conoutf(CON_DEBUG, "BUE: %s:%s:%d, offset: %d, size: %d, stride: %d", u.name, u.blockname, u.binding, 0, size, stride);
+        if(GETIV(dbgubo)) conoutf(CON_DEBUG, "BUE: %s:%s:%d, offset: %d, size: %d, stride: %d", u.name, u.blockname, u.binding, 0, size, stride);
     }
 }
 
@@ -745,18 +732,14 @@ void Shader::bindprograms()
     lastshader = this;
 }
 
-VARFN(shaders, useshaders, -1, -1, 1, initwarning("shaders"));
-VARF(shaderprecision, 0, 0, 2, initwarning("shader quality"));
-//VARF(forceglsl, 0, 0, 1, initwarning("shaders"));
-
 bool Shader::compile()
 {
     if(type & SHADER_GLSLANG)
     {
         if(!vsstr) vsobj = !reusevs || reusevs->type&SHADER_INVALID ? 0 : reusevs->vsobj;
-        else compileglslshader(GL_VERTEX_SHADER_ARB,   vsobj, vsstr, "VS", name, dbgshader || !variantshader);
+        else compileglslshader(GL_VERTEX_SHADER_ARB,   vsobj, vsstr, "VS", name, GETIV(dbgshader) || !variantshader);
         if(!psstr) psobj = !reuseps || reuseps->type&SHADER_INVALID ? 0 : reuseps->psobj;
-        else compileglslshader(GL_FRAGMENT_SHADER_ARB, psobj, psstr, "PS", name, dbgshader || !variantshader);
+        else compileglslshader(GL_FRAGMENT_SHADER_ARB, psobj, psstr, "PS", name, GETIV(dbgshader) || !variantshader);
         linkglslprogram(*this, !variantshader);
         return program!=0;
     }
@@ -764,10 +747,10 @@ bool Shader::compile()
     {
         if(renderpath!=R_ASMSHADER && renderpath!=R_ASMGLSLANG) return false;
         if(!vsstr) vs = !reusevs || reusevs->type&SHADER_INVALID ? 0 : reusevs->vs;
-        else if(!compileasmshader(GL_VERTEX_PROGRAM_ARB, vs, vsstr, "VS", name, dbgshader || !variantshader, variantshader!=NULL))
+        else if(!compileasmshader(GL_VERTEX_PROGRAM_ARB, vs, vsstr, "VS", name, GETIV(dbgshader) || !variantshader, variantshader!=NULL))
             native = false;
         if(!psstr) ps = !reuseps || reuseps->type&SHADER_INVALID ? 0 : reuseps->ps;
-        else if(!compileasmshader(GL_FRAGMENT_PROGRAM_ARB, ps, psstr, "PS", name, dbgshader || !variantshader, variantshader!=NULL))
+        else if(!compileasmshader(GL_FRAGMENT_PROGRAM_ARB, ps, psstr, "PS", name, GETIV(dbgshader) || !variantshader, variantshader!=NULL))
             native = false;
         return vs && ps && (!variantshader || native);
     }
@@ -995,10 +978,6 @@ void genemufog(vector<char> &vsbuf, vector<char> &psbuf, int fogtc, int fogcomp)
     psbuf.put(calcfog, strlen(calcfog)+1);
 }
 
-VAR(reserveshadowmaptc, 1, 0, 0);
-VAR(reservedynlighttc, 1, 0, 0);
-VAR(minimizedynlighttcusage, 1, 0, 0);
-
 static void gengenericvariant(Shader &s, const char *sname, const char *vs, const char *ps, int row)
 {
     bool vschanged = false, pschanged = false;
@@ -1069,8 +1048,8 @@ static bool genwatervariant(Shader &s, const char *sname, vector<char> &vs, vect
         if(!findunusedtexcoordcomponent(vs.getbuf(), fadetc, fadecomp))
         {
             uint usedtc = findusedtexcoords(vs.getbuf());
-            int reservetc = row%2 ? reserveshadowmaptc : reservedynlighttc;
-            loopi(maxtexcoords-reservetc) if(!(usedtc&(1<<i))) { fadetc = i; fadecomp = 3; break; }
+            int reservetc = row%2 ? GETIV(reserveshadowmaptc) : GETIV(reservedynlighttc);
+            loopi(GETIV(maxtexcoords)-reservetc) if(!(usedtc&(1<<i))) { fadetc = i; fadecomp = 3; break; }
         }
         if(fadetc>=0)
         {
@@ -1104,27 +1083,27 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
 {
     int numlights = 0, lights[MAXDYNLIGHTS];
     int emufogtc = -1, emufogcomp = -1;
-    if(s.type & SHADER_GLSLANG) numlights = maxvaryings < 48 || minimizedynlighttcusage ? 1 : MAXDYNLIGHTS;
+    if(s.type & SHADER_GLSLANG) numlights = GETIV(maxvaryings) < 48 || GETIV(minimizedynlighttcusage) ? 1 : MAXDYNLIGHTS;
     else
     {
         uint usedtc = findusedtexcoords(vs);
-        int reservetc = row%2 ? reserveshadowmaptc : reservedynlighttc;
-        if(maxtexcoords-reservetc<0) return;
-        int limit = minimizedynlighttcusage ? 1 : MAXDYNLIGHTS;
-        loopi(maxtexcoords-reservetc) if(!(usedtc&(1<<i))) 
+        int reservetc = row%2 ? GETIV(reserveshadowmaptc) : GETIV(reservedynlighttc);
+        if(GETIV(maxtexcoords)-reservetc<0) return;
+        int limit = GETIV(minimizedynlighttcusage) ? 1 : MAXDYNLIGHTS;
+        loopi(GETIV(maxtexcoords)-reservetc) if(!(usedtc&(1<<i))) 
         {
             lights[numlights++] = i;    
             if(numlights>=limit) break;
         }
         extern int emulatefog;
-        if(emulatefog && reservetc>0 && numlights+1<limit && !(usedtc&(1<<(maxtexcoords-reservetc))) && strstr(ps, "OPTION ARB_fog_linear;") && strstr(vs, "result.fogcoord"))
+        if(emulatefog && reservetc>0 && numlights+1<limit && !(usedtc&(1<<(GETIV(maxtexcoords)-reservetc))) && strstr(ps, "OPTION ARB_fog_linear;") && strstr(vs, "result.fogcoord"))
         {
             if(!findunusedtexcoordcomponent(vs, emufogtc, emufogcomp))
             {
-                emufogtc = maxtexcoords-reservetc;
+                emufogtc = GETIV(maxtexcoords)-reservetc;
                 emufogcomp = 3;
             }
-            lights[numlights++] = maxtexcoords-reservetc;
+            lights[numlights++] = GETIV(maxtexcoords)-reservetc;
         }
         if(!numlights) return;
     }
@@ -1249,13 +1228,13 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
     if(!(s.type & SHADER_GLSLANG))
     {
         uint usedtc = findusedtexcoords(vs);
-        if(maxtexcoords-reserveshadowmaptc<0) return;
-        loopi(maxtexcoords-reserveshadowmaptc) if(!(usedtc&(1<<i))) { smtc = i; break; }
+        if(GETIV(axtexcoords)-GETIV(reserveshadowmaptc)<0) return;
+        loopi(GETIV(maxtexcoords)-GETIV(reserveshadowmaptc)) if(!(usedtc&(1<<i))) { smtc = i; break; }
         extern int emulatefog;
-        if(smtc<0 && emulatefog && reserveshadowmaptc>0 && !(usedtc&(1<<(maxtexcoords-reserveshadowmaptc))) && strstr(ps, "OPTION ARB_fog_linear;"))
+        if(smtc<0 && emulatefog && GETIV(reserveshadowmaptc)>0 && !(usedtc&(1<<(GETIV(maxtexcoords)-GETIV(reserveshadowmaptc)))) && strstr(ps, "OPTION ARB_fog_linear;"))
         {
             if(!strstr(vs, "result.fogcoord") || !findunusedtexcoordcomponent(vs, emufogtc, emufogcomp)) return;
-            smtc = maxtexcoords-reserveshadowmaptc;
+            smtc = GETIV(maxtexcoords)-GETIV(reserveshadowmaptc);
         }
         if(smtc<0) return;
     }
@@ -1441,13 +1420,11 @@ static void genuniformdefs(vector<char> &vsbuf, vector<char> &psbuf, const char 
     psbuf.put(psmain, strlen(psmain)+1);
 }
 
-VAR(defershaders, 0, 1, 1);
-
 void defershader(int *type, const char *name, const char *contents)
 {
     Shader *exists = shaders.access(name);
     if(exists && !(exists->type&SHADER_INVALID)) return;
-    if(!defershaders) { LuaEngine::runScript(contents); return; } // CubeCreate: lua
+    if(!GETIV(defershaders)) { LuaEngine::runScript(contents); return; } // CubeCreate: lua
     char *rname = exists ? exists->name : newstring(name);
     Shader &s = shaders[rname];
     s.name = rname;
@@ -1498,22 +1475,19 @@ int Shader::uniformlocversion()
     return version;
 }
 
-VARF(nativeshaders, 0, 1, 1, fixshaderdetail());
-VARFP(shaderdetail, 0, MAXSHADERDETAIL, MAXSHADERDETAIL, fixshaderdetail());
-
 void Shader::fixdetailshader(bool force, bool recurse)
 {
     Shader *alt = this;
     detailshader = NULL;
     do
     {
-        Shader *cur = shaderdetail < MAXSHADERDETAIL ? alt->fastshader[shaderdetail] : alt;
+        Shader *cur = GETIV(shaderdetail) < MAXSHADERDETAIL ? alt->fastshader[GETIV(shaderdetail)] : alt;
         if(cur->type&SHADER_DEFERRED && force) useshader(cur);
         if(!(cur->type&SHADER_INVALID))
         {
             if(cur->type&SHADER_DEFERRED) break;
             detailshader = cur;
-            if(cur->native || !nativeshaders) break;
+            if(cur->native || !GETIV(nativeshaders)) break;
         }
         alt = alt->altshader;
     } while(alt && alt!=this);
@@ -2037,8 +2011,6 @@ tmu tmus[MAXTMUS] =
     INVALIDTMU
 };
 
-VAR(maxtmus, 1, 0, 0);
-
 void parsetmufunc(tmu &t, tmufunc &f, const char *s)
 {
     int arg = -1;
@@ -2078,7 +2050,7 @@ void parsetmufunc(tmu &t, tmufunc &f, const char *s)
 
 void resettmu(int n)
 {
-    if(renderpath!=R_FIXEDFUNCTION || n>=maxtmus) return;
+    if(renderpath!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
     tmu &t = tmus[n];
     if(t.mode!=GL_MODULATE) { t.mode = GL_MODULATE; glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, t.mode); }
     if(t.rgb.scale != 1)  { t.rgb.scale = 1; glTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, t.rgb.scale); }
@@ -2087,7 +2059,7 @@ void resettmu(int n)
 
 void scaletmu(int n, int rgbscale, int alphascale)
 {
-    if(renderpath!=R_FIXEDFUNCTION || n>=maxtmus) return;
+    if(renderpath!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
     tmu &t = tmus[n];
     if(rgbscale && t.rgb.scale != rgbscale)  { t.rgb.scale = rgbscale; glTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, t.rgb.scale); }
     if(alphascale && t.alpha.scale != alphascale)  { t.alpha.scale = alphascale; glTexEnvi(GL_TEXTURE_ENV, GL_ALPHA_SCALE, t.alpha.scale); }
@@ -2095,7 +2067,7 @@ void scaletmu(int n, int rgbscale, int alphascale)
 
 void colortmu(int n, float r, float g, float b, float a)
 {
-    if(renderpath!=R_FIXEDFUNCTION || n>=maxtmus) return;
+    if(renderpath!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
     tmu &t = tmus[n];
     if(t.color[0] != r || t.color[1] != g || t.color[2] != b || t.color[3] != a)
     {
@@ -2126,7 +2098,7 @@ void committmufunc(GLenum mode, bool rgb, tmufunc &dst, tmufunc &src)
 
 void setuptmu(int n, const char *rgbfunc, const char *alphafunc)
 {
-    if(renderpath!=R_FIXEDFUNCTION || n>=maxtmus) return;
+    if(renderpath!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
 
     static tmu init = INITTMU;
     tmu f = tmus[n];
@@ -2143,31 +2115,29 @@ void setuptmu(int n, const char *rgbfunc, const char *alphafunc)
     committmufunc(f.mode, false, t.alpha, f.alpha);
 }
 
-VAR(nolights, 1, 0, 0);
-VAR(nowater, 1, 0, 0);
-VAR(nomasks, 1, 0, 0);
-
 void inittmus()
 {
     if(hasTE && hasMT)
     {
         GLint val;
         glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &val);
-        maxtmus = max(1, min(MAXTMUS, int(val)));
-        loopi(maxtmus)
+        SETVN(maxtmus, max(1, min(MAXTMUS, int(val))));
+        loopi(GETIV(maxtmus))
         {
             glActiveTexture_(GL_TEXTURE0_ARB+i);
             resettmu(i);
         }
         glActiveTexture_(GL_TEXTURE0_ARB);
     }
-    else if(hasTE) { maxtmus = 1; resettmu(0); }
+    else if(hasTE) { SETVN(maxtmus, 1); resettmu(0); }
     if(renderpath==R_FIXEDFUNCTION)
     {
-        if(maxtmus<4) caustics = 0;
-        if(maxtmus<2)
+        if(GETIV(maxtmus)<4) caustics = 0;
+        if(GETIV(maxtmus)<2)
         {
-            nolights = nowater = nomasks = 1;
+			SETV(nolights, 1);
+			SETV(nowater, 1);
+			SETV(nomasks, 1);
             SETV(lightmodels, 0);
         }
     }

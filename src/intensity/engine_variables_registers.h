@@ -906,6 +906,31 @@ REGVAR("thirdperson", 0, 1, 2);
 REGVAR("gui2d", 1, 1, 0);
 REGVAR("gamespeed", 0, 100, 100);
 REGVAR("paused", 0, 0, 1);
+REGVAR("shaderdetail", 0, 1, 3);
+REGVAR("mainmenu", 1, 0, 0);
+REGVAR("envmapradius", 0, 128, 10000);
+REGVAR("nolights", 1, 0, 0);
+REGVAR("blobs", 0, 1, 1);
+REGVAR("shadowmap", 0, 0, 1);
+REGVAR("maxtmus", 1, 0, 0);
+REGVAR("reservevpparams", 1, 16, 0);
+REGVAR("maxvpenvparams", 1, 0, 0);
+REGVAR("maxvplocalparams", 1, 0, 0);
+REGVAR("maxfpenvparams", 1, 0, 0);
+REGVAR("maxfplocalparams", 1, 0, 0);
+REGVAR("maxvsuniforms", 1, 0, 0);
+REGVAR("vertwater", 0, 1, 1);
+REGVAR("reflectdist", 0, 2000, 10000);
+REGVAR("waterrefract", 0, 1, 1);
+REGVAR("waterreflect", 0, 1, 1);
+REGVAR("waterfade", 0, 1, 1);
+REGVAR("caustics", 0, 1, 1);
+REGVAR("waterfallrefract", 0, 0, 1);
+REGVAR("waterfog", 0, 150, 10000);
+REGVAR("lavafog", 0, 50, 10000);
+REGVAR("showmat", 0, 1, 1);
+REGVAR("fullbright", 0, 0, 1);
+REGVAR("menuautoclose", 32, 120, 4096);
 #endif
 
 // intensity/targeting.cpp

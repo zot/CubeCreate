@@ -304,8 +304,6 @@ int hasstencil = 0; // For rendergl.cpp
 
 int renderpath = R_FIXEDFUNCTION; // For rendergl.cpp
 
-int shaderdetail = 1; // For texture.h
-
 Shader *Shader::lastshader = NULL;
 void Shader::bindprograms() { assert(0); };
 void Shader::flushenvparams(Slot* slot) { assert(0); };
@@ -350,13 +348,10 @@ void createtexture(int tnum, int w, int h, void *pixels, int clamp, int filter, 
 
 vec worldpos;
 vec camdir;
-int mainmenu;
 bvec watercolor, waterfallcolor, lavacolor;
-int hidehud;
+int hidehud; // to replace
 dynent *player = NULL;
 physent *camera1 = NULL;
-int envmapradius = 128;
-int nolights = 1;
 float loadprogress = 0.333;
 vector<LightMap> lightmaps;
 int initing = NOT_INITING;
@@ -365,17 +360,11 @@ int ati_oq_bug = 0;
 Shader *nocolorshader = NULL, *notextureshader = NULL, *lineshader = NULL;
 bool fading = false;
 int xtraverts = 0, xtravertsva = 0;
-int shadowmap = 0;
-int showblobls = 0;
 bool reflecting = false;
 int refracting = 0;
 int oqfrags = 0;
 float reflectz;
 bool fogging = false;
-int reflectdist, vertwater, refractfog, waterrefract, waterreflect, waterfade, caustics, waterfallrefract, waterfog, lavafog;
-int showblobs;
-int maxtmus = 0;
-int reservevpparams, maxvpenvparams, maxvplocalparams, maxfpenvparams, maxfplocalparams, maxvsuniforms;
 
 bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false, hasRN = false, hasPBO = false, hasFBB = false, hasUBO = false, hasBUE = false;
 
@@ -386,9 +375,7 @@ bool calclight_canceled = false;
 int curtexnum = 0;
 Shader *defaultshader = NULL, *rectshader = NULL, *foggedshader = NULL, *foggednotextureshader = NULL, *stdworldshader = NULL;
 bool inbetweenframes = false, renderedframe = false;
-int fullbright = 0, outline = 0;
-int showmat = 0;
-int menuautoclose = 120;
+int outline = 0;
 vec shadowoffset(0, 0, 0), shadowfocus(0, 0, 0), shadowdir(0, 0.707, 1);
 int explicitsky = 0;
 double skyarea = 0;

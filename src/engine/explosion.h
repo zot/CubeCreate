@@ -195,7 +195,7 @@ static void initsphere(int slices, int stacks)
 
 static void setupexplosion()
 {
-    if(renderpath!=R_FIXEDFUNCTION || maxtmus>=2)
+    if(renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
     {
         if(!expmodtex[0]) expmodtex[0] = createexpmodtex(64, 0);
         if(!expmodtex[1]) expmodtex[1] = createexpmodtex(64, 0.25f);
@@ -250,7 +250,7 @@ static void setupexplosion()
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer(2, GL_FLOAT, sizeof(expvert), &verts->u);
 
-            if(maxtmus>=2)
+            if(GETIV(maxtmus)>=2)
             {
                 setuptmu(0, "C * T", "= Ca");
 
@@ -294,7 +294,7 @@ static void drawexpverts(int numverts, int numindices, GLushort *indices)
 
 static void drawexplosion(bool inside, uchar r, uchar g, uchar b, uchar a)
 {
-    if((renderpath!=R_FIXEDFUNCTION || maxtmus>=2) && lastexpmodtex != expmodtex[inside ? 1 : 0])
+    if((renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2) && lastexpmodtex != expmodtex[inside ? 1 : 0])
     {
         glActiveTexture_(GL_TEXTURE1_ARB);
         lastexpmodtex = expmodtex[inside ? 1 :0];
@@ -344,7 +344,7 @@ static void cleanupexplosion()
     {
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-        if(maxtmus>=2)
+        if(GETIV(maxtmus)>=2)
         {
             resettmu(0);
 

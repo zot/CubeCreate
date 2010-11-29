@@ -162,7 +162,7 @@ void rendervertwater(uint subdiv, int xo, int yo, int z, uint size, uchar mat = 
             else 
             {
                 bool below = camera1->o.z < z-WATER_OFFSET;
-                if(nowater || minimapping) { renderwaterstrips(vertwc, z); }
+                if(GETIV(nowater) || minimapping) { renderwaterstrips(vertwc, z); }
                 else if(GETIV(waterrefract))
                 {
                     if(GETIV(waterreflect) && !below) { renderwaterstrips(vertwmtc, z); }
@@ -263,7 +263,7 @@ void renderflatwater(int x, int y, int z, uint rsize, uint csize, uchar mat = MA
             else
             {
                 bool below = camera1->o.z < z-WATER_OFFSET;
-                if(nowater || minimapping) { renderwaterquad(vertwcn, z); }
+                if(GETIV(nowater) || minimapping) { renderwaterquad(vertwcn, z); }
                 else if(GETIV(waterrefract))
                 {
                     if(GETIV(waterreflect) && !below) { renderwaterquad(vertwmtcn, z); }
@@ -388,7 +388,7 @@ void renderwaterff()
     glDisable(GL_CULL_FACE);
     
     if(minimapping) glDisable(GL_TEXTURE_2D);
-    else if(!nowater && (GETIV(waterreflect) || GETIV(waterrefract) || (GETIV(waterenvmap) && hasCM)))
+    else if(!GETIV(nowater) && (GETIV(waterreflect) || GETIV(waterrefract) || (GETIV(waterenvmap) && hasCM)))
     {
         if(GETIV(waterrefract)) setuprefractTMUs();
         else setupreflectTMUs();
@@ -416,7 +416,7 @@ void renderwaterff()
         if(ref.height<0 || ref.lastused<totalmillis || ref.matsurfs.empty()) continue;
 
         bool below = camera1->o.z < ref.height + offset;
-        if(!nowater && (GETIV(waterrefract) || GETIV(waterreflect) || (GETIV(waterenvmap) && hasCM)) && !minimapping)
+        if(!GETIV(nowater) && (GETIV(waterrefract) || GETIV(waterreflect) || (GETIV(waterenvmap) && hasCM)) && !minimapping)
         {
             if(hasOQ && oqfrags && GETIV(oqwater) && ref.query && ref.query->owner==&ref)
             {
@@ -469,9 +469,9 @@ void renderwaterff()
             if(m.depth!=lastdepth)
             {
                 float depth = !GETIV(waterfog) ? 1.0f : min(0.75f*m.depth/GETIV(waterfog), 0.95f);
-                if(nowater || !GETIV(waterrefract)) depth = max(depth, nowater || (!GETIV(waterreflect) && (!GETIV(waterenvmap) || !hasCM)) || below ? 0.6f : 0.3f);
+                if(GETIV(nowater) || !GETIV(waterrefract)) depth = max(depth, GETIV(nowater) || (!GETIV(waterreflect) && (!GETIV(waterenvmap) || !hasCM)) || below ? 0.6f : 0.3f);
                 wcol[3] = int(depth*255);
-                if(!nowater && !GETIV(waterrefract) && ((GETIV(waterreflect) || (GETIV(waterenvmap) && hasCM)) && !below))
+                if(!GETIV(nowater) && !GETIV(waterrefract) && ((GETIV(waterreflect) || (GETIV(waterenvmap) && hasCM)) && !below))
                 {
                     if(varray::data.length()) varray::end();
                     colortmu(0, depth*wcol[0]/255.0f, depth*wcol[1]/255.0f, depth*wcol[2]/255.0f, 1-depth);
@@ -489,7 +489,7 @@ void renderwaterff()
     varray::disable();
 
     if(minimapping) glEnable(GL_TEXTURE_2D);
-    else if(!nowater && (GETIV(waterrefract) || GETIV(waterreflect) || (GETIV(waterenvmap) && hasCM)))
+    else if(!GETIV(nowater) && (GETIV(waterrefract) || GETIV(waterreflect) || (GETIV(waterenvmap) && hasCM)))
     {
         if(!GETIV(waterrefract) && (wasbelow || !GETIV(waterreflect))) 
         {
@@ -915,7 +915,7 @@ void addreflection(materialsurface &m)
     ref->matsurfs.setsize(0);
     ref->matsurfs.add(&m);
     ref->depth = m.depth;
-    if(nowater || minimapping) return;
+    if(GETIV(nowater) || minimapping) return;
 
     if(GETIV(waterreflect) && !ref->tex) genwatertex(ref->tex, reflectionfb, reflectiondb);
     if(GETIV(waterrefract) && !ref->refracttex) genwatertex(ref->refracttex, reflectionfb, reflectiondb, true);
@@ -999,7 +999,7 @@ void queryreflections()
 
     lastquery = totalmillis;
 
-    if((editmode && GETIV(showmat) && !envmapping) || !hasOQ || !oqfrags || !GETIV(oqwater) || nowater || minimapping) return;
+    if((editmode && GETIV(showmat) && !envmapping) || !hasOQ || !oqfrags || !GETIV(oqwater) || GETIV(nowater) || minimapping) return;
 
     varray::enable();
 
@@ -1161,7 +1161,7 @@ static bool calcscissorbox(Reflection &ref, int size, vec &clipmin, vec &clipmax
 
 void drawreflections()
 {
-    if((editmode && GETIV(showmat) && !envmapping) || nowater || minimapping) return;
+    if((editmode && GETIV(showmat) && !envmapping) || GETIV(nowater) || minimapping) return;
 
     extern int nvidia_scissor_bug;
 

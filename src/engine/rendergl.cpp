@@ -340,13 +340,12 @@ void gl_checkextensions()
         SETV(waterreflect, 0);
     }
 
-    extern int reservedynlighttc, reserveshadowmaptc;
     if(strstr(vendor, "ATI"))
     {
         //conoutf(CON_WARN, "WARNING: ATI cards may show garbage in skybox. (use \"/ati_skybox_bug 1\" to fix)");
 
-        reservedynlighttc = 2;
-        reserveshadowmaptc = 3;
+        SETVN(reservedynlighttc, 2);
+        SETVN(reserveshadowmaptc, 3);
         minimizetcusage = 1;
         emulatefog = 1;
         if(hasTF) SETV(depthfxprecision, 1);
@@ -363,7 +362,7 @@ void gl_checkextensions()
     }
     else if(strstr(vendor, "NVIDIA"))
     {
-        reservevpparams = 10;
+        SETVN(reservevpparams, 10);
         rtsharefb = 0; // work-around for strange driver stalls involving when using many FBOs
         if(!strstr(exts, "GL_EXT_gpu_shader4")) SETV(filltjoints, 0); // DX9 or less NV cards seem to not cause many sparklies
         
@@ -376,7 +375,7 @@ void gl_checkextensions()
         avoidshaders = 1;
         intel_quadric_bug = 1;
         SETV(maxtexsize, 256);
-        reservevpparams = 20;
+        SETVN(reservevpparams, 20);
         SETV(batchlightmaps, 0);
         SETV(ffdynlights, 0);
 
@@ -390,7 +389,7 @@ void gl_checkextensions()
     {
         avoidshaders = 1;
         SETV(maxtexsize, 256);
-        reservevpparams = 20;
+        SETVN(reservevpparams, 20);
         SETV(batchlightmaps, 0);
         SETV(ffdynlights, 0);
 
@@ -694,12 +693,11 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
     }
 #endif
 
-    extern int useshaders;//, forceglsl; CubeCreate: disable asm shaders
     bool hasshaders = (hasVP && hasFP) || hasGLSL;
-    if(!useshaders || (useshaders<0 && avoidshaders) || !hasMT || !hasshaders)
+    if(!GETIV(shaders) || (GETIV(shaders)<0 && avoidshaders) || !hasMT || !hasshaders)
     {
         if(!hasMT || !hasshaders) conoutf(CON_WARN, "WARNING: No shader support! Using fixed-function fallback. (no fancy visuals for you)");
-        else if(useshaders<0 && !hasTF) conoutf(CON_WARN, "WARNING: Disabling shaders for extra performance. (use \"/shaders 1\" to enable shaders if desired)");
+        else if(GETIV(shaders)<0 && !hasTF) conoutf(CON_WARN, "WARNING: Disabling shaders for extra performance. (use \"/shaders 1\" to enable shaders if desired)");
         renderpath = R_FIXEDFUNCTION;
     }
     else renderpath = R_GLSLANG;
@@ -718,8 +716,9 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 
 void cleanupgl()
 {
-    extern int nomasks, nolights, nowater;
-    nomasks = nolights = nowater = 0;
+    SETV(nomasks, 0);
+    SETV(nolights, 0);
+    SETV(nowater, 0);
 
     extern void cleanupmotionblur();
     cleanupmotionblur();

@@ -1132,7 +1132,7 @@ static void changevbuf(renderstate &cur, int pass, vtxarray *va)
             glNormalPointer(GL_BYTE, VTXSIZE, va->vdata[0].norm.v);
             glColorPointer(4, GL_UNSIGNED_BYTE, VTXSIZE, va->vdata[0].tangent.v);
         }
-        else if(cur.glowtmu >= 0 && hasCM && maxtmus >= 2)
+        else if(cur.glowtmu >= 0 && hasCM && GETIV(maxtmus) >= 2)
             glNormalPointer(GL_BYTE, VTXSIZE, va->vdata[0].norm.v);
     }
     else if(pass == RENDERPASS_ENVMAP)
@@ -1493,7 +1493,7 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot, VSlot &vslot)
                 glColor3f(cur.lightcolor.x*vslot.colorscale.x, cur.lightcolor.y*vslot.colorscale.y, cur.lightcolor.z*vslot.colorscale.z);
             } 
         } 
-        if((pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_ENVMAP) && slot.shader->type&SHADER_ENVMAP && slot.ffenv && hasCM && maxtmus >= 2 && envpass)
+        if((pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_ENVMAP) && slot.shader->type&SHADER_ENVMAP && slot.ffenv && hasCM && GETIV(maxtmus) >= 2 && envpass)
         {
             if(cur.glowtmu<0) { cur.skipped |= 1<<TEX_ENVMAP; vslot.skipped |= 1<<TEX_ENVMAP; }
             else changeenv(cur, pass, slot, vslot);
@@ -2045,15 +2045,15 @@ void setupTMUs(renderstate &cur, float causticspass, bool fogpass)
 {
     if(renderpath==R_FIXEDFUNCTION)
     {
-        if(nolights) cur.lightmaptmu = -1;
-        else if(maxtmus>=3)
+        if(GETIV(nolights)) cur.lightmaptmu = -1;
+        else if(GETIV(maxtmus)>=3)
         {
-            if(maxtmus>=4 && (hasTEX || hasTE4) && causticspass>=1)
+            if(GETIV(maxtmus)>=4 && (hasTEX || hasTE4) && causticspass>=1)
             {
                 cur.causticstmu = 0;
                 cur.diffusetmu = 2;
                 cur.lightmaptmu = 3;
-                if(maxtmus>=5 && glowpass && !cur.alphaing) cur.glowtmu = 4;
+                if(GETIV(maxtmus)>=5 && glowpass && !cur.alphaing) cur.glowtmu = 4;
             }
             else if(glowpass && !cur.alphaing) cur.glowtmu = 2;
         }
@@ -2266,7 +2266,7 @@ static void cleanupenvpass(renderstate &cur)
 
 void rendergeom(float causticspass, bool fogpass)
 {
-    if(causticspass && ((renderpath==R_FIXEDFUNCTION && maxtmus<2) || !causticscale || !causticmillis)) causticspass = 0;
+    if(causticspass && ((renderpath==R_FIXEDFUNCTION && GETIV(maxtmus)<2) || !causticscale || !causticmillis)) causticspass = 0;
 
     bool mainpass = !reflecting && !refracting && !envmapping && !glaring,
          doOQ = hasOQ && oqfrags && oqgeom && mainpass,
@@ -2320,7 +2320,7 @@ void rendergeom(float causticspass, bool fogpass)
             {
                 if(va->query) 
                 {
-                    if(!zpass && geombatches.length()) renderbatches(cur, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
+                    if(!zpass && geombatches.length()) renderbatches(cur, GETIV(nolights) ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
                     renderquery(cur, va->query, va);
                 }
                 continue;
@@ -2334,10 +2334,10 @@ void rendergeom(float causticspass, bool fogpass)
         }
 
         if(!doZP) blends += va->blends;
-        renderva(cur, va, doZP ? RENDERPASS_Z : (nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP), fogpass, doOQ);
+        renderva(cur, va, doZP ? RENDERPASS_Z : (GETIV(nolights) ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP), fogpass, doOQ);
     }
 
-    if(geombatches.length()) renderbatches(cur, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
+    if(geombatches.length()) renderbatches(cur, GETIV(nolights) ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
 
     if(!cur.colormask) { cur.colormask = true; glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE); }
     if(!cur.depthmask) { cur.depthmask = true; glDepthMask(GL_TRUE); }
@@ -2367,9 +2367,9 @@ void rendergeom(float causticspass, bool fogpass)
         {
             if(!va->texs || va->occluded >= OCCLUDE_GEOM) continue;
             blends += va->blends;
-            renderva(cur, va, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP, fogpass);
+            renderva(cur, va, GETIV(nolights) ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP, fogpass);
         }
-        if(geombatches.length()) renderbatches(cur, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
+        if(geombatches.length()) renderbatches(cur, GETIV(nolights) ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
         for(vtxarray *va = visibleva; va; va = va->next)
         {
             if(!va->texs || va->occluded < OCCLUDE_GEOM) continue;
@@ -2386,12 +2386,12 @@ void rendergeom(float causticspass, bool fogpass)
             }
 
             blends += va->blends;
-            renderva(cur, va, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP, fogpass);
+            renderva(cur, va, GETIV(nolights) ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP, fogpass);
         }
-        if(geombatches.length()) renderbatches(cur, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
+        if(geombatches.length()) renderbatches(cur, GETIV(nolights) ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
     }
 
-    if(blends && (renderpath!=R_FIXEDFUNCTION || !nolights))
+    if(blends && (renderpath!=R_FIXEDFUNCTION || !GETIV(nolights)))
     {
         if(!multipassing) { multipassing = true; glDepthFunc(GL_LEQUAL); }
         glDepthMask(GL_FALSE);
@@ -2634,7 +2634,7 @@ void renderalphageom(bool fogpass)
         loopk(3) cur.color[k] = 1;
         cur.alphascale = -1;
         loopv(alphavas) if(front || alphavas[i]->alphabacktris) renderva(cur, alphavas[i], RENDERPASS_LIGHTMAP, fogpass);
-        if(geombatches.length()) renderbatches(cur, nolights ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
+        if(geombatches.length()) renderbatches(cur, GETIV(nolights) ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
 
         cleanupTMUs(cur, 0, fogpass);
 

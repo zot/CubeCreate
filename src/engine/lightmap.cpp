@@ -2361,7 +2361,7 @@ void clearlights()
         e.light.color = vec(1, 1, 1);
         e.light.dir = vec(0, 0, 1);
     }
-    if(nolights) return;
+    if(GETIV(nolights)) return;
 
     genlightmaptexs(LM_ALPHA, 0);
     genlightmaptexs(LM_ALPHA, LM_ALPHA);
@@ -2391,7 +2391,7 @@ void updateentlighting()
 
 void initlights()
 {
-    if(nolights || (GETIV(fullbright) && editmode) || lightmaps.empty())
+    if(GETIV(nolights) || (GETIV(fullbright) && editmode) || lightmaps.empty())
     {
         clearlights();
         return;
@@ -2433,7 +2433,7 @@ static inline void fastskylight(const vec &o, float tolerance, uchar *skylight, 
 
 void lightreaching(const vec &target, vec &color, vec &dir, bool fast, extentity *t, float ambient)
 {
-    if(nolights || (GETIV(fullbright) && editmode) || lightmaps.empty())
+    if(GETIV(nolights) || (GETIV(fullbright) && editmode) || lightmaps.empty())
     {
         color = vec(1, 1, 1);
         dir = vec(0, 0, 1);

@@ -117,10 +117,8 @@ void writeinitcfg()
     root[L"stencilbits"] = new JSONValue((double)GETIV(stencilbits));
     root[L"fsaa"] = new JSONValue((double)GETIV(fsaa));
     root[L"vsync"] = new JSONValue((double)GETIV(vsync));
-    extern int useshaders, shaderprecision;//, forceglsl; CubeCreate: disable asm shaders
-    root[L"shaders"] = new JSONValue((double)useshaders);
-    root[L"shaderprecision"] = new JSONValue((double)shaderprecision);
-    //root[L"forceglsl"] = new JSONValue((double)forceglsl);
+    root[L"shaders"] = new JSONValue((double)GETIV(shaders));
+    root[L"shaderprecision"] = new JSONValue((double)GETIV(shaderprecision));
     root[L"soundchans"] = new JSONValue((double)GETIV(soundchans));
     root[L"soundfreq"] = new JSONValue((double)GETIV(soundfreq));
     root[L"soundbufferlen"] = new JSONValue((double)GETIV(soundbufferlen));
@@ -1151,11 +1149,9 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
             case 's': SETV(stencilbits, atoi(&argv[i][2])); break;
             case 'f': 
             {
-                extern int useshaders, shaderprecision;//, forceglsl; CubeCreate: disable asm shaders
                 int n = atoi(&argv[i][2]);
-                useshaders = n > 0 ? 1 : 0;
-                shaderprecision = clamp(n >= 4 ? n - 4 : n - 1, 0, 2);
-                //forceglsl = n >= 4 ? 1 : 0; CubeCreate: disable asm shaders
+                SETV(shaders, n > 0 ? 1 : 0);
+                SETVN(shaderprecision, clamp(n >= 4 ? n - 4 : n - 1, 0, 2));
                 break;
             }
             case 'l': 

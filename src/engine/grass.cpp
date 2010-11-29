@@ -226,7 +226,7 @@ void rendergrass()
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glTexCoordPointer(2, GL_FLOAT, sizeof(grassvert), &grassverts[0].u);
 
-    if(renderpath!=R_FIXEDFUNCTION || maxtmus>=2)
+    if(renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
     {
         glActiveTexture_(GL_TEXTURE1_ARB);
         glClientActiveTexture_(GL_TEXTURE1_ARB);
@@ -259,7 +259,7 @@ void rendergrass()
         }
         if(lmtexid != g.lmtex)
         {
-            if(renderpath!=R_FIXEDFUNCTION || maxtmus>=2)
+            if(renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
             {
                 glActiveTexture_(GL_TEXTURE1_ARB);
                 glBindTexture(GL_TEXTURE_2D, g.lmtex);
@@ -276,7 +276,7 @@ void rendergrass()
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    if(renderpath!=R_FIXEDFUNCTION || maxtmus>=2)
+    if(renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
     {
         glActiveTexture_(GL_TEXTURE1_ARB);
         glClientActiveTexture_(GL_TEXTURE1_ARB);

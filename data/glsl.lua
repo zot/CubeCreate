@@ -220,7 +220,7 @@ gworldargs = {}
 function worldshader(...)
 	sworldargs = { ... }
 	local stype = 4
-	if not string.find(sworldargs[1], "env") then stype = stype + 2 end
+	if string.find(sworldargs[1], "env") then stype = stype + 2 end
 	Shader.normal(stype, sworldargs[1],
 		[[
 			#pragma CUBE2_fog
@@ -255,7 +255,7 @@ function worldshader(...)
 				<%=sworldargs[3]%>
 
 				diffuse *= colorparams;
-				<% if #sworldargs < 4 or sworldargs[4] == "" then return 'gl_FragColor = diffuse * lm;' else return sworldargs[4] end %>
+				<% if #sworldargs < 4 or sworldargs[4] == "" then return "gl_FragColor = diffuse * lm;" else return sworldargs[4] end %>
 
 				#pragma CUBE2_water
 			}
@@ -1047,7 +1047,7 @@ skelanimdefs = [[
 						vec4 animdata[%i];
 					};
 				#else
-			]=], math.min( ( CV.maxvsuniforms - CV.reservevpparams ), 256) - 10)
+			]=], math.min( ( EV.maxvsuniforms - EV.reservevpparams ), 256) - 10)
 		end
 	%>
 	<%
@@ -1060,7 +1060,7 @@ skelanimdefs = [[
 		end
 	%>
 
-	uniform vec4 animdata[<% return ( math.min( ( CV.maxvsuniforms - CV.reservevpparams ), 256) - 10 ) %>];
+	uniform vec4 animdata[<% return ( math.min( ( EV.maxvsuniforms - EV.reservevpparams ), 256) - 10 ) %>];
 	<% if CV.useubo ~= 0 then return "#endif" end %>
 ]]
 
@@ -1081,14 +1081,14 @@ skelanimfragdefs = [[
 						vec4 animdata[%i];
 					};
 				#endif
-			]=], math.min( ( CV.maxvsuniforms - CV.reservevpparams ), 256) - 10)
+			]=], math.min( ( EV.maxvsuniforms - EV.reservevpparams ), 256) - 10)
 		else
 			return string.format([=[
 				#ifdef GL_EXT_bindable_uniform
 					#extension GL_EXT_bindable_uniform : enable
 					bindable uniform vec4 animdata[%i];
 				#endif
-			]=], math.min( ( CV.maxvsuniforms - CV.reservevpparams ), 256) - 10)
+			]=], math.min( ( EV.maxvsuniforms - EV.reservevpparams ), 256) - 10)
 		end
 	end
 %>
