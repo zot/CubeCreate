@@ -1,31 +1,13 @@
 #include "engine.h"
 #include "rendertarget.h"
 
-VARP(shadowmap, 0, 0, 1);
-
 extern void cleanshadowmap();
-VARFP(shadowmapsize, 7, 9, 11, cleanshadowmap());
-VARP(shadowmapradius, 64, 96, 256);
-VAR(shadowmapheight, 0, 32, 128);
-VARP(ffshadowmapdist, 128, 1024, 4096);
-VARP(shadowmapdist, 128, 256, 512);
-VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
-VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
 bvec shadowmapambientcolor(0, 0, 0);
-HVARFR(shadowmapambient, 0, 0, 0xFFFFFF,
-{
-    if(shadowmapambient <= 255) shadowmapambient |= (shadowmapambient<<8) | (shadowmapambient<<16);
-    shadowmapambientcolor = bvec((shadowmapambient>>16)&0xFF, (shadowmapambient>>8)&0xFF, shadowmapambient&0xFF);
-});
-VARP(shadowmapintensity, 0, 40, 100);
-
-VARP(blurshadowmap, 0, 1, 3);
-VARP(blursmsigma, 1, 100, 200);
 
 #define SHADOWSKEW 0.7071068f
 
 vec shadowoffset(0, 0, 0), shadowfocus(0, 0, 0), shadowdir(0, SHADOWSKEW, 1);
-VAR(shadowmapcasters, 1, 0, 0);
+
 float shadowmapmaxz = 0;
 
 void setshadowdir(int angle)
@@ -34,11 +16,9 @@ void setshadowdir(int angle)
     shadowdir.rotate_around_z(angle*RAD);
 }
 
-VARFR(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
-
 void guessshadowdir()
 {
-    if(shadowmapangle) return;
+    if(GETIV(shadowmapangle)) return;
     vec lightpos(0, 0, 0), casterpos(0, 0, 0);
     int numlights = 0, numcasters = 0;
     const vector<extentity *> &ents = entities::getents();
@@ -80,11 +60,6 @@ bool shadowmapping = false;
 
 static glmatrixf shadowmapmatrix;
 
-VARP(shadowmapbias, 0, 5, 1024);
-VARP(shadowmappeelbias, 0, 20, 1024);
-VAR(smdepthpeel, 0, 1, 1);
-VAR(smoothshadowmappeel, 1, 0, 0);
-
 static struct shadowmaptexture : rendertarget
 {
     GLenum attachment() const
@@ -101,7 +76,7 @@ static struct shadowmaptexture : rendertarget
         }
        
         static const GLenum rgbfmts[] = { GL_RGB, GL_RGB8, GL_FALSE }, rgbafmts[] = { GL_RGBA16F_ARB, GL_RGBA16, GL_RGBA, GL_RGBA8, GL_FALSE };
-        return hasFBO ? &rgbafmts[fpshadowmap && hasTF ? 0 : (shadowmapprecision ? 1 : 2)] : rgbfmts;
+        return hasFBO ? &rgbafmts[GETIV(fpshadowmap) && hasTF ? 0 : (GETIV(shadowmapprecision) ? 1 : 2)] : rgbfmts;
     }
 
     bool shadowcompare() const { return renderpath==R_FIXEDFUNCTION; }
@@ -145,9 +120,9 @@ static struct shadowmaptexture : rendertarget
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
-        glOrtho(-shadowmapradius, shadowmapradius, -shadowmapradius, shadowmapradius, 
-            renderpath==R_FIXEDFUNCTION ? 0 : -shadowmapdist, 
-            renderpath==R_FIXEDFUNCTION ? ffshadowmapdist : shadowmapdist);
+        glOrtho(-GETIV(shadowmapradius), GETIV(shadowmapradius), -GETIV(shadowmapradius), GETIV(shadowmapradius), 
+            renderpath==R_FIXEDFUNCTION ? 0 : -GETIV(shadowmapdist), 
+            renderpath==R_FIXEDFUNCTION ? GETIV(ffshadowmapdist) : GETIV(shadowmapdist));
 
         glMatrixMode(GL_MODELVIEW);
 
@@ -157,13 +132,13 @@ static struct shadowmaptexture : rendertarget
         vec dir;
         vecfromyawpitch(camera1->yaw, camera1->pitch, 1, 0, dir);
         dir.z = 0;
-        dir.mul(shadowmapradius);
+        dir.mul(GETIV(shadowmapradius));
 
         vec dirx, diry;
         vecfromyawpitch(camera1->yaw, 0, 0, 1, dirx);
         vecfromyawpitch(camera1->yaw, 0, 1, 0, diry);
-        shadowoffset.x = -fmod(dirx.dot(camera1->o) - skewdir.x*camera1->o.z, 2.0f*shadowmapradius/vieww);
-        shadowoffset.y = -fmod(diry.dot(camera1->o) - skewdir.y*camera1->o.z, 2.0f*shadowmapradius/viewh);
+        shadowoffset.x = -fmod(dirx.dot(camera1->o) - skewdir.x*camera1->o.z, 2.0f*GETIV(shadowmapradius)/vieww);
+        shadowoffset.y = -fmod(diry.dot(camera1->o) - skewdir.y*camera1->o.z, 2.0f*GETIV(shadowmapradius)/viewh);
 
         GLfloat skew[] =
         {
@@ -173,12 +148,12 @@ static struct shadowmaptexture : rendertarget
             0, 0, 0, 1
         };
         glLoadMatrixf(skew);
-        glTranslatef(skewdir.x*shadowmapheight + shadowoffset.x, skewdir.y*shadowmapheight + shadowoffset.y + dir.magnitude(), -shadowmapheight);
+        glTranslatef(skewdir.x*GETIV(shadowmapheight) + shadowoffset.x, skewdir.y*GETIV(shadowmapheight) + shadowoffset.y + dir.magnitude(), -GETIV(shadowmapheight));
         glRotatef(camera1->yaw+180, 0, 0, -1);
         glTranslatef(-camera1->o.x, -camera1->o.y, -camera1->o.z);
         shadowfocus = camera1->o;
         shadowfocus.add(dir);
-        shadowfocus.add(vec(shadowdir).mul(shadowmapheight));
+        shadowfocus.add(vec(shadowdir).mul(GETIV(shadowmapheight)));
         shadowfocus.add(dirx.mul(shadowoffset.x));
         shadowfocus.add(diry.mul(shadowoffset.y));
 
@@ -187,16 +162,22 @@ static struct shadowmaptexture : rendertarget
         glGetFloatv(GL_MODELVIEW_MATRIX, mv.v);
         shadowmapmatrix.mul(proj, mv);
         if(renderpath==R_FIXEDFUNCTION) shadowmapmatrix.projective();
-        else shadowmapmatrix.projective(-1, 1-shadowmapbias/float(shadowmapdist));
+        else shadowmapmatrix.projective(-1, 1-GETIV(shadowmapbias)/float(GETIV(shadowmapdist)));
 
         glColor3f(0, 0, 0);
         glDisable(GL_TEXTURE_2D);
 
-        if(renderpath!=R_FIXEDFUNCTION) setenvparamf("shadowmapbias", SHPARAM_VERTEX, 0, -shadowmapbias/float(shadowmapdist), 1 - (shadowmapbias + (smoothshadowmappeel ? 0 : shadowmappeelbias))/float(shadowmapdist));
+        if(renderpath!=R_FIXEDFUNCTION)
+            setenvparamf("shadowmapbias",
+                         SHPARAM_VERTEX,
+                         0,
+                         -GETIV(shadowmapbias)/float(GETIV(shadowmapdist)),
+                         1 - (GETIV(shadowmapbias) + (GETIV(smoothshadowmappeel) ? 0 : GETIV(shadowmappeelbias)))/float(GETIV(shadowmapdist))
+            );
         else glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
-        shadowmapcasters = 0;
-        shadowmapmaxz = shadowfocus.z - shadowmapdist;
+        SETV(shadowmapcasters, 0);
+        shadowmapmaxz = shadowfocus.z - GETIV(shadowmapdist);
         shadowmapping = true;
         rendergame();
         shadowmapping = false;
@@ -205,7 +186,7 @@ static struct shadowmaptexture : rendertarget
         glEnable(GL_TEXTURE_2D);
 
         if(renderpath==R_FIXEDFUNCTION) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        else if(shadowmapcasters && smdepthpeel) 
+        else if(GETIV(shadowmapcasters) && GETIV(smdepthpeel)) 
         {
             int sx, sy, sw, sh;
             bool scissoring = rtscissor && scissorblur(sx, sy, sw, sh) && sw > 0 && sh > 0;
@@ -227,14 +208,14 @@ static struct shadowmaptexture : rendertarget
         glMatrixMode(GL_MODELVIEW);
         glPopMatrix();
 
-        return shadowmapcasters>0;
+        return GETIV(shadowmapcasters)>0;
     }
 
     bool flipdebug() const { return false; }
 
     void dodebug(int w, int h)
     {
-        if(shadowmapcasters)
+        if(GETIV(shadowmapcasters))
         {
             glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
             debugscissor(w, h);
@@ -250,8 +231,6 @@ void cleanshadowmap()
     shadowmaptex.cleanup(true);
 }
 
-VAR(ffsmscissor, 0, 1, 1);
-
 static void calcscissorbox()
 {
     int smx, smy, smw, smh;
@@ -260,14 +239,14 @@ static void calcscissorbox()
     vec forward, right;
     vecfromyawpitch(camera1->yaw, 0, -1, 0, forward);
     vecfromyawpitch(camera1->yaw, 0, 0, -1, right);
-    forward.mul(shadowmapradius*2.0f/shadowmaptex.viewh);
-    right.mul(shadowmapradius*2.0f/shadowmaptex.vieww);
+    forward.mul(GETIV(shadowmapradius)*2.0f/shadowmaptex.viewh);
+    right.mul(GETIV(shadowmapradius)*2.0f/shadowmaptex.vieww);
 
     vec bottom(shadowfocus);
-    bottom.sub(vec(shadowdir).mul(shadowmapdist));
+    bottom.sub(vec(shadowdir).mul(GETIV(shadowmapdist)));
     bottom.add(vec(forward).mul(smy - shadowmaptex.viewh/2)).add(vec(right).mul(smx - shadowmaptex.vieww/2));
     vec top(bottom);
-    top.add(vec(shadowdir).mul(shadowmapmaxz - (shadowfocus.z - shadowmapdist)));
+    top.add(vec(shadowdir).mul(shadowmapmaxz - (shadowfocus.z - GETIV(shadowmapdist))));
    
     vec4 v[8];
     float sx1 = 1, sy1 = 1, sx2 = -1, sy2 = -1;
@@ -319,7 +298,7 @@ void calcshadowmapbb(const vec &o, float xyrad, float zrad, float &x1, float &y1
     ro.sub(camera1->o);
     ro.rotate_around_z(-(camera1->yaw+180)*RAD);
     ro.x += ro.z * skewdir.x + shadowoffset.x;
-    ro.y += ro.z * skewdir.y + shadowmapradius * cosf(camera1->pitch*RAD) + shadowoffset.y;
+    ro.y += ro.z * skewdir.y + GETIV(shadowmapradius) * cosf(camera1->pitch*RAD) + shadowoffset.y;
 
     vec high(ro), low(ro);
     high.x += zrad * skewdir.x;
@@ -327,15 +306,15 @@ void calcshadowmapbb(const vec &o, float xyrad, float zrad, float &x1, float &y1
     low.x -= zrad * skewdir.x;
     low.y -= zrad * skewdir.y;
 
-    x1 = (min(high.x, low.x) - xyrad) / shadowmapradius;
-    y1 = (min(high.y, low.y) - xyrad) / shadowmapradius;
-    x2 = (max(high.x, low.x) + xyrad) / shadowmapradius;
-    y2 = (max(high.y, low.y) + xyrad) / shadowmapradius;
+    x1 = (min(high.x, low.x) - xyrad) / GETIV(shadowmapradius);
+    y1 = (min(high.y, low.y) - xyrad) / GETIV(shadowmapradius);
+    x2 = (max(high.x, low.x) + xyrad) / GETIV(shadowmapradius);
+    y2 = (max(high.y, low.y) + xyrad) / GETIV(shadowmapradius);
 }
 
 bool addshadowmapcaster(const vec &o, float xyrad, float zrad)
 {
-    if(o.z + zrad <= shadowfocus.z - shadowmapdist || o.z - zrad >= shadowfocus.z) return false;
+    if(o.z + zrad <= shadowfocus.z - GETIV(shadowmapdist) || o.z - zrad >= shadowfocus.z) return false;
 
     shadowmapmaxz = max(shadowmapmaxz, o.z + zrad);
 
@@ -344,15 +323,15 @@ bool addshadowmapcaster(const vec &o, float xyrad, float zrad)
 
     if(!shadowmaptex.addblurtiles(x1, y1, x2, y2, 2)) return false;
 
-    shadowmapcasters++;
+    SETVN(shadowmapcasters, GETIV(shadowmapcasters) + 1);
     return true;
 }
 
 bool isshadowmapreceiver(vtxarray *va)
 {
-    if(!shadowmap || !shadowmapcasters) return false;
+    if(!GETIV(shadowmap) || !GETIV(shadowmapcasters)) return false;
 
-    if(va->shadowmapmax.z <= shadowfocus.z - shadowmapdist || va->shadowmapmin.z >= shadowmapmaxz) return false;
+    if(va->shadowmapmax.z <= shadowfocus.z - GETIV(shadowmapdist) || va->shadowmapmin.z >= shadowmapmaxz) return false;
 
     float xyrad = SQRT2*0.5f*max(va->shadowmapmax.x-va->shadowmapmin.x, va->shadowmapmax.y-va->shadowmapmin.y),
           zrad = 0.5f*(va->shadowmapmax.z-va->shadowmapmin.z),
@@ -371,9 +350,9 @@ bool isshadowmapreceiver(vtxarray *va)
     float cx = shadowfocus.x + dz*shadowdir.x, cy = shadowfocus.y + dz*shadowdir.y;
     float skew = va->size/2*SHADOWSKEW;
     if(!shadowmap || !shadowmaptex ||
-       va->o.z + va->size <= shadowfocus.z - shadowmapdist || va->o.z >= shadowmapmaxz ||
-       va->o.x + va->size <= cx - shadowmapradius-skew || va->o.x >= cx + shadowmapradius+skew || 
-       va->o.y + va->size <= cy - shadowmapradius-skew || va->o.y >= cy + shadowmapradius+skew) 
+       va->o.z + va->size <= shadowfocus.z - GETIV(shadowmapdist) || va->o.z >= shadowmapmaxz ||
+       va->o.x + va->size <= cx - GETIV(shadowmapradius)-skew || va->o.x >= cx + GETIV(shadowmapradius)+skew || 
+       va->o.y + va->size <= cy - GETIV(shadowmapradius)-skew || va->o.y >= cy + GETIV(shadowmapradius)+skew) 
         return false;
     return true;
 #endif
@@ -386,16 +365,16 @@ bool isshadowmapcaster(const vec &o, float rad)
     float cx = shadowfocus.x + dz*shadowdir.x, cy = shadowfocus.y + dz*shadowdir.y;
     float skew = rad*SHADOWSKEW;
     if(!shadowmapping ||
-       o.z + rad <= shadowfocus.z - shadowmapdist || o.z - rad >= shadowfocus.z ||
-       o.x + rad <= cx - shadowmapradius-skew || o.x - rad >= cx + shadowmapradius+skew ||
-       o.y + rad <= cy - shadowmapradius-skew || o.y - rad >= cy + shadowmapradius+skew)
+       o.z + rad <= shadowfocus.z - GETIV(shadowmapdist) || o.z - rad >= shadowfocus.z ||
+       o.x + rad <= cx - GETIV(shadowmapradius)-skew || o.x - rad >= cx + GETIV(shadowmapradius)+skew ||
+       o.y + rad <= cy - GETIV(shadowmapradius)-skew || o.y - rad >= cy + GETIV(shadowmapradius)+skew)
         return false;
     return true;
 }
 
 void pushshadowmap()
 {
-    if(!shadowmap || !shadowmaptex.rendertex) return;
+    if(!GETIV(shadowmap) || !shadowmaptex.rendertex) return;
 
     if(renderpath==R_FIXEDFUNCTION)
     {
@@ -422,9 +401,9 @@ void pushshadowmap()
         // MUST set Q with glTexCoord4f, glTexCoord3f does not work
         glTexCoord4f(0, 0, 0, 1);
 
-        glColor3f(shadowmapintensity/100.0f, shadowmapintensity/100.0f, shadowmapintensity/100.0f);
+        glColor3f(GETIV(shadowmapintensity)/100.0f, GETIV(shadowmapintensity)/100.0f, GETIV(shadowmapintensity)/100.0f);
 
-        if(ffsmscissor) calcscissorbox();
+        if(GETIV(ffsmscissor)) calcscissorbox();
         return;
     }
 
@@ -440,7 +419,7 @@ void pushshadowmap()
     glClientActiveTexture_(GL_TEXTURE0_ARB);
 
     float r, g, b;
-    if(!shadowmapambient)
+    if(!GETIV(shadowmapambient))
     {
         if(skylightcolor[0] || skylightcolor[1] || skylightcolor[2])
         {
@@ -461,7 +440,7 @@ void pushshadowmap()
 
 void popshadowmap()
 {
-    if(!shadowmap || !shadowmaptex.rendertex) return;
+    if(!GETIV(shadowmap) || !shadowmaptex.rendertex) return;
 
     if(renderpath==R_FIXEDFUNCTION) 
     {
@@ -475,19 +454,17 @@ void popshadowmap()
 
 void rendershadowmap()
 {
-    if(!shadowmap || (renderpath==R_FIXEDFUNCTION && (!hasSGIDT || !hasSGISH))) return;
+    if(!GETIV(shadowmap) || (renderpath==R_FIXEDFUNCTION && (!hasSGIDT || !hasSGISH))) return;
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
     glDisable(GL_FOG); 
-    shadowmaptex.render(1<<shadowmapsize, 1<<shadowmapsize, renderpath!=R_FIXEDFUNCTION ? blurshadowmap : 0, blursmsigma/100.0f);
+    shadowmaptex.render(1<<GETIV(shadowmapsize), 1<<GETIV(shadowmapsize), renderpath!=R_FIXEDFUNCTION ? GETIV(blurshadowmap) : 0, GETIV(blursmsigma)/100.0f);
     glEnable(GL_FOG);
 }
 
-VAR(debugsm, 0, 0, 1);
-
 void viewshadowmap()
 {
-    if(!shadowmap) return;
+    if(!GETIV(shadowmap)) return;
     shadowmaptex.debug();
 }
 

@@ -277,9 +277,8 @@ void gl_checkextensions()
     {
         hasTF = true;
         if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_texture_float extension.");
-        shadowmap = 1;
-        extern int smoothshadowmappeel;
-        smoothshadowmappeel = 1;
+        SETV(shadowmap, 1);
+        SETV(smoothshadowmappeel, 1);
     }
 
     if(strstr(exts, "GL_NV_float_buffer")) 
@@ -625,7 +624,7 @@ void gl_checkextensions()
         if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_rescale_normal extension.");
     }
 
-    if(!hasSGIDT && !hasSGISH) shadowmap = 0;
+    if(!hasSGIDT && !hasSGISH) SETV(shadowmap, 0);
 
     if(strstr(exts, "GL_EXT_gpu_shader4") && !avoidshaders)
     {
@@ -1876,7 +1875,7 @@ void gl_drawframe(int w, int h)
 
     visiblecubes();
     
-    if(shadowmap && !hasFBO) rendershadowmap();
+    if(GETIV(shadowmap) && !hasFBO) rendershadowmap();
 
     glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
 
@@ -2210,8 +2209,7 @@ void gl_drawhud(int w, int h)
     
     glColor3f(1, 1, 1);
 
-    extern int debugsm;
-    if(debugsm)
+    if(GETIV(debugsm))
     {
         extern void viewshadowmap();
         viewshadowmap();

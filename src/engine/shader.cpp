@@ -1295,14 +1295,13 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
     vssm.put(vsmain, vspragma-vsmain);
     pssm.put(psmain, pspragma-psmain);
 
-    extern int smoothshadowmappeel;
     if(s.type & SHADER_GLSLANG)
     {
         const char *tc =
             "shadowmaptc = vec3(gl_TextureMatrix[2] * gl_Vertex);\n";
         vssm.put(tc, strlen(tc));
         const char *sm =
-            smoothshadowmappeel ? 
+            GETIV(smoothshadowmappeel) ? 
                 "vec4 smvals = texture2D(shadowmap, shadowmaptc.xy);\n"
                 "vec2 smdiff = clamp(smvals.xz - shadowmaptc.zz*smvals.y, 0.0, 1.0);\n"
                 "float shadowed = clamp((smdiff.x > 0.0 ? smvals.w : 0.0) - 8.0*smdiff.y, 0.0, 1.0);\n" :
@@ -1326,7 +1325,7 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
         vssm.put(tc, strlen(tc));
 
         defformatstring(sm)(
-            smoothshadowmappeel ? 
+            GETIV(smoothshadowmappeel) ? 
                 "TEMP smvals, smdiff, smambient;\n"
                 "TEX smvals, fragment.texcoord[%d], texture[7], 2D;\n"
                 "MAD_SAT smdiff.xz, -fragment.texcoord[%d].z, smvals.y, smvals;\n"

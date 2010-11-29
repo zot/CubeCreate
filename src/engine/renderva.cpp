@@ -2271,7 +2271,7 @@ void rendergeom(float causticspass, bool fogpass)
     bool mainpass = !reflecting && !refracting && !envmapping && !glaring,
          doOQ = hasOQ && oqfrags && oqgeom && mainpass,
          doZP = doOQ && zpass,
-         doSM = shadowmap && !envmapping && !glaring && renderpath!=R_FIXEDFUNCTION;
+         doSM = GETIV(shadowmap) && !envmapping && !glaring && renderpath!=R_FIXEDFUNCTION;
     renderstate cur;
     if(mainpass)
     {
@@ -2280,7 +2280,7 @@ void rendergeom(float causticspass, bool fogpass)
     }
     if(!doZP) 
     {
-        if(shadowmap && hasFBO && mainpass) rendershadowmap();
+        if(GETIV(shadowmap) && hasFBO && mainpass) rendershadowmap();
         setupTMUs(cur, causticspass, fogpass);
         if(doSM) pushshadowmap();
     }
@@ -2346,7 +2346,7 @@ void rendergeom(float causticspass, bool fogpass)
 
     if(doZP)
     {
-        if(shadowmap && hasFBO && mainpass)
+        if(GETIV(shadowmap) && hasFBO && mainpass)
         {
             glDisableClientState(GL_VERTEX_ARRAY);
             if(hasVBO)
@@ -2439,7 +2439,7 @@ void rendergeom(float causticspass, bool fogpass)
 
     if(foggedvas.length()) renderfoggedvas(cur, doOQ && !zpass);
 
-    if(renderpath==R_FIXEDFUNCTION ? (glowpass && cur.skipped) || (causticspass>=1 && cur.causticstmu<0) || (shadowmap && shadowmapcasters) || hasdynlights : causticspass)
+    if(renderpath==R_FIXEDFUNCTION ? (glowpass && cur.skipped) || (causticspass>=1 && cur.causticstmu<0) || (GETIV(shadowmap) && GETIV(shadowmapcasters)) || hasdynlights : causticspass)
     {
         if(!multipassing) { multipassing = true; glDepthFunc(GL_LEQUAL); }
         glDepthMask(GL_FALSE);
@@ -2489,7 +2489,7 @@ void rendergeom(float causticspass, bool fogpass)
             glActiveTexture_(GL_TEXTURE0_ARB);
         }
 
-        if(renderpath==R_FIXEDFUNCTION && shadowmap && shadowmapcasters)
+        if(renderpath==R_FIXEDFUNCTION && GETIV(shadowmap) && GETIV(shadowmapcasters))
         {
             glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
             glFogfv(GL_FOG_COLOR, zerofog);
