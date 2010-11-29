@@ -340,8 +340,7 @@ extern void drawbb(const ivec &bo, const ivec &br, const vec &camera = camera1->
 #define endquery(query) \
     { \
         glEndQuery_(GL_SAMPLES_PASSED_ARB); \
-        extern int ati_oq_bug; \
-        if(ati_oq_bug) glFlush(); \
+        if(GETIV(ati_oq_bug)) glFlush(); \
     }
 
 // dynlight

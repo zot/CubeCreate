@@ -1011,10 +1011,10 @@ LUA_EMBED_s(reloadModel, 0, {
             if (fpsEntity->clientnum == ClientSystem::playerNumber)
             {
 
-                if (oldThirdperson == -1 && thirdperson == 0)
+                if (oldThirdperson == -1 && GETIV(thirdperson) == 0)
                 {
-                    oldThirdperson = thirdperson;
-                    thirdperson = 1;
+                    oldThirdperson = GETIV(thirdperson);
+                    SETV(thirdperson, 1);
                 }
             }
 
@@ -1035,7 +1035,7 @@ LUA_EMBED_s(reloadModel, 0, {
 
                 if (fpsEntity->clientnum == ClientSystem::playerNumber && oldThirdperson != -1)
                 {
-                    thirdperson = oldThirdperson;
+                    SETV(thirdperson, oldThirdperson);
                     oldThirdperson = -1;
                 }
             }
@@ -1109,7 +1109,7 @@ LUA_EMBED_s(reloadModel, 0, {
         if (LuaEngine::engineParameters.count("setDefaultThirdpersonMode") == 0)
         {
             LuaEngine::engineParameters["setDefaultThirdpersonMode"] = "set";
-            thirdperson = arg1;
+            SETV(thirdperson, arg1);
         } else
             Logging::log(Logging::WARNING, "Can only set default thirdperson mode once per map\r\n");
     });

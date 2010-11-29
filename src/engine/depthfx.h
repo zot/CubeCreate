@@ -121,7 +121,7 @@ bool depthfxing = false;
 
 bool binddepthfxtex()
 {
-    if(renderpath!=R_FIXEDFUNCTION && !reflecting && !refracting && GETIV(depthfx) && depthfxtex.rendertex && numdepthfxranges>0)        
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION && !reflecting && !refracting && GETIV(depthfx) && depthfxtex.rendertex && numdepthfxranges>0)        
     {
         glActiveTexture_(GL_TEXTURE2_ARB);
         glBindTexture(depthfxtex.target, depthfxtex.rendertex);
@@ -138,7 +138,7 @@ bool binddepthfxtex()
 
 void binddepthfxparams(float blend, float minblend = 0, bool allow = true, void *owner = NULL)
 {
-    if(renderpath!=R_FIXEDFUNCTION && !reflecting && !refracting && GETIV(depthfx) && depthfxtex.rendertex && numdepthfxranges>0)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION && !reflecting && !refracting && GETIV(depthfx) && depthfxtex.rendertex && numdepthfxranges>0)
     {
         float scale = 0, offset = -1, texscale = 0;
         if(!depthfxtex.highprecision())
@@ -177,7 +177,7 @@ void binddepthfxparams(float blend, float minblend = 0, bool allow = true, void 
 
 void drawdepthfxtex()
 {
-    if(!GETIV(depthfx) || renderpath==R_FIXEDFUNCTION) return;
+    if(!GETIV(depthfx) || GETIV(renderpath)==R_FIXEDFUNCTION) return;
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
     glDisable(GL_FOG);

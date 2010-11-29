@@ -1,5 +1,3 @@
-extern int rtsharefb, rtscissor, blurtile;
-
 struct rendertarget
 {
     int texw, texh, vieww, viewh;
@@ -67,7 +65,7 @@ struct rendertarget
         if(!blurtex) glGenTextures(1, &blurtex);
         createtexture(blurtex, texw, texh, NULL, 3, 1, colorfmt, target);
 
-        if(!swaptexs() || rtsharefb) return;
+        if(!swaptexs() || GETIV(rtsharefb)) return;
         if(!blurfb) glGenFramebuffers_(1, &blurfb);
         glBindFramebuffer_(GL_FRAMEBUFFER_EXT, blurfb);
         glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, target, blurtex, 0);
@@ -182,7 +180,7 @@ struct rendertarget
            x1-blurerror/vieww > scissorx2 || y1-blurerror/viewh > scissory2) 
             return false;
 
-        if(!blurtile) return true;
+        if(!GETIV(blurtile)) return true;
 
         int tx1 = max(0, min(BLURTILES - 1, int((x1 + 1)/2 * BLURTILES))),
             ty1 = max(0, min(BLURTILES - 1, int((y1 + 1)/2 * BLURTILES))),
@@ -204,7 +202,7 @@ struct rendertarget
             wscale /= texw;
             hscale /= texh;
         }
-        if(blurtile && scissorx1 < scissorx2 && scissory1 < scissory2)
+        if(GETIV(blurtile) && scissorx1 < scissorx2 && scissory1 < scissory2)
         {
             uint tiles[sizeof(blurtiles)/sizeof(uint)];
             memcpy(tiles, blurtiles, sizeof(blurtiles));
@@ -279,7 +277,7 @@ struct rendertarget
 
             if(hasFBO)
             {
-                if(!swaptexs() || rtsharefb) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, target, i ? rendertex : blurtex, 0);
+                if(!swaptexs() || GETIV(rtsharefb)) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, target, i ? rendertex : blurtex, 0);
                 else glBindFramebuffer_(GL_FRAMEBUFFER_EXT, i ? renderfb : blurfb);
                 glBindTexture(target, i ? blurtex : rendertex);
             }
@@ -304,7 +302,7 @@ struct rendertarget
     virtual void doblur(int blursize, float blursigma) 
     { 
         int sx, sy, sw, sh;
-        bool scissoring = rtscissor && scissorblur(sx, sy, sw, sh) && sw > 0 && sh > 0;
+        bool scissoring = GETIV(rtscissor) && scissorblur(sx, sy, sw, sh) && sw > 0 && sh > 0;
         if(!scissoring) { sx = sy = 0; sw = vieww; sh = viewh; }
         blur(blursize, blursigma, sx, sy, sw, sh, scissoring);
     }
@@ -383,7 +381,7 @@ struct rendertarget
             vieww = w;
             viewh = h;
         }
-        if(w!=texw || h!=texh || (texrect() ? target!=GL_TEXTURE_RECTANGLE_ARB : target!=GL_TEXTURE_2D) || (hasFBO && (swaptexs() && !rtsharefb ? !blurfb : blurfb))) cleanup();
+        if(w!=texw || h!=texh || (texrect() ? target!=GL_TEXTURE_RECTANGLE_ARB : target!=GL_TEXTURE_2D) || (hasFBO && (swaptexs() && !GETIV(rtsharefb) ? !blurfb : blurfb))) cleanup();
         
         if(!filter())
         {
@@ -405,14 +403,14 @@ struct rendertarget
             if(swaptexs() && blursize)
             {
                 swap(rendertex, blurtex);
-                if(!rtsharefb)
+                if(!GETIV(rtsharefb))
                 {
                     swap(renderfb, blurfb);
                     swap(renderdb, blurdb);
                 }
             }
             glBindFramebuffer_(GL_FRAMEBUFFER_EXT, renderfb);
-            if(swaptexs() && blursize && rtsharefb)
+            if(swaptexs() && blursize && GETIV(rtsharefb))
                 glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, attachment(), target, rendertex, 0);
             glViewport(0, 0, vieww, viewh);
         }
@@ -421,7 +419,7 @@ struct rendertarget
         doclear();
 
         int sx, sy, sw, sh;
-        bool scissoring = rtscissor && scissorrender(sx, sy, sw, sh) && sw > 0 && sh > 0;
+        bool scissoring = GETIV(rtscissor) && scissorrender(sx, sy, sw, sh) && sw > 0 && sh > 0;
         if(scissoring)
         {
             if(!hasFBO)
@@ -476,7 +474,7 @@ struct rendertarget
 
     void debugscissor(int w, int h, bool lines = false)
     {
-        if(!rtscissor || scissorx1 >= scissorx2 || scissory1 >= scissory2) return;
+        if(!GETIV(rtscissor) || scissorx1 >= scissorx2 || scissory1 >= scissory2) return;
         int sx = int(0.5f*(scissorx1 + 1)*w),
             sy = int(0.5f*(scissory1 + 1)*h),
             sw = int(0.5f*(scissorx2 - scissorx1)*w),
@@ -493,7 +491,7 @@ struct rendertarget
 
     void debugblurtiles(int w, int h, bool lines = false)
     {
-        if(!blurtile) return;
+        if(!GETIV(blurtile)) return;
         float vxsz = float(w)/BLURTILES, vysz = float(h)/BLURTILES;
         loop(y, BLURTILES+1)
         {

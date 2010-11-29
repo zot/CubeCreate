@@ -419,15 +419,14 @@ void drawskyoutline()
 
     glDisable(GL_TEXTURE_2D);
     glDepthMask(GL_FALSE);
-    extern int wireframe;
-    if(!wireframe)
+    if(!GETIV(wireframe))
     {
         enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
     glColor3f(0.5f, 0.0f, 0.5f);
     rendersky(true);
-    if(!wireframe) 
+    if(!GETIV(wireframe)) 
     {
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         disablepolygonoffset(GL_POLYGON_OFFSET_LINE);
@@ -489,8 +488,7 @@ void drawskybox(int farplane, bool limited)
     {
         explicitonly = alwaysrender || !sparklyfix || refracting; 
         if(!drawskylimits(explicitonly) && !alwaysrender) return;
-        extern int ati_skybox_bug;
-        if(!alwaysrender && !renderedskyfaces && !ati_skybox_bug) explicitonly = false;
+        if(!alwaysrender && !renderedskyfaces && !GETIV(ati_skybox_bug)) explicitonly = false;
     }
     else if(!alwaysrender)
     {

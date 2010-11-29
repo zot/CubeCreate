@@ -437,8 +437,7 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
 
 void tryedit()
 {
-    extern int hidehud;
-    if(!editmode || hidehud || GETIV(mainmenu)) return;
+    if(!editmode || GETIV(hidehud) || GETIV(mainmenu)) return;
     if(GETIV(blendpaintmode)) trypaintblendmap();
 }
 

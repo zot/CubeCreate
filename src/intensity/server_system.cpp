@@ -302,8 +302,6 @@ Texture *notexture = NULL; // Replacement for texture.cpp's notexture
 
 int hasstencil = 0; // For rendergl.cpp
 
-int renderpath = R_FIXEDFUNCTION; // For rendergl.cpp
-
 Shader *Shader::lastshader = NULL;
 void Shader::bindprograms() { assert(0); };
 void Shader::flushenvparams(Slot* slot) { assert(0); };
@@ -356,7 +354,6 @@ float loadprogress = 0.333;
 vector<LightMap> lightmaps;
 int initing = NOT_INITING;
 bool shadowmapping = false;
-int ati_oq_bug = 0;
 Shader *nocolorshader = NULL, *notextureshader = NULL, *lineshader = NULL;
 bool fading = false;
 int xtraverts = 0, xtravertsva = 0;

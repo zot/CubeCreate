@@ -76,9 +76,9 @@ struct animmodel : model
         skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), specglare(1), glowglare(1), fullbright(0), envmapmin(0), envmapmax(0), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true), cullface(true) {}
 
         bool multitextured() { return enableglow; }
-        bool envmapped() { return hasCM && envmapmax>0 && GETIV(envmapmodels) && (renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus) >= 3); }
-        bool bumpmapped() { return renderpath!=R_FIXEDFUNCTION && normalmap && GETIV(bumpmodels); }
-        bool normals() { return renderpath!=R_FIXEDFUNCTION || (GETIV(lightmodels) && !fullbright) || envmapped() || bumpmapped(); }
+        bool envmapped() { return hasCM && envmapmax>0 && GETIV(envmapmodels) && (GETIV(renderpath)!=R_FIXEDFUNCTION || GETIV(maxtmus) >= 3); }
+        bool bumpmapped() { return GETIV(renderpath)!=R_FIXEDFUNCTION && normalmap && GETIV(bumpmodels); }
+        bool normals() { return GETIV(renderpath)!=R_FIXEDFUNCTION || (GETIV(lightmodels) && !fullbright) || envmapped() || bumpmapped(); }
         bool tangents() { return bumpmapped(); }
 
         void setuptmus(const animstate *as, bool masked)
@@ -245,10 +245,10 @@ struct animmodel : model
             Texture *s = bumpmapped() && unlittex ? unlittex : tex, 
                     *m = masks->type&Texture::STUB ? notexture : masks, 
                     *n = bumpmapped() ? normalmap : NULL;
-            if((renderpath==R_FIXEDFUNCTION || !GETIV(lightmodels)) &&
+            if((GETIV(renderpath)==R_FIXEDFUNCTION || !GETIV(lightmodels)) &&
                !GETIV(glowmodels) && (!GETIV(envmapmodels) || envmaptmu<0 || envmapmax<=0))
                 m = notexture;
-            if(renderpath==R_FIXEDFUNCTION) setuptmus(as, m!=notexture);
+            if(GETIV(renderpath)==R_FIXEDFUNCTION) setuptmus(as, m!=notexture);
             else
             {
                 setshaderparams(b, as, m!=notexture);
@@ -302,7 +302,7 @@ struct animmodel : model
                 if(!enableglow) glActiveTexture_(GL_TEXTURE0_ARB);
                 lastmasks = m;
             }
-            if((renderpath!=R_FIXEDFUNCTION || m!=notexture) && envmaptmu>=0 && envmapmax>0)
+            if((GETIV(renderpath)!=R_FIXEDFUNCTION || m!=notexture) && envmaptmu>=0 && envmapmax>0)
             {
                 GLuint emtex = envmap ? envmap->id : closestenvmaptex;
                 if(!enableenvmap || lastenvmaptex!=emtex)
@@ -311,7 +311,7 @@ struct animmodel : model
                     if(!enableenvmap)
                     {
                         glEnable(GL_TEXTURE_CUBE_MAP_ARB);
-                        if(!lastenvmaptex && renderpath==R_FIXEDFUNCTION)
+                        if(!lastenvmaptex && GETIV(renderpath)==R_FIXEDFUNCTION)
                         {
                             glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
                             glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_REFLECTION_MAP_ARB);
@@ -690,7 +690,7 @@ struct animmodel : model
                 glMultMatrixf(matrixstack[matrixpos].v);
                 if(model->scale!=1) glScalef(model->scale, model->scale, model->scale);
                 if(!translate.iszero()) glTranslatef(translate.x, translate.y, translate.z);
-                if(renderpath!=R_FIXEDFUNCTION && envmaptmu>=0)
+                if(GETIV(renderpath)!=R_FIXEDFUNCTION && envmaptmu>=0)
                 {
                     glMatrixMode(GL_TEXTURE);
                     glLoadMatrixf(matrixstack[matrixpos].v);
@@ -700,7 +700,7 @@ struct animmodel : model
 
             if(!(anim&(ANIM_NOSKIN|ANIM_NORENDER)))
             {
-                if(renderpath!=R_FIXEDFUNCTION)
+                if(GETIV(renderpath)!=R_FIXEDFUNCTION)
                 {
                     setenvparamf("lightdir", SHPARAM_VERTEX, 0, rdir.x, rdir.y, rdir.z);
                     setenvparamf("lightdir", SHPARAM_PIXEL, 0, rdir.x, rdir.y, rdir.z);
@@ -895,7 +895,7 @@ struct animmodel : model
 
         if(!(anim&ANIM_NOSKIN))
         {
-            if(renderpath==R_FIXEDFUNCTION && GETIV(lightmodels))
+            if(GETIV(renderpath)==R_FIXEDFUNCTION && GETIV(lightmodels))
             {
                 GLfloat pos[4] = { dir.x*1000, dir.y*1000, dir.z*1000, 0 };
                 glLightfv(GL_LIGHT0, GL_POSITION, pos);
@@ -932,7 +932,7 @@ struct animmodel : model
 
         if(envmaptmu>=0)
         {
-            if(renderpath==R_FIXEDFUNCTION)
+            if(GETIV(renderpath)==R_FIXEDFUNCTION)
             {
                 glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
                 setuptmu(envmaptmu, "T , P @ Pa", "= Ca");
@@ -976,11 +976,11 @@ struct animmodel : model
 
         if(envmaptmu>=0)
         {
-            if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
+            if(GETIV(renderpath)==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
             glMatrixMode(GL_TEXTURE);
             glLoadIdentity();
             glMatrixMode(GL_MODELVIEW);
-            if(renderpath==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE0_ARB);
+            if(GETIV(renderpath)==R_FIXEDFUNCTION) glActiveTexture_(GL_TEXTURE0_ARB);
         }
 
         if(transparent<1 && (alphadepth || anim&ANIM_GHOST)) 
@@ -1181,7 +1181,7 @@ struct animmodel : model
         envmaptmu = -1;
         transparent = 1;
 
-        if(renderpath==R_FIXEDFUNCTION && GETIV(lightmodels) && !enablelight0)
+        if(GETIV(renderpath)==R_FIXEDFUNCTION && GETIV(lightmodels) && !enablelight0)
         {
             glEnable(GL_LIGHT0);
             static const GLfloat zero[4] = { 0, 0, 0, 0 };
@@ -1264,7 +1264,7 @@ struct animmodel : model
     {
         glActiveTexture_(GL_TEXTURE0_ARB+envmaptmu);
         if(enableenvmap) glDisable(GL_TEXTURE_CUBE_MAP_ARB);
-        if(cleanup && renderpath==R_FIXEDFUNCTION)
+        if(cleanup && GETIV(renderpath)==R_FIXEDFUNCTION)
         {
             resettmu(envmaptmu);
             glDisable(GL_TEXTURE_GEN_S);

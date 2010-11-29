@@ -625,23 +625,23 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     {
         lilswap(&chdr.lightprecision, 3);
         if(hdr.version<=20) conoutf(CON_WARN, "loading older / less efficient map format, may benefit from \"calclight\", then \"savecurrentmap\"");
-        if(chdr.lightprecision) setvar("lightprecision", chdr.lightprecision);
-        if(chdr.lighterror) setvar("lighterror", chdr.lighterror);
-        if(chdr.bumperror) setvar("bumperror", chdr.bumperror);
-        setvar("lightlod", chdr.lightlod);
-        if(chdr.ambient) setvar("ambient", chdr.ambient);
-        setvar("skylight", (int(chdr.skylight[0])<<16) | (int(chdr.skylight[1])<<8) | int(chdr.skylight[2]));
-        setvar("watercolour", (int(chdr.watercolour[0])<<16) | (int(chdr.watercolour[1])<<8) | int(chdr.watercolour[2]), true);
-        setvar("waterfallcolour", (int(chdr.waterfallcolour[0])<<16) | (int(chdr.waterfallcolour[1])<<8) | int(chdr.waterfallcolour[2]));
-        setvar("lavacolour", (int(chdr.lavacolour[0])<<16) | (int(chdr.lavacolour[1])<<8) | int(chdr.lavacolour[2]));
-        setvar("fullbright", 0, true);
-        if(chdr.lerpsubdivsize || chdr.lerpangle) setvar("lerpangle", chdr.lerpangle);
+        if(chdr.lightprecision) SETVF(lightprecision, chdr.lightprecision);
+        if(chdr.lighterror) SETVF(lighterror, chdr.lighterror);
+        if(chdr.bumperror) SETVF(bumperror, chdr.bumperror);
+        SETVF(lightlod, chdr.lightlod);
+        if(chdr.ambient) SETVF(ambient, chdr.ambient);
+        SETVF(skylight, (int(chdr.skylight[0])<<16) | (int(chdr.skylight[1])<<8) | int(chdr.skylight[2]));
+        SETVF(watercolour, (int(chdr.watercolour[0])<<16) | (int(chdr.watercolour[1])<<8) | int(chdr.watercolour[2]));
+        SETVF(waterfallcolour, (int(chdr.waterfallcolour[0])<<16) | (int(chdr.waterfallcolour[1])<<8) | int(chdr.waterfallcolour[2]));
+        SETVF(lavacolour, (int(chdr.lavacolour[0])<<16) | (int(chdr.lavacolour[1])<<8) | int(chdr.lavacolour[2]));
+        SETVF(fullbright, 0);
+        if(chdr.lerpsubdivsize || chdr.lerpangle) SETVF(lerpangle, chdr.lerpangle);
         if(chdr.lerpsubdivsize)
         {
-            setvar("lerpsubdiv", chdr.lerpsubdiv);
-            setvar("lerpsubdivsize", chdr.lerpsubdivsize);
+            SETVF(lerpsubdiv, chdr.lerpsubdiv);
+            SETVF(lerpsubdivsize, chdr.lerpsubdivsize);
         }
-        setsvar("maptitle", chdr.maptitle);
+        SETVF(maptitle, chdr.maptitle);
         hdr.blendmap = chdr.blendmap;
         hdr.numvars = 0; 
         hdr.numvslots = 0;
@@ -667,7 +667,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
             case ID_VAR:
             {
                 int val = f->getlil<int>();
-                if(exists && id->minval <= id->maxval) setvar(name, val);
+                if(exists && id->minval <= id->maxval) EngineVariables::get(std::string(name)).get()->set(val, true, true, false);
                 if(dbgvars) conoutf(CON_DEBUG, "read var %s: %d", name, val);
                 break;
             }
@@ -675,7 +675,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
             case ID_FVAR:
             {
                 float val = f->getlil<float>();
-                if(exists && id->minvalf <= id->maxvalf) setfvar(name, val);
+                if(exists && id->minvalf <= id->maxvalf) EngineVariables::get(std::string(name)).get()->set(val, true, true, false);
                 if(dbgvars) conoutf(CON_DEBUG, "read fvar %s: %f", name, val);
                 break;
             }
@@ -687,7 +687,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
                 f->read(val, min(slen, MAXSTRLEN-1));
                 val[min(slen, MAXSTRLEN-1)] = '\0';
                 if(slen >= MAXSTRLEN) f->seek(slen - (MAXSTRLEN-1), SEEK_CUR);
-                if(exists) setsvar(name, val);
+                if(exists) EngineVariables::get(std::string(name)).get()->set(std::string(val), true, true, true);
                 if(dbgvars) conoutf(CON_DEBUG, "read svar %s: %s", name, val);
                 break;
             }
@@ -1143,9 +1143,9 @@ void writeobj(char *name)
             loopk(es.length[1])
             {
                 int n = idx[k] - va.voffset;
-                const vec &pos = renderpath==R_FIXEDFUNCTION ? ((const vertexff *)&vdata[n*vtxsize])->pos : ((const vertex *)&vdata[n*vtxsize])->pos;
-                vec2 tc(renderpath==R_FIXEDFUNCTION ? ((const vertexff *)&vdata[n*vtxsize])->u : ((const vertex *)&vdata[n*vtxsize])->u,
-                        renderpath==R_FIXEDFUNCTION ? ((const vertexff *)&vdata[n*vtxsize])->v : ((const vertex *)&vdata[n*vtxsize])->v);
+                const vec &pos = GETIV(renderpath)==R_FIXEDFUNCTION ? ((const vertexff *)&vdata[n*vtxsize])->pos : ((const vertex *)&vdata[n*vtxsize])->pos;
+                vec2 tc(GETIV(renderpath)==R_FIXEDFUNCTION ? ((const vertexff *)&vdata[n*vtxsize])->u : ((const vertex *)&vdata[n*vtxsize])->u,
+                        GETIV(renderpath)==R_FIXEDFUNCTION ? ((const vertexff *)&vdata[n*vtxsize])->v : ((const vertex *)&vdata[n*vtxsize])->v);
                 ivec &key = keys.add();
                 key.x = shareverts.access(pos, verts.length());
                 if(key.x == verts.length()) 

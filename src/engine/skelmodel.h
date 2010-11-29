@@ -605,7 +605,7 @@ struct skelmodel : animmodel
                 }
                 else if(enabletangents) disabletangents();
 
-                if(renderpath==R_FIXEDFUNCTION && (s.scrollu || s.scrollv))
+                if(GETIV(renderpath)==R_FIXEDFUNCTION && (s.scrollu || s.scrollv))
                 {
                     glMatrixMode(GL_TEXTURE);
                     glPushMatrix();
@@ -625,7 +625,7 @@ struct skelmodel : animmodel
             glde++;
             xtravertsva += numverts;
 
-            if(renderpath==R_FIXEDFUNCTION && !(as->anim&ANIM_NOSKIN) && (s.scrollu || s.scrollv))
+            if(GETIV(renderpath)==R_FIXEDFUNCTION && !(as->anim&ANIM_NOSKIN) && (s.scrollu || s.scrollv))
             {
                 if(s.multitextured())
                 {
@@ -924,7 +924,7 @@ struct skelmodel : animmodel
 
         int maxgpuparams() const
         {
-            switch(renderpath)
+            switch(GETIV(renderpath))
             {
                 case R_GLSLANG: return GETIV(maxvsuniforms);
                 case R_ASMGLSLANG:
@@ -933,7 +933,7 @@ struct skelmodel : animmodel
             }
         }
         int availgpubones() const { return (min(maxgpuparams() - GETIV(reservevpparams), 256) - 10) / (GETIV(matskel) ? 3 : 2); }
-        bool gpuaccelerate() const { return renderpath!=R_FIXEDFUNCTION && numframes && GETIV(gpuskel) && numgpubones<=availgpubones(); }
+        bool gpuaccelerate() const { return GETIV(renderpath)!=R_FIXEDFUNCTION && numframes && GETIV(gpuskel) && numgpubones<=availgpubones(); }
 
         void interpmatbones(const animstate *as, float pitch, const vec &axis, int numanimparts, const uchar *partmask, skelcacheentry &sc)
         {

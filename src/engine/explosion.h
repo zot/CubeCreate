@@ -50,7 +50,7 @@ static void inithemisphere(int hres, int depth)
 
     if(hasVBO)
     {
-        if(renderpath!=R_FIXEDFUNCTION)
+        if(GETIV(renderpath)!=R_FIXEDFUNCTION)
         {
             if(!hemivbuf) glGenBuffers_(1, &hemivbuf);
             glBindBuffer_(GL_ARRAY_BUFFER_ARB, hemivbuf);
@@ -195,14 +195,14 @@ static void initsphere(int slices, int stacks)
 
 static void setupexplosion()
 {
-    if(renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
     {
         if(!expmodtex[0]) expmodtex[0] = createexpmodtex(64, 0);
         if(!expmodtex[1]) expmodtex[1] = createexpmodtex(64, 0.25f);
         lastexpmodtex = 0;
     }
 
-    if(renderpath!=R_FIXEDFUNCTION)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION)
     {
         if(glaring)
         {
@@ -230,22 +230,22 @@ static void setupexplosion()
         else if(GETIV(explosion2d)) SETSHADER(explosion2d); else SETSHADER(explosion3d);
     }
 
-    if(renderpath==R_FIXEDFUNCTION || GETIV(explosion2d))
+    if(GETIV(renderpath)==R_FIXEDFUNCTION || GETIV(explosion2d))
     {
         if(!hemiverts && !hemivbuf) inithemisphere(5, 2);
-        if(renderpath==R_FIXEDFUNCTION) animateexplosion();
+        if(GETIV(renderpath)==R_FIXEDFUNCTION) animateexplosion();
         if(hasVBO)
         {
-            if(renderpath!=R_FIXEDFUNCTION) glBindBuffer_(GL_ARRAY_BUFFER_ARB, hemivbuf);
+            if(GETIV(renderpath)!=R_FIXEDFUNCTION) glBindBuffer_(GL_ARRAY_BUFFER_ARB, hemivbuf);
             glBindBuffer_(GL_ELEMENT_ARRAY_BUFFER_ARB, hemiebuf);
         }
 
-        expvert *verts = renderpath==R_FIXEDFUNCTION ? (hasVBO ? 0 : expverts) : (expvert *)hemiverts;
+        expvert *verts = GETIV(renderpath)==R_FIXEDFUNCTION ? (hasVBO ? 0 : expverts) : (expvert *)hemiverts;
 
         glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(3, GL_FLOAT, renderpath==R_FIXEDFUNCTION ? sizeof(expvert) : sizeof(vec), verts);
+        glVertexPointer(3, GL_FLOAT, GETIV(renderpath)==R_FIXEDFUNCTION ? sizeof(expvert) : sizeof(vec), verts);
 
-        if(renderpath==R_FIXEDFUNCTION)
+        if(GETIV(renderpath)==R_FIXEDFUNCTION)
         {
             glEnableClientState(GL_TEXTURE_COORD_ARRAY);
             glTexCoordPointer(2, GL_FLOAT, sizeof(expvert), &verts->u);
@@ -294,7 +294,7 @@ static void drawexpverts(int numverts, int numindices, GLushort *indices)
 
 static void drawexplosion(bool inside, uchar r, uchar g, uchar b, uchar a)
 {
-    if((renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2) && lastexpmodtex != expmodtex[inside ? 1 : 0])
+    if((GETIV(renderpath)!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2) && lastexpmodtex != expmodtex[inside ? 1 : 0])
     {
         glActiveTexture_(GL_TEXTURE1_ARB);
         lastexpmodtex = expmodtex[inside ? 1 :0];
@@ -302,7 +302,7 @@ static void drawexplosion(bool inside, uchar r, uchar g, uchar b, uchar a)
         glActiveTexture_(GL_TEXTURE0_ARB);
     }
     int passes = !reflecting && !refracting && inside ? 2 : 1;
-    if(renderpath!=R_FIXEDFUNCTION && !GETIV(explosion2d))
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION && !GETIV(explosion2d))
     {
         if(inside) glScalef(1, 1, -1);
         loopi(passes)
@@ -340,7 +340,7 @@ static void drawexplosion(bool inside, uchar r, uchar g, uchar b, uchar a)
 static void cleanupexplosion()
 {
     glDisableClientState(GL_VERTEX_ARRAY);
-    if(renderpath==R_FIXEDFUNCTION)
+    if(GETIV(renderpath)==R_FIXEDFUNCTION)
     {
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
@@ -493,7 +493,7 @@ struct fireballrenderer : listrenderer
         float yaw = inside ? camera1->yaw : atan2(oc.y, oc.x)/RAD - 90,
         pitch = (inside ? camera1->pitch : asin(oc.z/oc.magnitude())/RAD) - 90;
         vec rotdir;
-        if(renderpath==R_FIXEDFUNCTION || GETIV(explosion2d))
+        if(GETIV(renderpath)==R_FIXEDFUNCTION || GETIV(explosion2d))
         {
             glRotatef(yaw, 0, 0, 1);
             glRotatef(pitch, 1, 0, 0);
@@ -515,7 +515,7 @@ struct fireballrenderer : listrenderer
             setlocalparamf("texgenT", SHPARAM_VERTEX, 3, 0.5f*t.x, 0.5f*t.y, 0.5f*t.z, 0.5f);
         }
 
-        if(renderpath!=R_FIXEDFUNCTION)
+        if(GETIV(renderpath)!=R_FIXEDFUNCTION)
         {
             setlocalparamf("center", SHPARAM_VERTEX, 0, o.x, o.y, o.z);
             setlocalparamf("animstate", SHPARAM_VERTEX, 1, size, psize, pmax, float(lastmillis));

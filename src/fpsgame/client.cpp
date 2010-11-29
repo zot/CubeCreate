@@ -115,7 +115,7 @@ namespace game
 //        addmsg(N_EDITMODE, "ri", on ? 1 : 0);
 //        if(player1->state==CS_DEAD) deathstate(player1, true); Kripken
 //        else if(player1->state==CS_EDITING && player1->editstate==CS_DEAD) sb.showscores(false); Kripken
-        setvar("zoom", -1, true);
+        SETVFN(zoom, -1);
 
         #ifdef CLIENT
             enthover = -1; // Would be nice if sauer did this, but it doesn't... so without it you still hover on a nonseen edit ent

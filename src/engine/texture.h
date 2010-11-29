@@ -124,8 +124,6 @@ extern PFNGLUNIFORMBUFFEREXTPROC        glUniformBuffer_;
 extern PFNGLGETUNIFORMBUFFERSIZEEXTPROC glGetUniformBufferSize_;
 extern PFNGLGETUNIFORMOFFSETEXTPROC     glGetUniformOffset_;
 
-extern int renderpath;
-
 enum { R_FIXEDFUNCTION = 0, R_ASMSHADER, R_GLSLANG, R_ASMGLSLANG };
 
 enum { SHPARAM_LOOKUP = 0, SHPARAM_VERTEX, SHPARAM_PIXEL, SHPARAM_UNIFORM };
@@ -272,21 +270,21 @@ struct Shader
 
     void setvariant(int col, int row, Shader *fallbackshader)
     {
-        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        if(!this || !detailshader || GETIV(renderpath)==R_FIXEDFUNCTION) return;
         setvariant_(col, row, fallbackshader);
         lastshader->flushenvparams();
     }
 
     void setvariant(int col, int row)
     {
-        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        if(!this || !detailshader || GETIV(renderpath)==R_FIXEDFUNCTION) return;
         setvariant_(col, row, detailshader);
         lastshader->flushenvparams();
     }
 
     void setvariant(int col, int row, Slot &slot, VSlot &vslot, Shader *fallbackshader)
     {
-        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        if(!this || !detailshader || GETIV(renderpath)==R_FIXEDFUNCTION) return;
         setvariant_(col, row, fallbackshader);
         lastshader->flushenvparams(&slot);
         lastshader->setslotparams(slot, vslot);
@@ -294,7 +292,7 @@ struct Shader
 
     void setvariant(int col, int row, Slot &slot, VSlot &vslot)
     {
-        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        if(!this || !detailshader || GETIV(renderpath)==R_FIXEDFUNCTION) return;
         setvariant_(col, row, detailshader);
         lastshader->flushenvparams(&slot);
         lastshader->setslotparams(slot, vslot);
@@ -307,14 +305,14 @@ struct Shader
  
     void set()
     {
-        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        if(!this || !detailshader || GETIV(renderpath)==R_FIXEDFUNCTION) return;
         set_();
         lastshader->flushenvparams();
     }
 
     void set(Slot &slot, VSlot &vslot)
     {
-        if(!this || !detailshader || renderpath==R_FIXEDFUNCTION) return;
+        if(!this || !detailshader || GETIV(renderpath)==R_FIXEDFUNCTION) return;
         set_();
         lastshader->flushenvparams(&slot);
         lastshader->setslotparams(slot, vslot);

@@ -77,10 +77,10 @@ void CameraControl::forcePosition(vec& position)
     // If we just switched to forced camera mode, save thirdperson state and go to third person
     // (We need third person so that we show the player's avatar as the camera moves. There is
     // currently no support for forcing the camera in first person mode, which would be tricky to do.)
-    if (!thirdperson && savedThirdperson == -1)
+    if (!GETIV(thirdperson) && savedThirdperson == -1)
     {
-        savedThirdperson = thirdperson;
-        thirdperson = 1;
+        savedThirdperson = GETIV(thirdperson);
+        SETV(thirdperson, 1);
     }
 }
 
@@ -88,10 +88,10 @@ void CameraControl::forceYaw(float yaw)
 {
     useForcedYaw = true;
     forcedCamera.yaw = yaw;
-    if (!thirdperson && savedThirdperson == -1)
+    if (!GETIV(thirdperson) && savedThirdperson == -1)
     {
-        savedThirdperson = thirdperson;
-        thirdperson = 1;
+        savedThirdperson = GETIV(thirdperson);
+        SETV(thirdperson, 1);
     }
 }
 
@@ -99,10 +99,10 @@ void CameraControl::forcePitch(float pitch)
 {
     useForcedPitch = true;
     forcedCamera.pitch = pitch;
-    if (!thirdperson && savedThirdperson == -1)
+    if (!GETIV(thirdperson) && savedThirdperson == -1)
     {
-        savedThirdperson = thirdperson;
-        thirdperson = 1;
+        savedThirdperson = GETIV(thirdperson);
+        SETV(thirdperson, 1);
     }
 }
 
@@ -110,20 +110,20 @@ void CameraControl::forceRoll(float roll)
 {
     useForcedRoll = true;
     forcedCamera.roll = roll;
-    if (!thirdperson && savedThirdperson == -1)
+    if (!GETIV(thirdperson) && savedThirdperson == -1)
     {
-        savedThirdperson = thirdperson;
-        thirdperson = 1;
+        savedThirdperson = GETIV(thirdperson);
+        SETV(thirdperson, 1);
     }
 }
 
 void CameraControl::forceFov(float fov)
 {
     forcedCameraFov = fov;
-    if (!thirdperson && savedThirdperson == -1)
+    if (!GETIV(thirdperson) && savedThirdperson == -1)
     {
-        savedThirdperson = thirdperson;
-        thirdperson = 1;
+        savedThirdperson = GETIV(thirdperson);
+        SETV(thirdperson, 1);
     }
 }
 
@@ -174,7 +174,7 @@ void CameraControl::positionCamera(physent* camera1)
     // If we just left forced camera mode, restore thirdperson state
     if (savedThirdperson != -1)
     {
-        thirdperson = savedThirdperson;
+        SETV(thirdperson, savedThirdperson);
         savedThirdperson = -1;
     }
 
@@ -191,7 +191,7 @@ void CameraControl::positionCamera(physent* camera1)
     if(game::collidecamera()) 
     {
         vec cameraOrigin = camera1->o;
-        if (thirdperson)
+        if (GETIV(thirdperson))
         {
             vec up(0, 0, 1);
             movecamera(camera1, up, float(GETFV(cameraheight)), 1);
@@ -405,8 +405,8 @@ void prepare_entity_gui()
         std::string fieldName = "entity_gui_field_" + Utility::toString(i);
         std::string labelName = "entity_gui_label_" + Utility::toString(i);
 
-        setsvar((char*)fieldName.c_str(), (char*)value.c_str());
-        setsvar((char*)labelName.c_str(), (char*)guiName.c_str());
+        EngineVariables::get(fieldName).get()->set(value, true, true, true);
+        EngineVariables::get(labelName).get()->set(guiName, true, true, true);
     }
 
     // Title

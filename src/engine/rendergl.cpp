@@ -8,8 +8,6 @@
 bool hasVBO = false, hasDRE = false, hasOQ = false, hasTR = false, hasFBO = false, hasDS = false, hasTF = false, hasBE = false, hasBC = false, hasCM = false, hasNP2 = false, hasTC = false, hasTE = false, hasMT = false, hasD3 = false, hasAF = false, hasVP2 = false, hasVP3 = false, hasPP = false, hasMDA = false, hasTE3 = false, hasTE4 = false, hasVP = false, hasFP = false, hasGLSL = false, hasGM = false, hasNVFB = false, hasSGIDT = false, hasSGISH = false, hasDT = false, hasSH = false, hasNVPCF = false, hasRN = false, hasPBO = false, hasFBB = false, hasUBO = false, hasBUE = false, hasFC = false, hasTEX = false;
 int hasstencil = 0;
 
-VAR(renderpath, 1, 0, 0);
-
 // GL_ARB_vertex_buffer_object, GL_ARB_pixel_buffer_object
 PFNGLGENBUFFERSARBPROC       glGenBuffers_       = NULL;
 PFNGLBINDBUFFERARBPROC       glBindBuffer_       = NULL;
@@ -136,34 +134,6 @@ void *getprocaddress(const char *name)
     return SDL_GL_GetProcAddress(name);
 }
 
-VARP(ati_skybox_bug, 0, 0, 1);
-VAR(ati_oq_bug, 0, 0, 1);
-VAR(ati_minmax_bug, 0, 0, 1);
-VAR(ati_dph_bug, 0, 0, 1);
-VAR(ati_teximage_bug, 0, 0, 1);
-VAR(ati_line_bug, 0, 0, 1);
-VAR(ati_cubemap_bug, 0, 0, 1);
-VAR(ati_ubo_bug, 0, 0, 1);
-VAR(nvidia_scissor_bug, 0, 0, 1);
-VAR(apple_glsldepth_bug, 0, 0, 1);
-VAR(apple_ff_bug, 0, 0, 1);
-VAR(apple_vp_bug, 0, 0, 1);
-VAR(sdl_backingstore_bug, -1, 0, 1);
-VAR(intel_quadric_bug, 0, 0, 1);
-VAR(mesa_program_bug, 0, 0, 1);
-VAR(avoidshaders, 1, 0, 0);
-VAR(minimizetcusage, 1, 0, 0);
-VAR(emulatefog, 1, 0, 0);
-VAR(usevp2, 1, 0, 0);
-VAR(usevp3, 1, 0, 0);
-VAR(usetexrect, 1, 0, 0);
-VAR(hasglsl, 1, 0, 0);
-VAR(useubo, 1, 0, 0);
-VAR(usebue, 1, 0, 0);
-VAR(rtscissor, 0, 1, 1);
-VAR(blurtile, 0, 1, 1);
-VAR(rtsharefb, 0, 1, 1);
-
 static bool checkseries(const char *s, int low, int high)
 {
     while(*s && !isdigit(*s)) ++s;
@@ -172,8 +142,6 @@ static bool checkseries(const char *s, int low, int high)
     while(isdigit(*s)) n = n*10 + (*s++ - '0');    
     return n >= low && n < high;
 }
-
-VAR(dbgexts, 0, 0, 1);
 
 void gl_checkextensions()
 {
@@ -207,7 +175,7 @@ void gl_checkextensions()
         if(strstr(exts, "GL_ATI_texture_env_combine3")) hasTE3 = true;
         if(strstr(exts, "GL_NV_texture_env_combine4")) hasTE4 = true;
         if(strstr(exts, "GL_EXT_texture_env_dot3") || strstr(exts, "GL_ARB_texture_env_dot3")) hasD3 = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_texture_env_combine extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_texture_env_combine extension.");
     }
     else conoutf(CON_WARN, "WARNING: No texture_env_combine extension! (your video card is WAY too old)");
 
@@ -219,7 +187,7 @@ void gl_checkextensions()
         glMultiTexCoord3f_     = (PFNGLMULTITEXCOORD3FARBPROC)    getprocaddress("glMultiTexCoord3fARB");
         glMultiTexCoord4f_     = (PFNGLMULTITEXCOORD4FARBPROC)    getprocaddress("glMultiTexCoord4fARB");
         hasMT = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_multitexture extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_multitexture extension.");
     }
     else conoutf(CON_WARN, "WARNING: No multitexture extension!");
 
@@ -227,7 +195,7 @@ void gl_checkextensions()
     if(strstr(exts, "GL_ARB_vertex_buffer_object")) 
     {
         hasVBO = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_vertex_buffer_object extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_vertex_buffer_object extension.");
     }
     else conoutf(CON_WARN, "WARNING: No vertex_buffer_object extension! (geometry heavy maps will be SLOW)");
 #ifdef __APPLE__
@@ -239,7 +207,7 @@ void gl_checkextensions()
     if(strstr(exts, "GL_ARB_pixel_buffer_object"))
     {
         hasPBO = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_pixel_buffer_object extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_pixel_buffer_object extension.");
     }
 
     if(hasVBO || hasPBO)
@@ -258,7 +226,7 @@ void gl_checkextensions()
     {
         glDrawRangeElements_ = (PFNGLDRAWRANGEELEMENTSEXTPROC)getprocaddress("glDrawRangeElementsEXT");
         hasDRE = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_draw_range_elements extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_draw_range_elements extension.");
     }
 
     if(strstr(exts, "GL_EXT_multi_draw_arrays"))
@@ -266,7 +234,7 @@ void gl_checkextensions()
         glMultiDrawArrays_   = (PFNGLMULTIDRAWARRAYSEXTPROC)  getprocaddress("glMultiDrawArraysEXT");
         glMultiDrawElements_ = (PFNGLMULTIDRAWELEMENTSEXTPROC)getprocaddress("glMultiDrawElementsEXT");
         hasMDA = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_multi_draw_arrays extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_multi_draw_arrays extension.");
     }
 
 #ifdef __APPLE__
@@ -276,7 +244,7 @@ void gl_checkextensions()
     if(strstr(exts, "GL_ARB_texture_float") || strstr(exts, "GL_ATI_texture_float"))
     {
         hasTF = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_texture_float extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_texture_float extension.");
         SETV(shadowmap, 1);
         SETV(smoothshadowmappeel, 1);
     }
@@ -284,7 +252,7 @@ void gl_checkextensions()
     if(strstr(exts, "GL_NV_float_buffer")) 
     {
         hasNVFB = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_NV_float_buffer extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_NV_float_buffer extension.");
     }
 
     if(strstr(exts, "GL_EXT_framebuffer_object"))
@@ -301,13 +269,13 @@ void gl_checkextensions()
         glFramebufferRenderbuffer_ = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)getprocaddress("glFramebufferRenderbufferEXT");
         glGenerateMipmap_          = (PFNGLGENERATEMIPMAPEXTPROC)         getprocaddress("glGenerateMipmapEXT");
         hasFBO = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_framebuffer_object extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_framebuffer_object extension.");
 
         if(strstr(exts, "GL_EXT_framebuffer_blit"))
         {
             glBlitFramebuffer_     = (PFNGLBLITFRAMEBUFFEREXTPROC)        getprocaddress("glBlitFramebufferEXT");
             hasFBB = true;
-            if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_framebuffer_blit extension.");
+            if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_framebuffer_blit extension.");
         }
     }
     else conoutf(CON_WARN, "WARNING: No framebuffer object support. (reflective water may be slow)");
@@ -326,11 +294,11 @@ void gl_checkextensions()
             glGetQueryObjectiv_ =  (PFNGLGETQUERYOBJECTIVARBPROC) getprocaddress("glGetQueryObjectivARB");
             glGetQueryObjectuiv_ = (PFNGLGETQUERYOBJECTUIVARBPROC)getprocaddress("glGetQueryObjectuivARB");
             hasOQ = true;
-            if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_occlusion_query extension.");
+            if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_occlusion_query extension.");
 #if defined(__APPLE__) && SDL_BYTEORDER == SDL_BIG_ENDIAN
-            if(strstr(vendor, "ATI") && (osversion<0x1050)) ati_oq_bug = 1;
+            if(strstr(vendor, "ATI") && (osversion<0x1050)) SETV(ati_oq_bug, 1);
 #endif
-            if(ati_oq_bug) conoutf(CON_WARN, "WARNING: Using ATI occlusion query bug workaround. (use \"/ati_oq_bug 0\" to disable if unnecessary)");
+            if(GETIV(ati_oq_bug)) conoutf(CON_WARN, "WARNING: Using ATI occlusion query bug workaround. (use \"/ati_oq_bug 0\" to disable if unnecessary)");
         }
     }
     if(!hasOQ)
@@ -346,8 +314,8 @@ void gl_checkextensions()
 
         SETVN(reservedynlighttc, 2);
         SETVN(reserveshadowmaptc, 3);
-        minimizetcusage = 1;
-        emulatefog = 1;
+        SETVN(minimizetcusage, 1);
+        SETVN(emulatefog, 1);
         if(hasTF) SETV(depthfxprecision, 1);
 
 #if 0
@@ -356,24 +324,24 @@ void gl_checkextensions()
         // reported on ATI Radeon HD 4800, Gentoo Linux kernel 2.6.26, Catalyst 9.3, 4-29-09, driver overreads memory on mipmapped GL_RGB textures for base level once max level is specified 
         // ... doesn't seem to affect Radeon X1300 on Catalyst 9.3, however
         // TODO: verify if this is fixed in newer Catalyst releases
-        if(strstr(renderer, "Radeon HD")) ati_teximage_bug = 1;
+        if(strstr(renderer, "Radeon HD")) SETV(ati_teximage_bug, 1);
 #endif
 #endif
     }
     else if(strstr(vendor, "NVIDIA"))
     {
         SETVN(reservevpparams, 10);
-        rtsharefb = 0; // work-around for strange driver stalls involving when using many FBOs
+        SETV(rtsharefb, 0); // work-around for strange driver stalls involving when using many FBOs
         if(!strstr(exts, "GL_EXT_gpu_shader4")) SETV(filltjoints, 0); // DX9 or less NV cards seem to not cause many sparklies
         
-        if(hasFBO && !hasTF) nvidia_scissor_bug = 1; // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too 
+        if(hasFBO && !hasTF) SETV(nvidia_scissor_bug, 1); // 5200 bug, clearing with scissor on an FBO messes up on reflections, may affect lesser cards too 
         if(hasTF && (!strstr(renderer, "GeForce") || !checkseries(renderer, 6000, 6600)))
             SETV(fpdepthfx, 1); // FP filtering causes software fallback on 6200?
     }
     else if(strstr(vendor, "Intel"))
     {
-        avoidshaders = 1;
-        intel_quadric_bug = 1;
+        SETV(avoidshaders, 1);
+        SETV(intel_quadric_bug, 1);
         SETV(maxtexsize, 256);
         SETVN(reservevpparams, 20);
         SETV(batchlightmaps, 0);
@@ -382,12 +350,12 @@ void gl_checkextensions()
         if(!hasOQ) SETV(waterrefract, 0);
 
 #ifdef __APPLE__
-        apple_vp_bug = 1;
+        SETV(apple_vp_bug, 1);
 #endif
     }
     else if(strstr(vendor, "Tungsten") || strstr(vendor, "Mesa") || strstr(vendor, "DRI") || strstr(vendor, "Microsoft") || strstr(vendor, "S3 Graphics"))
     {
-        avoidshaders = 1;
+        SETV(avoidshaders, 1);
         SETV(maxtexsize, 256);
         SETVN(reservevpparams, 20);
         SETV(batchlightmaps, 0);
@@ -410,13 +378,17 @@ void gl_checkextensions()
         glDisableVertexAttribArray_ = (PFNGLDISABLEVERTEXATTRIBARRAYARBPROC) getprocaddress("glDisableVertexAttribArrayARB");
         glVertexAttribPointer_ =      (PFNGLVERTEXATTRIBPOINTERARBPROC)      getprocaddress("glVertexAttribPointerARB");
 
-        if(strstr(vendor, "ATI")) ati_dph_bug = ati_line_bug = 1;
-        else if(strstr(vendor, "Tungsten")) mesa_program_bug = 1;
+        if(strstr(vendor, "ATI"))
+        {
+		    SETV(ati_dph_bug, 1);
+		    SETV(ati_line_bug, 1);
+		}
+        else if(strstr(vendor, "Tungsten")) SETV(mesa_program_bug, 1);
 
 #ifdef __APPLE__
         if(osversion>=0x1050) // fixed in 1055 for some hardware.. but not all..
         {
-            apple_ff_bug = 1;
+            SETV(apple_ff_bug, 1);
             conoutf(CON_WARN, "WARNING: Using Leopard ARB_position_invariant bug workaround. (use \"/apple_ff_bug 0\" to disable if unnecessary)");
         }
 #endif
@@ -457,30 +429,30 @@ void gl_checkextensions()
         if(checkglslsupport())
         {
             hasGLSL = true;
-            hasglsl = 1;
+            SETV(hasglsl, 1);
 #ifdef __APPLE__
             //if(osversion<0x1050) ??
-            if(hasVP && hasFP) apple_glsldepth_bug = 1;
+            if(hasVP && hasFP) SETV(apple_glsldepth_bug, 1);
 #endif
-            if(apple_glsldepth_bug) conoutf(CON_WARN, "WARNING: Using Apple GLSL depth bug workaround. (use \"/apple_glsldepth_bug 0\" to disable if unnecessary");
+            if(GETIV(apple_glsldepth_bug)) conoutf(CON_WARN, "WARNING: Using Apple GLSL depth bug workaround. (use \"/apple_glsldepth_bug 0\" to disable if unnecessary");
         }
     }
     
     bool hasshaders = (hasVP && hasFP) || hasGLSL;
     if(hasshaders)
     {
-        if(!avoidshaders) SETV(matskel, 0);
+        if(!GETIV(avoidshaders)) SETV(matskel, 0);
     }
 
-    if(strstr(exts, "GL_NV_vertex_program2_option")) { usevp2 = 1; hasVP2 = true; }
-    if(strstr(exts, "GL_NV_vertex_program3")) { usevp3 = 1; hasVP3 = true; }
+    if(strstr(exts, "GL_NV_vertex_program2_option")) { SETVN(usevp2, 1); hasVP2 = true; }
+    if(strstr(exts, "GL_NV_vertex_program3")) { SETVN(usevp3, 1); hasVP3 = true; }
 
     if(strstr(exts, "GL_EXT_gpu_program_parameters"))
     {
         glProgramEnvParameters4fv_   = (PFNGLPROGRAMENVPARAMETERS4FVEXTPROC)  getprocaddress("glProgramEnvParameters4fvEXT");
         glProgramLocalParameters4fv_ = (PFNGLPROGRAMLOCALPARAMETERS4FVEXTPROC)getprocaddress("glProgramLocalParameters4fvEXT");
         hasPP = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_gpu_program_parameters extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_gpu_program_parameters extension.");
     }
 
     if(strstr(exts, "GL_ARB_uniform_buffer_object"))
@@ -493,10 +465,10 @@ void gl_checkextensions()
         glBindBufferBase_          = (PFNGLBINDBUFFERBASEPROC)         getprocaddress("glBindBufferBase");
         glBindBufferRange_         = (PFNGLBINDBUFFERRANGEPROC)        getprocaddress("glBindBufferRange");
 
-        useubo = 1;
+        SETVN(useubo, 1);
         hasUBO = true;
-        if(strstr(vendor, "ATI")) ati_ubo_bug = 1;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_uniform_buffer_object extension.");
+        if(strstr(vendor, "ATI")) SETVN(ati_ubo_bug, 1);
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_uniform_buffer_object extension.");
     }
     else if(strstr(exts, "GL_EXT_bindable_uniform"))
     {
@@ -504,46 +476,46 @@ void gl_checkextensions()
         glGetUniformBufferSize_ = (PFNGLGETUNIFORMBUFFERSIZEEXTPROC)getprocaddress("glGetUniformBufferSizeEXT");
         glGetUniformOffset_     = (PFNGLGETUNIFORMOFFSETEXTPROC)    getprocaddress("glGetUniformOffsetEXT");
 
-        usebue = 1;
+        SETVN(usebue, 1);
         hasBUE = true;
-        if(strstr(vendor, "ATI")) ati_ubo_bug = 1;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_bindable_uniform extension.");
+        if(strstr(vendor, "ATI")) SETVN(ati_ubo_bug, 1);
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_bindable_uniform extension.");
     }
 
     if(strstr(exts, "GL_EXT_texture_rectangle") || strstr(exts, "GL_ARB_texture_rectangle"))
     {
-        usetexrect = 1;
+        SETVN(usetexrect, 1);
         hasTR = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_texture_rectangle extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_texture_rectangle extension.");
     }
     else if(hasMT && hasshaders) conoutf(CON_WARN, "WARNING: No texture rectangle support. (no full screen shaders)");
 
     if(strstr(exts, "GL_EXT_packed_depth_stencil") || strstr(exts, "GL_NV_packed_depth_stencil"))
     {
         hasDS = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_packed_depth_stencil extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_packed_depth_stencil extension.");
     }
 
     if(strstr(exts, "GL_EXT_blend_minmax"))
     {
         glBlendEquation_ = (PFNGLBLENDEQUATIONEXTPROC) getprocaddress("glBlendEquationEXT");
         hasBE = true;
-        if(strstr(vendor, "ATI")) ati_minmax_bug = 1;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_blend_minmax extension.");
+        if(strstr(vendor, "ATI")) SETVN(ati_minmax_bug, 1);
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_blend_minmax extension.");
     }
 
     if(strstr(exts, "GL_EXT_blend_color"))
     {
         glBlendColor_ = (PFNGLBLENDCOLOREXTPROC) getprocaddress("glBlendColorEXT");
         hasBC = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_blend_color extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_blend_color extension.");
     }
 
     if(strstr(exts, "GL_EXT_fog_coord"))
     {
         glFogCoordPointer_ = (PFNGLFOGCOORDPOINTEREXTPROC) getprocaddress("glFogCoordPointerEXT");
         hasFC = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_fog_coord extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_fog_coord extension.");
     }
 
     if(strstr(exts, "GL_ARB_texture_cube_map"))
@@ -553,15 +525,15 @@ void gl_checkextensions()
         SETVN(hwcubetexsize, val);
         hasCM = true;
         // On Catalyst 10.2, issuing an occlusion query on the first draw using a given cubemap texture causes a nasty crash
-        if(strstr(vendor, "ATI")) ati_cubemap_bug = 1;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_texture_cube_map extension.");
+        if(strstr(vendor, "ATI")) SETVN(ati_cubemap_bug, 1);
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_texture_cube_map extension.");
     }
     else conoutf(CON_WARN, "WARNING: No cube map texture support. (no reflective glass)");
 
     if(strstr(exts, "GL_ARB_texture_non_power_of_two"))
     {
         hasNP2 = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_texture_non_power_of_two extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_texture_non_power_of_two extension.");
     }
     else if(GETIV(usenp2)) conoutf(CON_WARN, "WARNING: Non-power-of-two textures not supported!");
 
@@ -576,7 +548,7 @@ void gl_checkextensions()
         glGetCompressedTexImage_ =   (PFNGLGETCOMPRESSEDTEXIMAGEARBPROC)  getprocaddress("glGetCompressedTexImageARB");
 
         hasTC = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_texture_compression_s3tc extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_texture_compression_s3tc extension.");
     }
 
     if(strstr(exts, "GL_EXT_texture_filter_anisotropic"))
@@ -585,47 +557,47 @@ void gl_checkextensions()
        glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &val);
        SETVN(hwmaxaniso, val);
        hasAF = true;
-       if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_texture_filter_anisotropic extension.");
+       if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_texture_filter_anisotropic extension.");
     }
 
     if(strstr(exts, "GL_SGIS_generate_mipmap"))
     {
         hasGM = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_SGIS_generate_mipmap extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_SGIS_generate_mipmap extension.");
     }
 
     if(strstr(exts, "GL_ARB_depth_texture"))
     {
         hasSGIDT = hasDT = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_depth_texture extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_depth_texture extension.");
     }
     else if(strstr(exts, "GL_SGIX_depth_texture"))
     {
         hasSGIDT = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_SGIX_depth_texture extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_SGIX_depth_texture extension.");
     }
 
     if(strstr(exts, "GL_ARB_shadow"))
     {
         hasSGISH = hasSH = true;
         if(strstr(vendor, "NVIDIA") || strstr(renderer, "Radeon HD")) hasNVPCF = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_ARB_shadow extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_ARB_shadow extension.");
     }
     else if(strstr(exts, "GL_SGIX_shadow"))
     {
         hasSGISH = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_SGIX_shadow extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_SGIX_shadow extension.");
     }
 
     if(strstr(exts, "GL_EXT_rescale_normal"))
     {
         hasRN = true;
-        if(dbgexts) conoutf(CON_INIT, "Using GL_EXT_rescale_normal extension.");
+        if(GETIV(dbgexts)) conoutf(CON_INIT, "Using GL_EXT_rescale_normal extension.");
     }
 
     if(!hasSGIDT && !hasSGISH) SETV(shadowmap, 0);
 
-    if(strstr(exts, "GL_EXT_gpu_shader4") && !avoidshaders)
+    if(strstr(exts, "GL_EXT_gpu_shader4") && !GETIV(avoidshaders))
     {
         // on DX10 or above class cards (i.e. GF8 or RadeonHD) enable expensive features
         SETV(grass, 1);
@@ -694,20 +666,19 @@ void gl_init(int w, int h, int bpp, int depth, int fsaa)
 #endif
 
     bool hasshaders = (hasVP && hasFP) || hasGLSL;
-    if(!GETIV(shaders) || (GETIV(shaders)<0 && avoidshaders) || !hasMT || !hasshaders)
+    if(!GETIV(shaders) || (GETIV(shaders)<0 && GETIV(avoidshaders)) || !hasMT || !hasshaders)
     {
         if(!hasMT || !hasshaders) conoutf(CON_WARN, "WARNING: No shader support! Using fixed-function fallback. (no fancy visuals for you)");
         else if(GETIV(shaders)<0 && !hasTF) conoutf(CON_WARN, "WARNING: Disabling shaders for extra performance. (use \"/shaders 1\" to enable shaders if desired)");
-        renderpath = R_FIXEDFUNCTION;
+        SETVN(renderpath, R_FIXEDFUNCTION);
     }
-    else renderpath = R_GLSLANG;
-    //else renderpath = hasGLSL ? (!hasVP || !hasFP || forceglsl > 0 ? R_GLSLANG : R_ASMGLSLANG) : R_ASMSHADER; CubeCreate: disable asm shaders
+    else SETVN(renderpath, R_GLSLANG);
 
     static const char * const rpnames[4] = { "fixed-function", "assembly shader", "GLSL shader", "assembly/GLSL shader" };
 #if 0 // INTENSITY - JUST PRINTF
-    conoutf(CON_INIT, "Rendering using the OpenGL %s path.", rpnames[renderpath]);
+    conoutf(CON_INIT, "Rendering using the OpenGL %s path.", rpnames[GETIV(renderpath)]);
 #else
-    printf("Rendering using the OpenGL %s path.", rpnames[renderpath]);
+    printf("Rendering using the OpenGL %s path.", rpnames[GETIV(renderpath)]);
 #endif
 
     inittmus();
@@ -729,8 +700,6 @@ void cleanupgl()
 
 #define VARRAY_INTERNAL
 #include "varray.h"
-
-VAR(wireframe, 0, 0, 1);
 
 ICOMMAND(getcampos, "", (), 
 {
@@ -768,23 +737,13 @@ void transplayer()
 
 float curfov = 100, curavatarfov = 65, fovy, aspect;
 int farplane;
-VARP(zoominvel, 0, 250, 5000);
-VARP(zoomoutvel, 0, 100, 5000);
-VARP(zoomfov, 10, 35, 60);
-VARP(fov, 10, 100, 150);
-VAR(avatarzoomfov, 10, 25, 60);
-VAR(avatarfov, 10, 65, 150);
-FVAR(avatardepth, 0, 0.5f, 1);
 
 // CubeCreate: remove static
 int zoommillis = 0;
-VARF(zoom, -1, 0, 1,
-    if(zoom) zoommillis = totalmillis;
-);
 
 void disablezoom()
 {
-    zoom = 0;
+    SETVN(zoom, 0);
     zoommillis = totalmillis;
 }
 
@@ -798,13 +757,13 @@ void computezoom()
         return;
     } // INTENSITY: end forced camera stuff
 
-    if(!zoom) { curfov = fov; curavatarfov = avatarfov; return; }
-    if(zoom < 0 && curfov >= fov) { zoom = 0; curfov = fov; curavatarfov = avatarfov; return; } // don't zoom-out if not zoomed-in
-    int zoomvel = zoom > 0 ? zoominvel : zoomoutvel,
-        oldfov = zoom > 0 ? fov : zoomfov,
-        newfov = zoom > 0 ? zoomfov : fov,
-        oldavatarfov = zoom > 0 ? avatarfov : avatarzoomfov,
-        newavatarfov = zoom > 0 ? avatarzoomfov : avatarfov;
+    if(!GETIV(zoom)) { curfov = GETIV(fov); curavatarfov = GETIV(avatarfov); return; }
+    if(GETIV(zoom) < 0 && curfov >= GETIV(fov)) { SETVN(zoom, 0); curfov = GETIV(fov); curavatarfov = GETIV(avatarfov); return; } // don't zoom-out if not zoomed-in
+    int zoomvel = GETIV(zoom) > 0 ? GETIV(zoominvel) : GETIV(zoomoutvel),
+        oldfov = GETIV(zoom) > 0 ? GETIV(fov) : GETIV(zoomfov),
+        newfov = GETIV(zoom) > 0 ? GETIV(zoomfov) : GETIV(fov),
+        oldavatarfov = GETIV(zoom) > 0 ? GETIV(avatarfov) : GETIV(avatarzoomfov),
+        newavatarfov = GETIV(zoom) > 0 ? GETIV(avatarzoomfov) : GETIV(avatarfov);
     float t = zoomvel ? float(zoomvel - (totalmillis - zoommillis)) / zoomvel : 0;
     if(t <= 0) 
     {
@@ -813,7 +772,7 @@ void computezoom()
             curfov = newfov;
             curavatarfov = newavatarfov;
         }
-        zoom = max(zoom, 0);
+        SETVN(zoom, max(GETIV(zoom), 0));
     }
     else 
     {
@@ -822,16 +781,6 @@ void computezoom()
     }
 }
 
-FVARP(zoomsens, 1e-3f, 1, 1000);
-FVARP(zoomaccel, 0, 0, 1000);
-VARP(zoomautosens, 0, 1, 1);
-FVARP(sensitivity, 1e-3f, 3, 1000);
-FVARP(sensitivityscale, 1e-3f, 1, 1000);
-VARP(invmouse, 0, 0, 1);
-FVARP(mouseaccel, 0, 0, 1000);
-
-VAR(thirdperson, 0, 1, 2); // INTENSITY: 3rdperson by default
-FVAR(thirdpersondistance, 0, 20, 1000);
 physent *camera1 = NULL;
 bool detachedcamera = false;
 bool isthirdperson() { return player!=camera1 || detachedcamera || reflecting; }
@@ -847,22 +796,22 @@ void fixcamerarange()
 
 void mousemove(int dx, int dy)
 {
-    float cursens = sensitivity, curaccel = mouseaccel;
-    if(zoom)
+    float cursens = float(GETFV(sensitivity)), curaccel = float(GETFV(mouseaccel));
+    if(GETIV(zoom))
     {
-        if(zoomautosens) 
+        if(GETIV(zoomautosens)) 
         {
-            cursens = float(sensitivity*zoomfov)/fov;
-            curaccel = float(mouseaccel*zoomfov)/fov;
+            cursens = float(GETFV(sensitivity)*GETIV(zoomfov))/GETIV(fov);
+            curaccel = float(GETFV(mouseaccel)*GETIV(zoomfov))/GETIV(fov);
         }
         else 
         {
-            cursens = zoomsens;
-            curaccel = zoomaccel;
+            cursens = float(GETFV(zoomsens));
+            curaccel = float(GETFV(zoomaccel));
         }
     }
     if(curaccel && curtime && (dx || dy)) cursens += curaccel * sqrtf(dx*dx + dy*dy)/curtime;
-    cursens /= 33.0f*sensitivityscale;
+    cursens /= 33.0f*float(GETFV(sensitivityscale));
 
     // INTENSITY: Let scripts customize mousemoving
     if (LuaEngine::exists())
@@ -872,7 +821,7 @@ void mousemove(int dx, int dy)
         LuaEngine::getTableItem("performMousemove");
         LuaEngine::pushValueFromIndex(-2);
         LuaEngine::pushValue(dx * cursens);
-        LuaEngine::pushValue(-dy * cursens * (invmouse ? -1 : 1));
+        LuaEngine::pushValue(-dy * cursens * (GETIV(invmouse) ? -1 : 1));
         LuaEngine::call(3, 1);
 
         LuaEngine::getTableItem("yaw");
@@ -898,8 +847,8 @@ void recomputecamera()
     game::setupcamera();
     computezoom();
 
-    bool shoulddetach = thirdperson > 1 || game::detachcamera();
-    if(!thirdperson && !shoulddetach)
+    bool shoulddetach = GETIV(thirdperson) > 1 || game::detachcamera();
+    if(!GETIV(thirdperson) && !shoulddetach)
     {
         camera1 = player;
         detachedcamera = false;
@@ -928,10 +877,10 @@ void recomputecamera()
         vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, dir);
         if(game::collidecamera()) 
         {
-            movecamera(camera1, dir, thirdpersondistance, 1);
-            movecamera(camera1, dir, clamp(thirdpersondistance - camera1->o.dist(player->o), 0.0f, 1.0f), 0.1f);
+            movecamera(camera1, dir, float(GETFV(thirdpersondistance)), 1);
+            movecamera(camera1, dir, clamp(float(GETFV(thirdpersondistance)) - camera1->o.dist(player->o), 0.0f, 1.0f), 0.1f);
         }
-        else camera1->o.add(vec(dir).mul(thirdpersondistance));
+        else camera1->o.add(vec(dir).mul(float(GETFV(thirdpersondistance))));
 #else
         CameraControl::positionCamera(camera1);
 #endif
@@ -953,16 +902,14 @@ void readmatrices()
     invmvpmatrix.invert(mvpmatrix);
 }
 
-FVAR(nearplane, 1e-3f, 0.54f, 1e3f);
-
 void project(float fovy, float aspect, int farplane, bool flipx = false, bool flipy = false, bool swapxy = false, float zscale = 1)
 {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     if(swapxy) glRotatef(90, 0, 0, 1);
     if(flipx || flipy!=swapxy || zscale!=1) glScalef(flipx ? -1 : 1, flipy!=swapxy ? -1 : 1, zscale);
-    GLdouble ydist = nearplane * tan(fovy/2*RAD), xdist = ydist * aspect;
-    glFrustum(-xdist, xdist, -ydist, ydist, nearplane, farplane);
+    GLdouble ydist = GETFV(nearplane) * tan(fovy/2*RAD), xdist = ydist * aspect;
+    glFrustum(-xdist, xdist, -ydist, ydist, GETFV(nearplane), farplane);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -970,20 +917,17 @@ vec calcavatarpos(const vec &pos, float dist)
 {
     vec eyepos;
     mvmatrix.transform(pos, eyepos);
-    GLdouble ydist = nearplane * tan(curavatarfov/2*RAD), xdist = ydist * aspect;
+    GLdouble ydist = GETFV(nearplane) * tan(curavatarfov/2*RAD), xdist = ydist * aspect;
     vec4 scrpos;
-    scrpos.x = eyepos.x*nearplane/xdist;
-    scrpos.y = eyepos.y*nearplane/ydist;
-    scrpos.z = (eyepos.z*(farplane + nearplane) - 2*nearplane*farplane) / (farplane - nearplane);
+    scrpos.x = eyepos.x*float(GETFV(nearplane))/xdist;
+    scrpos.y = eyepos.y*float(GETFV(nearplane))/ydist;
+    scrpos.z = (eyepos.z*(farplane + float(GETFV(nearplane))) - 2*float(GETFV(nearplane))*farplane) / (farplane - float(GETFV(nearplane)));
     scrpos.w = -eyepos.z;
 
     vec worldpos = invmvpmatrix.perspectivetransform(scrpos);
     vec dir = vec(worldpos).sub(camera1->o).rescale(dist);
     return dir.add(camera1->o);
 }
-
-VAR(reflectclip, 0, 6, 64);
-VAR(reflectclipavatar, -64, 0, 64);
 
 glmatrixf clipmatrix;
 
@@ -1020,23 +964,19 @@ void popprojection()
     glMatrixMode(GL_MODELVIEW);
 }
 
-FVAR(polygonoffsetfactor, -1e4f, -3.0f, 1e4f);
-FVAR(polygonoffsetunits, -1e4f, -3.0f, 1e4f);
-FVAR(depthoffset, -1e4f, 0.01f, 1e4f);
-
 void enablepolygonoffset(GLenum type)
 {
-    if(!depthoffset)
+    if(!GETFV(depthoffset))
     {
-        glPolygonOffset(polygonoffsetfactor, polygonoffsetunits);
+        glPolygonOffset(GETFV(polygonoffsetfactor), GETFV(polygonoffsetunits));
         glEnable(type);
         return;
     }
     
-    bool clipped = reflectz < 1e15f && reflectclip;
+    bool clipped = reflectz < 1e15f && GETIV(reflectclip);
 
     glmatrixf offsetmatrix = clipped ? clipmatrix : projmatrix;
-    offsetmatrix[14] += depthoffset * projmatrix[10];
+    offsetmatrix[14] += GETFV(depthoffset) * projmatrix[10];
 
     glMatrixMode(GL_PROJECTION);
     if(!clipped) glPushMatrix();
@@ -1051,13 +991,13 @@ void enablepolygonoffset(GLenum type)
 
 void disablepolygonoffset(GLenum type)
 {
-    if(!depthoffset)
+    if(!GETFV(depthoffset))
     {
         glDisable(type);
         return;
     }
     
-    bool clipped = reflectz < 1e15f && reflectclip;
+    bool clipped = reflectz < 1e15f && GETIV(reflectclip);
 
     glMatrixMode(GL_PROJECTION);
     if(clipped) 
@@ -1170,12 +1110,7 @@ void setenvmatrix()
     envmatrix.transpose();
 }
 
-VARR(fog, 16, 4000, 1000024);
 bvec fogcolor(0x80, 0x99, 0xB3);
-HVARFR(fogcolour, 0, 0x8099B3, 0xFFFFFF,
-{
-    fogcolor = bvec((fogcolour>>16)&0xFF, (fogcolour>>8)&0xFF, fogcolour&0xFF);
-});
 
 static float findsurface(int fogmat, const vec &v, int &abovemat)
 {
@@ -1202,18 +1137,18 @@ static void blendfog(int fogmat, float blend, float logblend, float &start, floa
     {
         case MAT_WATER:
             loopk(3) fogc[k] += blend*watercolor[k]/255.0f;
-            end += logblend*min(fog, max(GETIV(waterfog)*4, 32));
+            end += logblend*min(GETIV(fog), max(GETIV(waterfog)*4, 32));
             break;
 
         case MAT_LAVA:
             loopk(3) fogc[k] += blend*lavacolor[k]/255.0f;
-            end += logblend*min(fog, max(GETIV(lavafog)*4, 32));
+            end += logblend*min(GETIV(fog), max(GETIV(lavafog)*4, 32));
             break;
 
         default:
             loopk(3) fogc[k] += blend*fogcolor[k]/255.0f;
-            start += logblend*(fog+64)/8;
-            end += logblend*fog;
+            start += logblend*(GETIV(fog)+64)/8;
+            end += logblend*GETIV(fog);
             break;
     }
 }
@@ -1300,8 +1235,6 @@ void rendergame(bool mainpass)
     if(!shadowmapping) renderedgame = true;
 }
 
-VARP(skyboxglare, 0, 1, 1);
-
 void drawglare()
 {
     glaring = true;
@@ -1312,22 +1245,22 @@ void drawglare()
     glGetFloatv(GL_FOG_END, &oldfogend);
     glGetFloatv(GL_FOG_COLOR, oldfogcolor);
 
-    glFogf(GL_FOG_START, (fog+64)/8);
-    glFogf(GL_FOG_END, fog);
+    glFogf(GL_FOG_START, (GETIV(fog)+64)/8);
+    glFogf(GL_FOG_END, GETIV(fog));
     glFogfv(GL_FOG_COLOR, zerofog);
 
     glClearColor(0, 0, 0, 1);
-    glClear((skyboxglare ? 0 : GL_COLOR_BUFFER_BIT) | GL_DEPTH_BUFFER_BIT);
+    glClear((GETIV(skyboxglare) ? 0 : GL_COLOR_BUFFER_BIT) | GL_DEPTH_BUFFER_BIT);
 
     rendergeom();
 
-    if(skyboxglare) drawskybox(farplane, false);
+    if(GETIV(skyboxglare)) drawskybox(farplane, false);
 
     renderreflectedmapmodels();
     rendergame();
     if(!isthirdperson())
     {
-        project(curavatarfov, aspect, farplane, false, false, false, avatardepth);
+        project(curavatarfov, aspect, farplane, false, false, false, float(GETFV(avatardepth)));
         game::renderavatar();
         project(fovy, aspect, farplane);
     }
@@ -1345,9 +1278,6 @@ void drawglare()
     glaring = false;
 }
 
-VARP(reflectmms, 0, 1, 1);
-VARR(refractsky, 0, 0, 1);
-
 glmatrixf fogmatrix, invfogmatrix;
 
 void drawreflection(float z, bool refract)
@@ -1355,7 +1285,7 @@ void drawreflection(float z, bool refract)
     reflectz = z < 0 ? 1e16f : z;
     reflecting = !refract;
     refracting = refract ? (z < 0 || camera1->o.z >= z ? -1 : 1) : 0;
-    fading = renderpath!=R_FIXEDFUNCTION && GETIV(waterrefract) && GETIV(waterfade) && hasFBO && z>=0;
+    fading = GETIV(renderpath)!=R_FIXEDFUNCTION && GETIV(waterrefract) && GETIV(waterfade) && hasFBO && z>=0;
     fogging = refracting<0 && z>=0;
 
     float oldfogstart, oldfogend, oldfogcolor[4];
@@ -1384,8 +1314,8 @@ void drawreflection(float z, bool refract)
     }
     else
     {
-        glFogf(GL_FOG_START, (fog+64)/8);
-        glFogf(GL_FOG_END, fog);
+        glFogf(GL_FOG_START, (GETIV(fog)+64)/8);
+        glFogf(GL_FOG_END, GETIV(fog));
         float fogc[4] = { fogcolor.x/255.0f, fogcolor.y/255.0f, fogcolor.z/255.0f, 1.0f };
         glFogfv(GL_FOG_COLOR, fogc);
     }
@@ -1408,9 +1338,9 @@ void drawreflection(float z, bool refract)
 
     setenvmatrix();
 
-    if(reflectclip && z>=0)
+    if(GETIV(reflectclip) && z>=0)
     {
-        float zoffset = reflectclip/4.0f, zclip;
+        float zoffset = GETIV(reflectclip)/4.0f, zclip;
         if(refracting<0)
         {
             zclip = z+zoffset;
@@ -1430,10 +1360,10 @@ void drawreflection(float z, bool refract)
 
     renderreflectedgeom(refracting<0 && z>=0 && GETIV(caustics), fogging);
 
-    if(reflecting || refracting>0 || (refracting<0 && refractsky) || z<0)
+    if(reflecting || refracting>0 || (refracting<0 && GETIV(refractsky)) || z<0)
     {
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        if(reflectclip && z>=0) popprojection();
+        if(GETIV(reflectclip) && z>=0) popprojection();
         if(fogging) 
         {
             popprojection();
@@ -1446,33 +1376,33 @@ void drawreflection(float z, bool refract)
             glPushMatrix();
             glLoadMatrixf(fogmatrix.v);
         }
-        if(reflectclip && z>=0) pushprojection(clipmatrix);
+        if(GETIV(reflectclip) && z>=0) pushprojection(clipmatrix);
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
     }
     else if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 
     renderdecals();
 
-    if(reflectmms) renderreflectedmapmodels();
+    if(GETIV(reflectmms)) renderreflectedmapmodels();
     rendergame();
 
     if(refracting && z>=0 && !isthirdperson() && fabs(camera1->o.z-z) <= 0.5f*(player->eyeheight + player->aboveeye))
     {   
         glmatrixf avatarproj;
-        avatarproj.perspective(curavatarfov, aspect, nearplane, farplane);
-        if(reflectclip)
+        avatarproj.perspective(curavatarfov, aspect, float(GETFV(nearplane)), farplane);
+        if(GETIV(reflectclip))
         {
             popprojection();
             glmatrixf avatarclip;
             plane clipplane;
-            invmvmatrix.transposedtransform(plane(0, 0, refracting, reflectclipavatar/4.0f - refracting*z), clipplane);
+            invmvmatrix.transposedtransform(plane(0, 0, refracting, GETIV(reflectclipavatar)/4.0f - refracting*z), clipplane);
             avatarclip.clip(clipplane, avatarproj);
             pushprojection(avatarclip);
         }
         else pushprojection(avatarproj);
         game::renderavatar();
         popprojection();
-        if(reflectclip) pushprojection(clipmatrix);
+        if(GETIV(reflectclip)) pushprojection(clipmatrix);
     }
 
     if(refracting) rendergrass();
@@ -1482,7 +1412,7 @@ void drawreflection(float z, bool refract)
 
     if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
-    if(reflectclip && z>=0) popprojection();
+    if(GETIV(reflectclip) && z>=0) popprojection();
 
     if(reflecting)
     {
@@ -1587,14 +1517,7 @@ void clearminimap()
     if(minimaptex) { glDeleteTextures(1, &minimaptex); minimaptex = 0; }
 }
 
-VARR(minimapheight, 0, 0, 2<<16);
 bvec minimapcolor(0, 0, 0);
-HVARFR(minimapcolour, 0, 0, 0xFFFFFF,
-{
-    minimapcolor = bvec((minimapcolour>>16)&0xFF, (minimapcolour>>8)&0xFF, minimapcolour&0xFF);
-});
-VARR(minimapclip, 0, 0, 1);
-VARFP(minimapsize, 7, 8, 10, { if(minimaptex) drawminimap(); });
 
 void bindminimap()
 {
@@ -1621,7 +1544,7 @@ void drawminimap()
 
     renderprogress(0, "generating mini-map...", 0, !renderedframe);
 
-    int size = 1<<minimapsize, sizelimit = min(GETIV(hwtexsize), min(screen->w, screen->h));
+    int size = 1<<GETIV(minimapsize), sizelimit = min(GETIV(hwtexsize), min(screen->w, screen->h));
     while(size > sizelimit) size /= 2;
     if(!minimaptex) glGenTextures(1, &minimaptex);
 
@@ -1637,7 +1560,7 @@ void drawminimap()
             bbmax[k] = max(bbmax[k], va->geommax[k]);
         }
     }
-    if(minimapclip)
+    if(GETIV(minimapclip))
     {
         ivec clipmin(worldsize, worldsize, worldsize), clipmax(0, 0, 0);
         clipminimap(clipmin, clipmax);
@@ -1657,7 +1580,7 @@ void drawminimap()
     cmcamera = *player;
     cmcamera.reset();
     cmcamera.type = ENT_CAMERA;
-    cmcamera.o = vec(minimapcenter.x, minimapcenter.y, max(minimapcenter.z + minimapradius.z + 1, float(minimapheight)));
+    cmcamera.o = vec(minimapcenter.x, minimapcenter.y, max(minimapcenter.z + minimapradius.z + 1, float(GETIV(minimapheight))));
     cmcamera.yaw = 0;
     cmcamera.pitch = -90;
     cmcamera.roll = 0;
@@ -1699,12 +1622,12 @@ void drawminimap()
     queryreflections();
     drawreflections();
 
-    loopi(minimapheight > 0 && minimapheight < minimapcenter.z + minimapradius.z ? 2 : 1)
+    loopi(GETIV(minimapheight) > 0 && GETIV(minimapheight) < minimapcenter.z + minimapradius.z ? 2 : 1)
     {
         if(i)
         {
             glClear(GL_DEPTH_BUFFER_BIT);
-            camera1->o.z = minimapheight;
+            camera1->o.z = GETIV(minimapheight);
             transplayer();
         }
         rendergeom();
@@ -1743,13 +1666,9 @@ void cleanupmotionblur()
     lastmotion = 0;
 }
 
-VARFP(motionblur, 0, 0, 1, { if(!motionblur) cleanupmotionblur(); });
-VARP(motionblurmillis, 1, 5, 1000);
-FVARP(motionblurscale, 0, 0.5f, 1);
-
 void addmotionblur()
 {
-    if(!motionblur || !hasTR || max(screen->w, screen->h) > GETIV(hwtexsize)) return;
+    if(!GETIV(motionblur) || !hasTR || max(screen->w, screen->h) > GETIV(hwtexsize)) return;
 
     if(GETIV(paused) || game::ispaused()) { lastmotion = 0; return; }
 
@@ -1780,7 +1699,7 @@ void addmotionblur()
 
     rectshader->set();
 
-    glColor4f(1, 1, 1, lastmotion ? pow(motionblurscale, max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)) : 0);
+    glColor4f(1, 1, 1, lastmotion ? pow(float(GETFV(motionblurscale)), max(float(lastmillis - lastmotion)/GETIV(motionblurmillis), 1.0f)) : 0);
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(      0,       0); glVertex2f(-1, -1);
     glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
@@ -1799,9 +1718,9 @@ void addmotionblur()
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
  
-    if(lastmillis - lastmotion >= motionblurmillis)
+    if(lastmillis - lastmotion >= GETIV(motionblurmillis))
     {
-        lastmotion = lastmillis - lastmillis%motionblurmillis;
+        lastmotion = lastmillis - lastmillis%GETIV(motionblurmillis);
 
         glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, 0, 0, screen->w, screen->h);
     }
@@ -1835,7 +1754,7 @@ void gl_drawframe(int w, int h)
         if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
         else fogmat = abovemat;
         if(GETIV(caustics) && fogmat==MAT_WATER && camera1->o.z < z)
-            causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
+            causticspass = GETIV(renderpath)==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
     }
     else fogmat = MAT_AIR;    
     setfog(fogmat, fogblend, abovemat);
@@ -1876,15 +1795,15 @@ void gl_drawframe(int w, int h)
     
     if(GETIV(shadowmap) && !hasFBO) rendershadowmap();
 
-    glClear(GL_DEPTH_BUFFER_BIT|(wireframe && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
+    glClear(GL_DEPTH_BUFFER_BIT|(GETIV(wireframe) && editmode ? GL_COLOR_BUFFER_BIT : 0)|(hasstencil ? GL_STENCIL_BUFFER_BIT : 0));
 
-    if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
+    if(GETIV(wireframe) && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); 
 
     if(limitsky()) drawskybox(farplane, true);
 
     rendergeom(causticspass);
 
-    if(!wireframe && editmode && GETIV(outline)) renderoutline();
+    if(!GETIV(wireframe) && editmode && GETIV(outline)) renderoutline();
 
     queryreflections();
 
@@ -1898,12 +1817,12 @@ void gl_drawframe(int w, int h)
     rendergame(true);
     if(!isthirdperson())
     {
-        project(curavatarfov, aspect, farplane, false, false, false, avatardepth);
+        project(curavatarfov, aspect, farplane, false, false, false, float(GETFV(avatardepth)));
         game::renderavatar();
         project(fovy, aspect, farplane);
     }
 
-    if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    if(GETIV(wireframe) && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     if(hasFBO) 
     {
@@ -1912,7 +1831,7 @@ void gl_drawframe(int w, int h)
         drawreflections();
     }
 
-    if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    if(GETIV(wireframe) && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     renderwater();
     rendergrass();
@@ -1922,7 +1841,7 @@ void gl_drawframe(int w, int h)
 
     renderparticles(true);
 
-    if(wireframe && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    if(GETIV(wireframe) && editmode) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     glDisable(GL_FOG);
     glDisable(GL_CULL_FACE);
@@ -1966,17 +1885,10 @@ void gl_drawmainmenu(int w, int h)
     gl_drawhud(w, h);
 }
 
-VARNP(damagecompass, usedamagecompass, 0, 1, 1);
-VARP(damagecompassfade, 1, 1000, 10000);
-VARP(damagecompasssize, 1, 30, 100);
-VARP(damagecompassalpha, 1, 25, 100);
-VARP(damagecompassmin, 1, 25, 1000);
-VARP(damagecompassmax, 1, 200, 1000);
-
 float dcompass[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 void damagecompass(int n, const vec &loc)
 {
-    if(!usedamagecompass) return;
+    if(!GETIV(usedamagecompass)) return;
     vec delta(loc);
     delta.sub(camera1->o); 
     float yaw, pitch;
@@ -1986,20 +1898,20 @@ void damagecompass(int n, const vec &loc)
     if(yaw >= 360) yaw = fmod(yaw, 360);
     else if(yaw < 0) yaw = 360 - fmod(-yaw, 360);
     int dir = (int(yaw+22.5f)%360)/45;
-    dcompass[dir] += max(n, damagecompassmin)/float(damagecompassmax);
+    dcompass[dir] += max(n, GETIV(damagecompassmin))/float(GETIV(damagecompassmax));
     if(dcompass[dir]>1) dcompass[dir] = 1;
 
 }
 void drawdamagecompass(int w, int h)
 {
     int dirs = 0;
-    float size = damagecompasssize/100.0f*min(h, w)/2.0f;
+    float size = GETIV(damagecompasssize)/100.0f*min(h, w)/2.0f;
     loopi(8) if(dcompass[i]>0)
     {
         if(!dirs)
         {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glColor4f(1, 0, 0, damagecompassalpha/100.0f);
+            glColor4f(1, 0, 0, GETIV(damagecompassalpha)/100.0f);
         }
         dirs++;
 
@@ -2019,25 +1931,18 @@ void drawdamagecompass(int w, int h)
         glPopMatrix();
 
         // fade in log space so short blips don't disappear too quickly
-        scale -= float(curtime)/damagecompassfade;
+        scale -= float(curtime)/GETIV(damagecompassfade);
         dcompass[i] = scale > 0 ? (pow(logscale, scale) - 1) / (logscale - 1) : 0;
     }
 }
 
 int damageblendmillis = 0;
 
-VARFP(damagescreen, 0, 1, 1, { if(!damagescreen) damageblendmillis = 0; });
-VARP(damagescreenfactor, 1, 7, 100);
-VARP(damagescreenalpha, 1, 45, 100);
-VARP(damagescreenfade, 0, 125, 1000);
-VARP(damagescreenmin, 1, 10, 1000);
-VARP(damagescreenmax, 1, 100, 1000);
-
 void damageblend(int n)
 {
-    if(!damagescreen) return;
+    if(!GETIV(damagescreen)) return;
     if(lastmillis > damageblendmillis) damageblendmillis = lastmillis;
-    damageblendmillis += clamp(n, damagescreenmin, damagescreenmax)*damagescreenfactor;
+    damageblendmillis += clamp(n, GETIV(damagescreenmin), GETIV(damagescreenmax))*GETIV(damagescreenfactor);
 }
 
 void drawdamagescreen(int w, int h)
@@ -2052,9 +1957,9 @@ void drawdamagescreen(int w, int h)
 
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     glBindTexture(GL_TEXTURE_2D, damagetex->id);
-    float fade = damagescreenalpha/100.0f;
-    if(damageblendmillis - lastmillis < damagescreenfade)
-        fade *= float(damageblendmillis - lastmillis)/damagescreenfade;
+    float fade = GETIV(damagescreenalpha)/100.0f;
+    if(damageblendmillis - lastmillis < GETIV(damagescreenfade))
+        fade *= float(damageblendmillis - lastmillis)/GETIV(damagescreenfade);
     glColor4f(fade, fade, fade, fade);
 
     glBegin(GL_TRIANGLE_STRIP);
@@ -2067,13 +1972,6 @@ void drawdamagescreen(int w, int h)
     glDisable(GL_TEXTURE_2D);
     notextureshader->set();
 }
-
-VAR(hidestats, 0, 0, 1);
-VAR(hidehud, 0, 0, 1);
-
-VARP(crosshairsize, 0, 15, 50);
-VARP(cursorsize, 0, 30, 50);
-VARP(crosshairfx, 0, 1, 1);
 
 #define MAXCROSSHAIRS 4
 static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL };
@@ -2110,7 +2008,7 @@ JSONObject writecrosshairs()
 void drawcrosshair(int w, int h)
 {
     bool windowhit = g3d_windowhit(true, false) || !GuiControl::isMouselooking(); // INTENSITY: Mouselooking
-    if(!windowhit && (hidehud || GETIV(mainmenu))) return; //(hidehud || player->state==CS_SPECTATOR || player->state==CS_DEAD)) return;
+    if(!windowhit && (GETIV(hidehud) || GETIV(mainmenu))) return; //(hidehud || player->state==CS_SPECTATOR || player->state==CS_DEAD)) return;
 
     float r = 1, g = 1, b = 1, cx = 0.5f, cy = 0.5f, chsize;
     Texture *crosshair;
@@ -2119,7 +2017,7 @@ void drawcrosshair(int w, int h)
         static Texture *cursor = NULL;
         if(!cursor) cursor = textureload("data/guicursor.png", 3, true);
         crosshair = cursor;
-        chsize = cursorsize*w/900.0f;
+        chsize = GETIV(cursorsize)*w/900.0f;
         g3d_cursorpos(cx, cy);
     }
     else
@@ -2153,7 +2051,7 @@ void drawcrosshair(int w, int h)
         }
         #endif // INTENSITY: End script-controlled crosshairs
 
-        chsize = crosshairsize*w/900.0f;
+        chsize = GETIV(crosshairsize)*w/900.0f;
     }
     if(crosshair->bpp==4) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     else glBlendFunc(GL_ONE, GL_ONE);
@@ -2169,22 +2067,11 @@ void drawcrosshair(int w, int h)
     glEnd();
 }
 
-VARP(wallclock, 0, 0, 1);
-VARP(wallclock24, 0, 0, 1);
-VARP(wallclocksecs, 0, 0, 1);
-
 static time_t walltime = 0;
-
-VARP(showfps, 0, 1, 1);
-VARP(showfpsrange, 0, 0, 1);
-VAR(showeditstats, 0, 0, 1);
-VAR(statrate, 1, 200, 1000);
-
-FVARP(conscale, 1e-3f, 0.33f, 1e3f);
 
 void gl_drawhud(int w, int h)
 {
-    if(editmode && !hidehud && !GETIV(mainmenu))
+    if(editmode && !GETIV(hidehud) && !GETIV(mainmenu))
     {
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
@@ -2236,43 +2123,43 @@ void gl_drawhud(int w, int h)
     glEnable(GL_TEXTURE_2D);
     defaultshader->set();
 
-    int conw = int(w/conscale), conh = int(h/conscale), abovehud = conh - FONTH, limitgui = abovehud;
-    if(!hidehud && !GETIV(mainmenu))
+    int conw = int(w/GETFV(conscale)), conh = int(h/GETFV(conscale)), abovehud = conh - FONTH, limitgui = abovehud;
+    if(!GETIV(hidehud) && !GETIV(mainmenu))
     {
-        if(!hidestats)
+        if(!GETIV(hidestats))
         {
             glPushMatrix();
-            glScalef(conscale, conscale, 1);
+            glScalef(GETFV(conscale), GETFV(conscale), 1);
 
             int roffset = 0;
-            if(showfps)
+            if(GETIV(showfps))
             {
                 static int lastfps = 0, prevfps[3] = { 0, 0, 0 }, curfps[3] = { 0, 0, 0 };
-                if(totalmillis - lastfps >= statrate)
+                if(totalmillis - lastfps >= GETIV(statrate))
                 {
                     memcpy(prevfps, curfps, sizeof(prevfps));
-                    lastfps = totalmillis - (totalmillis%statrate);
+                    lastfps = totalmillis - (totalmillis%GETIV(statrate));
                 }
                 int nextfps[3];
                 getfps(nextfps[0], nextfps[1], nextfps[2]);
                 loopi(3) if(prevfps[i]==curfps[i]) curfps[i] = nextfps[i];
-                if(showfpsrange) draw_textf("fps %d+%d-%d", conw-7*FONTH, conh-FONTH*3/2, curfps[0], curfps[1], curfps[2]);
+                if(GETIV(showfpsrange)) draw_textf("fps %d+%d-%d", conw-7*FONTH, conh-FONTH*3/2, curfps[0], curfps[1], curfps[2]);
                 else draw_textf("fps %d", conw-5*FONTH, conh-FONTH*3/2, curfps[0]);
                 roffset += FONTH;
             }
 
-            if(wallclock)
+            if(GETIV(wallclock))
             {
                 if(!walltime) { walltime = time(NULL); walltime -= totalmillis/1000; if(!walltime) walltime++; }
                 time_t walloffset = walltime + totalmillis/1000;
                 struct tm *localvals = localtime(&walloffset);
                 static string buf;
-                if(localvals && strftime(buf, sizeof(buf), wallclocksecs ? (wallclock24 ? "%H:%M:%S" : "%I:%M:%S%p") : (wallclock24 ? "%H:%M" : "%I:%M%p"), localvals))
+                if(localvals && strftime(buf, sizeof(buf), GETIV(wallclocksecs) ? (GETIV(wallclock24) ? "%H:%M:%S" : "%I:%M:%S%p") : (GETIV(wallclock24) ? "%H:%M" : "%I:%M%p"), localvals))
                 {
                     // hack because not all platforms (windows) support %P lowercase option
                     // also strip leading 0 from 12 hour time
                     char *dst = buf;
-                    const char *src = &buf[!wallclock24 && buf[0]=='0' ? 1 : 0];
+                    const char *src = &buf[!GETIV(wallclock24) && buf[0]=='0' ? 1 : 0];
                     while(*src) *dst++ = tolower(*src++);
                     *dst++ = '\0'; 
                     draw_text(buf, conw-5*FONTH, conh-FONTH*3/2-roffset);
@@ -2280,13 +2167,13 @@ void gl_drawhud(int w, int h)
                 }
             }
                        
-            if(editmode || showeditstats)
+            if(editmode || GETIV(showeditstats))
             {
                 static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
-                if(totalmillis - laststats >= statrate)
+                if(totalmillis - laststats >= GETIV(statrate))
                 {
                     memcpy(prevstats, curstats, sizeof(prevstats));
-                    laststats = totalmillis - (totalmillis%statrate);
+                    laststats = totalmillis - (totalmillis%GETIV(statrate));
                 }
                 int nextstats[8] =
                 {
@@ -2334,7 +2221,7 @@ void gl_drawhud(int w, int h)
             glPopMatrix();
         }
 
-        if(hidestats || (!editmode && !showeditstats))
+        if(GETIV(hidestats) || (!editmode && !GETIV(showeditstats)))
         {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             game::gameplayhud(w, h);
@@ -2347,9 +2234,9 @@ void gl_drawhud(int w, int h)
     g3d_limitscale((2*limitgui - conh) / float(conh));
 
     glPushMatrix();
-    glScalef(conscale, conscale, 1);
+    glScalef(GETFV(conscale), GETFV(conscale), 1);
     abovehud -= rendercommand(FONTH/2, abovehud - FONTH/2, conw-FONTH);
-    if(!hidehud || GETIV(fullconsole)) renderconsole(conw, conh, abovehud - FONTH/2);
+    if(!GETIV(hidehud) || GETIV(fullconsole)) renderconsole(conw, conh, abovehud - FONTH/2);
     glPopMatrix();
 
     drawcrosshair(w, h);

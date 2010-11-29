@@ -64,12 +64,12 @@ static struct shadowmaptexture : rendertarget
 {
     GLenum attachment() const
     {
-        return renderpath==R_FIXEDFUNCTION ? GL_DEPTH_ATTACHMENT_EXT : GL_COLOR_ATTACHMENT0_EXT;
+        return GETIV(renderpath)==R_FIXEDFUNCTION ? GL_DEPTH_ATTACHMENT_EXT : GL_COLOR_ATTACHMENT0_EXT;
     }
 
     const GLenum *colorformats() const
     {
-        if(renderpath==R_FIXEDFUNCTION) 
+        if(GETIV(renderpath)==R_FIXEDFUNCTION) 
         {
             static const GLenum depthtexfmts[] = { GL_DEPTH_COMPONENT16, GL_DEPTH_COMPONENT24, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT32, GL_FALSE };
             return depthtexfmts;
@@ -79,9 +79,9 @@ static struct shadowmaptexture : rendertarget
         return hasFBO ? &rgbafmts[GETIV(fpshadowmap) && hasTF ? 0 : (GETIV(shadowmapprecision) ? 1 : 2)] : rgbfmts;
     }
 
-    bool shadowcompare() const { return renderpath==R_FIXEDFUNCTION; }
-    bool filter() const { return renderpath!=R_FIXEDFUNCTION || hasNVPCF; }
-    bool swaptexs() const { return renderpath!=R_FIXEDFUNCTION; }
+    bool shadowcompare() const { return GETIV(renderpath)==R_FIXEDFUNCTION; }
+    bool filter() const { return GETIV(renderpath)!=R_FIXEDFUNCTION || hasNVPCF; }
+    bool swaptexs() const { return GETIV(renderpath)!=R_FIXEDFUNCTION; }
 
     bool scissorblur(int &x, int &y, int &w, int &h)
     {
@@ -102,14 +102,14 @@ static struct shadowmaptexture : rendertarget
 
     void doclear()
     {
-        if(!hasFBO && rtscissor)
+        if(!hasFBO && GETIV(rtscissor))
         {
             glEnable(GL_SCISSOR_TEST);
             glScissor(screen->w-vieww, screen->h-viewh, vieww, viewh);
         }
         glClearColor(0, 0, 0, 0);
-        glClear(GL_DEPTH_BUFFER_BIT | (renderpath!=R_FIXEDFUNCTION ? GL_COLOR_BUFFER_BIT : 0));
-        if(!hasFBO && rtscissor) glDisable(GL_SCISSOR_TEST);
+        glClear(GL_DEPTH_BUFFER_BIT | (GETIV(renderpath)!=R_FIXEDFUNCTION ? GL_COLOR_BUFFER_BIT : 0));
+        if(!hasFBO && GETIV(rtscissor)) glDisable(GL_SCISSOR_TEST);
     }
 
     bool dorender()
@@ -121,8 +121,8 @@ static struct shadowmaptexture : rendertarget
         glPushMatrix();
         glLoadIdentity();
         glOrtho(-GETIV(shadowmapradius), GETIV(shadowmapradius), -GETIV(shadowmapradius), GETIV(shadowmapradius), 
-            renderpath==R_FIXEDFUNCTION ? 0 : -GETIV(shadowmapdist), 
-            renderpath==R_FIXEDFUNCTION ? GETIV(ffshadowmapdist) : GETIV(shadowmapdist));
+            GETIV(renderpath)==R_FIXEDFUNCTION ? 0 : -GETIV(shadowmapdist), 
+            GETIV(renderpath)==R_FIXEDFUNCTION ? GETIV(ffshadowmapdist) : GETIV(shadowmapdist));
 
         glMatrixMode(GL_MODELVIEW);
 
@@ -161,13 +161,13 @@ static struct shadowmaptexture : rendertarget
         glGetFloatv(GL_PROJECTION_MATRIX, proj.v);
         glGetFloatv(GL_MODELVIEW_MATRIX, mv.v);
         shadowmapmatrix.mul(proj, mv);
-        if(renderpath==R_FIXEDFUNCTION) shadowmapmatrix.projective();
+        if(GETIV(renderpath)==R_FIXEDFUNCTION) shadowmapmatrix.projective();
         else shadowmapmatrix.projective(-1, 1-GETIV(shadowmapbias)/float(GETIV(shadowmapdist)));
 
         glColor3f(0, 0, 0);
         glDisable(GL_TEXTURE_2D);
 
-        if(renderpath!=R_FIXEDFUNCTION)
+        if(GETIV(renderpath)!=R_FIXEDFUNCTION)
             setenvparamf("shadowmapbias",
                          SHPARAM_VERTEX,
                          0,
@@ -185,11 +185,11 @@ static struct shadowmaptexture : rendertarget
 
         glEnable(GL_TEXTURE_2D);
 
-        if(renderpath==R_FIXEDFUNCTION) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        if(GETIV(renderpath)==R_FIXEDFUNCTION) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         else if(GETIV(shadowmapcasters) && GETIV(smdepthpeel)) 
         {
             int sx, sy, sw, sh;
-            bool scissoring = rtscissor && scissorblur(sx, sy, sw, sh) && sw > 0 && sh > 0;
+            bool scissoring = GETIV(rtscissor) && scissorblur(sx, sy, sw, sh) && sw > 0 && sh > 0;
             if(scissoring) 
             {
                 if(!hasFBO)
@@ -199,7 +199,7 @@ static struct shadowmaptexture : rendertarget
                 }
                 glScissor(sx, sy, sw, sh);
             }
-            if(!rtscissor || scissoring) rendershadowmapreceivers();
+            if(!GETIV(rtscissor) || scissoring) rendershadowmapreceivers();
         }
 
         glMatrixMode(GL_PROJECTION);
@@ -376,7 +376,7 @@ void pushshadowmap()
 {
     if(!GETIV(shadowmap) || !shadowmaptex.rendertex) return;
 
-    if(renderpath==R_FIXEDFUNCTION)
+    if(GETIV(renderpath)==R_FIXEDFUNCTION)
     {
         glBindTexture(GL_TEXTURE_2D, shadowmaptex.rendertex);
 
@@ -442,7 +442,7 @@ void popshadowmap()
 {
     if(!GETIV(shadowmap) || !shadowmaptex.rendertex) return;
 
-    if(renderpath==R_FIXEDFUNCTION) 
+    if(GETIV(renderpath)==R_FIXEDFUNCTION) 
     {
         popscissor();
 
@@ -454,11 +454,11 @@ void popshadowmap()
 
 void rendershadowmap()
 {
-    if(!GETIV(shadowmap) || (renderpath==R_FIXEDFUNCTION && (!hasSGIDT || !hasSGISH))) return;
+    if(!GETIV(shadowmap) || (GETIV(renderpath)==R_FIXEDFUNCTION && (!hasSGIDT || !hasSGISH))) return;
 
     // Apple/ATI bug - fixed-function fog state can force software fallback even when fragment program is enabled
     glDisable(GL_FOG); 
-    shadowmaptex.render(1<<GETIV(shadowmapsize), 1<<GETIV(shadowmapsize), renderpath!=R_FIXEDFUNCTION ? GETIV(blurshadowmap) : 0, GETIV(blursmsigma)/100.0f);
+    shadowmaptex.render(1<<GETIV(shadowmapsize), 1<<GETIV(shadowmapsize), GETIV(renderpath)!=R_FIXEDFUNCTION ? GETIV(blurshadowmap) : 0, GETIV(blursmsigma)/100.0f);
     glEnable(GL_FOG);
 }
 

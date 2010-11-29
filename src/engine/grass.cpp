@@ -226,14 +226,14 @@ void rendergrass()
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glTexCoordPointer(2, GL_FLOAT, sizeof(grassvert), &grassverts[0].u);
 
-    if(renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
     {
         glActiveTexture_(GL_TEXTURE1_ARB);
         glClientActiveTexture_(GL_TEXTURE1_ARB);
         glEnable(GL_TEXTURE_2D);
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glTexCoordPointer(2, GL_FLOAT, sizeof(grassvert), &grassverts[0].lmu);
-        if(renderpath==R_FIXEDFUNCTION) setuptmu(1, "P * T x 2"); 
+        if(GETIV(renderpath)==R_FIXEDFUNCTION) setuptmu(1, "P * T x 2"); 
         glClientActiveTexture_(GL_TEXTURE0_ARB);
         glActiveTexture_(GL_TEXTURE0_ARB);
     }
@@ -259,7 +259,7 @@ void rendergrass()
         }
         if(lmtexid != g.lmtex)
         {
-            if(renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
+            if(GETIV(renderpath)!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
             {
                 glActiveTexture_(GL_TEXTURE1_ARB);
                 glBindTexture(GL_TEXTURE_2D, g.lmtex);
@@ -276,11 +276,11 @@ void rendergrass()
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    if(renderpath!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION || GETIV(maxtmus)>=2)
     {
         glActiveTexture_(GL_TEXTURE1_ARB);
         glClientActiveTexture_(GL_TEXTURE1_ARB);
-        if(renderpath==R_FIXEDFUNCTION) resettmu(1);
+        if(GETIV(renderpath)==R_FIXEDFUNCTION) resettmu(1);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         glDisable(GL_TEXTURE_2D);
         glClientActiveTexture_(GL_TEXTURE0_ARB);

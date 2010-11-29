@@ -22,7 +22,7 @@ static uint paramversion = 0;
 
 void loadshaders()
 {
-    if(renderpath==R_ASMSHADER || renderpath==R_ASMGLSLANG)
+    if(GETIV(renderpath)==R_ASMSHADER || GETIV(renderpath)==R_ASMGLSLANG)
     {
         GLint val;
         glGetProgramiv_(GL_VERTEX_PROGRAM_ARB, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, &val);
@@ -34,7 +34,7 @@ void loadshaders()
         glGetProgramiv_(GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, &val);
         SETVN(maxfplocalparams, val);
     }
-    if(renderpath==R_GLSLANG || renderpath==R_ASMGLSLANG)
+    if(GETIV(renderpath)==R_GLSLANG || GETIV(renderpath)==R_ASMGLSLANG)
     {
         GLint val;
         glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS_ARB, &val);
@@ -44,7 +44,7 @@ void loadshaders()
         glGetIntegerv(GL_MAX_VARYING_FLOATS_ARB, &val);
         SETVN(maxvaryings, val);
     }
-    if(renderpath != R_FIXEDFUNCTION)
+    if(GETIV(renderpath) != R_FIXEDFUNCTION)
     {
         GLint val;
         glGetIntegerv(GL_MAX_TEXTURE_COORDS_ARB, &val);
@@ -53,7 +53,6 @@ void loadshaders()
 
     initshaders = true;
     standardshader = true;
-    //execfile(renderpath==R_GLSLANG ? "data/glsl.cfg" : "data/stdshader.cfg"); CubeCreate
     LuaEngine::runFile("data/glsl.lua");
     standardshader = false;
     initshaders = false;
@@ -64,17 +63,16 @@ void loadshaders()
     extern Slot dummyslot;
     dummyslot.shader = stdworldshader;
 
-    extern int ati_line_bug;
     rectshader = lookupshaderbyname("rect");
     cubemapshader = lookupshaderbyname("cubemap");
     notextureshader = lookupshaderbyname("notexture");
     nocolorshader = lookupshaderbyname("nocolor");
     foggedshader = lookupshaderbyname("fogged");
     foggednotextureshader = lookupshaderbyname("foggednotexture");
-    lineshader = lookupshaderbyname(ati_line_bug && renderpath == R_ASMGLSLANG ? "notextureglsl" : "notexture");
-    foggedlineshader = lookupshaderbyname(ati_line_bug && renderpath == R_ASMGLSLANG ? "foggednotextureglsl" : "foggednotexture");
+    lineshader = lookupshaderbyname(GETIV(ati_line_bug) && GETIV(renderpath) == R_ASMGLSLANG ? "notextureglsl" : "notexture");
+    foggedlineshader = lookupshaderbyname(GETIV(ati_line_bug) && GETIV(renderpath) == R_ASMGLSLANG ? "foggednotextureglsl" : "foggednotexture");
     
-    if(renderpath==R_ASMSHADER || renderpath==R_ASMGLSLANG)
+    if(GETIV(renderpath)==R_ASMSHADER || GETIV(renderpath)==R_ASMGLSLANG)
     {
         glEnable(GL_VERTEX_PROGRAM_ARB);
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -97,8 +95,7 @@ static bool compileasmshader(GLenum type, GLuint &idx, const char *def, const ch
     glProgramString_(type, GL_PROGRAM_FORMAT_ASCII_ARB, (GLsizei)strlen(def), def);
     GLint err = -1, native = 1;
     glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &err);
-    extern int apple_vp_bug;
-    if(type!=GL_VERTEX_PROGRAM_ARB || !apple_vp_bug)
+    if(type!=GL_VERTEX_PROGRAM_ARB || !GETIV(apple_vp_bug))
         glGetProgramiv_(type, GL_PROGRAM_UNDER_NATIVE_LIMITS_ARB, &native);
     if(msg && err!=-1)
     {
@@ -745,7 +742,7 @@ bool Shader::compile()
     }
     else
     {
-        if(renderpath!=R_ASMSHADER && renderpath!=R_ASMGLSLANG) return false;
+        if(GETIV(renderpath)!=R_ASMSHADER && GETIV(renderpath)!=R_ASMGLSLANG) return false;
         if(!vsstr) vs = !reusevs || reusevs->type&SHADER_INVALID ? 0 : reusevs->vs;
         else if(!compileasmshader(GL_VERTEX_PROGRAM_ARB, vs, vsstr, "VS", name, GETIV(dbgshader) || !variantshader, variantshader!=NULL))
             native = false;
@@ -818,12 +815,12 @@ Shader *newshader(int type, const char *name, const char *vs, const char *ps, Sh
 {
     if(Shader::lastshader)
     {
-        if(renderpath==R_ASMSHADER || renderpath==R_ASMGLSLANG)
+        if(GETIV(renderpath)==R_ASMSHADER || GETIV(renderpath)==R_ASMGLSLANG)
         {
             glBindProgram_(GL_VERTEX_PROGRAM_ARB, 0);
             glBindProgram_(GL_FRAGMENT_PROGRAM_ARB, 0);
         }
-        if(renderpath==R_GLSLANG || renderpath==R_ASMGLSLANG) glUseProgramObject_(0);
+        if(GETIV(renderpath)==R_GLSLANG || GETIV(renderpath)==R_ASMGLSLANG) glUseProgramObject_(0);
         Shader::lastshader = NULL;
     }
 
@@ -863,7 +860,7 @@ Shader *newshader(int type, const char *name, const char *vs, const char *ps, Sh
         genattriblocs(s, vs, ps);
         genuniformlocs(s, vs, ps);
     }
-    if(renderpath!=R_FIXEDFUNCTION && !s.compile())
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION && !s.compile())
     {
         s.cleanup(true);
         if(variant) shaders.remove(rname);
@@ -1095,8 +1092,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
             lights[numlights++] = i;    
             if(numlights>=limit) break;
         }
-        extern int emulatefog;
-        if(emulatefog && reservetc>0 && numlights+1<limit && !(usedtc&(1<<(GETIV(maxtexcoords)-reservetc))) && strstr(ps, "OPTION ARB_fog_linear;") && strstr(vs, "result.fogcoord"))
+        if(GETIV(emulatefog) && reservetc>0 && numlights+1<limit && !(usedtc&(1<<(GETIV(maxtexcoords)-reservetc))) && strstr(ps, "OPTION ARB_fog_linear;") && strstr(vs, "result.fogcoord"))
         {
             if(!findunusedtexcoordcomponent(vs, emufogtc, emufogcomp))
             {
@@ -1162,7 +1158,6 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
 
         loopk(i+1)
         {
-            extern int ati_dph_bug;
             string tc, dl;
             if(s.type & SHADER_GLSLANG) formatstring(tc)(
                 k<numlights ? 
@@ -1174,7 +1169,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
                 "MAD dynlightdir.xyz, fragment.texcoord[%d], program.env[%d].w, program.env[%d];\n",
                 k==numlights ? "TEMP dynlightdir;\n" : "",
                 lights[0], k-1, k-1);
-            else if(ati_dph_bug || lights[k]==emufogtc) formatstring(tc)(
+            else if(GETIV(ati_dph_bug) || lights[k]==emufogtc) formatstring(tc)(
                 "MAD result.texcoord[%d].xyz, vertex.position, program.env[%d].w, program.env[%d];\n",
                 lights[k], 10+k, 10+k);
             else formatstring(tc)(
@@ -1192,7 +1187,7 @@ static void gendynlightvariant(Shader &s, const char *sname, const char *vs, con
                 "SUB dynlight.x, 1, dynlight.x;\n"
                 "MAD %s.rgb, program.env[%d], dynlight.x, %s;\n",
                 pslight, 10+k, pslight);
-            else if(ati_dph_bug || lights[k]==emufogtc) formatstring(dl)(
+            else if(GETIV(ati_dph_bug) || lights[k]==emufogtc) formatstring(dl)(
                 "%s"
                 "DP3_SAT dynlight.x, fragment.texcoord[%d], fragment.texcoord[%d];\n"
                 "SUB dynlight.x, 1, dynlight.x;\n"
@@ -1230,8 +1225,7 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
         uint usedtc = findusedtexcoords(vs);
         if(GETIV(axtexcoords)-GETIV(reserveshadowmaptc)<0) return;
         loopi(GETIV(maxtexcoords)-GETIV(reserveshadowmaptc)) if(!(usedtc&(1<<i))) { smtc = i; break; }
-        extern int emulatefog;
-        if(smtc<0 && emulatefog && GETIV(reserveshadowmaptc)>0 && !(usedtc&(1<<(GETIV(maxtexcoords)-GETIV(reserveshadowmaptc)))) && strstr(ps, "OPTION ARB_fog_linear;"))
+        if(smtc<0 && GETIV(emulatefog) && GETIV(reserveshadowmaptc)>0 && !(usedtc&(1<<(GETIV(maxtexcoords)-GETIV(reserveshadowmaptc)))) && strstr(ps, "OPTION ARB_fog_linear;"))
         {
             if(!strstr(vs, "result.fogcoord") || !findunusedtexcoordcomponent(vs, emufogtc, emufogcomp)) return;
             smtc = GETIV(maxtexcoords)-GETIV(reserveshadowmaptc);
@@ -1508,7 +1502,7 @@ void shader(int *type, char *name, char *vs, char *ps)
 {
     if(lookupshaderbyname(name)) return;
    
-    if((*type & SHADER_GLSLANG ? renderpath!=R_GLSLANG && renderpath!=R_ASMGLSLANG : renderpath==R_GLSLANG) ||
+    if((*type & SHADER_GLSLANG ? GETIV(renderpath)!=R_GLSLANG && GETIV(renderpath)!=R_ASMGLSLANG : GETIV(renderpath)==R_GLSLANG) ||
        (!hasCM && strstr(ps, *type & SHADER_GLSLANG ? "textureCube" : "CUBE;")) ||
        (!hasTR && strstr(ps, *type & SHADER_GLSLANG ? "texture2DRect" : "RECT;")))
     {
@@ -1516,13 +1510,12 @@ void shader(int *type, char *name, char *vs, char *ps)
         return;
     }
  
-    extern int mesa_program_bug;
-    if(renderpath!=R_FIXEDFUNCTION)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION)
     {
         defformatstring(info)("shader %s", name);
         renderprogress(loadprogress, info);
     }
-    if((renderpath==R_ASMSHADER || renderpath==R_ASMGLSLANG) && mesa_program_bug && initshaders && !(*type & SHADER_GLSLANG))
+    if((GETIV(renderpath)==R_ASMSHADER || GETIV(renderpath)==R_ASMGLSLANG) && GETIV(mesa_program_bug) && initshaders && !(*type & SHADER_GLSLANG))
     {
         glEnable(GL_VERTEX_PROGRAM_ARB);
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
@@ -1537,7 +1530,7 @@ void shader(int *type, char *name, char *vs, char *ps)
         if(vsbuf.length()) vs = vsbuf.getbuf(); \
         if(psbuf.length()) ps = psbuf.getbuf(); \
     }
-    if(renderpath!=R_FIXEDFUNCTION)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION)
     {
         if(*type & SHADER_GLSLANG)
         {
@@ -1546,14 +1539,14 @@ void shader(int *type, char *name, char *vs, char *ps)
         }
     }
     Shader *s = newshader(*type, name, vs, ps);
-    if(s && renderpath!=R_FIXEDFUNCTION)
+    if(s && GETIV(renderpath)!=R_FIXEDFUNCTION)
     {
         // '#' is a comment in vertex/fragment programs, while '#pragma' allows an escape for GLSL, so can handle both at once
         if(strstr(vs, "#pragma CUBE2_water")) genwatervariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_shadowmap")) genshadowmapvariant(*s, s->name, vs, ps);
         if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(*s, s->name, vs, ps);
     }
-    if((renderpath==R_ASMSHADER || renderpath==R_ASMGLSLANG) && mesa_program_bug && initshaders && !(*type & SHADER_GLSLANG))
+    if((GETIV(renderpath)==R_ASMSHADER || GETIV(renderpath)==R_ASMGLSLANG) && GETIV(mesa_program_bug) && initshaders && !(*type & SHADER_GLSLANG))
     {
         glDisable(GL_VERTEX_PROGRAM_ARB);
         glDisable(GL_FRAGMENT_PROGRAM_ARB);
@@ -1569,7 +1562,7 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
         return;
     }
 
-    if(renderpath==R_FIXEDFUNCTION && standardshader) return;
+    if(GETIV(renderpath)==R_FIXEDFUNCTION && standardshader) return;
 
     Shader *s = lookupshaderbyname(name);
     if(!s) return;
@@ -1577,14 +1570,13 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
     defformatstring(varname)("<variant:%d,%d>%s", s->variants[*row].length(), *row, name);
     //defformatstring(info)("shader %s", varname);
     //renderprogress(loadprogress, info);
-    extern int mesa_program_bug;
-    if((renderpath==R_ASMSHADER || renderpath==R_ASMGLSLANG) && mesa_program_bug && initshaders && !(*type & SHADER_GLSLANG))
+    if((GETIV(renderpath)==R_ASMSHADER || GETIV(renderpath)==R_ASMGLSLANG) && GETIV(mesa_program_bug) && initshaders && !(*type & SHADER_GLSLANG))
     {
         glEnable(GL_VERTEX_PROGRAM_ARB);
         glEnable(GL_FRAGMENT_PROGRAM_ARB);
     }
     vector<char> vsbuf, psbuf, vsbak, psbak;
-    if(renderpath!=R_FIXEDFUNCTION)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION)
     {
         if(*type & SHADER_GLSLANG)
         {
@@ -1593,13 +1585,13 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps)
         }
     }
     Shader *v = newshader(*type, varname, vs, ps, s, *row);
-    if(v && renderpath!=R_FIXEDFUNCTION)
+    if(v && GETIV(renderpath)!=R_FIXEDFUNCTION)
     {
         // '#' is a comment in vertex/fragment programs, while '#pragma' allows an escape for GLSL, so can handle both at once
         if(strstr(vs, "#pragma CUBE2_dynlight")) gendynlightvariant(*s, varname, vs, ps, *row);
         if(strstr(ps, "#pragma CUBE2_variant") || strstr(vs, "#pragma CUBE2_variant")) gengenericvariant(*s, varname, vs, ps, *row);
     }
-    if((renderpath==R_ASMSHADER || renderpath==R_ASMGLSLANG) && mesa_program_bug && initshaders && !(*type & SHADER_GLSLANG))
+    if((GETIV(renderpath)==R_ASMSHADER || GETIV(renderpath)==R_ASMGLSLANG) && GETIV(mesa_program_bug) && initshaders && !(*type & SHADER_GLSLANG))
     {
         glDisable(GL_VERTEX_PROGRAM_ARB);
         glDisable(GL_FRAGMENT_PROGRAM_ARB);
@@ -1612,7 +1604,7 @@ void setshader(char *name)
     Shader *s = shaders.access(name);
     if(!s)
     {
-        if(renderpath!=R_FIXEDFUNCTION) conoutf(CON_ERROR, "no such shader: %s", name);
+        if(GETIV(renderpath)!=R_FIXEDFUNCTION) conoutf(CON_ERROR, "no such shader: %s", name);
     }
     else curshader = s;
 }
@@ -1834,7 +1826,7 @@ void cleanuppostfx(bool fullclean)
 
 void renderpostfx()
 {
-    if(postfxpasses.empty() || renderpath==R_FIXEDFUNCTION) return;
+    if(postfxpasses.empty() || GETIV(renderpath)==R_FIXEDFUNCTION) return;
 
     if(postfxw != screen->w || postfxh != screen->h) 
     {
@@ -2050,7 +2042,7 @@ void parsetmufunc(tmu &t, tmufunc &f, const char *s)
 
 void resettmu(int n)
 {
-    if(renderpath!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
     tmu &t = tmus[n];
     if(t.mode!=GL_MODULATE) { t.mode = GL_MODULATE; glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, t.mode); }
     if(t.rgb.scale != 1)  { t.rgb.scale = 1; glTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, t.rgb.scale); }
@@ -2059,7 +2051,7 @@ void resettmu(int n)
 
 void scaletmu(int n, int rgbscale, int alphascale)
 {
-    if(renderpath!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
     tmu &t = tmus[n];
     if(rgbscale && t.rgb.scale != rgbscale)  { t.rgb.scale = rgbscale; glTexEnvi(GL_TEXTURE_ENV, GL_RGB_SCALE_ARB, t.rgb.scale); }
     if(alphascale && t.alpha.scale != alphascale)  { t.alpha.scale = alphascale; glTexEnvi(GL_TEXTURE_ENV, GL_ALPHA_SCALE, t.alpha.scale); }
@@ -2067,7 +2059,7 @@ void scaletmu(int n, int rgbscale, int alphascale)
 
 void colortmu(int n, float r, float g, float b, float a)
 {
-    if(renderpath!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
     tmu &t = tmus[n];
     if(t.color[0] != r || t.color[1] != g || t.color[2] != b || t.color[3] != a)
     {
@@ -2098,7 +2090,7 @@ void committmufunc(GLenum mode, bool rgb, tmufunc &dst, tmufunc &src)
 
 void setuptmu(int n, const char *rgbfunc, const char *alphafunc)
 {
-    if(renderpath!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION || n>=GETIV(maxtmus)) return;
 
     static tmu init = INITTMU;
     tmu f = tmus[n];
@@ -2130,7 +2122,7 @@ void inittmus()
         glActiveTexture_(GL_TEXTURE0_ARB);
     }
     else if(hasTE) { SETVN(maxtmus, 1); resettmu(0); }
-    if(renderpath==R_FIXEDFUNCTION)
+    if(GETIV(renderpath)==R_FIXEDFUNCTION)
     {
         if(GETIV(maxtmus)<4) SETV(caustics, 0);
         if(GETIV(maxtmus)<2)
@@ -2150,14 +2142,14 @@ void cleanupshaders()
     defaultshader = notextureshader = nocolorshader = foggedshader = foggednotextureshader = NULL;
     enumerate(shaders, Shader, s, s.cleanup());
     Shader::lastshader = NULL;
-    if(renderpath==R_ASMSHADER || renderpath==R_ASMGLSLANG)
+    if(GETIV(renderpath)==R_ASMSHADER || GETIV(renderpath)==R_ASMGLSLANG)
     {
         glBindProgram_(GL_VERTEX_PROGRAM_ARB, 0);
         glBindProgram_(GL_FRAGMENT_PROGRAM_ARB, 0);
         glDisable(GL_VERTEX_PROGRAM_ARB);
         glDisable(GL_FRAGMENT_PROGRAM_ARB);
     }
-    if(renderpath==R_GLSLANG || renderpath==R_ASMGLSLANG) glUseProgramObject_(0);
+    if(GETIV(renderpath)==R_GLSLANG || GETIV(renderpath)==R_ASMGLSLANG) glUseProgramObject_(0);
     loopi(RESERVEDSHADERPARAMS + MAXSHADERPARAMS)
     {
         vertexparamstate[i].dirty = ShaderParamState::INVALID;
@@ -2173,7 +2165,7 @@ void reloadshaders()
     persistidents = false;
     loadshaders();
     persistidents = true;
-    if(renderpath==R_FIXEDFUNCTION) return;
+    if(GETIV(renderpath)==R_FIXEDFUNCTION) return;
     linkslotshaders();
     enumerate(shaders, Shader, s, 
     {

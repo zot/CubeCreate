@@ -26,14 +26,14 @@ bool glaring = false;
 
 void drawglaretex()
 {
-    if(!GETIV(glare) || renderpath==R_FIXEDFUNCTION) return;
+    if(!GETIV(glare) || GETIV(renderpath)==R_FIXEDFUNCTION) return;
 
     glaretex.render(1<<GETIV(glaresize), 1<<GETIV(glaresize), GETIV(blurglare), GETIV(blurglaresigma)/100.0f);
 }
 
 void addglare()
 {
-    if(!GETIV(glare) || renderpath==R_FIXEDFUNCTION) return;
+    if(!GETIV(glare) || GETIV(renderpath)==R_FIXEDFUNCTION) return;
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);

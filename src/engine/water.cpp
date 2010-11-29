@@ -157,8 +157,8 @@ void rendervertwater(uint subdiv, int xo, int yo, int z, uint size, uchar mat = 
     {
         case MAT_WATER:
         {
-            whoffset = lastmillis/(renderpath!=R_FIXEDFUNCTION ? 600.0f : 300.0f);
-            if(renderpath!=R_FIXEDFUNCTION) { renderwaterstrips(vertwt, z); }
+            whoffset = lastmillis/(GETIV(renderpath)!=R_FIXEDFUNCTION ? 600.0f : 300.0f);
+            if(GETIV(renderpath)!=R_FIXEDFUNCTION) { renderwaterstrips(vertwt, z); }
             else 
             {
                 bool below = camera1->o.z < z-WATER_OFFSET;
@@ -259,7 +259,7 @@ void renderflatwater(int x, int y, int z, uint rsize, uint csize, uchar mat = MA
     switch(mat)
     {
         case MAT_WATER:
-            if(renderpath!=R_FIXEDFUNCTION) { renderwaterquad(vertwtn, z); }
+            if(GETIV(renderpath)!=R_FIXEDFUNCTION) { renderwaterquad(vertwtn, z); }
             else
             {
                 bool below = camera1->o.z < z-WATER_OFFSET;
@@ -531,7 +531,7 @@ void renderwater()
     if(editmode && GETIV(showmat) && !envmapping) return;
     if(!rplanes) return;
 
-    if(renderpath==R_FIXEDFUNCTION) { renderwaterff(); return; }
+    if(GETIV(renderpath)==R_FIXEDFUNCTION) { renderwaterff(); return; }
 
     glDisable(GL_CULL_FACE);
 
@@ -710,7 +710,7 @@ void renderwater()
         {
             glActiveTexture_(GL_TEXTURE3_ARB);
             glDisable(GL_TEXTURE_2D);
-            if(hasFBO && renderpath!=R_FIXEDFUNCTION && GETIV(waterfade)) glDisable(GL_BLEND);
+            if(hasFBO && GETIV(renderpath)!=R_FIXEDFUNCTION && GETIV(waterfade)) glDisable(GL_BLEND);
         }
         else
         {
@@ -795,7 +795,7 @@ void genwatertex(GLuint &tex, GLuint &fb, GLuint &db, bool refract = false)
     const int stencilfmts = 2;
     static GLenum reflectfmt = GL_FALSE, refractfmt = GL_FALSE, depthfmt = GL_FALSE, stencilfmt = GL_FALSE;
     static bool usingalpha = false;
-    bool needsalpha = refract && hasFBO && renderpath!=R_FIXEDFUNCTION && GETIV(waterrefract) && GETIV(waterfade);
+    bool needsalpha = refract && hasFBO && GETIV(renderpath)!=R_FIXEDFUNCTION && GETIV(waterrefract) && GETIV(waterfade);
     if(refract && usingalpha!=needsalpha)
     {
         usingalpha = needsalpha;
@@ -963,7 +963,7 @@ void queryreflections()
     while(size>GETIV(hwtexsize)) size /= 2;
     if(size!=lastsize) { if(lastsize) cleanreflections(); lastsize = size; }
 
-    bool shouldrefract = GETIV(waterfallrefract) && renderpath!=R_FIXEDFUNCTION;
+    bool shouldrefract = GETIV(waterfallrefract) && GETIV(renderpath)!=R_FIXEDFUNCTION;
     for(vtxarray *va = visibleva; va; va = va->next)
     {
         if(!va->matsurfs || va->occluded >= OCCLUDE_BB || va->curvfc >= VFC_FOGGED) continue;
@@ -986,7 +986,7 @@ void queryreflections()
             if(waterpvsoccluded(ref.height)) ref.matsurfs.setsize(0);
         }
     }
-    if(renderpath!=R_FIXEDFUNCTION && GETIV(waterfallrefract))
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION && GETIV(waterfallrefract))
     {
         Reflection &ref = waterfallrefraction;
         if(ref.height>=0 && ref.lastused>=totalmillis && ref.matsurfs.length())
@@ -1009,7 +1009,7 @@ void queryreflections()
         ref.query = ref.height>=0 && ref.lastused>=totalmillis && ref.matsurfs.length() ? newquery(&ref) : NULL;
         if(ref.query) queryreflection(ref, !refs++);
     }
-    if(renderpath!=R_FIXEDFUNCTION && GETIV(waterfallrefract))
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION && GETIV(waterfallrefract))
     {
         Reflection &ref = waterfallrefraction;
         ref.prevquery = GETIV(oqwater) > 1 ? ref.query : NULL;
@@ -1161,8 +1161,6 @@ void drawreflections()
 {
     if((editmode && GETIV(showmat) && !envmapping) || GETIV(nowater) || minimapping) return;
 
-    extern int nvidia_scissor_bug;
-
     static int lastdrawn = 0;
     int refs = 0, n = lastdrawn;
     float offset = -WATER_OFFSET;
@@ -1205,9 +1203,9 @@ void drawreflections()
         if(GETIV(waterreflect) && ref.tex && camera1->o.z >= ref.height+offset)
         {
             if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.tex, 0);
-            if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
+            if(scissor && !GETIV(nvidia_scissor_bug)) glEnable(GL_SCISSOR_TEST);
             maskreflection(ref, offset, true);
-            if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
+            if(scissor && GETIV(nvidia_scissor_bug)) glEnable(GL_SCISSOR_TEST);
             savevfcP();
             setvfcP(ref.height+offset, clipmin, clipmax); 
             drawreflection(ref.height+offset, false);
@@ -1223,10 +1221,10 @@ void drawreflections()
         if(GETIV(waterrefract) && ref.refracttex)
         {
             if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.refracttex, 0);
-            if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
+            if(scissor && !GETIV(nvidia_scissor_bug)) glEnable(GL_SCISSOR_TEST);
             maskreflection(ref, offset, false, GETIV(refractclear) || !GETIV(waterfog) || (ref.depth>=10000 && camera1->o.z >= ref.height + offset));
-            if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
-            if(GETIV(waterfog) || (renderpath!=R_FIXEDFUNCTION && GETIV(waterfade) && hasFBO))
+            if(scissor && GETIV(nvidia_scissor_bug)) glEnable(GL_SCISSOR_TEST);
+            if(GETIV(waterfog) || (GETIV(renderpath)!=R_FIXEDFUNCTION && GETIV(waterfade) && hasFBO))
             {
                 savevfcP();
                 setvfcP(-1, clipmin, clipmax);
@@ -1244,7 +1242,7 @@ void drawreflections()
         if(refs>=GETIV(maxreflect)) break;
     }
 
-    if(renderpath!=R_FIXEDFUNCTION && GETIV(waterfallrefract) && waterfallrefraction.refracttex)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION && GETIV(waterfallrefract) && waterfallrefraction.refracttex)
     {
         Reflection &ref = waterfallrefraction;
 
@@ -1277,9 +1275,9 @@ void drawreflections()
         }
 
         if(hasFBO) glFramebufferTexture2D_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, ref.refracttex, 0);
-        if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
+        if(scissor && !GETIV(nvidia_scissor_bug)) glEnable(GL_SCISSOR_TEST);
         maskreflection(ref, -0.1f, false, !GETIV(waterfog));
-        if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
+        if(scissor && GETIV(nvidia_scissor_bug)) glEnable(GL_SCISSOR_TEST);
         if(GETIV(waterfog))
         {
             savevfcP();

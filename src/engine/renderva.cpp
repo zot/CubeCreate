@@ -166,8 +166,7 @@ void setvfcP(float z, const vec &bbmin, const vec &bbmax)
     vfcP[4] = plane(vec4(pw).add(pz)).normalize(); // near/far planes
     if(z >= 0) loopi(5) vfcP[i].reflectz(z);
 
-    extern int fog;
-    vfcDfog = fog;
+    vfcDfog = GETIV(fog);
     calcvfcD();
 }
 
@@ -664,7 +663,7 @@ void renderblendbrush(GLuint tex, float x, float y, float w, float h)
     glColor4ub((GETIV(blendbrushcolor)>>16)&0xFF, (GETIV(blendbrushcolor)>>8)&0xFF, GETIV(blendbrushcolor)&0xFF, 0x40);
 
     GLfloat s[4] = { 1.0f/w, 0, 0, -x/w }, t[4] = { 0, 1.0f/h, 0, -y/h };
-    if(renderpath==R_FIXEDFUNCTION) 
+    if(GETIV(renderpath)==R_FIXEDFUNCTION) 
     {
         setuptexgen();
         glTexGenfv(GL_S, GL_OBJECT_PLANE, s);
@@ -698,7 +697,7 @@ void renderblendbrush(GLuint tex, float x, float y, float w, float h)
         prev = va;
     }
 
-    if(renderpath==R_FIXEDFUNCTION) disabletexgen();
+    if(GETIV(renderpath)==R_FIXEDFUNCTION) disabletexgen();
 
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
@@ -730,8 +729,7 @@ void rendershadowmapreceivers()
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_GREATER);
 
-    extern int ati_minmax_bug;
-    if(!ati_minmax_bug) glColorMask(GL_FALSE, GL_FALSE, GL_TRUE, GL_FALSE);
+    if(!GETIV(ati_minmax_bug)) glColorMask(GL_FALSE, GL_FALSE, GL_TRUE, GL_FALSE);
 
     glEnable(GL_BLEND);
     glBlendEquation_(GL_MAX_EXT);
@@ -765,7 +763,7 @@ void rendershadowmapreceivers()
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);
     
-    if(!ati_minmax_bug) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    if(!GETIV(ati_minmax_bug)) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
     if(hasVBO)
     {
@@ -916,7 +914,7 @@ struct geombatch
     {
         if(va->vbuf < b.va->vbuf) return -1;
         if(va->vbuf > b.va->vbuf) return 1;
-        if(renderpath!=R_FIXEDFUNCTION)
+        if(GETIV(renderpath)!=R_FIXEDFUNCTION)
         {
             if(va->dynlightmask < b.va->dynlightmask) return -1;
             if(va->dynlightmask > b.va->dynlightmask) return 1;
@@ -1110,9 +1108,9 @@ static void changevbuf(renderstate &cur, int pass, vtxarray *va)
             glTexCoordPointer(2, GL_FLOAT, VTXSIZE, &va->vdata[0].u);
         }
         glClientActiveTexture_(GL_TEXTURE0_ARB+cur.lightmaptmu);
-        glTexCoordPointer(2, renderpath==R_FIXEDFUNCTION ? GL_FLOAT : GL_SHORT, VTXSIZE, &va->vdata[0].lmu);
+        glTexCoordPointer(2, GETIV(renderpath)==R_FIXEDFUNCTION ? GL_FLOAT : GL_SHORT, VTXSIZE, &va->vdata[0].lmu);
         glClientActiveTexture_(GL_TEXTURE0_ARB+cur.diffusetmu);
-        if(renderpath!=R_FIXEDFUNCTION)
+        if(GETIV(renderpath)!=R_FIXEDFUNCTION)
         {
             glNormalPointer(GL_BYTE, VTXSIZE, va->vdata[0].norm.v);
             glColorPointer(4, GL_UNSIGNED_BYTE, VTXSIZE, va->vdata[0].tangent.v);
@@ -1140,7 +1138,7 @@ static void changebatchtmus(renderstate &cur, int pass, geombatch &b)
         glBindTexture(GL_TEXTURE_2D, cur.textures[cur.lightmaptmu] = lightmaptexs[lmid].id);
         changed = true;
     }
-    if(renderpath==R_FIXEDFUNCTION)
+    if(GETIV(renderpath)==R_FIXEDFUNCTION)
     {
         if(b.vslot.slot->shader->type&SHADER_ENVMAP && b.es.envmap!=EMID_CUSTOM && cur.envscale.x)
         {
@@ -1443,7 +1441,7 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot, VSlot &vslot)
             glBindTexture(GL_TEXTURE_2D, cur.textures[cur.diffusetmu] = diffusetex);
     }
 
-    if(renderpath==R_FIXEDFUNCTION)
+    if(GETIV(renderpath)==R_FIXEDFUNCTION)
     {
         if(pass==RENDERPASS_LIGHTMAP || pass==RENDERPASS_COLOR) 
         {
@@ -1605,7 +1603,7 @@ static void changetexgen(renderstate &cur, int dim, Slot &slot, VSlot &vslot)
         cur.texgenvslot = &vslot;
     }
 
-    if(renderpath==R_FIXEDFUNCTION)
+    if(GETIV(renderpath)==R_FIXEDFUNCTION)
     {
         bool mtglow = cur.mtglow && !cur.envscale.x;
         if(cur.texgendim == dim && (cur.mttexgen || !mtglow)) return;
@@ -1644,7 +1642,7 @@ static void renderbatch(renderstate &cur, int pass, geombatch &b)
         {
             if(rendered < 0)
             {
-                if(renderpath!=R_FIXEDFUNCTION) changeshader(cur, b.vslot.slot->shader, *b.vslot.slot, b.vslot, false);
+                if(GETIV(renderpath)!=R_FIXEDFUNCTION) changeshader(cur, b.vslot.slot->shader, *b.vslot.slot, b.vslot, false);
                 rendered = 0;
                 gbatches++;
             }
@@ -1662,7 +1660,7 @@ static void renderbatch(renderstate &cur, int pass, geombatch &b)
         {
             if(rendered < 1)
             {
-                if(renderpath!=R_FIXEDFUNCTION) changeshader(cur, b.vslot.slot->shader, *b.vslot.slot, b.vslot, true);
+                if(GETIV(renderpath)!=R_FIXEDFUNCTION) changeshader(cur, b.vslot.slot->shader, *b.vslot.slot, b.vslot, true);
                 rendered = 1;
                 gbatches++;
             }
@@ -1730,7 +1728,6 @@ void renderzpass(renderstate &cur, vtxarray *va)
     if(!cur.depthmask) { cur.depthmask = true; glDepthMask(GL_TRUE); }
     if(cur.colormask) { cur.colormask = false; glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); }
 
-    extern int apple_glsldepth_bug;
     int firsttex = 0, numtexs = va->texs, numtris = va->tris;
     ushort *edata = va->edata;
     if(cur.alphaing)
@@ -1742,7 +1739,7 @@ void renderzpass(renderstate &cur, vtxarray *va)
         xtravertsva += 3*numtris;
     }
     else xtravertsva += va->verts;
-    if(renderpath!=R_ASMGLSLANG || !apple_glsldepth_bug)
+    if(GETIV(renderpath)!=R_ASMGLSLANG || !GETIV(apple_glsldepth_bug))
     {
         nocolorshader->set();
         drawvatris(va, 3*numtris, edata);
@@ -1864,7 +1861,7 @@ void renderva(renderstate &cur, vtxarray *va, int pass = RENDERPASS_LIGHTMAP, bo
                 foggedvas.add(va);
                 break;
             }
-            if(renderpath!=R_FIXEDFUNCTION && !envmapping && !glaring && !cur.alphaing)
+            if(GETIV(renderpath)!=R_FIXEDFUNCTION && !envmapping && !glaring && !cur.alphaing)
             {
                 va->shadowed = isshadowmapreceiver(va);
                 calcdynlightmask(va);
@@ -1963,7 +1960,7 @@ void loadcaustics(bool force)
     loopi(NUMCAUSTICS)
     {
         defformatstring(name)(
-            renderpath==R_FIXEDFUNCTION ? 
+            GETIV(renderpath)==R_FIXEDFUNCTION ? 
                 "<grey><mad:0.6,0.4>packages/caustics/caust%.2d.png" :
                 "<grey><mad:-0.6,0.6>packages/caustics/caust%.2d.png",
             i);
@@ -2000,7 +1997,7 @@ void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
         glActiveTexture_(GL_TEXTURE0_ARB+tmu+i);
         glEnable(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, caustictex[(tex+i)%NUMCAUSTICS]->id);
-        if(renderpath==R_FIXEDFUNCTION)
+        if(GETIV(renderpath)==R_FIXEDFUNCTION)
         {
             setuptexgen();
             if(color) setuptmu(tmu+i, !i ? "$1 , $0 @ Ca" : "= P");
@@ -2009,7 +2006,7 @@ void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
             glTexGenfv(GL_T, GL_OBJECT_PLANE, t);
         }
     }
-    if(renderpath!=R_FIXEDFUNCTION)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION)
     {
         static Shader *causticshader = NULL;
         if(!causticshader) causticshader = lookupshaderbyname("caustic");
@@ -2022,7 +2019,7 @@ void setupcaustics(int tmu, float blend, GLfloat *color = NULL)
 
 void setupTMUs(renderstate &cur, float causticspass, bool fogpass)
 {
-    if(renderpath==R_FIXEDFUNCTION)
+    if(GETIV(renderpath)==R_FIXEDFUNCTION)
     {
         if(GETIV(nolights)) cur.lightmaptmu = -1;
         else if(GETIV(maxtmus)>=3)
@@ -2137,7 +2134,7 @@ void cleanupTMUs(renderstate &cur, float causticspass, bool fogpass)
     glLoadIdentity();
     glMatrixMode(GL_MODELVIEW);
 
-    if(renderpath!=R_FIXEDFUNCTION)
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION)
     {
         glDisableClientState(GL_NORMAL_ARRAY);
         glDisableClientState(GL_COLOR_ARRAY);
@@ -2239,12 +2236,12 @@ static void cleanupenvpass(renderstate &cur)
 
 void rendergeom(float causticspass, bool fogpass)
 {
-    if(causticspass && ((renderpath==R_FIXEDFUNCTION && GETIV(maxtmus)<2) || !GETIV(causticscale) || !GETIV(causticmillis))) causticspass = 0;
+    if(causticspass && ((GETIV(renderpath)==R_FIXEDFUNCTION && GETIV(maxtmus)<2) || !GETIV(causticscale) || !GETIV(causticmillis))) causticspass = 0;
 
     bool mainpass = !reflecting && !refracting && !envmapping && !glaring,
          doOQ = hasOQ && GETIV(oqfrags) && GETIV(oqgeom) && mainpass,
          doZP = doOQ && GETIV(zpass),
-         doSM = GETIV(shadowmap) && !envmapping && !glaring && renderpath!=R_FIXEDFUNCTION;
+         doSM = GETIV(shadowmap) && !envmapping && !glaring && GETIV(renderpath)!=R_FIXEDFUNCTION;
     renderstate cur;
     if(mainpass)
     {
@@ -2364,7 +2361,7 @@ void rendergeom(float causticspass, bool fogpass)
         if(geombatches.length()) renderbatches(cur, GETIV(nolights) ? RENDERPASS_COLOR : RENDERPASS_LIGHTMAP);
     }
 
-    if(blends && (renderpath!=R_FIXEDFUNCTION || !GETIV(nolights)))
+    if(blends && (GETIV(renderpath)!=R_FIXEDFUNCTION || !GETIV(nolights)))
     {
         if(!multipassing) { multipassing = true; glDepthFunc(GL_LEQUAL); }
         glDepthMask(GL_FALSE);
@@ -2412,13 +2409,13 @@ void rendergeom(float causticspass, bool fogpass)
 
     if(foggedvas.length()) renderfoggedvas(cur, doOQ && !GETIV(zpass));
 
-    if(renderpath==R_FIXEDFUNCTION ? (GETIV(glowpass) && cur.skipped) || (causticspass>=1 && cur.causticstmu<0) || (GETIV(shadowmap) && GETIV(shadowmapcasters)) || hasdynlights : causticspass)
+    if(GETIV(renderpath)==R_FIXEDFUNCTION ? (GETIV(glowpass) && cur.skipped) || (causticspass>=1 && cur.causticstmu<0) || (GETIV(shadowmap) && GETIV(shadowmapcasters)) || hasdynlights : causticspass)
     {
         if(!multipassing) { multipassing = true; glDepthFunc(GL_LEQUAL); }
         glDepthMask(GL_FALSE);
         glEnable(GL_BLEND);
 
-        if(renderpath==R_FIXEDFUNCTION && GETIV(glowpass) && cur.skipped&(1<<TEX_ENVMAP))
+        if(GETIV(renderpath)==R_FIXEDFUNCTION && GETIV(glowpass) && cur.skipped&(1<<TEX_ENVMAP))
         {
             setupenvpass(cur);
             rendergeommultipass(cur, RENDERPASS_ENVMAP, fogpass);
@@ -2428,7 +2425,7 @@ void rendergeom(float causticspass, bool fogpass)
         static GLfloat zerofog[4] = { 0, 0, 0, 1 }, onefog[4] = { 1, 1, 1, 1 }; 
         glGetFloatv(GL_FOG_COLOR, cur.fogcolor);
 
-        if(renderpath==R_FIXEDFUNCTION && GETIV(glowpass) && cur.skipped&(1<<TEX_GLOW))
+        if(GETIV(renderpath)==R_FIXEDFUNCTION && GETIV(glowpass) && cur.skipped&(1<<TEX_GLOW))
         {
             glBlendFunc(GL_ONE, GL_ONE);
             glFogfv(GL_FOG_COLOR, zerofog);
@@ -2440,11 +2437,11 @@ void rendergeom(float causticspass, bool fogpass)
             glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         }
 
-        if(renderpath==R_FIXEDFUNCTION ? causticspass>=1 && cur.causticstmu<0 : causticspass)
+        if(GETIV(renderpath)==R_FIXEDFUNCTION ? causticspass>=1 && cur.causticstmu<0 : causticspass)
         {
             setupcaustics(0, causticspass);
-            glBlendFunc(GL_ZERO, renderpath==R_FIXEDFUNCTION ? GL_SRC_COLOR : GL_ONE_MINUS_SRC_COLOR);
-            glFogfv(GL_FOG_COLOR, renderpath==R_FIXEDFUNCTION ? onefog : zerofog);
+            glBlendFunc(GL_ZERO, GETIV(renderpath)==R_FIXEDFUNCTION ? GL_SRC_COLOR : GL_ONE_MINUS_SRC_COLOR);
+            glFogfv(GL_FOG_COLOR, GETIV(renderpath)==R_FIXEDFUNCTION ? onefog : zerofog);
             if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
             rendergeommultipass(cur, RENDERPASS_CAUSTICS, fogpass);
             if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -2452,7 +2449,7 @@ void rendergeom(float causticspass, bool fogpass)
             {
                 glActiveTexture_(GL_TEXTURE0_ARB+i);
                 resettmu(i);
-                if(renderpath==R_FIXEDFUNCTION || !i) 
+                if(GETIV(renderpath)==R_FIXEDFUNCTION || !i) 
                 {
                     resettmu(i);
                     disabletexgen();
@@ -2462,7 +2459,7 @@ void rendergeom(float causticspass, bool fogpass)
             glActiveTexture_(GL_TEXTURE0_ARB);
         }
 
-        if(renderpath==R_FIXEDFUNCTION && GETIV(shadowmap) && GETIV(shadowmapcasters))
+        if(GETIV(renderpath)==R_FIXEDFUNCTION && GETIV(shadowmap) && GETIV(shadowmapcasters))
         {
             glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
             glFogfv(GL_FOG_COLOR, zerofog);
@@ -2473,7 +2470,7 @@ void rendergeom(float causticspass, bool fogpass)
             popshadowmap();
         }
 
-        if(renderpath==R_FIXEDFUNCTION && hasdynlights)
+        if(GETIV(renderpath)==R_FIXEDFUNCTION && hasdynlights)
         {
             glBlendFunc(GL_SRC_ALPHA, GETIV(dbgffdl) ? GL_ZERO : GL_ONE);
             glFogfv(GL_FOG_COLOR, zerofog);
@@ -2598,7 +2595,7 @@ void renderalphageom(bool fogpass)
 
         glDepthFunc(GL_LEQUAL);
         glEnable(GL_BLEND);
-        if(renderpath==R_FIXEDFUNCTION) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        if(GETIV(renderpath)==R_FIXEDFUNCTION) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         else glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         cur.vbuf = 0;
         cur.texgendim = -1;
@@ -2611,7 +2608,7 @@ void renderalphageom(bool fogpass)
 
         cleanupTMUs(cur, 0, fogpass);
 
-        if(renderpath==R_FIXEDFUNCTION && GETIV(glowpass) && cur.skipped)
+        if(GETIV(renderpath)==R_FIXEDFUNCTION && GETIV(glowpass) && cur.skipped)
         {
             if(cur.depthmask) { cur.depthmask = false; glDepthMask(GL_FALSE); }
             if(cur.skipped&(1<<TEX_ENVMAP))
@@ -2647,7 +2644,7 @@ void renderalphageom(bool fogpass)
                 setupTMUs(cur, 0, fogpass);
             }
         }
-        else if(renderpath!=R_FIXEDFUNCTION) 
+        else if(GETIV(renderpath)!=R_FIXEDFUNCTION) 
         {
             glFogfv(GL_FOG_COLOR, cur.fogcolor);
         }

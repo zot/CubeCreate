@@ -413,7 +413,7 @@ struct vacollect : verthash
             if(x->dim > y->dim) return 1;
             return 0;
         }
-        if(renderpath!=R_FIXEDFUNCTION)
+        if(GETIV(renderpath)!=R_FIXEDFUNCTION)
         {
             VSlot &xs = lookupvslot(x->tex, false), &ys = lookupvslot(y->tex, false);
             if(xs.slot->shader < ys.slot->shader) return -1;
@@ -439,7 +439,7 @@ struct vacollect : verthash
 
     void genverts(void *buf)
     {
-        if(renderpath==R_FIXEDFUNCTION)
+        if(GETIV(renderpath)==R_FIXEDFUNCTION)
             GENVERTSPOSNORMUV(vertexff, buf, { f->lmu = v.lmu/float(SHRT_MAX); f->lmv = v.lmv/float(SHRT_MAX); });
         else 
             GENVERTS(vertex, buf, { *f = v; f->norm.flip(); });
@@ -557,7 +557,7 @@ struct vacollect : verthash
         {
             Slot &slot = *lookupvslot(va->eslist[i].texture, false).slot;
             loopvj(slot.sts) va->texmask |= 1<<slot.sts[j].type;
-            if(slot.shader->type&SHADER_ENVMAP && (renderpath!=R_FIXEDFUNCTION || (slot.ffenv && hasCM && GETIV(maxtmus) >= 2))) va->texmask |= 1<<TEX_ENVMAP;
+            if(slot.shader->type&SHADER_ENVMAP && (GETIV(renderpath)!=R_FIXEDFUNCTION || (slot.ffenv && hasCM && GETIV(maxtmus) >= 2))) va->texmask |= 1<<TEX_ENVMAP;
         }
 
         if(grasstris.length())
@@ -836,7 +836,7 @@ void addcubeverts(VSlot &vslot, int orient, int size, vec *pos, ushort texture, 
             v.lmv = short(ceil((lm->offsety + surface->y + (surface->texcoords[k*2 + 1] / 255.0f) * (surface->h - 1) + 0.5f) * SHRT_MAX/lmtex->h));
         }
         else v.lmu = v.lmv = 0;
-        if(renderpath!=R_FIXEDFUNCTION && normals)
+        if(GETIV(renderpath)!=R_FIXEDFUNCTION && normals)
         {
             v.norm = normals->normals[k];
             vec n = normals->normals[k].tovec(), t = orientation_tangent[vslot.rotation][dim];

@@ -84,7 +84,7 @@ void renderwaterfall(const materialsurface &m, Texture *tex, float scale, float 
     switch(mat)
     {
         case MAT_WATER: 
-            t /= renderpath!=R_FIXEDFUNCTION ? 600.0f : 300.0f; 
+            t /= GETIV(renderpath)!=R_FIXEDFUNCTION ? 600.0f : 300.0f; 
             d /= 1000.0f;
             break;
         case MAT_LAVA: 
@@ -663,7 +663,7 @@ void rendermaterials()
                             if(!blended) { glEnable(GL_BLEND); blended = true; }
                             if(depth) { glDepthMask(GL_FALSE); depth = false; }
                         }
-                        else if(renderpath==R_FIXEDFUNCTION || ((!GETIV(waterfallrefract) || reflecting || refracting) && (!hasCM || !GETIV(waterfallenv))))
+                        else if(GETIV(renderpath)==R_FIXEDFUNCTION || ((!GETIV(waterfallrefract) || reflecting || refracting) && (!hasCM || !GETIV(waterfallenv))))
                         {
                             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
                             glColor3ubv(wfcol);
@@ -752,11 +752,11 @@ void rendermaterials()
                     {
                         if(!depth) { glDepthMask(GL_TRUE); depth = true; }
                         if(blended) { glDisable(GL_BLEND); blended = false; }
-                        if(renderpath==R_FIXEDFUNCTION && !overbright) { setuptmu(0, "C * T x 2"); overbright = true; }
+                        if(GETIV(renderpath)==R_FIXEDFUNCTION && !overbright) { setuptmu(0, "C * T x 2"); overbright = true; }
                         float t = lastmillis/2000.0f;
                         t -= floor(t);
                         t = 1.0f - 2*fabs(t-0.5f);
-                        if(renderpath!=R_FIXEDFUNCTION && GETIV(glare)) t = 0.625f + 0.075f*t;
+                        if(GETIV(renderpath)!=R_FIXEDFUNCTION && GETIV(glare)) t = 0.625f + 0.075f*t;
                         else t = 0.5f + 0.5f*t;
                         glColor3f(t, t, t);
                         static Shader *lavashader = NULL, *lavaglareshader = NULL;
@@ -787,7 +787,7 @@ void rendermaterials()
                         if(envmapped!=m.envmap)
                         {
                             glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, lookupenvmap(m.envmap));
-                            if(renderpath!=R_FIXEDFUNCTION && !usedcamera) 
+                            if(GETIV(renderpath)!=R_FIXEDFUNCTION && !usedcamera) 
                             {
                                 setenvparamf("camera", SHPARAM_VERTEX, 0, camera1->o.x, camera1->o.y, camera1->o.z);
                                 usedcamera = true;
@@ -802,7 +802,7 @@ void rendermaterials()
                         if(depth) { glDepthMask(GL_FALSE); depth = false; }
                         if(m.envmap!=EMID_NONE && GETIV(glassenv))
                         {
-                            if(renderpath==R_FIXEDFUNCTION)
+                            if(GETIV(renderpath)==R_FIXEDFUNCTION)
                             {
                                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                                 glColor4f(0.8f, 0.9f, 1.0f, 0.25f);
@@ -845,7 +845,7 @@ void rendermaterials()
         switch(m.material)
         {
             case MAT_WATER:
-                renderwaterfall(m, wslot.sts[1].t, wslot.scale, 0.1f, MAT_WATER, renderpath!=R_FIXEDFUNCTION && hasCM && GETIV(waterfallenv) ? &normals[m.orient] : NULL);
+                renderwaterfall(m, wslot.sts[1].t, wslot.scale, 0.1f, MAT_WATER, GETIV(renderpath)!=R_FIXEDFUNCTION && hasCM && GETIV(waterfallenv) ? &normals[m.orient] : NULL);
                 break;
 
             case MAT_LAVA:
@@ -857,7 +857,7 @@ void rendermaterials()
 
             case MAT_GLASS:
                 if(m.envmap!=EMID_NONE && GETIV(glassenv))
-                    drawglass(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, 0.1f, renderpath!=R_FIXEDFUNCTION ? &normals[m.orient] : NULL);
+                    drawglass(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, 0.1f, GETIV(renderpath)!=R_FIXEDFUNCTION ? &normals[m.orient] : NULL);
                 else drawmaterial(m.orient, m.o.x, m.o.y, m.o.z, m.csize, m.rsize, 0.1f);
                 break;
         }

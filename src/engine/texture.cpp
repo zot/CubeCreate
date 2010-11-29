@@ -184,7 +184,7 @@ void texcolorify(ImageData &s, const vec &color, vec weights)
 
 void texffmask(ImageData &s, float glowscale, float envscale)
 {
-    if(renderpath!=R_FIXEDFUNCTION) return;
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION) return;
     if(GETIV(nomasks) || s.bpp<3) { s.cleanup(); return; }
     const int minval = 0x18;
     bool glow = false, envmap = true;
@@ -210,7 +210,7 @@ void texdup(ImageData &s, int srcchan, int dstchan)
 
 void texdecal(ImageData &s)
 {
-    if(renderpath!=R_FIXEDFUNCTION || hasTE) return;
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION || hasTE) return;
     ImageData m(s.w, s.w, 2);
     readwritetex(m, s,
         dst[0] = src[0];
@@ -357,8 +357,7 @@ void uploadtexture(GLenum target, GLenum internal, int tw, int th, GLenum format
         int srcalign = row > 0 ? rowalign : texalign(src, pitch, 1);
         if(align != srcalign) glPixelStorei(GL_UNPACK_ALIGNMENT, align = srcalign);
         if(row > 0) glPixelStorei(GL_UNPACK_ROW_LENGTH, row);
-        extern int ati_teximage_bug;
-        if(ati_teximage_bug && (internal==GL_RGB || internal==GL_RGB8) && mipmap && src && !level)
+        if(GETIV(ati_teximage_bug) && (internal==GL_RGB || internal==GL_RGB8) && mipmap && src && !level)
         {
             if(target==GL_TEXTURE_1D) 
             {
@@ -867,15 +866,15 @@ static bool texturedata(ImageData &d, const char *tname, Slot::Tex *tex = NULL, 
         PARSETEXCOMMANDS(pcmds);
         if(!strncmp(cmd, "noff", len))
         {
-            if(renderpath==R_FIXEDFUNCTION) return true;
+            if(GETIV(renderpath)==R_FIXEDFUNCTION) return true;
         }
         else if(!strncmp(cmd, "ffmask", len))
         {
-            if(renderpath==R_FIXEDFUNCTION) raw = true;
+            if(GETIV(renderpath)==R_FIXEDFUNCTION) raw = true;
         }
         else if(!strncmp(cmd, "decal", len))
         {
-            if(renderpath==R_FIXEDFUNCTION && !hasTE) raw = true;
+            if(GETIV(renderpath)==R_FIXEDFUNCTION && !hasTE) raw = true;
         }
         else if(!strncmp(cmd, "dds", len)) dds = true;
         else if(!strncmp(cmd, "thumbnail", len)) raw = true;
@@ -1604,15 +1603,15 @@ static void addname(vector<char> &key, Slot &slot, Slot::Tex &t, bool combined =
 
 static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 {
-    if(renderpath==R_FIXEDFUNCTION && t.type!=TEX_DIFFUSE && t.type!=TEX_GLOW && !forceload) { t.t = notexture; return; }
+    if(GETIV(renderpath)==R_FIXEDFUNCTION && t.type!=TEX_DIFFUSE && t.type!=TEX_GLOW && !forceload) { t.t = notexture; return; }
     vector<char> key; 
     addname(key, s, t);
     int texmask = 0;
-    bool envmap = renderpath==R_FIXEDFUNCTION && s.shader->type&SHADER_ENVMAP && s.ffenv && hasCM && GETIV(maxtmus) >= 2;
+    bool envmap = GETIV(renderpath)==R_FIXEDFUNCTION && s.shader->type&SHADER_ENVMAP && s.ffenv && hasCM && GETIV(maxtmus) >= 2;
     if(!forceload) switch(t.type)
     {
         case TEX_DIFFUSE:
-            if(renderpath==R_FIXEDFUNCTION)
+            if(GETIV(renderpath)==R_FIXEDFUNCTION)
             {
                 int mask = (1<<TEX_DECAL)|(1<<TEX_NORMAL);
                 if(envmap) mask |= 1<<TEX_SPEC;
@@ -1627,7 +1626,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
 
         case TEX_NORMAL:
         {
-            if(renderpath==R_FIXEDFUNCTION) break;
+            if(GETIV(renderpath)==R_FIXEDFUNCTION) break;
             int i = findtextype(s, t.type==TEX_DIFFUSE ? (1<<TEX_SPEC) : (1<<TEX_DEPTH));
             if(i<0) break;
             texmask |= 1<<s.sts[i].type;
@@ -1645,7 +1644,7 @@ static void texcombine(Slot &s, int index, Slot::Tex &t, bool forceload = false)
     switch(t.type)
     {
         case TEX_DIFFUSE:
-            if(renderpath==R_FIXEDFUNCTION)
+            if(GETIV(renderpath)==R_FIXEDFUNCTION)
             {
                 if(!ts.compressed) loopv(s.sts)
                 {
@@ -1695,7 +1694,7 @@ static Slot &loadslot(Slot &s, bool forceload)
         switch(t.type)
         {
             case TEX_ENVMAP:
-                if(hasCM && (renderpath != R_FIXEDFUNCTION || (s.shader->type&SHADER_ENVMAP && s.ffenv && GETIV(maxtmus) >= 2) || forceload)) t.t = cubemapload(t.name);
+                if(hasCM && (GETIV(renderpath) != R_FIXEDFUNCTION || (s.shader->type&SHADER_ENVMAP && s.ffenv && GETIV(maxtmus) >= 2) || forceload)) t.t = cubemapload(t.name);
                 break;
 
             default:
@@ -1853,8 +1852,7 @@ void loadlayermasks()
 
 void forcecubemapload(GLuint tex)
 {
-    extern int ati_cubemap_bug;
-    if(!ati_cubemap_bug || !tex) return;
+    if(!GETIV(ati_cubemap_bug) || !tex) return;
 
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();

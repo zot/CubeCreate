@@ -590,7 +590,7 @@ function bumpvariantshader(...)
 				// need to store these in Z/W to keep texcoords < 6, otherwise kills performance on Radeons
 				// but slows lightmap access in fragment shader a bit, so avoid when possible
 				<%
-					if btopt("r") or CV.minimizetcusage ~= 0 then
+					if btopt("r") or EV.minimizetcusage ~= 0 then
 						return [=[ gl_TexCoord[0].zw = gl_MultiTexCoord1.yx * ]=] .. lmcoordscale
 					else
 						return [=[ gl_TexCoord[1].xy = gl_MultiTexCoord1.xy * ]=] .. lmcoordscale
@@ -661,7 +661,7 @@ function bumpvariantshader(...)
 
 			void main(void)
 			{
-				#define lmtc <% return (CV.minimizetcusage ~= 0 or btopt("r")) and "gl_TexCoord[0].wz" or "gl_TexCoord[1].xy" %>
+				#define lmtc <% return (EV.minimizetcusage ~= 0 or btopt("r")) and "gl_TexCoord[0].wz" or "gl_TexCoord[1].xy" %>
 				<%
 					if not btopt("i") or btopt("s") then
 						return [=[
@@ -1017,7 +1017,7 @@ Shader.fast("bumpenvspecmapparallaxpulseglowworld", "bumpenvpulseglowworldalt", 
 
 skelanimdefs = [[
 	<%
-		if CV.useubo ~= 0 then
+		if EV.useubo ~= 0 then
 			return [=[
 				#ifdef GL_ARB_uniform_buffer_object
 				#extension GL_ARB_uniform_buffer_object : enable
@@ -1029,7 +1029,7 @@ skelanimdefs = [[
 		end
 	%>
 	<%
-		if CV.usebue ~= 0 then
+		if EV.usebue ~= 0 then
 			return "#extension GL_EXT_bindable_uniform : enable"
 		end
 	%>
@@ -1039,7 +1039,7 @@ skelanimdefs = [[
 	attribute vec4 vbones;
 	#pragma CUBE2_uniform animdata AnimData 0 16
 	<%
-		if CV.useubo ~= 0 then
+		if EV.useubo ~= 0 then
 			return string.format([=[
 				#if defined(GL_ARB_uniform_buffer_object) || __VERSION__ >= 140
 					layout(std140) uniform AnimData
@@ -1051,7 +1051,7 @@ skelanimdefs = [[
 		end
 	%>
 	<%
-		if CV.usebue ~= 0 then
+		if EV.usebue ~= 0 then
 			return [=[
 				#ifdef GL_EXT_bindable_uniform
 					bindable
@@ -1061,13 +1061,13 @@ skelanimdefs = [[
 	%>
 
 	uniform vec4 animdata[<% return ( math.min( ( EV.maxvsuniforms - EV.reservevpparams ), 256) - 10 ) %>];
-	<% if CV.useubo ~= 0 then return "#endif" end %>
+	<% if EV.useubo ~= 0 then return "#endif" end %>
 ]]
 
 skelanimfragdefs = [[
 <%
-	if CV.ati_ubo_bug ~= 0 then
-		if CV.useubo ~= 0 then
+	if EV.ati_ubo_bug ~= 0 then
+		if EV.useubo ~= 0 then
 			return string.format([=[
 				#ifdef GL_ARB_uniform_buffer_object
 					#extension GL_ARB_uniform_buffer_object : enable
@@ -1594,7 +1594,7 @@ function modelanimshader (...)
 	local args = { ... }
 	fraganimshader =  args[2] > 0 and args[2]
 	reuseanimshader = fraganimshader
-	if CV.ati_ubo_bug ~= 0 then
+	if EV.ati_ubo_bug ~= 0 then
 		reuseanimshader = string.format("%i , %i", args[2], tonumber(args[2] > 0))
 		if args[4] == 1 then
 			modelvfargs = { "bB" .. args[3] }
@@ -1745,7 +1745,7 @@ for i = 1, 7 do
 		Shader.alt(string.format("blurx%i", i), string.format("blurx%i", i - 1))
 		Shader.alt(string.format("blury%i", i), string.format("blury%i", i - 1))
 	end
-	if CV.usetexrect ~= 0 then
+	if EV.usetexrect ~= 0 then
 		blurshader(string.format("blurx%irect", i), i, "x", "2DRect")
 		blurshader(string.format("blury%irect", i), i, "y", "2DRect")
 		if i > 0 then
@@ -2154,7 +2154,7 @@ function explosionshader(...)
 	)
 end
 
-for i = 1, (CV.usetexrect ~= 0 and 6 or 4) do
+for i = 1, (EV.usetexrect ~= 0 and 6 or 4) do
 	local list = { "", "glare", "soft", "soft8", "softrect", "soft8rect" }
 	explosionshader("explosion2d" .. list[i],
 		[[
@@ -2246,7 +2246,7 @@ function particleshader(...)
 	)
 end
 
-for i = 1, (CV.usetexrect ~= 0 and 5 or 3) do
+for i = 1, (EV.usetexrect ~= 0 and 5 or 3) do
 	local list = { "", "soft", "soft8", "softrect", "soft8rect" }
 	particleshader("particle" .. list[i])
 end

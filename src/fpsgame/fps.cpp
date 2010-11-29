@@ -140,7 +140,7 @@ namespace game
 
     fpsent *hudplayer()
     {
-        if(thirdperson) return player1;
+        if(GETIV(thirdperson)) return player1;
         fpsent *target = followingplayer();
         return target ? target : player1;
     }
@@ -570,7 +570,9 @@ namespace game
 
         entities::resetspawns();
         copystring(clientmap, name ? name : "");
-        setvar("zoom", -1, true);
+#ifdef CLIENT
+        SETVFN(zoom, -1);
+#endif
         maptime = 0;
 //        if(*name) conoutf(CON_GAMEINFO, "\f2game mode is %s", fpsserver::modestr(gamemode));
 

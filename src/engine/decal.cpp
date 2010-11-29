@@ -98,7 +98,7 @@ struct decalrenderer
         bvec color;
         if(flags&DF_OVERBRIGHT)
         {
-            if(renderpath!=R_FIXEDFUNCTION || hasTE) color = bvec(128, 128, 128);
+            if(GETIV(renderpath)!=R_FIXEDFUNCTION || hasTE) color = bvec(128, 128, 128);
             else color = bvec(alpha, alpha, alpha);
         }
         else
@@ -231,12 +231,12 @@ struct decalrenderer
         {
             glGetFloatv(GL_FOG_COLOR, oldfogc);
             static float zerofog[4] = { 0, 0, 0, 1 }, grayfog[4] = { 0.5f, 0.5f, 0.5f, 1 };
-            glFogfv(GL_FOG_COLOR, flags&DF_OVERBRIGHT && (renderpath!=R_FIXEDFUNCTION || hasTE) ? grayfog : zerofog);
+            glFogfv(GL_FOG_COLOR, flags&DF_OVERBRIGHT && (GETIV(renderpath)!=R_FIXEDFUNCTION || hasTE) ? grayfog : zerofog);
         }
         
         if(flags&DF_OVERBRIGHT) 
         {
-            if(renderpath!=R_FIXEDFUNCTION)
+            if(GETIV(renderpath)!=R_FIXEDFUNCTION)
             {
                 glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR); 
                 SETSHADER(overbrightdecal);
@@ -256,7 +256,7 @@ struct decalrenderer
 
             if(flags&DF_SATURATE)
             {
-                if(renderpath!=R_FIXEDFUNCTION) SETSHADER(saturatedecal);
+                if(GETIV(renderpath)!=R_FIXEDFUNCTION) SETSHADER(saturatedecal);
                 else if(hasTE) setuptmu(0, "C * T x 2");
             }
             else foggedshader->set();

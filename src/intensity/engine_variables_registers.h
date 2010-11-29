@@ -933,6 +933,8 @@ REGVAR("fullbright", 0, 0, 1);
 REGVAR("menuautoclose", 32, 120, 4096);
 REGVAR("outline", 0, 0, 0xFFFFFF);
 REGVAR("oqfrags", 0, 8, 64);
+REGVAR("renderpath", 1, R_FIXEDFUNCTION, 0);
+REGVAR("ati_oq_bug", 0, 0, 1);
 #endif
 
 // intensity/targeting.cpp

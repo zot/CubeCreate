@@ -391,8 +391,7 @@ void renderprogress(float bar, const char *text, GLuint tex, bool background)   
     interceptkey(SDLK_UNKNOWN); // keep the event queue awake to avoid 'beachball' cursor
     #endif
 
-    extern int sdl_backingstore_bug;
-    if(background || sdl_backingstore_bug > 0) restorebackground();
+    if(background || GETIV(sdl_backingstore_bug) > 0) restorebackground();
 
     int w = screen->w, h = screen->h;
     getbackgroundres(w, h);

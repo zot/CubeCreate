@@ -337,14 +337,14 @@ static void updatelightmap(const surfaceinfo &surface)
         lm.offsetx = lm.offsety = 0;
         lm.tex = lightmaptexs.length();
         LightMapTexture &tex = lightmaptexs.add();
-        tex.type = renderpath==R_FIXEDFUNCTION ? (lm.type&~LM_TYPE) | LM_DIFFUSE : lm.type;
+        tex.type = GETIV(renderpath)==R_FIXEDFUNCTION ? (lm.type&~LM_TYPE) | LM_DIFFUSE : lm.type;
         tex.w = LM_PACKW;
         tex.h = LM_PACKH;
         tex.unlitx = lm.unlitx;
         tex.unlity = lm.unlity;
         glGenTextures(1, &tex.id);
         createtexture(tex.id, tex.w, tex.h, NULL, 3, 1, tex.type&LM_ALPHA ? GL_RGBA : GL_RGB);
-        if(renderpath!=R_FIXEDFUNCTION && (lm.type&LM_TYPE)==LM_BUMPMAP0 && lightmaps.inrange(surface.lmid+1-LMID_RESERVED))
+        if(GETIV(renderpath)!=R_FIXEDFUNCTION && (lm.type&LM_TYPE)==LM_BUMPMAP0 && lightmaps.inrange(surface.lmid+1-LMID_RESERVED))
         {
             LightMap &lm2 = lightmaps[surface.lmid+1-LMID_RESERVED];
             lm2.offsetx = lm2.offsety = 0;
@@ -365,7 +365,7 @@ static void updatelightmap(const surfaceinfo &surface)
 
     glBindTexture(GL_TEXTURE_2D, lightmaptexs[lm.tex].id);
     glTexSubImage2D(GL_TEXTURE_2D, 0, lm.offsetx + surface.x, lm.offsety + surface.y, surface.w, surface.h, lm.type&LM_ALPHA ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, &lm.data[(surface.y*LM_PACKW + surface.x)*lm.bpp]);
-    if(renderpath!=R_FIXEDFUNCTION && (lm.type&LM_TYPE)==LM_BUMPMAP0 && lightmaps.inrange(surface.lmid+1-LMID_RESERVED))
+    if(GETIV(renderpath)!=R_FIXEDFUNCTION && (lm.type&LM_TYPE)==LM_BUMPMAP0 && lightmaps.inrange(surface.lmid+1-LMID_RESERVED))
     {
         LightMap &lm2 = lightmaps[surface.lmid+1-LMID_RESERVED];
         glBindTexture(GL_TEXTURE_2D, lightmaptexs[lm2.tex].id);
@@ -2208,7 +2208,7 @@ void genreservedlightmaptexs()
     while(lightmaptexs.length() < LMID_RESERVED)
     {
         LightMapTexture &tex = lightmaptexs.add();
-        tex.type = renderpath != R_FIXEDFUNCTION && lightmaptexs.length()&1 ? LM_DIFFUSE : LM_BUMPMAP1;
+        tex.type = GETIV(renderpath) != R_FIXEDFUNCTION && lightmaptexs.length()&1 ? LM_DIFFUSE : LM_BUMPMAP1;
         glGenTextures(1, &tex.id);
     }
     uchar unlit[3] = { ambientcolor[0], ambientcolor[1], ambientcolor[2] };
@@ -2271,7 +2271,7 @@ void genlightmaptexs(int flagmask, int flagval)
         if(lm.unlitx < 0) findunlit(i);
     }
 
-    if(renderpath==R_FIXEDFUNCTION)
+    if(GETIV(renderpath)==R_FIXEDFUNCTION)
     {
         remaining[LM_DIFFUSE] += remaining[LM_BUMPMAP0];
         remaining[LM_BUMPMAP0] = remaining[LM_BUMPMAP1] = 0;
@@ -2287,7 +2287,7 @@ void genlightmaptexs(int flagmask, int flagval)
         {
             LightMap &lm = lightmaps[i];
             if(lm.tex >= 0 || (lm.type&flagmask) != flagval) continue;
-            if(renderpath != R_FIXEDFUNCTION) type = lm.type&LM_TYPE;
+            if(GETIV(renderpath) != R_FIXEDFUNCTION) type = lm.type&LM_TYPE;
             else if((lm.type&LM_TYPE) == LM_BUMPMAP1) continue;
             firstlm = &lm; 
             break; 
@@ -2309,7 +2309,7 @@ void genlightmaptexs(int flagmask, int flagval)
         tex.w = LM_PACKW<<((used+1)/2);
         tex.h = LM_PACKH<<(used/2);
         int bpp = firstlm->bpp;
-        uchar *data = used || (renderpath == R_FIXEDFUNCTION && (firstlm->type&LM_TYPE) == LM_BUMPMAP0 && GETIV(convertlms)) ? 
+        uchar *data = used || (GETIV(renderpath) == R_FIXEDFUNCTION && (firstlm->type&LM_TYPE) == LM_BUMPMAP0 && GETIV(convertlms)) ? 
             new uchar[bpp*tex.w*tex.h] : 
             NULL;
         int offsetx = 0, offsety = 0;
@@ -2317,7 +2317,7 @@ void genlightmaptexs(int flagmask, int flagval)
         {
             LightMap &lm = lightmaps[i];
             if(lm.tex >= 0 || (lm.type&flagmask) != flagval || 
-               (renderpath==R_FIXEDFUNCTION ? 
+               (GETIV(renderpath)==R_FIXEDFUNCTION ? 
                 (lm.type&LM_TYPE) == LM_BUMPMAP1 : 
                 (lm.type&LM_TYPE) != type))
                 continue;
@@ -2333,7 +2333,7 @@ void genlightmaptexs(int flagmask, int flagval)
 
             if(data)
             {
-                if(renderpath == R_FIXEDFUNCTION && (lm.type&LM_TYPE) == LM_BUMPMAP0 && GETIV(convertlms))
+                if(GETIV(renderpath) == R_FIXEDFUNCTION && (lm.type&LM_TYPE) == LM_BUMPMAP0 && GETIV(convertlms))
                     convertlightmap(lm, lightmaps[i+1], &data[bpp*(offsety*tex.w + offsetx)], bpp*tex.w);
                 else copylightmap(lm, &data[bpp*(offsety*tex.w + offsetx)], bpp*tex.w);
             }
