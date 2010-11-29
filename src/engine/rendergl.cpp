@@ -1428,7 +1428,7 @@ void drawreflection(float z, bool refract)
         pushprojection(clipmatrix);
     }
 
-    renderreflectedgeom(refracting<0 && z>=0 && caustics, fogging);
+    renderreflectedgeom(refracting<0 && z>=0 && GETIV(caustics), fogging);
 
     if(reflecting || refracting>0 || (refracting<0 && refractsky) || z<0)
     {
@@ -1834,7 +1834,7 @@ void gl_drawframe(int w, int h)
         float z = findsurface(fogmat, camera1->o, abovemat) - WATER_OFFSET;
         if(camera1->o.z < z + 1) fogblend = min(z + 1 - camera1->o.z, 1.0f);
         else fogmat = abovemat;
-        if(caustics && fogmat==MAT_WATER && camera1->o.z < z)
+        if(GETIV(caustics) && fogmat==MAT_WATER && camera1->o.z < z)
             causticspass = renderpath==R_FIXEDFUNCTION ? 1.0f : min(z - camera1->o.z, 1.0f);
     }
     else fogmat = MAT_AIR;    
@@ -1884,8 +1884,7 @@ void gl_drawframe(int w, int h)
 
     rendergeom(causticspass);
 
-    extern int outline;
-    if(!wireframe && editmode && outline) renderoutline();
+    if(!wireframe && editmode && GETIV(outline)) renderoutline();
 
     queryreflections();
 

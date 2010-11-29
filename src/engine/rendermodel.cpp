@@ -753,7 +753,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
     vec center, bbradius;
     float radius = 0;
     bool shadow = !GETIV(shadowmap) && !glaring && (flags&(MDL_SHADOW|MDL_DYNSHADOW)) && GETIV(blobs),
-         doOQ = flags&MDL_CULL_QUERY && hasOQ && oqfrags && oqdynent;
+         doOQ = flags&MDL_CULL_QUERY && hasOQ && GETIV(oqfrags) && oqdynent;
     if(flags&(MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED|MDL_CULL_QUERY|MDL_SHADOW|MDL_DYNSHADOW))
     {
         m->boundbox(0/*frame*/, center, bbradius); // FIXME

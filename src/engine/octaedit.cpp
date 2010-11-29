@@ -1,13 +1,11 @@
 #include "engine.h"
 
-extern int outline;
-
 void boxs(int orient, vec o, const vec &s)
 {
     int   d = dimension(orient),
           dc= dimcoord(orient);
 
-    float f = !outline ? 0 : (dc>0 ? 0.2f : -0.2f);
+    float f = !GETIV(outline) ? 0 : (dc>0 ? 0.2f : -0.2f);
     o[D[d]] += float(dc) * s[D[d]] + f,
 
     glBegin(GL_LINE_LOOP);
@@ -36,7 +34,7 @@ void boxsgrid(int orient, vec o, vec s, int g)
           oy = o[C[d]],
           xs = s[R[d]],
           ys = s[C[d]],
-          f = !outline ? 0 : (dc>0 ? 0.2f : -0.2f);    
+          f = !GETIV(outline) ? 0 : (dc>0 ? 0.2f : -0.2f);    
 
     o[D[d]] += dc * s[D[d]]*g + f;
 

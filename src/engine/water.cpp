@@ -381,8 +381,6 @@ GLuint reflectionfb = 0, reflectiondb = 0;
 
 GLuint getwaterfalltex() { return waterfallrefraction.refracttex ? waterfallrefraction.refracttex : notexture->id; }
 
-extern int oqfrags;
-
 void renderwaterff()
 {
     glDisable(GL_CULL_FACE);
@@ -418,7 +416,7 @@ void renderwaterff()
         bool below = camera1->o.z < ref.height + offset;
         if(!GETIV(nowater) && (GETIV(waterrefract) || GETIV(waterreflect) || (GETIV(waterenvmap) && hasCM)) && !minimapping)
         {
-            if(hasOQ && oqfrags && GETIV(oqwater) && ref.query && ref.query->owner==&ref)
+            if(hasOQ && GETIV(oqfrags) && GETIV(oqwater) && ref.query && ref.query->owner==&ref)
             {
                 if(!ref.prevquery || ref.prevquery->owner!=&ref || checkquery(ref.prevquery))
                 {
@@ -627,7 +625,7 @@ void renderwater()
     {
         Reflection &ref = reflections[i];
         if(ref.height<0 || ref.lastused<totalmillis || ref.matsurfs.empty()) continue;
-        if(!glaring && hasOQ && oqfrags && GETIV(oqwater) && ref.query && ref.query->owner==&ref)
+        if(!glaring && hasOQ && GETIV(oqfrags) && GETIV(oqwater) && ref.query && ref.query->owner==&ref)
         {
             if(!ref.prevquery || ref.prevquery->owner!=&ref || checkquery(ref.prevquery))
             {
@@ -999,7 +997,7 @@ void queryreflections()
 
     lastquery = totalmillis;
 
-    if((editmode && GETIV(showmat) && !envmapping) || !hasOQ || !oqfrags || !GETIV(oqwater) || GETIV(nowater) || minimapping) return;
+    if((editmode && GETIV(showmat) && !envmapping) || !hasOQ || !GETIV(oqfrags) || !GETIV(oqwater) || GETIV(nowater) || minimapping) return;
 
     varray::enable();
 
@@ -1176,7 +1174,7 @@ void drawreflections()
     {
         Reflection &ref = reflections[++n%MAXREFLECTIONS];
         if(ref.height<0 || ref.lastused<lastquery || ref.matsurfs.empty()) continue;
-        if(hasOQ && oqfrags && GETIV(oqwater) && ref.query && ref.query->owner==&ref)
+        if(hasOQ && GETIV(oqfrags) && GETIV(oqwater) && ref.query && ref.query->owner==&ref)
         { 
             if(!ref.prevquery || ref.prevquery->owner!=&ref || checkquery(ref.prevquery))
             {
@@ -1251,7 +1249,7 @@ void drawreflections()
         Reflection &ref = waterfallrefraction;
 
         if(ref.height<0 || ref.lastused<lastquery || ref.matsurfs.empty()) goto nowaterfall;
-        if(hasOQ && oqfrags && GETIV(oqwater) && ref.query && ref.query->owner==&ref)
+        if(hasOQ && GETIV(oqfrags) && GETIV(oqwater) && ref.query && ref.query->owner==&ref)
         {
             if(!ref.prevquery || ref.prevquery->owner!=&ref || checkquery(ref.prevquery))
             {

@@ -2132,7 +2132,7 @@ void inittmus()
     else if(hasTE) { SETVN(maxtmus, 1); resettmu(0); }
     if(renderpath==R_FIXEDFUNCTION)
     {
-        if(GETIV(maxtmus)<4) caustics = 0;
+        if(GETIV(maxtmus)<4) SETV(caustics, 0);
         if(GETIV(maxtmus)<2)
         {
 			SETV(nolights, 1);
