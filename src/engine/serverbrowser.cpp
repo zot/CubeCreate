@@ -370,11 +370,6 @@ void addserver(const char *name, int port, const char *password, bool keep)
     s->keep = keep;
 }
 
-VARP(searchlan, 0, 0, 1);
-VARP(servpingrate, 1000, 5000, 60000);
-VARP(servpingdecay, 1000, 15000, 60000);
-VARP(maxservpings, 0, 10, 1000);
-
 void pingservers()
 {
     if(pingsock == ENET_SOCKET_NULL) 
@@ -395,7 +390,7 @@ void pingservers()
 
     static int lastping = 0;
     if(lastping >= servers.length()) lastping = 0;
-    loopi(maxservpings ? min(servers.length(), maxservpings) : servers.length())
+    loopi(GETIV(maxservpings) ? min(servers.length(), GETIV(maxservpings)) : servers.length())
     {
         serverinfo &si = *servers[lastping];
         if(++lastping >= servers.length()) lastping = 0;
@@ -404,9 +399,9 @@ void pingservers()
         buf.dataLength = p.length();
         enet_socket_send(pingsock, &si.address, &buf, 1);
         
-        si.checkdecay(servpingdecay);
+        si.checkdecay(GETIV(servpingdecay));
     }
-    if(searchlan)
+    if(GETIV(searchlan))
     {
         ENetAddress address;
         address.host = ENET_HOST_BROADCAST;
@@ -467,11 +462,11 @@ void checkpings()
         if(len <= 0) return;  
         serverinfo *si = NULL;
         loopv(servers) if(addr.host == servers[i]->address.host && addr.port == servers[i]->address.port) { si = servers[i]; break; }
-        if(!si && searchlan) si = newserver(NULL, server::serverport(addr.port), addr.host); 
+        if(!si && GETIV(searchlan)) si = newserver(NULL, server::serverport(addr.port), addr.host); 
         if(!si) continue;
         ucharbuf p(ping, len);
-        int millis = getint(p), rtt = clamp(totalmillis - millis, 0, min(servpingdecay, totalmillis));
-        if(rtt < servpingdecay) si->addping(rtt, millis);
+        int millis = getint(p), rtt = clamp(totalmillis - millis, 0, min(GETIV(servpingdecay), totalmillis));
+        if(rtt < GETIV(servpingdecay)) si->addping(rtt, millis);
         si->numplayers = getint(p);
         int numattr = getint(p);
         si->attr.shrink(0);
@@ -492,7 +487,7 @@ void refreshservers()
 
     checkresolver();
     checkpings();
-    if(totalmillis - lastinfo >= servpingrate/(maxservpings ? max(1, (servers.length() + maxservpings - 1) / maxservpings) : 1)) pingservers();
+    if(totalmillis - lastinfo >= GETIV(servpingrate)/(GETIV(maxservpings) ? max(1, (servers.length() + GETIV(maxservpings) - 1) / GETIV(maxservpings)) : 1)) pingservers();
     servers.sort(serverinfo::compare);
 }
 
@@ -545,7 +540,7 @@ void retrieveservers(vector<char> &data)
     if(sock == ENET_SOCKET_NULL) return;
 
     extern char *mastername;
-    defformatstring(text)("retrieving servers from %s... (esc to abort)", mastername);
+    defformatstring(text)("retrieving servers from %s... (esc to abort)", GETSV(mastername).c_str());
     renderprogress(0, text);
 
     int starttime = SDL_GetTicks(), timeout = 0;

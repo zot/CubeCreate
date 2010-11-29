@@ -24,6 +24,8 @@ void SystemManager::init()
 {
     printf("SystemManager::init()\r\n");
 
+    LuaEngine::create(); // init lua engine if required. It'll simply return if already initialized
+
     printf("SystemManager::MessageSystem setup\r\n");
     MessageSystem::MessageManager::registerAll();
 

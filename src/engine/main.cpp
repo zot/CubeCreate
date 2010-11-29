@@ -32,12 +32,10 @@ void quit()                     // normal exit
 
 void force_quit() // INTENSITY - change quit to force_quit
 {
-    SystemManager::quit(); // INTENSITY
-    LuaEngine::destroy();
-
     extern void writeinitcfg();
     writeinitcfg();
-//    writeservercfg(); // INTENSITY: No need
+
+    SystemManager::quit(); // INTENSITY
     abortconnect();
     disconnect();
     localdisconnect();

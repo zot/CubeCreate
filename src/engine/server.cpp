@@ -398,7 +398,6 @@ ENetAddress masteraddress = { ENET_HOST_ANY, ENET_PORT_ANY }, serveraddress = { 
 int lastupdatemaster = 0;
 vector<char> masterout, masterin;
 int masteroutpos = 0, masterinpos = 0;
-VARN(updatemaster, allowupdatemaster, 0, 1, 1);
 
 void disconnectmaster()
 {
@@ -416,19 +415,17 @@ void disconnectmaster()
     masteraddress.port = ENET_PORT_ANY;
 }
 
-SVARF(mastername, server::defaultmaster(), disconnectmaster());
-
 ENetSocket connectmaster()
 {
-    if(!mastername[0]) return ENET_SOCKET_NULL;
+    if(GETSV(mastername).empty()) return ENET_SOCKET_NULL;
 
     if(masteraddress.host == ENET_HOST_ANY)
     {
 #ifdef STANDALONE
-        printf("looking up %s...\n", mastername);
+        printf("looking up %s...\n", GETSV(mastername).c_str());
 #endif
         masteraddress.port = server::masterport();
-        if(!resolverwait(mastername, &masteraddress)) return ENET_SOCKET_NULL;
+        if(!resolverwait(GETSV(mastername).c_str(), &masteraddress)) return ENET_SOCKET_NULL;
     }
     ENetSocket sock = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
     if(sock != ENET_SOCKET_NULL && serveraddress.host != ENET_HOST_ANY && enet_socket_bind(sock, &serveraddress) < 0)
@@ -436,7 +433,7 @@ ENetSocket connectmaster()
         enet_socket_destroy(sock);
         sock = ENET_SOCKET_NULL;
     }
-    if(sock == ENET_SOCKET_NULL || connectwithtimeout(sock, mastername, masteraddress) < 0) 
+    if(sock == ENET_SOCKET_NULL || connectwithtimeout(sock, GETSV(mastername).c_str(), masteraddress) < 0) 
     {
 #ifdef STANDALONE
         printf(sock==ENET_SOCKET_NULL ? "could not open socket\n" : "could not connect\n"); 
@@ -583,11 +580,6 @@ void checkserversockets()        // reply all server info requests
     if(mastersock != ENET_SOCKET_NULL && ENET_SOCKETSET_CHECK(sockset, mastersock)) flushmasterinput();
 #endif
 }
-
-
-VAR(serveruprate, 0, 0, INT_MAX);
-SVAR(serverip, "");
-VARF(serverport, 0, server::serverport(), 0xFFFF, { if(!serverport) serverport = server::serverport(); });
 
 #ifdef STANDALONE
 int curtime = 0, lastmillis = 0, totalmillis = 0;
@@ -803,13 +795,13 @@ bool servererror(bool dedicated, const char *desc)
   
 bool setuplistenserver(bool dedicated)
 {
-    ENetAddress address = { ENET_HOST_ANY, serverport <= 0 ? enet_uint16(server::serverport()) : enet_uint16(serverport) };
-    if(*serverip)
+    ENetAddress address = { ENET_HOST_ANY, GETIV(serverport) <= 0 ? enet_uint16(server::serverport()) : enet_uint16(GETIV(serverport)) };
+    if(!GETSV(serverip).empty())
     {
-        if(enet_address_set_host(&address, serverip)<0) conoutf(CON_WARN, "WARNING: server ip not resolved");
+        if(enet_address_set_host(&address, GETSV(serverip).c_str())<0) conoutf(CON_WARN, "WARNING: server ip not resolved");
         else serveraddress.host = address.host;
     }
-    serverhost = enet_host_create(&address, min(maxclients + server::reserveclients(), MAXCLIENTS), server::numchannels(), 0, serveruprate);
+    serverhost = enet_host_create(&address, min(maxclients + server::reserveclients(), MAXCLIENTS), server::numchannels(), 0, GETIV(serveruprate));
     if(!serverhost)
     {
         // INTENSITY: Do *NOT* fatally quit on this error. It can lead to repeated restarts etc.
@@ -820,7 +812,7 @@ bool setuplistenserver(bool dedicated)
         return false;
     }
     loopi(maxclients) serverhost->peers[i].data = NULL;
-    address.port = server::serverinfoport(serverport > 0 ? serverport : -1);
+    address.port = server::serverinfoport(GETIV(serverport) > 0 ? GETIV(serverport) : -1);
 #if 0 // INTENSITY: no need for pongsock
     pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
     if(pongsock != ENET_SOCKET_NULL && enet_socket_bind(pongsock, &address) < 0)
@@ -868,13 +860,13 @@ void startlistenserver(int *usemaster)
 {
     if(serverhost) { conoutf(CON_ERROR, "listen server is already running"); return; }
 
-    allowupdatemaster = *usemaster>0 ? 1 : 0;
+    SETV(updatemaster, *usemaster>0 ? 1 : 0);
  
     if(!setuplistenserver(false)) return;
     
     updatemasterserver();
    
-    conoutf("listen server started for %d clients%s", maxclients, allowupdatemaster ? " and listed with master server" : ""); 
+    conoutf("listen server started for %d clients%s", maxclients, GETIV(updatemaster) ? " and listed with master server" : ""); 
 }
 COMMAND(startlistenserver, "i");
 
@@ -895,11 +887,11 @@ bool serveroption(char *opt)
 {
     switch(opt[1])
     {
-        case 'u': setvar("serveruprate", atoi(opt+2)); return true;
-        case 'c': setvar("maxclients", atoi(opt+2)); return true;
-        case 'i': setsvar("serverip", opt+2); return true;
-        case 'j': setvar("serverport", atoi(opt+2)); return true; 
-        case 'm': setsvar("mastername", opt+2); setvar("updatemaster", mastername[0] ? 1 : 0); return true;
+        case 'u': SETV(serveruprate, atoi(opt+2)); return true;
+        case 'c': maxclients = atoi(opt+2); return true;
+        case 'i': SETVF(serverip, std::string(opt+2)); return true;
+        case 'j': SETVFN(serverport, atoi(opt+2)); return true; 
+        case 'm': SETVF(mastername, std::string(opt+2)); SETV(updatemaster, !GETSV(mastername).empty() ? 1 : 0); return true;
 #ifdef STANDALONE
         case 'q': printf("Using home directory: %s\n", opt+2); sethomedir(opt+2); return true;
         case 'k': printf("Adding package directory: %s\n", opt+2); addpackagedir(opt+2); return true;
