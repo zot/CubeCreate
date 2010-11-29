@@ -362,7 +362,6 @@ bool fading = false;
 int xtraverts = 0, xtravertsva = 0;
 bool reflecting = false;
 int refracting = 0;
-int oqfrags = 0;
 float reflectz;
 bool fogging = false;
 
@@ -375,7 +374,6 @@ bool calclight_canceled = false;
 int curtexnum = 0;
 Shader *defaultshader = NULL, *rectshader = NULL, *foggedshader = NULL, *foggednotextureshader = NULL, *stdworldshader = NULL;
 bool inbetweenframes = false, renderedframe = false;
-int outline = 0;
 vec shadowoffset(0, 0, 0), shadowfocus(0, 0, 0), shadowdir(0, 0.707, 1);
 int explicitsky = 0;
 double skyarea = 0;

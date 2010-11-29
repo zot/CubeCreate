@@ -207,8 +207,7 @@ struct ragdolldata
 
     void init(dynent *d)
     {
-        extern int ragdolltimestepmin;
-        float ts = ragdolltimestepmin/1000.0f;
+        float ts = GETIV(ragdolltimestepmin)/1000.0f;
         loopv(skel->verts) (verts[i].oldpos = verts[i].pos).sub(vec(d->vel).add(d->falling).mul(ts));
         timestep = ts;
 
@@ -324,11 +323,6 @@ void ragdolldata::constrainrot()
     }
 }
 
-VAR(ragdolltimestepmin, 1, 5, 50);
-VAR(ragdolltimestepmax, 1, 10, 50);
-FVAR(ragdollrotfric, 0, 0.85f, 1);
-FVAR(ragdollrotfricstop, 0, 0.1f, 1);
-
 void ragdolldata::calcrotfriction()
 {
     loopv(skel->rotfrictions)
@@ -341,7 +335,7 @@ void ragdolldata::calcrotfriction()
 void ragdolldata::applyrotfriction(float ts)
 {
     calctris();
-    float stopangle = 2*M_PI*ts*ragdollrotfricstop, rotfric = 1.0f - pow(ragdollrotfric, ts*1000.0f/ragdolltimestepmin);
+    float stopangle = 2*M_PI*ts*float(GETFV(ragdollrotfricstop)), rotfric = 1.0f - pow(float(GETFV(ragdollrotfric)), ts*1000.0f/GETIV(ragdolltimestepmin));
     loopv(skel->rotfrictions)
     {
         ragdollskel::rotfriction &r = skel->rotfrictions[i];
@@ -389,11 +383,9 @@ void ragdolldata::updatepos()
     }
 }
 
-VAR(ragdollconstrain, 1, 5, 100);
-
 void ragdolldata::constrain()
 {
-    loopi(ragdollconstrain)
+    loopi(GETIV(ragdollconstrain))
     {
         constraindist();
         updatepos();
@@ -403,14 +395,6 @@ void ragdolldata::constrain()
         updatepos();
     }
 }
-
-FVAR(ragdollbodyfric, 0, 0.95f, 1);
-FVAR(ragdollbodyfricscale, 0, 2, 10);
-FVAR(ragdollwaterfric, 0, 0.85f, 1);
-FVAR(ragdollgroundfric, 0, 0.8f, 1);
-FVAR(ragdollairfric, 0, 0.996f, 1);
-VAR(ragdollexpireoffset, 0, 1500, 30000);
-VAR(ragdollwaterexpireoffset, 0, 3000, 30000);
 
 void ragdolldata::move(dynent *pl, float ts)
 {
@@ -430,7 +414,7 @@ void ragdolldata::move(dynent *pl, float ts)
    
     calcrotfriction(); 
     float tsfric = timestep ? ts/timestep : 1,
-          airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
+          airfric = float(GETFV(ragdollairfric)) + min((float(GETFV(ragdollbodyfricscale))*collisions)/skel->verts.length(), 1.0f)*(float(GETFV(ragdollbodyfric)) - float(GETFV(ragdollairfric)));
     collisions = 0;
     loopv(skel->verts)
     {
@@ -438,7 +422,7 @@ void ragdolldata::move(dynent *pl, float ts)
         vec dpos = vec(v.pos).sub(v.oldpos);
         dpos.z -= GRAVITY*ts*ts;
         if(water) dpos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts;
-        dpos.mul(pow((water ? ragdollwaterfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts*1000.0f/ragdolltimestepmin)*tsfric);
+        dpos.mul(pow((water ? float(GETFV(ragdollwaterfric)) : 1.0f) * (v.collided ? float(GETFV(ragdollgroundfric)) : airfric), ts*1000.0f/GETIV(ragdolltimestepmin))*tsfric);
         v.oldpos = v.pos;
         v.pos.add(dpos);
     }
@@ -461,7 +445,7 @@ void ragdolldata::move(dynent *pl, float ts)
     if(collisions)
     {
         floating = 0;
-        if(!collidemillis) collidemillis = lastmillis + (water ? ragdollwaterexpireoffset : ragdollexpireoffset);
+        if(!collidemillis) collidemillis = lastmillis + (water ? GETIV(ragdollwaterexpireoffset) : GETIV(ragdollexpireoffset));
     }
     else if(++floating > 1 && lastmillis < collidemillis) collidemillis = 0;
 
@@ -470,9 +454,6 @@ void ragdolldata::move(dynent *pl, float ts)
     calcboundsphere();
 }    
 
-FVAR(ragdolleyesmooth, 0, 0.5f, 1);
-VAR(ragdolleyesmoothmillis, 1, 250, 10000);
-
 void moveragdoll(dynent *d)
 {
     if(!curtime || !d->ragdoll) return;
@@ -480,9 +461,9 @@ void moveragdoll(dynent *d)
     if(!d->ragdoll->collidemillis || lastmillis < d->ragdoll->collidemillis)
     {
         int lastmove = d->ragdoll->lastmove;
-        while(d->ragdoll->lastmove + (lastmove == d->ragdoll->lastmove ? ragdolltimestepmin : ragdolltimestepmax) <= lastmillis)
+        while(d->ragdoll->lastmove + (lastmove == d->ragdoll->lastmove ? GETIV(ragdolltimestepmin) : GETIV(ragdolltimestepmax)) <= lastmillis)
         {
-            int timestep = min(ragdolltimestepmax, lastmillis - d->ragdoll->lastmove);
+            int timestep = min(GETIV(ragdolltimestepmax), lastmillis - d->ragdoll->lastmove);
             d->ragdoll->move(d, timestep/1000.0f);
             d->ragdoll->lastmove += timestep;
         }
@@ -490,7 +471,7 @@ void moveragdoll(dynent *d)
 
     vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
     eye.add(d->ragdoll->offset);
-    float k = pow(ragdolleyesmooth, float(curtime)/ragdolleyesmoothmillis);
+    float k = pow(float(GETFV(ragdolleyesmooth)), float(curtime)/GETIV(ragdolleyesmoothmillis));
     d->o.mul(k).add(eye.mul(1-k));
 }
 

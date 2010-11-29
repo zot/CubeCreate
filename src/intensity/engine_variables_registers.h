@@ -931,6 +931,8 @@ REGVAR("lavafog", 0, 50, 10000);
 REGVAR("showmat", 0, 1, 1);
 REGVAR("fullbright", 0, 0, 1);
 REGVAR("menuautoclose", 32, 120, 4096);
+REGVAR("outline", 0, 0, 0xFFFFFF);
+REGVAR("oqfrags", 0, 8, 64);
 #endif
 
 // intensity/targeting.cpp
