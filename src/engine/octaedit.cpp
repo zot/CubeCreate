@@ -110,7 +110,7 @@ void toggleedit(bool force)
     stoppaintblendmap();
     keyrepeat(editmode);
     SETV(editing, editmode);
-    entediting = editmode;
+    SETV(entediting, editmode);
     if(GETIV(fullbright)) initlights();
     if(!force) game::edittoggled(editmode);
 }
@@ -276,7 +276,7 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
         sel.o[C[od]] = e[C[od]];
     }
     else 
-    if(entmoving)
+    if(GETIV(entmoving))
     {
         entdrag(camdir);       
     }
@@ -288,7 +288,7 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
        
         wdist = rayent(camera1->o, camdir, 1e16f, 
                        (editmode && GETIV(showmat) ? RAY_EDITMAT : 0)   // select cubes first
-                       | (!GETIV(dragging) && entediting ? RAY_ENTS : 0)
+                       | (!GETIV(dragging) && GETIV(entediting) ? RAY_ENTS : 0)
                        | RAY_SKIPFIRST 
                        | (GETIV(passthroughcube)==1 ? RAY_PASS : 0), gridsize, entorient, ent);
      
@@ -390,7 +390,7 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
     
     // cursors    
 
-    renderentselection(camera1->o, camdir, entmoving!=0);
+    renderentselection(camera1->o, camdir, GETIV(entmoving)!=0);
 
     lineshader->set();
 

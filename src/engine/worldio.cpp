@@ -191,15 +191,15 @@ void loadc(stream *f, cube &c)
         default:
             fatal("garbage in map");
     }
-    loopi(6) c.texture[i] = mapversion<14 ? f->getchar() : f->getlil<ushort>();
-    if(mapversion < 7) f->seek(3, SEEK_CUR);
+    loopi(6) c.texture[i] = GETIV(mapversion)<14 ? f->getchar() : f->getlil<ushort>();
+    if(GETIV(mapversion) < 7) f->seek(3, SEEK_CUR);
     else
     {
         uchar mask = f->getchar();
         if(mask & 0x80) 
         {
             int mat = f->getchar();
-            if(mapversion < 27)
+            if(GETIV(mapversion) < 27)
             {
                 static uchar matconv[] = { MAT_AIR, MAT_WATER, MAT_CLIP, MAT_GLASS|MAT_CLIP, MAT_NOCLIP, MAT_LAVA|MAT_DEATH, MAT_GAMECLIP, MAT_DEATH };
                 mat = size_t(mat) < sizeof(matconv)/sizeof(matconv[0]) ? matconv[mat] : MAT_AIR;
@@ -219,13 +219,13 @@ void loadc(stream *f, cube &c)
                 {
                     f->read(&surfaces[i], sizeof(surfaceinfo));
                     lilswap(&surfaces[i].x, 2);
-                    if(mapversion < 10) ++surfaces[i].lmid;
-                    if(mapversion < 18)
+                    if(GETIV(mapversion) < 10) ++surfaces[i].lmid;
+                    if(GETIV(mapversion) < 18)
                     {
                         if(surfaces[i].lmid >= LMID_AMBIENT1) ++surfaces[i].lmid;
                         if(surfaces[i].lmid >= LMID_BRIGHT1) ++surfaces[i].lmid;
                     }
-                    if(mapversion < 19)
+                    if(GETIV(mapversion) < 19)
                     {
                         if(surfaces[i].lmid >= LMID_DARK) surfaces[i].lmid += 2;
                     }
@@ -243,7 +243,7 @@ void loadc(stream *f, cube &c)
             if(lit) newsurfaces(c, surfaces, numsurfs);
             else if(bright) brightencube(c);
         }
-        if(mapversion >= 20)
+        if(GETIV(mapversion) >= 20)
         {
             if(octsav&0x80)
             {
@@ -262,7 +262,7 @@ void loadc(stream *f, cube &c)
                             mergeinfo *m = &c.ext->merges[i];
                             f->read(m, sizeof(mergeinfo));
                             lilswap(&m->u1, 4);
-                            if(mapversion <= 25)
+                            if(GETIV(mapversion) <= 25)
                             {
                                 int uorigin = m->u1 & 0xE000, vorigin = m->v1 & 0xE000;
                                 m->u1 = (m->u1 - uorigin) << 2;
@@ -615,7 +615,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     Texture *mapshot = textureload(picname, 3, true, false);
     renderbackground("loading...", mapshot, mname, game::getmapinfo());
 
-    setvar("mapversion", hdr.version, true, false);
+    SETVFN(mapversion, hdr.version);
 
     if(hdr.version <= 28)
     {
@@ -1079,7 +1079,7 @@ bool finish_load_world() // INTENSITY: Second half, after all entities received
     initlights();
     allchanged(true);
 
-//    if(maptitle[0] && strcmp(maptitle, "Untitled Map by Unknown")) conoutf(CON_ECHO, "%s", maptitle); // INTENSITY
+//    if(!GETSV(maptitle).empty() && GETSV(maptitle).compare("Untitled Map by Unknown")) conoutf(CON_ECHO, "%s", GETSV(maptitle).c_str()); // INTENSITY
 
     startmap(cname ? cname : mname);
     

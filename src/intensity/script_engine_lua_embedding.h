@@ -1219,7 +1219,7 @@ LUA_EMBED_ds(renderProgress, 0, {
 });
 
 LUA_EMBED_NOPARAM(getMapversion, 1, {
-    LuaEngine::pushValue(mapversion);
+    LuaEngine::pushValue(GETIV(mapversion));
 });
 
 // Models

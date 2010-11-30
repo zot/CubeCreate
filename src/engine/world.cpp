@@ -7,13 +7,8 @@
 #include "message_system.h" // INTENSITY
 
 
-VARR(mapversion, 1, MAPVERSION, 0);
 VARNR(mapscale, worldscale, 1, 0, 0);
 VARNR(mapsize, worldsize, 1, 0, 0);
-SVARR(maptitle, "Untitled Map by Unknown");
-
-VAR(octaentsize, 0, 128, 1024);
-VAR(entselradius, 0, 2, 10);
 
 bool getentboundingbox(extentity &e, ivec &o, ivec &r)
 {
@@ -42,8 +37,8 @@ bool getentboundingbox(extentity &e, ivec &o, ivec &r)
         // invisible mapmodels use entselradius
         default:
             o = e.o;
-            o.sub(entselradius);
-            r.x = r.y = r.z = entselradius*2;
+            o.sub(GETIV(entselradius));
+            r.x = r.y = r.z = GETIV(entselradius)*2;
             break;
     }
     return true;
@@ -166,10 +161,10 @@ static bool modifyoctaent(int flags, int id)
     }
     else
     {
-        int leafsize = octaentsize, limit = max(r.x, max(r.y, r.z));
+        int leafsize = GETIV(octaentsize), limit = max(r.x, max(r.y, r.z));
         while(leafsize < limit) leafsize *= 2;
         int diff = ~(leafsize-1) & ((o.x^(o.x+r.x))|(o.y^(o.y+r.y))|(o.z^(o.z+r.z)));
-        if(diff && (limit > octaentsize/2 || diff < leafsize*2)) leafsize *= 2;
+        if(diff && (limit > GETIV(octaentsize)/2 || diff < leafsize*2)) leafsize *= 2;
         modifyoctaentity(flags, id, worldroot, ivec(0, 0, 0), worldsize>>1, o, r, leafsize);
     }
     e.inoctanode = flags&MODOE_ADD ? 1 : 0;
@@ -219,7 +214,7 @@ static inline void findents(cube *c, const ivec &o, int size, const ivec &bo, co
     loopoctabox(o, size, bo, br)
     {
         if(c[i].ext && c[i].ext->ents) findents(*c[i].ext->ents, low, high, notspawned, pos, radius, found);
-        if(c[i].children && size > octaentsize) 
+        if(c[i].children && size > GETIV(octaentsize)) 
         {
             ivec co(i, o.x, o.y, o.z, size);
             findents(c[i].children, co, size>>1, bo, br, low, high, notspawned, pos, radius, found);
@@ -232,7 +227,7 @@ void findents(int low, int high, bool notspawned, const vec &pos, const vec &rad
     vec invradius(1/radius.x, 1/radius.y, 1/radius.z);
     ivec bo = vec(pos).sub(radius).sub(1),
          br = vec(radius).add(1).mul(2);
-    int diff = (bo.x^(bo.x+br.x)) | (bo.y^(bo.y+br.y)) | (bo.z^(bo.z+br.z)) | octaentsize,
+    int diff = (bo.x^(bo.x+br.x)) | (bo.y^(bo.y+br.y)) | (bo.z^(bo.z+br.z)) | GETIV(octaentsize),
         scale = worldscale-1;
     if(diff&~((1<<scale)-1) || uint(bo.x|bo.y|bo.z|(bo.x+br.x)|(bo.y+br.y)|(bo.z+br.z)) >= uint(worldsize))
     {
@@ -248,7 +243,7 @@ void findents(int low, int high, bool notspawned, const vec &pos, const vec &rad
         if(c->ext && c->ext->ents) findents(*c->ext->ents, low, high, notspawned, pos, invradius, found);
         scale--;
     }
-    if(c->children && 1<<scale >= octaentsize) findents(c->children, ivec(bo).mask(~((2<<scale)-1)), 1<<scale, bo, br, low, high, notspawned, pos, invradius, found);
+    if(c->children && 1<<scale >= GETIV(octaentsize)) findents(c->children, ivec(bo).mask(~((2<<scale)-1)), 1<<scale, bo, br, low, high, notspawned, pos, invradius, found);
 }
 
 char *entname(entity &e)
@@ -270,12 +265,10 @@ int entlooplevel = 0;
 int efocus = -1, enthover = -1, entorient = -1, oldhover = -1;
 bool undonext = true;
 
-VARF(entediting, 0, 0, 1, { if(!entediting) { entcancel(); efocus = enthover = -1; } });
-
 bool noentedit()
 {
     if(!editmode) { conoutf(CON_ERROR, "operation only allowed in edit mode"); return true; }
-    return !entediting;
+    return !GETIV(entediting);
 }
 
 bool pointinsel(selinfo &sel, vec &o)
@@ -338,8 +331,6 @@ void detachentity(extentity &e)
     e.attached = NULL;
 }
 
-VAR(attachradius, 1, 100, 1000);
-
 void attachentity(extentity &e)
 {
     switch(e.type)
@@ -378,7 +369,7 @@ void attachentity(extentity &e)
             closedist = dist;
         }
     }
-    if(closedist>attachradius) return;
+    if(closedist>GETIV(attachradius)) return;
     e.attached = ents[closest];
     ents[closest]->attached = &e;
 }
@@ -472,10 +463,10 @@ void entselectionbox(const entity &e, vec &eo, vec &es)
     {   
         m->collisionbox(0, eo, es, entity.get()); // INTENSITY: entity
         if(es.x > es.y) es.y = es.x; else es.x = es.y; // square
-        es.z = (es.z + eo.z + 1 + entselradius)/2; // enclose ent radius box and model box
+        es.z = (es.z + eo.z + 1 + GETIV(entselradius))/2; // enclose ent radius box and model box
         eo.x += e.o.x;
         eo.y += e.o.y;
-        eo.z = e.o.z - entselradius + es.z;
+        eo.z = e.o.z - GETIV(entselradius) + es.z;
     } 
     else if(e.type == ET_MAPMODEL && (m = entity->getModel())) // INTENSITY
     {
@@ -491,15 +482,12 @@ void entselectionbox(const entity &e, vec &eo, vec &es)
     }   
     else
     {
-        es = vec(entselradius);
+        es = vec(GETIV(entselradius));
         eo = e.o;
     }    
     eo.sub(es);
     es.mul(2);
 }
-
-VAR(entselsnap, 0, 0, 1);
-VAR(entmovingshadow, 0, 1, 1);
 
 extern void boxs(int orient, vec o, const vec &s);
 extern void boxs3D(const vec &o, vec s, int g);
@@ -527,16 +515,14 @@ void entdrag(const vec &ray)
         g.add(sel.grid/2).mask(~(sel.grid-1));
         g[d] = z;
         
-        r = (entselsnap ? g[R[d]] : v[R[d]]) - e.o[R[d]];
-        c = (entselsnap ? g[C[d]] : v[C[d]]) - e.o[C[d]];       
+        r = (GETIV(entselsnap) ? g[R[d]] : v[R[d]]) - e.o[R[d]];
+        c = (GETIV(entselsnap) ? g[C[d]] : v[C[d]]) - e.o[C[d]];       
     );
 
     if(initentdragging) makeundoent();
     groupeditpure(e.o[R[d]] += r; e.o[C[d]] += c);
     initentdragging = false;
 }
-
-VAR(showentradius, 0, 1, 1);
 
 void renderentring(const extentity &e, float radius, int axis)
 {
@@ -689,7 +675,7 @@ void renderentselection(const vec &o, const vec &ray, bool entmoving)
     {
         entfocus(enthover, entselectionbox(e, eo, es)); // also ensures enthover is back in focus
         boxs3D(eo, es, 1);
-        if(entmoving && entmovingshadow==1)
+        if(entmoving && GETIV(entmovingshadow)==1)
         {
             vec a, b;
             glColor3ub(20, 20, 20);
@@ -703,7 +689,7 @@ void renderentselection(const vec &o, const vec &ray, bool entmoving)
         glLineWidth(1);
     }
 
-    if(showentradius && (entgroup.length() || enthover >= 0))
+    if(GETIV(showentradius) && (entgroup.length() || enthover >= 0))
     {
         glDepthFunc(GL_GREATER);
         glColor3f(0.25f, 0.25f, 0.25f);
@@ -737,37 +723,24 @@ bool hoveringonent(int ent, int orient)
     return false;
 }
 
-VAR(entitysurf, 0, 0, 1);
-VARF(entmoving, 0, 0, 2,
-    if(enthover < 0 || noentedit())
-        entmoving = 0;
-    else if(entmoving == 1)
-        entmoving = enttoggle(enthover);
-    else if(entmoving == 2 && entgroup.find(enthover) < 0)
-        entadd(enthover);
-    if(entmoving > 0)
-        initentdragging = true;
-);
-
 void entpush(int *dir)
 {
     if(noentedit()) return;
     int d = dimension(entorient);
     int s = dimcoord(entorient) ? -*dir : *dir;
-    if(entmoving) 
+    if(GETIV(entmoving)) 
     {
         groupeditpure(e.o[d] += float(s*sel.grid)); // editdrag supplies the undo
     }
     else 
         groupedit(e.o[d] += float(s*sel.grid));
-    if(entitysurf==1)
+    if(GETIV(entitysurf)==1)
     {
         player->o[d] += float(s*sel.grid);
         player->resetinterp();
     }
 }
 
-VAR(entautoviewdist, 0, 25, 100);
 void entautoview(int *dir) 
 {
     if(!haveselent()) return;
@@ -775,7 +748,7 @@ void entautoview(int *dir)
     vec v(player->o);
     v.sub(worldpos);
     v.normalize();
-    v.mul(entautoviewdist);
+    v.mul(GETIV(entautoviewdist));
     int t = s + *dir;
     s = abs(t) % entgroup.length();
     if(t<0 && s>0) s = entgroup.length() - s;
@@ -816,12 +789,10 @@ int findtype(char *what)
     return ET_EMPTY;
 }
 
-VAR(entdrop, 0, 2, 3);
-
 bool dropentity(entity &e, int drop = -1)
 {
     vec radius(4.0f, 4.0f, 4.0f);
-    if(drop<0) drop = entdrop;
+    if(drop<0) drop = GETIV(entdrop);
     if(e.type == ET_MAPMODEL)
     {
         extentity& ext = *((extentity*)&e); // INTENSITY
@@ -1350,7 +1321,7 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
 }
 
 int getworldsize() { return worldsize; }
-int getmapversion() { return mapversion; }
+int getmapversion() { return GETIV(mapversion); }
 
 // INTENSITY: In our new system, this is called when dragging concludes. Only then do we update the server.
 // This facilitates smooth dragging on the client, and a single bandwidth use at the end.
