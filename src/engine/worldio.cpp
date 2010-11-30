@@ -22,8 +22,6 @@ void backup(char *name, char *backupname)
 
 string ogzname, bakname, cfgname, picname;
 
-VARP(savebak, 0, 2, 2);
-
 void cutogz(char *s)
 {
     char *ogzp = strstr(s, ".ogz");
@@ -58,7 +56,7 @@ void setmapfilenames(const char *fname, const char *cname = 0)
     getmapfilenames(fname, cname, pakname, mapname, mcfgname);
 
     formatstring(ogzname)("packages/%s.ogz", mapname);
-    if(savebak==1) formatstring(bakname)("packages/%s.BAK", mapname);
+    if(GETIV(savebak)==1) formatstring(bakname)("packages/%s.BAK", mapname);
     else formatstring(bakname)("packages/%s_%d.BAK", mapname, totalmillis);
     formatstring(cfgname)("packages/%s/%s.cfg", pakname, mcfgname);
     formatstring(picname)("packages/%s.jpg", mapname);
@@ -289,8 +287,6 @@ cube *loadchildren(stream *f)
     return c;
 }
 
-VAR(dbgvars, 0, 0, 1);
-
 void savevslot(stream *f, VSlot &vs, int prev)
 {
     f->putlil<int>(vs.changed);
@@ -432,7 +428,7 @@ bool save_world(const char *mname, bool nolms)
 {
     if(!*mname) mname = game::getclientmap();
     setmapfilenames(*mname ? mname : "untitled");
-    if(savebak) backup(ogzname, bakname);
+    if(GETIV(savebak)) backup(ogzname, bakname);
     stream *f = opengzfile(ogzname, "wb");
     if(!f) { conoutf(CON_WARN, "could not write map to %s", ogzname); return false; }
 
@@ -474,24 +470,24 @@ bool save_world(const char *mname, bool nolms)
         switch(id.type)
         {
             case ID_VAR:
-                if(dbgvars) conoutf(CON_DEBUG, "wrote var %s: %d", id.name, *id.storage.i);
+                if(GETIV(dbgvars)) conoutf(CON_DEBUG, "wrote var %s: %d", id.name, *id.storage.i);
                 f->putlil<int>(*id.storage.i);
                 break;
 
             case ID_FVAR:
-                if(dbgvars) conoutf(CON_DEBUG, "wrote fvar %s: %f", id.name, *id.storage.f);
+                if(GETIV(dbgvars)) conoutf(CON_DEBUG, "wrote fvar %s: %f", id.name, *id.storage.f);
                 f->putlil<float>(*id.storage.f);
                 break;
 
             case ID_SVAR:
-                if(dbgvars) conoutf(CON_DEBUG, "wrote svar %s: %s", id.name, *id.storage.s);
+                if(GETIV(dbgvars)) conoutf(CON_DEBUG, "wrote svar %s: %s", id.name, *id.storage.s);
                 f->putlil<ushort>(strlen(*id.storage.s));
                 f->write(*id.storage.s, strlen(*id.storage.s));
                 break;
         }
     });
 
-    if(dbgvars) conoutf(CON_DEBUG, "wrote %d vars", hdr.numvars);
+    if(GETIV(dbgvars)) conoutf(CON_DEBUG, "wrote %d vars", hdr.numvars);
 
     f->putchar((int)strlen(game::gameident()));
     f->write(game::gameident(), (int)strlen(game::gameident())+1);
@@ -668,7 +664,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
             {
                 int val = f->getlil<int>();
                 if(exists && id->minval <= id->maxval) EngineVariables::get(std::string(name)).get()->set(val, true, true, false);
-                if(dbgvars) conoutf(CON_DEBUG, "read var %s: %d", name, val);
+                if(GETIV(dbgvars)) conoutf(CON_DEBUG, "read var %s: %d", name, val);
                 break;
             }
  
@@ -676,7 +672,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
             {
                 float val = f->getlil<float>();
                 if(exists && id->minvalf <= id->maxvalf) EngineVariables::get(std::string(name)).get()->set(val, true, true, false);
-                if(dbgvars) conoutf(CON_DEBUG, "read fvar %s: %f", name, val);
+                if(GETIV(dbgvars)) conoutf(CON_DEBUG, "read fvar %s: %f", name, val);
                 break;
             }
     
@@ -688,12 +684,12 @@ bool load_world(const char *mname, const char *cname)        // still supports a
                 val[min(slen, MAXSTRLEN-1)] = '\0';
                 if(slen >= MAXSTRLEN) f->seek(slen - (MAXSTRLEN-1), SEEK_CUR);
                 if(exists) EngineVariables::get(std::string(name)).get()->set(std::string(val), true, true, true);
-                if(dbgvars) conoutf(CON_DEBUG, "read svar %s: %s", name, val);
+                if(GETIV(dbgvars)) conoutf(CON_DEBUG, "read svar %s: %s", name, val);
                 break;
             }
         }
     }
-    if(dbgvars) conoutf(CON_DEBUG, "read %d vars", hdr.numvars);
+    if(GETIV(dbgvars)) conoutf(CON_DEBUG, "read %d vars", hdr.numvars);
 
     string gametype;
     copystring(gametype, "fps");

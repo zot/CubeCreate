@@ -1,8 +1,5 @@
 #include "engine.h"
 
-VARP(oqdynent, 0, 1, 1);
-VARP(animationinterpolationtime, 0, 150, 1000);
-
 model *loadingmodel = NULL;
 
 #include "ragdoll.h"
@@ -445,8 +442,6 @@ bool modeloccluded(const vec &center, float radius)
            bboccluded(ivec(int(center.x-radius), int(center.y-radius), int(center.z-radius)), ivec(br, br, br));
 }
 
-VAR(showboundingbox, 0, 0, 2);
-
 void render2dbox(vec &o, float x, float y, float z)
 {
     glBegin(GL_LINE_LOOP);
@@ -540,15 +535,6 @@ modelbatch &addbatchedmodel(model *m)
     return *b;
 }
 
-VAR(modeltweaks, 0, 0, 1); // INTENSITY: SkyManager: tweaks for models (like ambience, glow, so we can sync it with ambientlight
-FVAR(tweakmodelspec, 0, 1.0, 100.0);
-FVAR(tweakmodelambient, 0, 1.0, 100.0);
-FVAR(tweakmodelglow, 0, 1.0, 100.0);
-FVAR(tweakmodelspecglare, 0, 1.0, 100.0);
-FVAR(tweakmodelglowglare, 0, 1.0, 100.0);
-
-FVARR(tweakmodelscale, 0.001, 1.0, 100.0); // end INTENSITY
-
 void renderbatchedmodel(model *m, batchedmodel &b)
 {
     modelattach *a = NULL;
@@ -566,12 +552,12 @@ void renderbatchedmodel(model *m, batchedmodel &b)
         if(b.flags&MDL_GHOST) anim |= ANIM_GHOST;
     }
 
-    if(modeltweaks) { // INTENSITY: SkyManager: do modeltweaks
-        if (!b.d) m->setambient(tweakmodelambient);    // t7g; This is how we adjust ambient and related for all models at once.
-        else m->setambient(tweakmodelambient / 10.0f);
-        m->setglow(tweakmodelglow);
-        m->setspec(tweakmodelspec);
-        m->setglare(tweakmodelspecglare, tweakmodelglowglare);
+    if(GETIV(modeltweaks)) { // INTENSITY: SkyManager: do modeltweaks
+        if (!b.d) m->setambient(float(GETFV(tweakmodelambient)));    // t7g; This is how we adjust ambient and related for all models at once.
+        else m->setambient(float(GETFV(tweakmodelambient)) / 10.0f);
+        m->setglow(float(GETFV(tweakmodelglow)));
+        m->setspec(float(GETFV(tweakmodelspec)));
+        m->setglare(float(GETFV(tweakmodelspecglare)), float(GETFV(tweakmodelglowglare)));
     }
 
     m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir, b.transparent, b.rotation); // INTENSITY: roll, rotation
@@ -719,8 +705,6 @@ void endmodelquery()
     modelattached.setsize(minattached);
 }
 
-VARP(maxmodelradiusdistance, 10, 200, 1000);
-
 void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
 {
     if(fabs(camera1->o.x-center.x) < radius+1 &&
@@ -753,7 +737,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
     vec center, bbradius;
     float radius = 0;
     bool shadow = !GETIV(shadowmap) && !glaring && (flags&(MDL_SHADOW|MDL_DYNSHADOW)) && GETIV(blobs),
-         doOQ = flags&MDL_CULL_QUERY && hasOQ && GETIV(oqfrags) && oqdynent;
+         doOQ = flags&MDL_CULL_QUERY && hasOQ && GETIV(oqfrags) && GETIV(oqdynent);
     if(flags&(MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED|MDL_CULL_QUERY|MDL_SHADOW|MDL_DYNSHADOW))
     {
         m->boundbox(0/*frame*/, center, bbradius); // FIXME
@@ -768,7 +752,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
             center.rotate_around_z(-yaw*RAD);
             center.add(o);
         }
-        if(flags&MDL_CULL_DIST && center.dist(camera1->o)/radius>maxmodelradiusdistance) return;
+        if(flags&MDL_CULL_DIST && center.dist(camera1->o)/radius>GETIV(maxmodelradiusdistance)) return;
         if(flags&MDL_CULL_VFC)
         {
             if(reflecting || refracting)
@@ -817,9 +801,9 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
     }
 
     if(flags&MDL_NORENDER) anim |= ANIM_NORENDER;
-    else if(showboundingbox && !shadowmapping && !reflecting && !refracting && editmode)
+    else if(GETIV(showboundingbox) && !shadowmapping && !reflecting && !refracting && editmode)
     {
-        if(d && showboundingbox==1) 
+        if(d && GETIV(showboundingbox)==1) 
         {
             render3dbox(d->o, d->eyeheight, d->aboveeye, d->radius);
             renderellipse(d->o, d->xradius, d->yradius, d->yaw);
@@ -827,7 +811,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
         else
         {
             vec center, radius;
-            if(showboundingbox==1) m->collisionbox(0, center, radius, entity.get()); // INTENSITY: Added entity
+            if(GETIV(showboundingbox)==1) m->collisionbox(0, center, radius, entity.get()); // INTENSITY: Added entity
             else m->boundbox(0, center, radius);
             rotatebb(center, radius, int(yaw));
             center.add(o);
@@ -1017,18 +1001,14 @@ void loadskin(const char *dir, const char *altdir, Texture *&skin, Texture *&mas
 
 // convenient function that covers the usual anims for players/monsters/npcs
 
-VAR(animoverride, -1, 0, NUMANIMS-1);
-VAR(testanims, 0, 0, 1);
-VAR(testpitch, -90, 0, 90);
-
 void renderclient(dynent *d, const char *mdlname, LogicEntityPtr entity, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade, bool ragdoll)
 {
     int anim = hold ? hold : ANIM_IDLE|ANIM_LOOP;
-    float yaw = testanims && d==player ? 0 : d->yaw+90,
-          pitch = testpitch && d==player ? testpitch : d->pitch;
+    float yaw = GETIV(testanims) && d==player ? 0 : d->yaw+90,
+          pitch = GETIV(testpitch) && d==player ? GETIV(testpitch) : d->pitch;
     vec o = d->feetpos();
     int basetime = 0;
-    if(animoverride) anim = (animoverride<0 ? ANIM_ALL : animoverride)|ANIM_LOOP;
+    if(GETIV(animoverride)) anim = (GETIV(animoverride)<0 ? ANIM_ALL : GETIV(animoverride))|ANIM_LOOP;
 #if 0 // INTENSITY: We handle death ourselves
     else if(d->state==CS_DEAD)
     {

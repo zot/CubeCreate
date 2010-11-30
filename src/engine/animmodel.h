@@ -611,14 +611,14 @@ struct animmodel : model
                     ai.prev.range = ai.cur.range = 0;
                     ai.lastswitch = -1;
                 }
-                else if(ai.lastmodel!=this || ai.lastswitch<0 || lastmillis-d->lastrendered>animationinterpolationtime)
+                else if(ai.lastmodel!=this || ai.lastswitch<0 || lastmillis-d->lastrendered>GETIV(animationinterpolationtime))
                 {
                     ai.prev = ai.cur = info;
-                    ai.lastswitch = lastmillis-animationinterpolationtime*2;
+                    ai.lastswitch = lastmillis-GETIV(animationinterpolationtime)*2;
                 }
                 else if(ai.cur!=info)
                 {
-                    if(lastmillis-ai.lastswitch>animationinterpolationtime/2) ai.prev = ai.cur;
+                    if(lastmillis-ai.lastswitch>GETIV(animationinterpolationtime)/2) ai.prev = ai.cur;
                     ai.cur = info;
                     ai.lastswitch = lastmillis;
                 }
@@ -667,10 +667,10 @@ struct animmodel : model
                 if(interp>=0 && d->animinterp[interp].prev.range>0)
                 {
                     int diff = lastmillis-d->animinterp[interp].lastswitch;
-                    if(diff<animationinterpolationtime)
+                    if(diff<GETIV(animationinterpolationtime))
                     {
                         p.prev.setframes(d->animinterp[interp].prev);
-                        p.interp = diff/float(animationinterpolationtime);
+                        p.interp = diff/float(GETIV(animationinterpolationtime));
                     }
                 }
             }
