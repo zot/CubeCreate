@@ -41,7 +41,7 @@ static int lastgrassanim = -1;
 
 static void animategrass()
 {
-    loopi(NUMGRASSOFFSETS) grassanimoffsets[i] = float(GETFV(grassanimscale))*sinf(2*M_PI*(grassoffsets[i] + lastmillis/float(GETIV(grassanimmillis))));
+    loopi(NUMGRASSOFFSETS) grassanimoffsets[i] = GETFV(grassanimscale)*sinf(2*M_PI*(grassoffsets[i] + lastmillis/float(GETIV(grassanimmillis))));
     lastgrassanim = lastmillis;
 }
 
@@ -66,8 +66,8 @@ bvec grasscolor(255, 255, 255);
 static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstri &g, Texture *tex)
 {
     float t = camera1->o.dot(w.dir);
-    int tstep = int(ceil(t/float(GETFV(grassstep))));
-    float tstart = tstep*float(GETFV(grassstep)), tfrac = tstart - t;
+    int tstep = int(ceil(t/GETFV(grassstep)));
+    float tstart = tstep*GETFV(grassstep), tfrac = tstart - t;
 
     float t1 = w.dir.dot(g.v[0]), t2 = w.dir.dot(g.v[1]), t3 = w.dir.dot(g.v[2]),
           tmin = min(t1, min(t2, t3)),
@@ -81,8 +81,8 @@ static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstr
  
     if(tmax < tstart || tmin > t + GETIV(grassdist)) return;
 
-    int minstep = max(int(ceil(tmin/float(GETFV(grassstep)))) - tstep, 1),
-        maxstep = int(floor(min(tmax, t + GETIV(grassdist))/float(GETFV(grassstep)))) - tstep,
+    int minstep = max(int(ceil(tmin/GETFV(grassstep))) - tstep, 1),
+        maxstep = int(floor(min(tmax, t + GETIV(grassdist))/GETFV(grassstep))) - tstep,
         numsteps = maxstep - minstep + 1;
 
     float texscale = (GETIV(grassscale)*tex->ys)/float(GETIV(grassheight)*tex->xs), animscale = GETIV(grassheight)*texscale;
@@ -93,12 +93,12 @@ static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstr
     if(color < 0) color = NUMGRASSOFFSETS - (-color)%NUMGRASSOFFSETS;
     color += numsteps + NUMGRASSOFFSETS - numsteps%NUMGRASSOFFSETS;
 
-    float taperdist = GETIV(grassdist)*float(GETFV(grasstaper)),
+    float taperdist = GETIV(grassdist)*GETFV(grasstaper),
           taperscale = 1.0f / (GETIV(grassdist) - taperdist);
 
     for(int i = maxstep; i >= minstep; i--, color--)
     {
-        float dist = i*float(GETFV(grassstep)) + tfrac;
+        float dist = i*GETFV(grassstep) + tfrac;
         vec p1 = vec(w.edge1).mul(dist).add(camera1->o),
             p2 = vec(w.edge2).mul(dist).add(camera1->o);
         p1.z = g.surface.zintersect(p1);
@@ -126,7 +126,7 @@ static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstr
               lm2u = g.tcu.dot(p2), lm2v = g.tcv.dot(p2),
               fade = dist > taperdist ? (GETIV(grassdist) - dist)*taperscale : 1,
               height = GETIV(grassheight) * fade;
-        uchar color[4] = { grasscolor.x, grasscolor.y, grasscolor.z, uchar(fade*float(GETFV(grassalpha))*255) };
+        uchar color[4] = { grasscolor.x, grasscolor.y, grasscolor.z, uchar(fade*GETFV(grassalpha)*255) };
 
         #define GRASSVERT(n, tcv, modify) { \
             grassvert &gv = grassverts.add(); \

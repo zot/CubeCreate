@@ -1587,32 +1587,32 @@ void updateparticles()
             extentity &e = *ents[entgroup[i]]; // INTENSITY: Made extentity
             if (!LogicSystem::getLogicEntity(e).get()) continue;
             std::string _class = '@' + LogicSystem::getLogicEntity(e).get()->getClass(); // INTENSITY
-            particle_textcopy(vec(e.o.x, e.o.y, e.o.z + int(GETFV(editpartsize)) * 2), _class.c_str(), PART_TEXT, 1, 0xFF4B19, float(GETFV(editpartsize))); // INTENSITY: Use class
+            particle_textcopy(vec(e.o.x, e.o.y, e.o.z + int(GETFV(editpartsize)) * 2), _class.c_str(), PART_TEXT, 1, 0xFF4B19, GETFV(editpartsize)); // INTENSITY: Use class
             switch (e.type)
             {
                 case ET_LIGHT:
-                    newparticle(e.o, e.o, 1, PART_EDIT_LIGHT, 0xFF4B19, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_LIGHT, 0xFF4B19, GETFV(editpartsize));
                     break;
                 case ET_SPOTLIGHT:
-                    newparticle(e.o, e.o, 1, PART_EDIT_SPOTLIGHT, 0xFF4B19, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_SPOTLIGHT, 0xFF4B19, GETFV(editpartsize));
                     break;
                 case ET_ENVMAP:
-                    newparticle(e.o, e.o, 1, PART_EDIT_ENVMAP, 0xFF4B19, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_ENVMAP, 0xFF4B19, GETFV(editpartsize));
                     break;
                 case ET_SOUND:
-                    newparticle(e.o, e.o, 1, PART_EDIT_SOUND, 0xFF4B19, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_SOUND, 0xFF4B19, GETFV(editpartsize));
                     break;
                 case ET_PLAYERSTART:
-                    newparticle(e.o, e.o, 1, PART_EDIT_MARKER, 0xFF4B19, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_MARKER, 0xFF4B19, GETFV(editpartsize));
                     break;
                 case ET_MAPMODEL:
-                    newparticle(e.o, e.o, 1, PART_EDIT_MAPMODEL, 0xFF4B19, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_MAPMODEL, 0xFF4B19, GETFV(editpartsize));
                     break;
                 case ET_PARTICLES:
-                    newparticle(e.o, e.o, 1, PART_EDIT_PARTICLES, 0xFF4B19, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_PARTICLES, 0xFF4B19, GETFV(editpartsize));
                     break;
                 default:
-                    newparticle(e.o, e.o, 1, PART_EDIT_GENERIC, 0xFF4B19, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_GENERIC, 0xFF4B19, GETFV(editpartsize));
                     break;
             }
             editid = e.uniqueId;
@@ -1623,32 +1623,32 @@ void updateparticles()
             if(e.type==ET_EMPTY || editid==e.uniqueId) continue;
             if (!LogicSystem::getLogicEntity(e).get()) continue;
             std::string _class = '@' + LogicSystem::getLogicEntity(e).get()->getClass(); // INTENSITY
-            particle_textcopy(vec(e.o.x, e.o.y, e.o.z + int(GETFV(editpartsize)) * 2), _class.c_str(), PART_TEXT, 1, 0x1EC850, float(GETFV(editpartsize))); // INTENSITY: Use class
+            particle_textcopy(vec(e.o.x, e.o.y, e.o.z + int(GETFV(editpartsize)) * 2), _class.c_str(), PART_TEXT, 1, 0x1EC850, GETFV(editpartsize)); // INTENSITY: Use class
             switch (e.type)
             {
                 case ET_LIGHT:
-                    newparticle(e.o, e.o, 1, PART_EDIT_LIGHT, (e.attr2 || e.attr3 || e.attr4) ? (e.attr2<<16)+(e.attr3<<8)+e.attr4 : 0xFFFFFF, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_LIGHT, (e.attr2 || e.attr3 || e.attr4) ? (e.attr2<<16)+(e.attr3<<8)+e.attr4 : 0xFFFFFF, GETFV(editpartsize));
                     break;
                 case ET_SPOTLIGHT:
-                    newparticle(e.o, e.o, 1, PART_EDIT_SPOTLIGHT, 0xFFFFFF, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_SPOTLIGHT, 0xFFFFFF, GETFV(editpartsize));
                     break;
                 case ET_ENVMAP:
-                    newparticle(e.o, e.o, 1, PART_EDIT_ENVMAP, 0xFFFFFF, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_ENVMAP, 0xFFFFFF, GETFV(editpartsize));
                     break;
                 case ET_SOUND:
-                    newparticle(e.o, e.o, 1, PART_EDIT_SOUND, 0xFFFFFF, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_SOUND, 0xFFFFFF, GETFV(editpartsize));
                     break;
                 case ET_PLAYERSTART:
-                    newparticle(e.o, e.o, 1, PART_EDIT_MARKER, 0xFFFFFF, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_MARKER, 0xFFFFFF, GETFV(editpartsize));
                     break;
                 case ET_MAPMODEL:
-                    newparticle(e.o, e.o, 1, PART_EDIT_MAPMODEL, 0xFFFFFF, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_MAPMODEL, 0xFFFFFF, GETFV(editpartsize));
                     break;
                 case ET_PARTICLES:
-                    newparticle(e.o, e.o, 1, PART_EDIT_PARTICLES, 0xFFFFFF, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_PARTICLES, 0xFFFFFF, GETFV(editpartsize));
                     break;
                 default:
-                    newparticle(e.o, e.o, 1, PART_EDIT_GENERIC, 0xFFFFFF, float(GETFV(editpartsize)));
+                    newparticle(e.o, e.o, 1, PART_EDIT_GENERIC, 0xFFFFFF, GETFV(editpartsize));
                     break;
             }
         }

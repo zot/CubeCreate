@@ -1447,7 +1447,7 @@ LUA_EMBED_NOPARAM(syncVariableFromLua, 0, {
 		}
 		case 'F':
 		{
-			EngineVariables::syncFromLua(name, LuaEngine::getDouble(3));
+			EngineVariables::syncFromLua(name, float(LuaEngine::getDouble(3)));
 			break;
 		}
 		case 'S':

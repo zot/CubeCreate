@@ -796,22 +796,22 @@ void fixcamerarange()
 
 void mousemove(int dx, int dy)
 {
-    float cursens = float(GETFV(sensitivity)), curaccel = float(GETFV(mouseaccel));
+    float cursens = GETFV(sensitivity), curaccel = GETFV(mouseaccel);
     if(GETIV(zoom))
     {
         if(GETIV(zoomautosens)) 
         {
-            cursens = float(GETFV(sensitivity)*GETIV(zoomfov))/GETIV(fov);
-            curaccel = float(GETFV(mouseaccel)*GETIV(zoomfov))/GETIV(fov);
+            cursens = (GETFV(sensitivity)*GETIV(zoomfov))/GETIV(fov);
+            curaccel = (GETFV(mouseaccel)*GETIV(zoomfov))/GETIV(fov);
         }
         else 
         {
-            cursens = float(GETFV(zoomsens));
-            curaccel = float(GETFV(zoomaccel));
+            cursens = GETFV(zoomsens);
+            curaccel = GETFV(zoomaccel);
         }
     }
     if(curaccel && curtime && (dx || dy)) cursens += curaccel * sqrtf(dx*dx + dy*dy)/curtime;
-    cursens /= 33.0f*float(GETFV(sensitivityscale));
+    cursens /= 33.0f*GETFV(sensitivityscale);
 
     // INTENSITY: Let scripts customize mousemoving
     if (LuaEngine::exists())
@@ -877,10 +877,10 @@ void recomputecamera()
         vecfromyawpitch(camera1->yaw, camera1->pitch, -1, 0, dir);
         if(game::collidecamera()) 
         {
-            movecamera(camera1, dir, float(GETFV(thirdpersondistance)), 1);
-            movecamera(camera1, dir, clamp(float(GETFV(thirdpersondistance)) - camera1->o.dist(player->o), 0.0f, 1.0f), 0.1f);
+            movecamera(camera1, dir, GETFV(thirdpersondistance), 1);
+            movecamera(camera1, dir, clamp(GETFV(thirdpersondistance) - camera1->o.dist(player->o), 0.0f, 1.0f), 0.1f);
         }
-        else camera1->o.add(vec(dir).mul(float(GETFV(thirdpersondistance))));
+        else camera1->o.add(vec(dir).mul(GETFV(thirdpersondistance)));
 #else
         CameraControl::positionCamera(camera1);
 #endif
@@ -919,9 +919,9 @@ vec calcavatarpos(const vec &pos, float dist)
     mvmatrix.transform(pos, eyepos);
     GLdouble ydist = GETFV(nearplane) * tan(curavatarfov/2*RAD), xdist = ydist * aspect;
     vec4 scrpos;
-    scrpos.x = eyepos.x*float(GETFV(nearplane))/xdist;
-    scrpos.y = eyepos.y*float(GETFV(nearplane))/ydist;
-    scrpos.z = (eyepos.z*(farplane + float(GETFV(nearplane))) - 2*float(GETFV(nearplane))*farplane) / (farplane - float(GETFV(nearplane)));
+    scrpos.x = eyepos.x*GETFV(nearplane)/xdist;
+    scrpos.y = eyepos.y*GETFV(nearplane)/ydist;
+    scrpos.z = (eyepos.z*(farplane + GETFV(nearplane)) - 2*GETFV(nearplane)*farplane) / (farplane - GETFV(nearplane));
     scrpos.w = -eyepos.z;
 
     vec worldpos = invmvpmatrix.perspectivetransform(scrpos);
@@ -1260,7 +1260,7 @@ void drawglare()
     rendergame();
     if(!isthirdperson())
     {
-        project(curavatarfov, aspect, farplane, false, false, false, float(GETFV(avatardepth)));
+        project(curavatarfov, aspect, farplane, false, false, false, GETFV(avatardepth));
         game::renderavatar();
         project(fovy, aspect, farplane);
     }
@@ -1389,7 +1389,7 @@ void drawreflection(float z, bool refract)
     if(refracting && z>=0 && !isthirdperson() && fabs(camera1->o.z-z) <= 0.5f*(player->eyeheight + player->aboveeye))
     {   
         glmatrixf avatarproj;
-        avatarproj.perspective(curavatarfov, aspect, float(GETFV(nearplane)), farplane);
+        avatarproj.perspective(curavatarfov, aspect, GETFV(nearplane), farplane);
         if(GETIV(reflectclip))
         {
             popprojection();
@@ -1699,7 +1699,7 @@ void addmotionblur()
 
     rectshader->set();
 
-    glColor4f(1, 1, 1, lastmotion ? pow(float(GETFV(motionblurscale)), max(float(lastmillis - lastmotion)/GETIV(motionblurmillis), 1.0f)) : 0);
+    glColor4f(1, 1, 1, lastmotion ? pow(GETFV(motionblurscale), max(float(lastmillis - lastmotion)/GETIV(motionblurmillis), 1.0f)) : 0);
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(      0,       0); glVertex2f(-1, -1);
     glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
@@ -1817,7 +1817,7 @@ void gl_drawframe(int w, int h)
     rendergame(true);
     if(!isthirdperson())
     {
-        project(curavatarfov, aspect, farplane, false, false, false, float(GETFV(avatardepth)));
+        project(curavatarfov, aspect, farplane, false, false, false, GETFV(avatardepth));
         game::renderavatar();
         project(fovy, aspect, farplane);
     }

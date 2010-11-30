@@ -1866,7 +1866,7 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
     }
     else
     {
-        pl->roll -= pl->strafe*curtime*float(GETFV(straferoll));
+        pl->roll -= pl->strafe*curtime*GETFV(straferoll);
         if(pl->roll > GETIV(maxroll)) pl->roll = GETIV(maxroll);
         else if(pl->roll < -GETIV(maxroll)) pl->roll = -GETIV(maxroll);
     }

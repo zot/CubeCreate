@@ -194,8 +194,8 @@ void CameraControl::positionCamera(physent* camera1)
         if (GETIV(thirdperson))
         {
             vec up(0, 0, 1);
-            movecamera(camera1, up, float(GETFV(cameraheight)), 1);
-            movecamera(camera1, up, clamp(float(GETFV(cameraheight)) - camera1->o.dist(cameraOrigin), 0.0f, 1.0f), 0.1f); // Find distance to obstacle
+            movecamera(camera1, up, GETFV(cameraheight), 1);
+            movecamera(camera1, up, clamp(GETFV(cameraheight) - camera1->o.dist(cameraOrigin), 0.0f, 1.0f), 0.1f); // Find distance to obstacle
         }
 
         vec cameraOrigin2 = camera1->o;
@@ -203,9 +203,9 @@ void CameraControl::positionCamera(physent* camera1)
         movecamera(camera1, dir, clamp(GETIV(cam_dist) - camera1->o.dist(cameraOrigin2), 0.0f, 1.0f), 0.1f); // Find distance to obstacle
 
         if (GETFV(smoothcamera)) {
-            float intendedDist = camera1->o.dist(cameraOrigin2)*(1.0f-float(GETFV(cameraavoid)));
+            float intendedDist = camera1->o.dist(cameraOrigin2)*(1.0f-GETFV(cameraavoid));
             static float lastDist = 5;
-            float ACTUAL_DISTANCE_FACTOR = clamp(1.0f - (curtime/1000.0f)/float(GETFV(smoothcamera)), 0.0f, 1.0f);
+            float ACTUAL_DISTANCE_FACTOR = clamp(1.0f - (curtime/1000.0f)/GETFV(smoothcamera), 0.0f, 1.0f);
             float actualDist = ACTUAL_DISTANCE_FACTOR*lastDist + (1-ACTUAL_DISTANCE_FACTOR)*intendedDist;
 
             // Start again, move to current distance
@@ -215,7 +215,7 @@ void CameraControl::positionCamera(physent* camera1)
             lastDist = actualDist;
         }
     } else {
-        camera1->o.z += float(GETFV(cameraheight));
+        camera1->o.z += GETFV(cameraheight);
         camera1->o.add(vec(dir).mul(GETIV(cam_dist)));
     }
 
@@ -238,7 +238,7 @@ void CameraControl::positionCamera(physent* camera1)
     // Only interpolate if we are fairly close, otherwise this might be a new map, or we teleported, etc.
     if (GETFV(smoothcamera) && !GuiControl::isMouselooking() && temp.magnitude() < 50*player->radius && fabs(yawDelta) < 30.0f && fabs(pitchDelta) < 30.0f)
     {
-        float ACTUAL_CAMERA_FACTOR = clamp(1.0f - (curtime/1000.0f)/float(GETFV(smoothcamera)), 0.0f, 1.0f);
+        float ACTUAL_CAMERA_FACTOR = clamp(1.0f - (curtime/1000.0f)/GETFV(smoothcamera), 0.0f, 1.0f);
 
         vec temp = player->o;
         temp.sub(lastPlayerPosition);

@@ -64,9 +64,9 @@ EngineVariable::EngineVariable
 	hasCB = cb ? true : false;
 }
 
-// this one is used for double variables. Arguments cb and persist are also optional.
+// this one is used for float variables. Arguments cb and persist are also optional.
 EngineVariable::EngineVariable
-(const std::string& vname, double minvf, double curvf, double maxvf, void (_cb_ cb)(double, double, double, double), bool persist, bool override)
+(const std::string& vname, float minvf, float curvf, float maxvf, void (_cb_ cb)(float, float, float, float), bool persist, bool override)
 {
 	name = vname;
 	if (minvf > maxvf)
@@ -79,7 +79,7 @@ EngineVariable::EngineVariable
 		readOnly = false;
 		minv = minvf; curv = curvf; maxv = maxvf; prev = curvf;
 	}
-	doubleCB = cb;
+	floatCB = cb;
 	persistent = persist;
 	type = cb ? ( persist ? "FVARFP" : "FVARF" ) : ( persist ? "FVARP" : "FVAR" );
 	hasCB = cb ? true : false;
@@ -105,7 +105,7 @@ EngineVariable::EngineVariable
 std::string EngineVariable::getName()    { return name;  }
 std::string EngineVariable::getType()    { return type;  }
 int         EngineVariable::getInteger() { return anyint(curv);  }
-double      EngineVariable::getDouble()  { return anydouble(curv); }
+float       EngineVariable::getFloat()  { return anyfloat(curv); }
 std::string EngineVariable::getString()  { return anystring(curv); }
 
 /*
@@ -122,10 +122,10 @@ void EngineVariable::set(int val, bool luaSync, bool forceCB, bool clamp)
 }
 
 // float variables
-void EngineVariable::set(double val, bool luaSync, bool forceCB, bool clamp)
+void EngineVariable::set(float val, bool luaSync, bool forceCB, bool clamp)
 {
 	prev = curv;
-	if (clamp && (val < anydouble(minv) || val > anydouble(maxv))) curv = clamp(val, anydouble(minv), anydouble(maxv));
+	if (clamp && (val < anyfloat(minv) || val > anyfloat(maxv))) curv = clamp(val, anyfloat(minv), anyfloat(maxv));
 	else curv = val;
 	callCB(luaSync, forceCB);
 }
@@ -172,9 +172,9 @@ void EngineVariable::registerLuaFVAR()
 {
 	LuaEngine::getGlobal("fvar");
 	LuaEngine::pushValue(name);
-	LuaEngine::pushValue(anydouble(minv));
-	LuaEngine::pushValue(anydouble(curv));
-	LuaEngine::pushValue(anydouble(maxv));
+	LuaEngine::pushValue(anyfloat(minv));
+	LuaEngine::pushValue(anyfloat(curv));
+	LuaEngine::pushValue(anyfloat(maxv));
 	LuaEngine::pushValue(readOnly);
 	LuaEngine::call(5, 0);
 }
@@ -213,8 +213,8 @@ void EngineVariable::callCB(bool luaSync, bool forceCB)
 		}
 		case 'F':
 		{
-			if (hasCB && (!luaSync || forceCB)) doubleCB(anydouble(minv), anydouble(maxv), anydouble(prev), anydouble(curv));
-			SYNCV(anydouble(curv));
+			if (hasCB && (!luaSync || forceCB)) floatCB(anyfloat(minv), anyfloat(maxv), anyfloat(prev), anyfloat(curv));
+			SYNCV(anyfloat(curv));
 			break;
 		}
 		case 'S':
@@ -318,7 +318,7 @@ void EngineVariables::syncFromLua(const std::string& name, int value)
 	storage[name].get()->set(value, false);
 }
 
-void EngineVariables::syncFromLua(const std::string& name, double value)
+void EngineVariables::syncFromLua(const std::string& name, float value)
 {
 	storage[name].get()->set(value, false);
 }

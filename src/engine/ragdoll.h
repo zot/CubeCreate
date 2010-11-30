@@ -335,7 +335,7 @@ void ragdolldata::calcrotfriction()
 void ragdolldata::applyrotfriction(float ts)
 {
     calctris();
-    float stopangle = 2*M_PI*ts*float(GETFV(ragdollrotfricstop)), rotfric = 1.0f - pow(float(GETFV(ragdollrotfric)), ts*1000.0f/GETIV(ragdolltimestepmin));
+    float stopangle = 2*M_PI*ts*GETFV(ragdollrotfricstop), rotfric = 1.0f - pow(GETFV(ragdollrotfric), ts*1000.0f/GETIV(ragdolltimestepmin));
     loopv(skel->rotfrictions)
     {
         ragdollskel::rotfriction &r = skel->rotfrictions[i];
@@ -414,7 +414,7 @@ void ragdolldata::move(dynent *pl, float ts)
    
     calcrotfriction(); 
     float tsfric = timestep ? ts/timestep : 1,
-          airfric = float(GETFV(ragdollairfric)) + min((float(GETFV(ragdollbodyfricscale))*collisions)/skel->verts.length(), 1.0f)*(float(GETFV(ragdollbodyfric)) - float(GETFV(ragdollairfric)));
+          airfric = GETFV(ragdollairfric) + min((GETFV(ragdollbodyfricscale)*collisions)/skel->verts.length(), 1.0f)*(GETFV(ragdollbodyfric) - GETFV(ragdollairfric));
     collisions = 0;
     loopv(skel->verts)
     {
@@ -422,7 +422,7 @@ void ragdolldata::move(dynent *pl, float ts)
         vec dpos = vec(v.pos).sub(v.oldpos);
         dpos.z -= GRAVITY*ts*ts;
         if(water) dpos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts;
-        dpos.mul(pow((water ? float(GETFV(ragdollwaterfric)) : 1.0f) * (v.collided ? float(GETFV(ragdollgroundfric)) : airfric), ts*1000.0f/GETIV(ragdolltimestepmin))*tsfric);
+        dpos.mul(pow((water ? GETFV(ragdollwaterfric) : 1.0f) * (v.collided ? GETFV(ragdollgroundfric) : airfric), ts*1000.0f/GETIV(ragdolltimestepmin))*tsfric);
         v.oldpos = v.pos;
         v.pos.add(dpos);
     }
@@ -471,7 +471,7 @@ void moveragdoll(dynent *d)
 
     vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
     eye.add(d->ragdoll->offset);
-    float k = pow(float(GETFV(ragdolleyesmooth)), float(curtime)/GETIV(ragdolleyesmoothmillis));
+    float k = pow(GETFV(ragdolleyesmooth), float(curtime)/GETIV(ragdolleyesmoothmillis));
     d->o.mul(k).add(eye.mul(1-k));
 }
 

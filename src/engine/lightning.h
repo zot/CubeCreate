@@ -36,9 +36,9 @@ static void renderlightning(Texture *tex, const vec &o, const vec &d, float sz)
     right.cross(up, step);
     right.normalize();
     float scroll = -float(lastmillis%GETIV(lnscrollmillis))/GETIV(lnscrollmillis), 
-          scrollscale = float(GETFV(lnscrollscale))*(LIGHTNINGSTEP*tex->ys)/(sz*tex->xs),
-          blend = pow(clamp(float(lastmillis - lastlnjitter)/GETIV(lnjittermillis), 0.0f, 1.0f), float(GETFV(lnblendpower))),
-          jitter0 = (1-blend)*float(GETFV(lnjitterscale))*sz/GETIV(lnjitterradius), jitter1 = blend*float(GETFV(lnjitterscale))*sz/GETIV(lnjitterradius); 
+          scrollscale = GETFV(lnscrollscale)*(LIGHTNINGSTEP*tex->ys)/(sz*tex->xs),
+          blend = pow(clamp(float(lastmillis - lastlnjitter)/GETIV(lnjittermillis), 0.0f, 1.0f), GETFV(lnblendpower)),
+          jitter0 = (1-blend)*GETFV(lnjitterscale)*sz/GETIV(lnjitterradius), jitter1 = blend*GETFV(lnjitterscale)*sz/GETIV(lnjitterradius); 
     glBegin(GL_TRIANGLE_STRIP);
     loopj(numsteps)
     {

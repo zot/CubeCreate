@@ -33,7 +33,7 @@
 #include <boost/any.hpp>
 
 #define anyint boost::any_cast<int>
-#define anydouble boost::any_cast<double>
+#define anyfloat boost::any_cast<float>
 #define anystring boost::any_cast<std::string>
 
 #ifdef __clang__
@@ -78,7 +78,7 @@ public:
 		bool override = false
 	);
     /**
-     * @brief Double variable constructor.
+     * @brief Float variable constructor.
      * @param vname Name of future variable.
      * @param minvf Minimal value of variable.
      * @param curvf Default value of variable.
@@ -87,14 +87,14 @@ public:
      * @param persist Sets if the future variable is going to be persistent through script engine restarts.
      * @param override Sets if the variable is overridable (i.e. gets re-set through lua reinitializations). Defaults to false.
      * 
-     * Construct a double variable.
+     * Construct a float variable.
      */
 	EngineVariable(
 		const std::string& vname,
-		double minvf,
-		double curvf,
-		double maxvf,
-		void (_cb_ cb)(double, double, double, double) = NULL,
+		float minvf,
+		float curvf,
+		float maxvf,
+		void (_cb_ cb)(float, float, float, float) = NULL,
 		bool persist = false,
 		bool override = false
 	);
@@ -144,12 +144,12 @@ public:
      */
 	int getInteger();
     /**
-     * @brief Get a double value of the variable.
-     * @return A double containing value of the variable.
+     * @brief Get a float value of the variable.
+     * @return A float containing value of the variable.
      * 
-     * Get a double value of the variable.
+     * Get a float value of the variable.
      */
-	double getDouble();
+	float getFloat();
     /**
      * @brief Set an integer value of the variable.
      * @param val The value itself.
@@ -161,15 +161,15 @@ public:
      */
 	void set(int val, bool luaSync = true, bool forceCB = false, bool clamp = true);
     /**
-     * @brief Set a double value of the variable.
+     * @brief Set a float value of the variable.
      * @param val The value itself.
      * @param luaSync Defaults to true, optional, if true, syncing with Lua will be done after change.
      * @param forceCB Forces running a callback after value set. Defaults to false.
      * @param clamp If value is bigger than max or smaller than min, then it gets clamped. Defaults to true.
      * 
-     * Sets a double value of the variable.
+     * Sets a float value of the variable.
      */
-	void set(double val, bool luaSync = true, bool forceCB = false, bool clamp = true);
+	void set(float val, bool luaSync = true, bool forceCB = false, bool clamp = true);
     /**
      * @brief Set a string value of the variable.
      * @param val The value itself.
@@ -207,7 +207,7 @@ public:
      */
 	void registerLuaIVAR();
     /**
-     * @brief Registers double Lua variable based on C++ representation it's ran for.
+     * @brief Registers float Lua variable based on C++ representation it's ran for.
      * 
      * Registers integer Lua variable based on C++ representation it's ran for.
      */
@@ -245,7 +245,7 @@ private:
 	union
 	{
 		void (_cb_ intCB)(int, int, int, int);
-		void (_cb_ doubleCB)(double, double, double, double);
+		void (_cb_ floatCB)(float, float, float, float);
 		void (_cb_ stringCB)(const std::string&, const std::string&);
 	};
 };
@@ -305,13 +305,13 @@ public:
      */
 	static void syncFromLua(const std::string& name, int value);
     /**
-     * @brief Sync a double value from Lua.
+     * @brief Sync a float value from Lua.
      * @param name Name of the variable.
-     * @param value Double value to sync.
+     * @param value Float value to sync.
      * 
      * When setting value in Lua, this is called to change state in C++.
      */
-	static void syncFromLua(const std::string& name, double value);
+	static void syncFromLua(const std::string& name, float value);
     /**
      * @brief Sync a string value from Lua.
      * @param name Name of the variable.
@@ -355,8 +355,8 @@ private:
  * @param ... This differs for every variable.
  * 
  * For integer variable, you pass three integer values in addition to name (min, cur, max) and optionally a callback
- * (void closure or void) and boolean setting persistency - true means persistent. For double variable, it's the same
- * except passed values are doubles. Callback for integer and double variables takes 4 integer/double arguments
+ * (void closure or void) and boolean setting persistency - true means persistent. For float variable, it's the same
+ * except passed values are floats. Callback for integer and float variables takes 4 integer/float arguments
  * (min, max, prev, cur). For string variable, you pass just cur value (no min, max),
  * and callback accepts just two arguments (prev and cur).
  */
@@ -379,12 +379,12 @@ private:
  * @brief Macro for making lambda callback creation easier.
  * @param code The code used as body of lambda function.
  * 
- * This creates a lambda function callback for double variables, letting @p code get minv, maxv, prev and curv values.
+ * This creates a lambda function callback for float variables, letting @p code get minv, maxv, prev and curv values.
  * @code
  * REGVAR("foo", 0.1, 1.3, 5.1, FCB({ foo }));
  * @endcode
  */
-#define FCB(code) _lambda_(_UNUSED_ double minv, _UNUSED_ double maxv, _UNUSED_ double prev, _UNUSED_ double curv) code
+#define FCB(code) _lambda_(_UNUSED_ float minv, _UNUSED_ float maxv, _UNUSED_ float prev, _UNUSED_ float curv) code
 
 /**
  * @def SCB
@@ -415,12 +415,12 @@ private:
  * @brief Macro for making getting variable value easier.
  * @param name Name of the variable to get.
  * 
- * Gets value of variable of name @p name as double.
+ * Gets value of variable of name @p name as float.
  * @code
- * double d = GETFV(foo);
+ * float d = GETFV(foo);
  * @endcode
  */
-#define GETFV(name) _EV_##name.get()->getDouble()
+#define GETFV(name) _EV_##name.get()->getFloat()
 
 /**
  * @def GETSV

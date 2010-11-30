@@ -1024,8 +1024,8 @@ bool g3d_movecursor(int dx, int dy)
 {
     if((!guis2d.length() || !hascursor) && GuiControl::isMouselooking()) return false; // INTENSITY: Added our mouselooking check
     const float CURSORSCALE = 500.0f;
-    cursorx = max(0.0f, min(1.0f, cursorx+float(GETFV(guisens))*dx*(screen->h/(screen->w*CURSORSCALE))));
-    cursory = max(0.0f, min(1.0f, cursory+float(GETFV(guisens))*dy/CURSORSCALE));
+    cursorx = max(0.0f, min(1.0f, cursorx+GETFV(guisens)*dx*(screen->h/(screen->w*CURSORSCALE))));
+    cursory = max(0.0f, min(1.0f, cursory+GETFV(guisens)*dy/CURSORSCALE));
     return true;
 }
 

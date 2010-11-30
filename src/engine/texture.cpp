@@ -2078,8 +2078,7 @@ void initenvmaps()
 {
     if(!hasCM) return;
     clearenvmaps();
-    extern char *skybox;
-    skyenvmap = skybox[0] ? cubemapload(skybox, true, false, true) : NULL;
+    skyenvmap = !GETSV(skybox).empty() ? cubemapload(GETSV(skybox).c_str(), true, false, true) : NULL;
     const vector<extentity *> &ents = entities::getents();
     loopv(ents)
     {

@@ -553,11 +553,11 @@ void renderbatchedmodel(model *m, batchedmodel &b)
     }
 
     if(GETIV(modeltweaks)) { // INTENSITY: SkyManager: do modeltweaks
-        if (!b.d) m->setambient(float(GETFV(tweakmodelambient)));    // t7g; This is how we adjust ambient and related for all models at once.
-        else m->setambient(float(GETFV(tweakmodelambient)) / 10.0f);
-        m->setglow(float(GETFV(tweakmodelglow)));
-        m->setspec(float(GETFV(tweakmodelspec)));
-        m->setglare(float(GETFV(tweakmodelspecglare)), float(GETFV(tweakmodelglowglare)));
+        if (!b.d) m->setambient(GETFV(tweakmodelambient));    // t7g; This is how we adjust ambient and related for all models at once.
+        else m->setambient(GETFV(tweakmodelambient) / 10.0f);
+        m->setglow(GETFV(tweakmodelglow));
+        m->setspec(GETFV(tweakmodelspec));
+        m->setglare(GETFV(tweakmodelspecglare), GETFV(tweakmodelglowglare));
     }
 
     m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir, b.transparent, b.rotation); // INTENSITY: roll, rotation
