@@ -437,8 +437,10 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
 
 void tryedit()
 {
+#ifdef CLIENT // CubeCreate
     if(!editmode || GETIV(hidehud) || GETIV(mainmenu)) return;
     if(GETIV(blendpaintmode)) trypaintblendmap();
+#endif
 }
 
 //////////// ready changes to vertex arrays ////////////

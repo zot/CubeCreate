@@ -28,6 +28,9 @@
     #include "targeting.h"
 #endif
 
+// actually create the pointers
+#include "engine_variables_registers.h"
+
 ///////////////////////////
 // ENGINE VARIABLE CLASS //
 ///////////////////////////
@@ -156,7 +159,7 @@ bool EngineVariable::isOverridable()
 // these are used for registration of Lua variables after one is registered in C++
 void EngineVariable::registerLuaIVAR()
 {
-	LuaEngine::getGlobal("_cpp_ivar");
+	LuaEngine::getGlobal("ivar");
 	LuaEngine::pushValue(name);
 	LuaEngine::pushValue(anyint(minv));
 	LuaEngine::pushValue(anyint(curv));
@@ -167,7 +170,7 @@ void EngineVariable::registerLuaIVAR()
 
 void EngineVariable::registerLuaFVAR()
 {
-	LuaEngine::getGlobal("_cpp_fvar");
+	LuaEngine::getGlobal("fvar");
 	LuaEngine::pushValue(name);
 	LuaEngine::pushValue(anydouble(minv));
 	LuaEngine::pushValue(anydouble(curv));
@@ -178,10 +181,11 @@ void EngineVariable::registerLuaFVAR()
 
 void EngineVariable::registerLuaSVAR()
 {
-	LuaEngine::getGlobal("_cpp_svar");
+	LuaEngine::getGlobal("svar");
 	LuaEngine::pushValue(name);
 	LuaEngine::pushValue(anystring(curv));
-	LuaEngine::call(2, 0);
+	LuaEngine::pushValue(readOnly);
+	LuaEngine::call(3, 0);
 }
 
 /*
@@ -248,11 +252,19 @@ void EngineVariables::reg(const std::string& name, EngineVariablePtr var)
 	storage.insert(EVPair(name, var));
 }
 
-// lets the storage fill from persistent and then registers new variables.
+// lets the storage fill from the other map and do new registrations into map.
 void EngineVariables::fill()
 {
 	fillFromPersistent();
+	#define _RV REGVAR
+	#undef REGVAR
+	#define REGVAR(name, ...) EngineVariables::reg(#name, _EV_##name)
+	#define _EV_NODEF
 	#include "engine_variables_registers.h"
+	#undef _EV_NODEF
+	#undef REGVAR
+	#define REGVAR _RV
+	#undef _RV
 }
 
 // takes storage map and registers those in lua

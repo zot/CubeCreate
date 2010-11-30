@@ -338,6 +338,16 @@ private:
 	static EVMap persistentStorage; // used just on clear() - persistent vars get moved here
 };
 
+// extern all registered variables
+#ifdef REGVAR
+#undef REGVAR
+#endif
+#define REGVAR(name, ...) extern EngineVariablePtr _EV_##name
+#define _EV_NODEF
+#include "engine_variables_registers.h"
+#undef _EV_NODEF
+#undef REGVAR
+
 /**
  * @def REGVAR
  * @brief Macro for simplifying variable registration.
@@ -350,7 +360,7 @@ private:
  * (min, max, prev, cur). For string variable, you pass just cur value (no min, max),
  * and callback accepts just two arguments (prev and cur).
  */
-#define REGVAR(name, ...) EngineVariables::reg(name, EngineVariablePtr(new EngineVariable(name, __VA_ARGS__)))
+#define REGVAR(name, ...) EngineVariablePtr _EV_##name = EngineVariablePtr(new EngineVariable(#name, __VA_ARGS__))
 
 /**
  * @def ICB
@@ -398,7 +408,7 @@ private:
  * int i = GETIV(foo);
  * @endcode
  */
-#define GETIV(name) EngineVariables::get(#name).get()->getInteger()
+#define GETIV(name) _EV_##name.get()->getInteger()
 
 /**
  * @def GETFV
@@ -410,7 +420,7 @@ private:
  * double d = GETFV(foo);
  * @endcode
  */
-#define GETFV(name) EngineVariables::get(#name).get()->getDouble()
+#define GETFV(name) _EV_##name.get()->getDouble()
 
 /**
  * @def GETSV
@@ -422,7 +432,7 @@ private:
  * std::string s = GETSV(foo);
  * @endcode
  */
-#define GETSV(name) EngineVariables::get(#name).get()->getString()
+#define GETSV(name) _EV_##name.get()->getString()
 
 /**
  * @def SETV
@@ -435,7 +445,7 @@ private:
  * SETV(foo, 15);
  * @endcode
  */
-#define SETV(name, value) EngineVariables::get(#name).get()->set(value)
+#define SETV(name, value) _EV_##name.get()->set(value)
 
 /**
  * @def SETVN
@@ -449,7 +459,7 @@ private:
  * SETVN(foo, 65536);
  * @endcode
  */
-#define SETVN(name, value) EngineVariables::get(#name).get()->set(value, true, false, false)
+#define SETVN(name, value) _EV_##name.get()->set(value, true, false, false)
 
 /**
  * @def SETVF
@@ -462,7 +472,7 @@ private:
  * SETVF(foo, 15);
  * @endcode
  */
-#define SETVF(name, value) EngineVariables::get(#name).get()->set(value, true, true, true)
+#define SETVF(name, value) _EV_##name.get()->set(value, true, true, true)
 
 /**
  * @def SETVFN
@@ -476,7 +486,7 @@ private:
  * SETVFN(foo, 65536);
  * @endcode
  */
-#define SETVFN(name, value) EngineVariables::get(#name).get()->set(value, true, true, false)
+#define SETVFN(name, value) _EV_##name.get()->set(value, true, true, false)
 
 /**
  * @}

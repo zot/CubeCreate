@@ -1459,30 +1459,6 @@ LUA_EMBED_NOPARAM(syncVariableFromLua, 0, {
 	}
 });
 
-LUA_EMBED_NOPARAM(registerVariableFromLua, 0, {
-	std::string name = LuaEngine::getString(1);
-	std::string type = LuaEngine::getString(2);
-	switch (type[0])
-	{
-		case 'I':
-		{
-			REGVAR(name, LuaEngine::getInteger(3), LuaEngine::getInteger(4), LuaEngine::getInteger(5));
-			break;
-		}
-		case 'F':
-		{
-			REGVAR(name, LuaEngine::getDouble(3), LuaEngine::getDouble(4), LuaEngine::getDouble(5));
-			break;
-		}
-		case 'S':
-		{
-			REGVAR(name, LuaEngine::getString(4));
-			break;
-		}
-		default: break;
-	}
-});
-
 void run_python(char *code);
 
 LUA_EMBED_s(runCS, 0, {

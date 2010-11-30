@@ -16,7 +16,7 @@ _VARS = class()
 _VARS.storage = {}
 
 
-function _VARS:reg(var, skipReg)
+function _VARS:reg(var)
 	if not is_a(var, _VAR) then log(ERROR, "Cannot register variable because wrong class was provided.") return nil end
 	if self.storage[var.name] then return nil end -- Do not register registered vars, but do not error either
 	self.storage[var.name] = var
@@ -43,7 +43,6 @@ function _VARS:reg(var, skipReg)
 			--CAPI.syncVariableFromLua(var.name, tostring(var), var.curv) -- run the callback anyway, sync with the same value
 		end
 	end, var)
-	if not skipReg then CAPI.registerVariableFromLua(var.name, tostring(var), var.minv, var.curv, var.maxv) end -- in order to simplify things, no need to pass minv, maxv
 end
 
 function _VARS:r(vtype, name, ...)
@@ -105,11 +104,15 @@ function FVARF:__tostring() return "FVARF" end
 
 SVAR = class(_VAR)
 function SVAR:__tostring() return "SVAR" end
-function SVAR:__init(name, curv)
+function SVAR:__init(name, curv, readonly)
 	assert(type(curv) == "string", "Wrong value type provided to SVAR.")
-	self[_VAR].__user_init(self, name, nil, curv, nil, nil)
+	self[_VAR].__user_init(self, name, nil, curv, nil, nil, readonly)
 end
 function SVAR:isInReach(v)
+	if self.read then
+		log(ERROR, "Variable is read only.")
+		return false
+	end
 	if type(v) ~= "string" then
 		log(ERROR, "Wrong value type passed to variable.")
 		return false
@@ -119,10 +122,10 @@ end
 
 SVARF = class(SVAR)
 function SVARF:__tostring() return "SVARF" end
-function SVARF:__init(name, curv, onchange)
+function SVARF:__init(name, curv, onchange, readonly)
 	assert(type(curv) == "string", "Wrong value type provided to SVARF.")
 	assert(onchange and type(onchange) == "function", "Wrong type of onchange callback to SVARF.")
-	self[_VAR].__user_init(self, name, nil, curv, nil, onchange, false)
+	self[_VAR].__user_init(self, name, nil, curv, nil, onchange, readonly)
 end
 
 function ivar  (name, ...) EV:r("IVAR",   name, ...) end
@@ -131,7 +134,3 @@ function fvar  (name, ...) EV:r("FVAR",   name, ...) end
 function fvarf (name, ...) EV:r("FVARF",  name, ...) end
 function svar  (name, ...) EV:r("SVAR",   name, ...) end
 function svarf (name, ...) EV:r("SVARF",  name, ...) end
-
-function _cpp_ivar (...) EV:reg(IVAR(...), true) end
-function _cpp_fvar (...) EV:reg(FVAR(...), true) end
-function _cpp_svar (...) EV:reg(SVAR(...), true) end

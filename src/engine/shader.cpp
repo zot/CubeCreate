@@ -1223,7 +1223,7 @@ static void genshadowmapvariant(Shader &s, const char *sname, const char *vs, co
     if(!(s.type & SHADER_GLSLANG))
     {
         uint usedtc = findusedtexcoords(vs);
-        if(GETIV(axtexcoords)-GETIV(reserveshadowmaptc)<0) return;
+        if(GETIV(maxtexcoords)-GETIV(reserveshadowmaptc)<0) return;
         loopi(GETIV(maxtexcoords)-GETIV(reserveshadowmaptc)) if(!(usedtc&(1<<i))) { smtc = i; break; }
         if(smtc<0 && GETIV(emulatefog) && GETIV(reserveshadowmaptc)>0 && !(usedtc&(1<<(GETIV(maxtexcoords)-GETIV(reserveshadowmaptc)))) && strstr(ps, "OPTION ARB_fog_linear;"))
         {

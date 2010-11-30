@@ -1888,7 +1888,7 @@ void gl_drawmainmenu(int w, int h)
 float dcompass[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 void damagecompass(int n, const vec &loc)
 {
-    if(!GETIV(usedamagecompass)) return;
+    if(!GETIV(damagecompass)) return;
     vec delta(loc);
     delta.sub(camera1->o); 
     float yaw, pitch;
