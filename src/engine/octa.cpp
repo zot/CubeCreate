@@ -183,10 +183,10 @@ ivec lu;
 int lusize;
 cube &lookupcube(int tx, int ty, int tz, int tsize, ivec &ro, int &rsize)
 {
-    tx = clamp(tx, 0, worldsize-1);
-    ty = clamp(ty, 0, worldsize-1);
-    tz = clamp(tz, 0, worldsize-1);
-    int scale = worldscale-1, csize = abs(tsize);
+    tx = clamp(tx, 0, GETIV(mapsize)-1);
+    ty = clamp(ty, 0, GETIV(mapsize)-1);
+    tz = clamp(tz, 0, GETIV(mapsize)-1);
+    int scale = GETIV(mapscale)-1, csize = abs(tsize);
     cube *c = &worldroot[octastep(tx, ty, tz, scale)];
     if(!(csize>>scale)) do
     {
@@ -212,7 +212,7 @@ int lookupmaterial(const vec &v)
 {
     ivec o(v);
     if(!insideworld(o)) return MAT_AIR;
-    int scale = worldscale-1;
+    int scale = GETIV(mapscale)-1;
     cube *c = &worldroot[octastep(o.x, o.y, o.z, scale)];
     while(c->children)
     {
@@ -232,15 +232,15 @@ cube &neighbourcube(cube &c, int orient, int x, int y, int z, int size, ivec &ro
     uint diff = n[dim];
     if(dimcoord(orient)) n[dim] += size; else n[dim] -= size;
     diff ^= n[dim];
-    if(diff >= uint(worldsize)) { ro = n; rsize = size; return c; }
-    int scale = worldscale;
+    if(diff >= uint(GETIV(mapsize))) { ro = n; rsize = size; return c; }
+    int scale = GETIV(mapscale);
     cube *nc = worldroot;
     if(neighbourdepth >= 0)
     {
         scale -= neighbourdepth + 1;
         diff >>= scale;                        
         do { scale++; diff >>= 1; } while(diff);
-        nc = neighbourstack[worldscale - scale];
+        nc = neighbourstack[GETIV(mapscale) - scale];
     }
     scale--;
     nc = &nc[octastep(n.x, n.y, n.z, scale)];
@@ -386,7 +386,7 @@ bool subdividecube(cube &c, bool fullcheck, bool brighten)
         }
     }
 
-    validatec(ch, worldsize);
+    validatec(ch, GETIV(mapsize));
     if(fullcheck) loopi(8) if(!isvalidcube(ch[i])) // not so good...
     {
         emptyfaces(ch[i]);
@@ -513,8 +513,8 @@ void mpremip(bool local)
     remiptotal = allocnodes;
     loopi(8)
     {
-        ivec o(i, 0, 0, 0, worldsize>>1);
-        remip(worldroot[i], o.x, o.y, o.z, worldsize>>2);
+        ivec o(i, 0, 0, 0, GETIV(mapsize)>>1);
+        remip(worldroot[i], o.x, o.y, o.z, GETIV(mapsize)>>2);
     }
     calcmerges();
     if(!local) allchanged();
@@ -1396,7 +1396,7 @@ void freemergeinfo(cube &c)
 
 static int genmergeprogress = 0;
 
-void genmergeinfo(cube *c = worldroot, const ivec &o = ivec(0, 0, 0), int size = worldsize>>1)
+void genmergeinfo(cube *c = worldroot, const ivec &o = ivec(0, 0, 0), int size = GETIV(mapsize)>>1)
 {
     if((genmergeprogress++&0xFFF)==0) renderprogress(float(genmergeprogress)/allocnodes, "merging surfaces...");
     neighbourstack[++neighbourdepth] = c;

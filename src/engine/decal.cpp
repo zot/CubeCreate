@@ -342,7 +342,7 @@ struct decalrenderer
         }
 
         ushort dstart = endvert;
-        gendecaltris(worldroot, ivec(0, 0, 0), worldsize>>1);
+        gendecaltris(worldroot, ivec(0, 0, 0), GETIV(mapsize)>>1);
         if(GETIV(dbgdec))
         {
             int nverts = endvert < dstart ? endvert + maxverts - dstart : endvert - dstart;

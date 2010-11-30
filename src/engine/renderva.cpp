@@ -94,7 +94,7 @@ void addvisibleva(vtxarray *va)
     float dist = vadist(va, camera1->o);
     va->distance = int(dist); /*cv.dist(camera1->o) - va->size*SQRT3/2*/
 
-    int hash = min(int(dist*VASORTSIZE/worldsize), VASORTSIZE-1);
+    int hash = min(int(dist*VASORTSIZE/GETIV(mapsize)), VASORTSIZE-1);
     vtxarray **prev = &vasort[hash], *cur = vasort[hash];
 
     while(cur && va->distance >= cur->distance)
@@ -543,8 +543,8 @@ static inline bool bboccluded(const ivec &bo, const ivec &br, cube *c, const ive
 bool bboccluded(const ivec &bo, const ivec &br)
 {
     int diff = (bo.x^(bo.x+br.x)) | (bo.y^(bo.y+br.y)) | (bo.z^(bo.z+br.z));
-    if(diff&~((1<<worldscale)-1)) return false;
-    int scale = worldscale-1;
+    if(diff&~((1<<GETIV(mapscale))-1)) return false;
+    int scale = GETIV(mapscale)-1;
     if(diff&(1<<scale)) return bboccluded(bo, br, worldroot, ivec(0, 0, 0), 1<<scale);
     cube *c = &worldroot[octastep(bo.x, bo.y, bo.z, scale)];
     if(c->ext && c->ext->va)

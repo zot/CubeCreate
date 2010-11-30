@@ -1014,7 +1014,7 @@ void gencubeedges(cube &c, int x, int y, int z, int size)
     }
 }
 
-void gencubeedges(cube *c = worldroot, int x = 0, int y = 0, int z = 0, int size = worldsize>>1)
+void gencubeedges(cube *c = worldroot, int x = 0, int y = 0, int z = 0, int size = GETIV(mapsize)>>1)
 {
     progress("fixing t-joints...");
     neighbourstack[++neighbourdepth] = c;
@@ -1088,11 +1088,11 @@ int hasskyfaces(cube &c, int x, int y, int z, int size, int faces[6])
 {
     int numfaces = 0;
     if(x == 0 && !skyoccluded(c, O_LEFT)) faces[numfaces++] = O_LEFT;
-    if(x + size == worldsize && !skyoccluded(c, O_RIGHT)) faces[numfaces++] = O_RIGHT;
+    if(x + size == GETIV(mapsize) && !skyoccluded(c, O_RIGHT)) faces[numfaces++] = O_RIGHT;
     if(y == 0 && !skyoccluded(c, O_BACK)) faces[numfaces++] = O_BACK;
-    if(y + size == worldsize && !skyoccluded(c, O_FRONT)) faces[numfaces++] = O_FRONT;
+    if(y + size == GETIV(mapsize) && !skyoccluded(c, O_FRONT)) faces[numfaces++] = O_FRONT;
     if(z == 0 && !skyoccluded(c, O_BOTTOM)) faces[numfaces++] = O_BOTTOM;
-    if(z + size == worldsize && !skyoccluded(c, O_TOP)) faces[numfaces++] = O_TOP;
+    if(z + size == GETIV(mapsize) && !skyoccluded(c, O_TOP)) faces[numfaces++] = O_TOP;
     return numfaces;
 }
 
@@ -1570,7 +1570,7 @@ int updateva(cube *c, int cx, int cy, int cz, int size, int csi)
             if(c[i].children) count += updateva(c[i].children, o.x, o.y, o.z, size/2, csi-1);
             else if(!isempty(c[i]) || hasskyfaces(c[i], o.x, o.y, o.z, size, faces)) count++;
             int tcount = count + (csi < int(sizeof(vamerges)/sizeof(vamerges[0])) ? vamerges[csi].length() : 0);
-            if(tcount > GETIV(vacubemax) || (tcount >= GETIV(vacubemin) && size >= GETIV(vacubesize)) || size == min(0x1000, worldsize/2)) 
+            if(tcount > GETIV(vacubemax) || (tcount >= GETIV(vacubemin) && size >= GETIV(vacubesize)) || size == min(0x1000, GETIV(mapsize)/2)) 
             {
                 loadprogress = clamp(recalcprogress/float(allocnodes), 0.0f, 1.0f);
                 setva(c[i], o.x, o.y, o.z, size, csi);
@@ -1699,11 +1699,11 @@ void findtjoints(int cur, const edgegroup &g)
 void octarender()                               // creates va s for all leaf cubes that don't already have them
 {
     int csi = 0;
-    while(1<<csi < worldsize) csi++;
+    while(1<<csi < GETIV(mapsize)) csi++;
 
     recalcprogress = 0;
     varoot.setsize(0);
-    updateva(worldroot, 0, 0, 0, worldsize/2, csi-1);
+    updateva(worldroot, 0, 0, 0, GETIV(mapsize)/2, csi-1);
     loadprogress = 0;
     flushvbo();
 

@@ -754,14 +754,14 @@ void debugcube(cube &c, int size, int x, int y, int z)
 //! List the textures actually used
 void debugoctree()
 {
-    debugcube(worldroot[0], worldsize/2, 0, 0, 0);
-    debugcube(worldroot[1], worldsize/2, worldsize/2, 0, 0);
-    debugcube(worldroot[2], worldsize/2, 0, worldsize/2, 0);
-    debugcube(worldroot[3], worldsize/2, worldsize/2, worldsize/2, 0);
-    debugcube(worldroot[4], worldsize/2, 0, 0, worldsize/2);
-    debugcube(worldroot[5], worldsize/2, worldsize/2, 0, worldsize/2);
-    debugcube(worldroot[6], worldsize/2, 0, worldsize/2, worldsize/2);
-    debugcube(worldroot[7], worldsize/2, worldsize/2, worldsize/2, worldsize/2);
+    debugcube(worldroot[0], GETIV(mapsize)/2, 0, 0, 0);
+    debugcube(worldroot[1], GETIV(mapsize)/2, GETIV(mapsize)/2, 0, 0);
+    debugcube(worldroot[2], GETIV(mapsize)/2, 0, GETIV(mapsize)/2, 0);
+    debugcube(worldroot[3], GETIV(mapsize)/2, GETIV(mapsize)/2, GETIV(mapsize)/2, 0);
+    debugcube(worldroot[4], GETIV(mapsize)/2, 0, 0, GETIV(mapsize)/2);
+    debugcube(worldroot[5], GETIV(mapsize)/2, GETIV(mapsize)/2, 0, GETIV(mapsize)/2);
+    debugcube(worldroot[6], GETIV(mapsize)/2, 0, GETIV(mapsize)/2, GETIV(mapsize)/2);
+    debugcube(worldroot[7], GETIV(mapsize)/2, GETIV(mapsize)/2, GETIV(mapsize)/2, GETIV(mapsize)/2);
 }
 
 COMMAND(debugoctree, "");

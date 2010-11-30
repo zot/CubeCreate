@@ -447,12 +447,12 @@ void drawskybox(int farplane, bool limited)
     }
 
     float skyclip = GETIV(clipsky) ? max(renderedskyclip-1, 0) : 0, topclip = 1;
-    if(reflectz<worldsize)
+    if(reflectz<GETIV(mapsize))
     {
-        if(refracting<0) topclip = 0.5f + 0.5f*(reflectz-camera1->o.z)/float(worldsize);
+        if(refracting<0) topclip = 0.5f + 0.5f*(reflectz-camera1->o.z)/float(GETIV(mapsize));
         else if(reflectz>skyclip) skyclip = reflectz;
     }
-    if(skyclip) skyclip = 0.5f + 0.5f*(skyclip-camera1->o.z)/float(worldsize); 
+    if(skyclip) skyclip = 0.5f + 0.5f*(skyclip-camera1->o.z)/float(GETIV(mapsize)); 
 
     if(glaring)
     {
@@ -638,6 +638,6 @@ double skyarea = 0;
 
 bool limitsky()
 {
-    return (explicitsky && (GETIV(skytexture) || editmode)) || (GETIV(sparklyfix) && skyarea / (double(worldsize)*double(worldsize)*6) < 0.9);
+    return (explicitsky && (GETIV(skytexture) || editmode)) || (GETIV(sparklyfix) && skyarea / (double(GETIV(mapsize))*double(GETIV(mapsize))*6) < 0.9);
 }
 

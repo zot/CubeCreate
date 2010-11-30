@@ -265,7 +265,7 @@ void finalizeWorldGeometry()
         renderprogress(0, "generating physics geometries");
 
         // Loop the octree and provide the physics engine with the cube info
-        loopOctree(worldroot, worldsize, vec(0));
+        loopOctree(worldroot, GETIV(mapsize), vec(0));
     }
 
     engine->finalizeStaticGeometry();

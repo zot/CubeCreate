@@ -131,13 +131,13 @@ bool setblendmaporigin(BlendMapCache *cache, const ivec &o, int size)
     if(blendmap.type!=BM_BRANCH)
     {
         cache->node = blendmap;
-        cache->scale = worldscale-BM_SCALE;
+        cache->scale = GETIV(mapscale)-BM_SCALE;
         cache->origin = ivec(0, 0, 0);
         return cache->node.solid!=&bmsolids[0xFF];
     }
 
     BlendMapBranch *bm = blendmap.branch;
-    int bmscale = worldscale-BM_SCALE, bmsize = 1<<bmscale,
+    int bmscale = GETIV(mapscale)-BM_SCALE, bmsize = 1<<bmscale,
         x = o.x>>BM_SCALE, y = o.y>>BM_SCALE,
         x1 = max(x-1, 0), y1 = max(y-1, 0),
         x2 = min(((o.x + size + (1<<BM_SCALE)-1)>>BM_SCALE) + 1, bmsize),
@@ -264,7 +264,7 @@ static void fillblendmap(uchar &type, BlendMapNode &node, int size, uchar val, i
 
 void fillblendmap(int x, int y, int w, int h, uchar val)
 {
-    int bmsize = worldsize>>BM_SCALE,
+    int bmsize = GETIV(mapsize)>>BM_SCALE,
         x1 = clamp(x, 0, bmsize),
         y1 = clamp(y, 0, bmsize),
         x2 = clamp(x+w, 0, bmsize),
@@ -311,7 +311,7 @@ static void invertblendmap(uchar &type, BlendMapNode &node, int size, int x1, in
 
 void invertblendmap(int x, int y, int w, int h)
 {
-    int bmsize = worldsize>>BM_SCALE,
+    int bmsize = GETIV(mapsize)>>BM_SCALE,
         x1 = clamp(x, 0, bmsize),
         y1 = clamp(y, 0, bmsize),
         x2 = clamp(x+w, 0, bmsize),
@@ -422,7 +422,7 @@ static void blitblendmap(uchar &type, BlendMapNode &node, int bmx, int bmy, int 
 
 void blitblendmap(uchar *src, int sx, int sy, int sw, int sh)
 {
-    int bmsize = worldsize>>BM_SCALE;
+    int bmsize = GETIV(mapsize)>>BM_SCALE;
     if(max(sx, sy) >= bmsize || min(sx+sw, sy+sh) <= 0 || min(sw, sh) <= 0) return;
     blitblendmap(blendmap.type, blendmap, 0, 0, bmsize, src, sx, sy, sw, sh);
 }
@@ -641,11 +641,11 @@ void paintblendmap(bool msg)
     if(!canpaintblendmap(true, false, msg)) return;
 
     BlendBrush *brush = brushes[curbrush];
-    int x = (int)floor(clamp(worldpos.x, 0.0f, float(worldsize))/(1<<BM_SCALE) - 0.5f*brush->w),
-        y = (int)floor(clamp(worldpos.y, 0.0f, float(worldsize))/(1<<BM_SCALE) - 0.5f*brush->h);
+    int x = (int)floor(clamp(worldpos.x, 0.0f, float(GETIV(mapsize)))/(1<<BM_SCALE) - 0.5f*brush->w),
+        y = (int)floor(clamp(worldpos.y, 0.0f, float(GETIV(mapsize)))/(1<<BM_SCALE) - 0.5f*brush->h);
     blitblendmap(brush->data, x, y, brush->w, brush->h);
     previewblends(ivec((x-1)<<BM_SCALE, (y-1)<<BM_SCALE, 0),
-                  ivec((brush->w+2)<<BM_SCALE, (brush->h+2)<<BM_SCALE, worldsize));
+                  ivec((brush->w+2)<<BM_SCALE, (brush->h+2)<<BM_SCALE, GETIV(mapsize)));
 }
 
 int paintingblendmap = 0, lastpaintblendmap = 0;
@@ -687,7 +687,7 @@ void clearblendmapsel()
         y2 = (sel.o.y+sel.s.y*sel.grid+(1<<BM_SCALE)-1)>>BM_SCALE;
     fillblendmap(x1, y1, x2-x1, y2-y1, 0xFF);
     previewblends(ivec(x1<<BM_SCALE, y1<<BM_SCALE, 0),
-                  ivec((x2-x1)<<BM_SCALE, (y2-y1)<<BM_SCALE, worldsize));
+                  ivec((x2-x1)<<BM_SCALE, (y2-y1)<<BM_SCALE, GETIV(mapsize)));
 }
 
 COMMAND(clearblendmapsel, "");
@@ -701,7 +701,7 @@ void invertblendmapsel()
         y2 = (sel.o.y+sel.s.y*sel.grid+(1<<BM_SCALE)-1)>>BM_SCALE;
     invertblendmap(x1, y1, x2-x1, y2-y1);
     previewblends(ivec(x1<<BM_SCALE, y1<<BM_SCALE, 0),
-                  ivec((x2-x1)<<BM_SCALE, (y2-y1)<<BM_SCALE, worldsize));
+                  ivec((x2-x1)<<BM_SCALE, (y2-y1)<<BM_SCALE, GETIV(mapsize)));
 }
 
 COMMAND(invertblendmapsel, "");
@@ -709,8 +709,8 @@ COMMAND(invertblendmapsel, "");
 void invertblendmap()
 {
     if(noedit(false) || (GETIV(nompedit) && multiplayer())) return;
-    invertblendmap(0, 0, worldsize>>BM_SCALE, worldsize>>BM_SCALE);
-    previewblends(ivec(0, 0, 0), ivec(worldsize, worldsize, worldsize));
+    invertblendmap(0, 0, GETIV(mapsize)>>BM_SCALE, GETIV(mapsize)>>BM_SCALE);
+    previewblends(ivec(0, 0, 0), ivec(GETIV(mapsize), GETIV(mapsize), GETIV(mapsize)));
 }
 
 COMMAND(invertblendmap, "");
@@ -718,7 +718,7 @@ COMMAND(invertblendmap, "");
 void showblendmap()
 {
     if(noedit(true) || (GETIV(nompedit) && multiplayer())) return;
-    previewblends(ivec(0, 0, 0), ivec(worldsize, worldsize, worldsize));
+    previewblends(ivec(0, 0, 0), ivec(GETIV(mapsize), GETIV(mapsize), GETIV(mapsize)));
 }
 
 COMMAND(showblendmap, "");
@@ -735,12 +735,12 @@ void renderblendbrush()
     if(!GETIV(blendpaintmode) || !brushes.inrange(curbrush)) return;
 
     BlendBrush *brush = brushes[curbrush];
-    int x1 = (int)floor(clamp(worldpos.x, 0.0f, float(worldsize))/(1<<BM_SCALE) - 0.5f*(brush->w+2)) << BM_SCALE,
-        y1 = (int)floor(clamp(worldpos.y, 0.0f, float(worldsize))/(1<<BM_SCALE) - 0.5f*(brush->h+2)) << BM_SCALE,
+    int x1 = (int)floor(clamp(worldpos.x, 0.0f, float(GETIV(mapsize)))/(1<<BM_SCALE) - 0.5f*(brush->w+2)) << BM_SCALE,
+        y1 = (int)floor(clamp(worldpos.y, 0.0f, float(GETIV(mapsize)))/(1<<BM_SCALE) - 0.5f*(brush->h+2)) << BM_SCALE,
         x2 = x1 + ((brush->w+2) << BM_SCALE),
         y2 = y1 + ((brush->h+2) << BM_SCALE);
 
-    if(max(x1, y1) >= worldsize || min(x2, y2) <= 0 || x1>=x2 || y1>=y2) return;
+    if(max(x1, y1) >= GETIV(mapsize) || min(x2, y2) <= 0 || x1>=x2 || y1>=y2) return;
 
     if(!brush->tex) brush->gentex();
     renderblendbrush(brush->tex, x1, y1, x2 - x1, y2 - y1);

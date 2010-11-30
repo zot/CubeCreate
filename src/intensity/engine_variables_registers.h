@@ -300,7 +300,7 @@ REGVAR(moving, 0, 0, 1, ICB({
 REGVAR(gridpower, 0, 3, 12, ICB({
     if(_EV_dragging.get()->getInteger()) return;
     gridsize = 1<<curv;
-    if(gridsize>=worldsize) gridsize = worldsize/2;
+    if(gridsize>=GETIV(mapsize)) gridsize = GETIV(mapsize)/2;
     cancelsel();
 }));
 

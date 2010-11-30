@@ -67,7 +67,7 @@ static bool mergepvsnodes(pvsnode &p, pvsnode *children)
     return true;
 }
 
-static void genpvsnodes(cube *c, int parent = 0, const ivec &co = ivec(0, 0, 0), int size = worldsize/2)
+static void genpvsnodes(cube *c, int parent = 0, const ivec &co = ivec(0, 0, 0), int size = GETIV(mapsize)/2)
 {
     int index = origpvsnodes.length();
     loopi(8)
@@ -317,7 +317,7 @@ struct pvsworker
 
     void resetlevels()
     {
-        curlevel = worldscale;
+        curlevel = GETIV(mapscale);
         levels[curlevel] = &pvsnodes[0];
         origin = ivec(0, 0, 0);
     }
@@ -325,7 +325,7 @@ struct pvsworker
     int hasvoxel(const ivec &p, int coord, int dir, int ocoord = 0, int odir = 0, int *omin = NULL)
     {
         uint diff = (origin.x^p.x)|(origin.y^p.y)|(origin.z^p.z);
-        if(diff >= uint(worldsize)) return 0;
+        if(diff >= uint(GETIV(mapsize))) return 0;
         diff >>= curlevel;
         while(diff)
         {
@@ -392,7 +392,7 @@ struct pvsworker
         if(p.edges.x!=0xFF) p.flags |= PVS_HIDE_GEOM;
     }
 
-    void shaftcullpvs(shaft &s, pvsnode &p, const ivec &co = ivec(0, 0, 0), int size = worldsize)
+    void shaftcullpvs(shaft &s, pvsnode &p, const ivec &co = ivec(0, 0, 0), int size = GETIV(mapsize))
     {
         if(p.flags&PVS_HIDE_BB) return;
         shaftbb bb(co, size);
@@ -418,7 +418,7 @@ struct pvsworker
 
     ringbuf<shaftbb, 32> prevblockers;
 
-    void cullpvs(pvsnode &p, const ivec &co = ivec(0, 0, 0), int size = worldsize)
+    void cullpvs(pvsnode &p, const ivec &co = ivec(0, 0, 0), int size = GETIV(mapsize))
     {
         if(p.flags&(PVS_HIDE_BB | PVS_HIDE_GEOM) || genpvs_canceled) return;
         if(p.children && !(p.flags&PVS_HIDE_BB))
@@ -698,7 +698,7 @@ struct pvsworker
             bbsize[R[dim]] = m.rsize;
             bborigin[dim] -= 2;
             bbsize[dim] = 2;
-            if(!materialoccluded(pvsnodes[0], vec(0, 0, 0), worldsize/2, bborigin, bbsize)) return false;
+            if(!materialoccluded(pvsnodes[0], vec(0, 0, 0), GETIV(mapsize)/2, bborigin, bbsize)) return false;
         }
         return true;
     }
@@ -728,7 +728,7 @@ struct pvsworker
         waterbytes = 0;
         loopi(4) if(wateroccluded&(0xFF<<(i*8))) waterbytes = i+1;
 
-        compresspvs(pvsnodes[0], worldsize, GETIV(pvsleafsize));
+        compresspvs(pvsnodes[0], GETIV(mapsize), GETIV(pvsleafsize));
         outbuf.setsize(0);
         serializepvs(pvsnodes[0]);
     }
@@ -922,9 +922,9 @@ static int curwaterpvs = 0, lockedwaterpvs = 0;
 static inline pvsdata *lookupviewcell(const vec &p)
 {
     uint x = uint(floor(p.x)), y = uint(floor(p.y)), z = uint(floor(p.z));
-    if(!viewcells || (x|y|z)>=uint(worldsize)) return NULL;
+    if(!viewcells || (x|y|z)>=uint(GETIV(mapsize))) return NULL;
     viewcellnode *vc = viewcells;
-    for(int scale = worldscale-1; scale>=0; scale--)
+    for(int scale = GETIV(mapscale)-1; scale>=0; scale--)
     {
         int i = octastep(x, y, z, scale);
         if(vc->leafmask&(1<<i))
@@ -1065,7 +1065,7 @@ COMMAND(testpvs, "i");
 
 void genpvs(int *viewcellsize)
 {
-    if(worldsize > 1<<15)
+    if(GETIV(mapsize) > 1<<15)
     {
         conoutf(CON_ERROR, "map is too large for PVS");
         return;
@@ -1087,7 +1087,7 @@ void genpvs(int *viewcellsize)
     root.children = 0;
     genpvsnodes(worldroot);
 
-    totalviewcells = countviewcells(worldroot, ivec(0, 0, 0), worldsize>>1, *viewcellsize>0 ? *viewcellsize : 32);
+    totalviewcells = countviewcells(worldroot, ivec(0, 0, 0), GETIV(mapsize)>>1, *viewcellsize>0 ? *viewcellsize : 32);
     numviewcells = 0;
     genpvs_canceled = false;
     check_genpvs_progress = false;
@@ -1098,7 +1098,7 @@ void genpvs(int *viewcellsize)
         timer = SDL_AddTimer(500, genpvs_timer, NULL);
     }
     viewcells = new viewcellnode;
-    genviewcells(*viewcells, worldroot, ivec(0, 0, 0), worldsize>>1, *viewcellsize>0 ? *viewcellsize : 32);
+    genviewcells(*viewcells, worldroot, ivec(0, 0, 0), GETIV(mapsize)>>1, *viewcellsize>0 ? *viewcellsize : 32);
     if(GETIV(pvsthreads)<=1)
     {
         SDL_RemoveTimer(timer);
@@ -1173,8 +1173,8 @@ static inline bool pvsoccluded(uchar *buf, const ivec &co, int size, const ivec 
 static inline bool pvsoccluded(uchar *buf, const ivec &bborigin, const ivec &bbsize)
 {
     int diff = (bborigin.x^(bborigin.x+bbsize.x)) | (bborigin.y^(bborigin.y+bbsize.y)) | (bborigin.z^(bborigin.z+bbsize.z));
-    if(diff&~((1<<worldscale)-1)) return false;
-    int scale = worldscale-1;
+    if(diff&~((1<<GETIV(mapscale))-1)) return false;
+    int scale = GETIV(mapscale)-1;
     while(!(diff&(1<<scale)))
     {
         int i = octastep(bborigin.x, bborigin.y, bborigin.z, scale);

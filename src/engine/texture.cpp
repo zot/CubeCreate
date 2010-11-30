@@ -1347,7 +1347,7 @@ static void fixinsidefaces(cube *c, const ivec &o, int size, int tex)
 ICOMMAND(fixinsidefaces, "i", (int *tex),
 {
     if(noedit(true) || (GETIV(nompedit) && multiplayer())) return;
-    fixinsidefaces(worldroot, ivec(0, 0, 0), worldsize>>1, *tex && vslots.inrange(*tex) ? *tex : DEFAULT_GEOM);
+    fixinsidefaces(worldroot, ivec(0, 0, 0), GETIV(mapsize)>>1, *tex && vslots.inrange(*tex) ? *tex : DEFAULT_GEOM);
     allchanged();
 });
 

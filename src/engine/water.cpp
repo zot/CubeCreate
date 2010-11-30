@@ -672,8 +672,8 @@ void renderwater()
             if(light!=lastlight)
             {
                 if(varray::data.length()) varray::end();
-                const vec &lightpos = light ? light->o : vec(worldsize/2, worldsize/2, worldsize);
-                float lightrad = light && light->attr1 ? light->attr1 : worldsize*8.0f;
+                const vec &lightpos = light ? light->o : vec(GETIV(mapsize)/2, GETIV(mapsize)/2, GETIV(mapsize));
+                float lightrad = light && light->attr1 ? light->attr1 : GETIV(mapsize)*8.0f;
                 const vec &lightcol = (light ? vec(light->attr2, light->attr3, light->attr4) : vec(ambient)).div(255.0f).mul(GETIV(waterspec)/100.0f);
                 setlocalparamf("lightpos", SHPARAM_VERTEX, 2, lightpos.x, lightpos.y, lightpos.z);
                 setlocalparamf("lightcolor", SHPARAM_PIXEL, 3, lightcol.x, lightcol.y, lightcol.z);

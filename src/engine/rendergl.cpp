@@ -717,7 +717,7 @@ void findorientation()
     vecfromyawpitch(camera1->yaw, camera1->pitch+90, 1, 0, camup);
 
     if(raycubepos(camera1->o, camdir, worldpos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-        worldpos = vec(camdir).mul(2*worldsize).add(camera1->o); //otherwise 3dgui won't work when outside of map
+        worldpos = vec(camdir).mul(2*GETIV(mapsize)).add(camera1->o); //otherwise 3dgui won't work when outside of map
 #else
     TargetingControl::setupOrientation();
 #endif
@@ -1126,9 +1126,9 @@ static float findsurface(int fogmat, const vec &v, int &abovemat)
         }
         o.z = co.z + csize;
     }
-    while(o.z < worldsize);
+    while(o.z < GETIV(mapsize));
     abovemat = MAT_AIR;
-    return worldsize;
+    return GETIV(mapsize);
 }
 
 static void blendfog(int fogmat, float blend, float logblend, float &start, float &end, float *fogc)
@@ -1464,7 +1464,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    int farplane = worldsize*2;
+    int farplane = GETIV(mapsize)*2;
 
     project(90.0f, 1.0f, farplane, !side.flipx, !side.flipy, side.swapxy);
 
@@ -1524,7 +1524,7 @@ void bindminimap()
     glBindTexture(GL_TEXTURE_2D, minimaptex);
 }
 
-void clipminimap(ivec &bbmin, ivec &bbmax, cube *c = worldroot, int x = 0, int y = 0, int z = 0, int size = worldsize>>1)
+void clipminimap(ivec &bbmin, ivec &bbmax, cube *c = worldroot, int x = 0, int y = 0, int z = 0, int size = GETIV(mapsize)>>1)
 {
     loopi(8)
     {
@@ -1549,7 +1549,7 @@ void drawminimap()
     if(!minimaptex) glGenTextures(1, &minimaptex);
 
     extern vector<vtxarray *> valist;
-    ivec bbmin(worldsize, worldsize, worldsize), bbmax(0, 0, 0);
+    ivec bbmin(GETIV(mapsize), GETIV(mapsize), GETIV(mapsize)), bbmax(0, 0, 0);
     loopv(valist)
     {
         vtxarray *va = valist[i];
@@ -1562,7 +1562,7 @@ void drawminimap()
     }
     if(GETIV(minimapclip))
     {
-        ivec clipmin(worldsize, worldsize, worldsize), clipmax(0, 0, 0);
+        ivec clipmin(GETIV(mapsize), GETIV(mapsize), GETIV(mapsize)), clipmax(0, 0, 0);
         clipminimap(clipmin, clipmax);
         loopk(2) bbmin[k] = max(bbmin[k], clipmin[k]);
         loopk(2) bbmax[k] = min(bbmax[k], clipmax[k]); 
@@ -1765,7 +1765,7 @@ void gl_drawframe(int w, int h)
         aspect += blend*sinf(lastmillis/1000.0+PI)*0.1f;
     }
 
-    farplane = worldsize*2;
+    farplane = GETIV(mapsize)*2;
 
     project(fovy, aspect, farplane);
     transplayer();

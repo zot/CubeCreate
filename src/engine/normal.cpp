@@ -167,7 +167,7 @@ void calcnormals()
     if(!GETIV(lerpangle)) return;
     lerpthreshold = cos(GETIV(lerpangle)*RAD) - 1e-5f; 
     progress = 1;
-    loopi(8) addnormals(worldroot[i], ivec(i, 0, 0, 0, worldsize/2), worldsize/2);
+    loopi(8) addnormals(worldroot[i], ivec(i, 0, 0, 0, GETIV(mapsize)/2), GETIV(mapsize)/2);
 }
 
 void clearnormals()

@@ -116,10 +116,10 @@ void ServerSystem::generatePhysicsVisibilities()
 {
     printf("Generating physics-related information...\r\n");
     int csi = 0;
-    while(1<<csi < worldsize) csi++;
+    while(1<<csi < GETIV(mapsize)) csi++;
 
 //    varoot.setsizenodelete(0);
-    headlessUpdateVa(worldroot, 0, 0, 0, worldsize/2, csi-1);
+    headlessUpdateVa(worldroot, 0, 0, 0, GETIV(mapsize)/2, csi-1);
 }
 
 

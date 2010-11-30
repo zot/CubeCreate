@@ -315,12 +315,12 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
             vec w = vec(camdir).mul(wdist+0.05f).add(camera1->o);
             if(!insideworld(w))
             {
-                loopi(3) wdist = min(wdist, ((camdir[i] > 0 ? worldsize : 0) - camera1->o[i]) / camdir[i]);
+                loopi(3) wdist = min(wdist, ((camdir[i] > 0 ? GETIV(mapsize) : 0) - camera1->o[i]) / camdir[i]);
                 w = vec(camdir).mul(wdist-0.05f).add(camera1->o);
                 if(!insideworld(w))
                 {
                     wdist = 0;
-                    loopi(3) w[i] = clamp(camera1->o[i], 0.0f, float(worldsize));
+                    loopi(3) w[i] = clamp(camera1->o[i], 0.0f, float(GETIV(mapsize)));
                 }
             }
             cube *c = &lookupcube(int(w.x), int(w.y), int(w.z));            
@@ -380,7 +380,7 @@ void rendereditcursor() // INTENSITY: Replaced all player->o with camera1->o, so
 
             sel.corner = (cor[R[d]]-(lu[R[d]]*2)/gridsize)+(cor[C[d]]-(lu[C[d]]*2)/gridsize)*2;
             selchildcount = 0;
-            countselchild(worldroot, ivec(0, 0, 0), worldsize/2);
+            countselchild(worldroot, ivec(0, 0, 0), GETIV(mapsize)/2);
             if(mag>1 && selchildcount==1) selchildcount = -mag;
         }
     }
@@ -505,7 +505,7 @@ void changed(const block3 &sel, bool commit = true)
     {
         b.o[i] -= 1;
         b.s[i] += 2;
-        readychanges(b, worldroot, ivec(0, 0, 0), worldsize/2);
+        readychanges(b, worldroot, ivec(0, 0, 0), GETIV(mapsize)/2);
         b.o[i] += 1;
         b.s[i] -= 2;
     }
@@ -1144,7 +1144,7 @@ namespace hmap
         if(biasup)
             pullhmap(0, >, <, 1, 0, -);
         else
-            pullhmap(worldsize, <, >, 0, 8, +);     
+            pullhmap(GETIV(mapsize), <, >, 0, 8, +);     
    
         cube **c  = cmap[x][y];
         int e[2][2];
@@ -1236,7 +1236,7 @@ namespace hmap
         bool paintme = paintbrush;
         int cx = (sel.corner&1 ? 0 : -1);
         int cy = (sel.corner&2 ? 0 : -1);
-        hws= (worldsize>>GETIV(gridpower));
+        hws= (GETIV(mapsize)>>GETIV(gridpower));
         gx = (cur[R[d]] >> GETIV(gridpower)) + cx - MAXBRUSH2;
         gy = (cur[C[d]] >> GETIV(gridpower)) + cy - MAXBRUSH2;
         gz = (cur[D[d]] >> GETIV(gridpower));
@@ -1262,7 +1262,7 @@ namespace hmap
             bnx = min(nx, brushmaxx-1);
             bny = min(ny, brushmaxy-1);   
         }
-        nz = worldsize-gridsize;
+        nz = GETIV(mapsize)-gridsize;
         mz = 0;
         hundo.s = ivec(d,1,1,5);
         hundo.orient = sel.orient;
@@ -1343,7 +1343,7 @@ void mpeditface(int dir, int mode, selinfo &sel, bool local)
     if(mode==1)
     {
         int h = sel.o[d]+dc*sel.grid;
-        if(((dir>0) == dc && h<=0) || ((dir<0) == dc && h>=worldsize)) return;
+        if(((dir>0) == dc && h<=0) || ((dir<0) == dc && h>=GETIV(mapsize))) return;
         if(dir<0) sel.o[d] += sel.grid * seldir;
     }
 

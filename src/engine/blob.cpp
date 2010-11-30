@@ -440,7 +440,7 @@ struct blobrenderer
         blobalphalow = scale / GETIV(blobfadelow);
         blobalphahigh = scale / GETIV(blobfadehigh);
         blobalpha = uchar(scale);
-        gentris(worldroot, ivec(0, 0, 0), worldsize>>1);
+        gentris(worldroot, ivec(0, 0, 0), GETIV(mapsize)>>1);
         return b.millis >= 0 ? &b : NULL;
     } 
 

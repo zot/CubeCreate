@@ -42,7 +42,7 @@ void TargetingControl::setupOrientation()
     camdir.rotate(-RAD*camera1->pitch, camright);
 
     if(raycubepos(camera1->o, camdir, worldpos, 0, RAY_CLIPMAT|RAY_SKIPFIRST) == -1)
-        worldpos = vec(camdir).mul(2*worldsize).add(camera1->o); //otherwise 3dgui won't work when outside of map
+        worldpos = vec(camdir).mul(2*GETIV(mapsize)).add(camera1->o); //otherwise 3dgui won't work when outside of map
 }
 #endif
 

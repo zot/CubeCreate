@@ -445,7 +445,7 @@ bool save_world(const char *mname, bool nolms)
     memcpy(hdr.magic, "OCTA", 4);
     hdr.version = MAPVERSION;
     hdr.headersize = sizeof(hdr);
-    hdr.worldsize = worldsize;
+    hdr.worldsize = GETIV(mapsize);
     hdr.numents = 0;
 //    const vector<extentity *> &ents = entities::getents(); // INTENSITY: No ents in .ogz
 //    loopv(ents) if(ents[i]->type!=ET_EMPTY || nolms) hdr.numents++; // INTENSITY: No ents in .ogz
@@ -732,10 +732,10 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     freeocta(worldroot);
     worldroot = NULL;
 
-    setvar("mapsize", hdr.worldsize, true, false);
+    SETVFN(mapsize, hdr.worldsize);
     int worldscale = 0;
     while(1<<worldscale < hdr.worldsize) worldscale++;
-    setvar("mapscale", worldscale, true, false);
+    SETVFN(mapscale, worldscale);
 
     renderprogress(0, "loading entities...");
 

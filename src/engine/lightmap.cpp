@@ -916,8 +916,8 @@ void clearlightcache(int e)
     {
         const extentity &light = *entities::getents()[e];
         int radius = light.attr1;
-        for(int x = int(max(light.o.x-radius, 0.0f))>>GETIV(lightcachesize), ex = int(min(light.o.x+radius, worldsize-1.0f))>>GETIV(lightcachesize); x <= ex; x++)
-        for(int y = int(max(light.o.y-radius, 0.0f))>>GETIV(lightcachesize), ey = int(min(light.o.y+radius, worldsize-1.0f))>>GETIV(lightcachesize); y <= ey; y++)
+        for(int x = int(max(light.o.x-radius, 0.0f))>>GETIV(lightcachesize), ex = int(min(light.o.x+radius, GETIV(mapsize)-1.0f))>>GETIV(lightcachesize); x <= ex; x++)
+        for(int y = int(max(light.o.y-radius, 0.0f))>>GETIV(lightcachesize), ey = int(min(light.o.y+radius, GETIV(mapsize)-1.0f))>>GETIV(lightcachesize); y <= ey; y++)
         {
             lightcacheentry &lce = lightcache[LIGHTCACHEHASH(x, y)];
             if(lce.x != x || lce.y != y) continue;
@@ -1833,7 +1833,7 @@ void previewblends(const ivec &bo, const ivec &bs)
     loadlayermasks();
     if(lightmapworkers.empty()) lightmapworkers.add(new lightmapworker);
     lightmapworkers[0]->reset();
-    if(previewblends(lightmapworkers[0], worldroot, ivec(0, 0, 0), worldsize/2, bo, bs))
+    if(previewblends(lightmapworkers[0], worldroot, ivec(0, 0, 0), GETIV(mapsize)/2, bo, bs))
         commitchanges(true);
 }
                             
@@ -2012,7 +2012,7 @@ void calclight(int *quality)
     calcnormals();
     show_calclight_progress();
     setupthreads();
-    generatelightmaps(worldroot, 0, 0, 0, worldsize >> 1);
+    generatelightmaps(worldroot, 0, 0, 0, GETIV(mapsize) >> 1);
     cleanupthreads();
     clearnormals();
     Uint32 end = SDL_GetTicks();
@@ -2070,7 +2070,7 @@ void patchlight(int *quality)
     if(GETIV(patchnormals)) calcnormals();
     show_calclight_progress();
     setupthreads();
-    generatelightmaps(worldroot, 0, 0, 0, worldsize >> 1);
+    generatelightmaps(worldroot, 0, 0, 0, GETIV(mapsize) >> 1);
     cleanupthreads();
     if(GETIV(patchnormals)) clearnormals();
     Uint32 end = SDL_GetTicks();

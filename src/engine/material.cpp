@@ -315,7 +315,7 @@ int optimizematsurfs(materialsurface *matbuf, int matsurfs)
          }
          else if(cur-start>=4)
          {
-            QuadNode vmats(0, 0, worldsize);
+            QuadNode vmats(0, 0, GETIV(mapsize));
             loopi(cur-start) vmats.insert(start[i].o[C[dim]], start[i].o[R[dim]], start[i].csize);
             vmats.genmatsurfs(start->material, start->orient, start->flags, start->o[dim], matbuf);
          }
@@ -502,7 +502,7 @@ void sortmaterials(vector<materialsurface *> &vismats)
             materialsurface &m = va->matbuf[i];
             if(!editmode || !GETIV(showmat) || envmapping)
             {
-                if(m.material==MAT_WATER && (m.orient==O_TOP || (refracting<0 && reflectz>worldsize))) continue;
+                if(m.material==MAT_WATER && (m.orient==O_TOP || (refracting<0 && reflectz>GETIV(mapsize)))) continue;
                 if(m.flags&materialsurface::F_EDIT) continue;
                 if(glaring && m.material!=MAT_LAVA) continue;
             }

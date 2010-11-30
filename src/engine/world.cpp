@@ -6,10 +6,6 @@
 #include "editing_system.h" // INTENSITY
 #include "message_system.h" // INTENSITY
 
-
-VARNR(mapscale, worldscale, 1, 0, 0);
-VARNR(mapsize, worldsize, 1, 0, 0);
-
 bool getentboundingbox(extentity &e, ivec &o, ivec &r)
 {
     switch(e.type)
@@ -165,7 +161,7 @@ static bool modifyoctaent(int flags, int id)
         while(leafsize < limit) leafsize *= 2;
         int diff = ~(leafsize-1) & ((o.x^(o.x+r.x))|(o.y^(o.y+r.y))|(o.z^(o.z+r.z)));
         if(diff && (limit > GETIV(octaentsize)/2 || diff < leafsize*2)) leafsize *= 2;
-        modifyoctaentity(flags, id, worldroot, ivec(0, 0, 0), worldsize>>1, o, r, leafsize);
+        modifyoctaentity(flags, id, worldroot, ivec(0, 0, 0), GETIV(mapsize)>>1, o, r, leafsize);
     }
     e.inoctanode = flags&MODOE_ADD ? 1 : 0;
     if(e.type == ET_LIGHT) clearlightcache(id);
@@ -228,8 +224,8 @@ void findents(int low, int high, bool notspawned, const vec &pos, const vec &rad
     ivec bo = vec(pos).sub(radius).sub(1),
          br = vec(radius).add(1).mul(2);
     int diff = (bo.x^(bo.x+br.x)) | (bo.y^(bo.y+br.y)) | (bo.z^(bo.z+br.z)) | GETIV(octaentsize),
-        scale = worldscale-1;
-    if(diff&~((1<<scale)-1) || uint(bo.x|bo.y|bo.z|(bo.x+br.x)|(bo.y+br.y)|(bo.z+br.z)) >= uint(worldsize))
+        scale = GETIV(mapscale)-1;
+    if(diff&~((1<<scale)-1) || uint(bo.x|bo.y|bo.z|(bo.x+br.x)|(bo.y+br.y)|(bo.z+br.z)) >= uint(GETIV(mapsize)))
     {
         findents(worldroot, ivec(0, 0, 0), 1<<scale, bo, br, low, high, notspawned, pos, invradius, found);
         return;
@@ -679,9 +675,9 @@ void renderentselection(const vec &o, const vec &ray, bool entmoving)
         {
             vec a, b;
             glColor3ub(20, 20, 20);
-            (a = eo).x = eo.x - fmod(eo.x, worldsize); (b = es).x = a.x + worldsize; boxs3D(a, b, 1);  
-            (a = eo).y = eo.y - fmod(eo.y, worldsize); (b = es).y = a.x + worldsize; boxs3D(a, b, 1);  
-            (a = eo).z = eo.z - fmod(eo.z, worldsize); (b = es).z = a.x + worldsize; boxs3D(a, b, 1);
+            (a = eo).x = eo.x - fmod(eo.x, GETIV(mapsize)); (b = es).x = a.x + GETIV(mapsize); boxs3D(a, b, 1);  
+            (a = eo).y = eo.y - fmod(eo.y, GETIV(mapsize)); (b = es).y = a.x + GETIV(mapsize); boxs3D(a, b, 1);  
+            (a = eo).z = eo.z - fmod(eo.z, GETIV(mapsize)); (b = es).z = a.x + GETIV(mapsize); boxs3D(a, b, 1);
         }
         glColor3ub(150,0,0);
         glLineWidth(5);
@@ -1133,7 +1129,7 @@ void findplayerspawn(dynent *d, int forceent, int tag)   // place at random spaw
     }
     else
     {
-        d->o.x = d->o.y = d->o.z = 0.5f*worldsize;
+        d->o.x = d->o.y = d->o.z = 0.5f*GETIV(mapsize);
         d->o.z += 1;
         entinmap(d);
     }
@@ -1186,15 +1182,15 @@ bool emptymap(int scale, bool force, const char *mname, bool usecfg)    // main 
 
     resetmap();
 
-    setvar("mapscale", scale<10 ? 10 : (scale>16 ? 16 : scale), true, false);
-    setvar("mapsize", 1<<worldscale, true, false);
+    SETVFN(mapscale, scale<10 ? 10 : (scale>16 ? 16 : scale));
+    SETVFN(mapsize, 1<<GETIV(mapscale));
     
     texmru.shrink(0);
     freeocta(worldroot);
     worldroot = newcubes(F_EMPTY);
     loopi(4) solidfaces(worldroot[i]);
 
-    if(worldsize > 0x1000) splitocta(worldroot, worldsize>>1);
+    if(GETIV(mapsize) > 0x1000) splitocta(worldroot, GETIV(mapsize)>>1);
 
     clearmainmenu();
 
@@ -1220,18 +1216,18 @@ bool enlargemap(bool force)
         conoutf(CON_ERROR, "mapenlarge only allowed in edit mode");
         return false;
     }
-    if(worldsize >= 1<<16) return false;
+    if(GETIV(mapsize) >= 1<<16) return false;
 
     while(outsideents.length()) removeentity(outsideents.pop());
 
-    worldscale++;
-    worldsize *= 2;
+    SETVN(mapscale, GETIV(mapscale) + 1);
+    SETVN(mapsize, GETIV(mapsize) * 2);
     cube *c = newcubes(F_EMPTY);
     c[0].children = worldroot;
     loopi(3) solidfaces(c[i+1]);
     worldroot = c;
 
-    if(worldsize > 0x1000) splitocta(worldroot, worldsize>>1);
+    if(GETIV(mapsize) > 0x1000) splitocta(worldroot, GETIV(mapsize)>>1);
 
     enlargeblendmap();
 
@@ -1250,7 +1246,7 @@ static bool isallempty(cube &c)
 void shrinkmap()
 {
     if(noedit(true) || (GETIV(nompedit) && multiplayer())) return;
-    if(worldsize <= 1<<10) return;
+    if(GETIV(mapsize) <= 1<<10) return;
 
     int octant = -1;
     loopi(8) if(!isallempty(worldroot[i]))
@@ -1267,10 +1263,10 @@ void shrinkmap()
     worldroot[octant].children = NULL;
     freeocta(worldroot);
     worldroot = root; 
-    worldscale--;
-    worldsize /= 2; 
+    SETVN(mapscale, GETIV(mapscale) - 1);
+    SETVN(mapsize, GETIV(mapsize) / 2);
 
-    ivec offset(octant, 0, 0, 0, worldsize);
+    ivec offset(octant, 0, 0, 0, GETIV(mapsize));
     vector<extentity *> &ents = entities::getents();
     loopv(ents) ents[i]->o.sub(offset.tovec());
 
@@ -1278,7 +1274,7 @@ void shrinkmap()
  
     allchanged();
 
-    conoutf("shrunk map to size %d", worldscale);
+    conoutf("shrunk map to size %d", GETIV(mapscale));
 }
 
 void newmap(int *i) { bool force = !isconnected() && !haslocalclients(); if(force) game::forceedit(""); if(emptymap(*i, force, NULL)) game::newmap(max(*i, 0)); }
@@ -1320,7 +1316,7 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
     }
 }
 
-int getworldsize() { return worldsize; }
+int getworldsize() { return GETIV(mapsize); }
 int getmapversion() { return GETIV(mapversion); }
 
 // INTENSITY: In our new system, this is called when dragging concludes. Only then do we update the server.
