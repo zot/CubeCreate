@@ -1,30 +1,41 @@
+-- these default settings get executed whenever "config.cfg" is not available
+-- do not modify anything below, instead change settings in game, or add to autoexec.cfg
+
+echo("CubeCreate defaults")
+
+EV.invmouse = 0
+
+EV.sensitivity = 3      -- similar number to quake
+EV.fov = 100            -- 90 is default in other games
+
+EV.musicvol = 60       -- set higher if you want (max 255)
+EV.soundvol = 255      -- sounds average volume is actually set per sound, average 100
+
+EV.gamma = 100          -- set to your liking, 100 = default
+
+EV.fullbrightmodels = 60 -- make player models a bit easier to see
+
+EV.sensitivity = 3      -- similar number to quake
+EV.fov = 100            -- 90 is default in other games
+
+EV.musicvol = 60       -- set higher if you want (max 255)
+EV.soundvol = 255      -- sounds average volume is actually set per sound, average 100
+
+EV.gamma = 100          -- set to your liking, 100 = default
+
+fullbrightmodels = 60 -- make player models a bit easier to see
+
+-- console
+
+EV.consize = 5            -- console is 5 lines
+EV.miniconsize = 5        -- mini-console is 5 lines
+EV.miniconwidth = 40      -- mini-console is 40% of screen width
+EV.fullconsize = 75       -- full console is 75% of screen height
+EV.miniconfilter = 0x300  -- display chat and team chat in mini-console
+EV.confilter = math.band(0x2FFF, math.bnot(EV.miniconfilter)) -- don't display other player frags or mini-console stuff in console
+EV.fullconfilter = 0xFFFF -- display all messages in full console
+
 CV:run([[
-// these default settings get executed whenever "config.cfg" is not available
-// do not modify anything below, instead change settings in game, or add to autoexec.cfg
-
-//name "unnamed" // INTENSITY
-
-invmouse 0         // 1 for flightsim mode
-sensitivity 3      // similar number to quake
-fov 100            // 90 is default in other games
-
-musicvol 60       // set higher if you want (max 255)
-soundvol 255      // sounds average volume is actually set per sound, average 100
-
-gamma 100          // set to your liking, 100 = default
-
-fullbrightmodels 60 // make player models a bit easier to see
-
-// console
-
-consize 5            // console is 5 lines
-miniconsize 5        // mini-console is 5 lines
-miniconwidth 40      // mini-console is 40% of screen width
-fullconsize 75       // full console is 75% of screen height
-miniconfilter 0x300  // display chat and team chat in mini-console
-confilter (&~ 0x2FFF $miniconfilter) // don't display other player frags or mini-console stuff in console
-fullconfilter 0xFFFF // display all messages in full console
-
 // WASD
 
 bind W forward
@@ -72,8 +83,6 @@ bind F12 "screenshot"
 
 bind INSERT "addbot"
 bind DELETE "delbot"
-
-hudgun 1
 
 //////////////////////////////////
 // universal scrollwheel + modifier commands:
@@ -230,6 +239,70 @@ editbind KP5 [setblendpaintmode 5]
 editbind KP8 [scrollblendbrush -1]
 editbind KP9 [scrollblendbrush 1]
 
-// INTENSITY
-exec "data/intensity_defaults.cfg"
+bind MOUSE1 [ mouse1click ]
+bind MOUSE2 [ mouse2click ]
+bind MOUSE3 [ mouse3click ]
+
+bind H [ actionkey0 ] // By convention, a 'help' dialog should appear
+
+bind 1 [ actionkey1 ]
+bind 2 [ actionkey2 ]
+bind 3 [ actionkey3 ]
+bind 4 [ actionkey4 ]
+bind 5 [ actionkey5 ]
+bind 6 [ actionkey6 ]
+bind 7 [ actionkey7 ]
+bind 8 [ actionkey8 ]
+
+bind Y [ actionkey9 ]
+bind U [ actionkey10 ]
+bind I [ actionkey11 ]
+bind O [ actionkey12 ]
+bind P [ actionkey13 ]
+bind J [ actionkey14 ]
+bind K [ actionkey15 ]
+bind L [ actionkey16 ]
+
+bind F [ actionkey17 ]
+// etc.;
+
+bind M mouselook // for an rpg-style control system
+editbind M mouselook // for an rpg-style control system
+editbindvar O showmat // Move showmat to 'O'
+
+//bind V characterview // view character, for editing appearance etc. // No need - use thirdperson 2
+
+//bind LEFT turn_left
+//bind RIGHT turn_right
+bind PAGEDOWN look_up
+bind PAGEUP look_down
+
+delta_game_0 = [ if (= $arg1 1) [ dec_camera ] [ inc_camera ] ]
+
+editbind MOUSE2 [ editextend_intensity ]
+
+//Blendmap Painting integration with / movement - overrides for sauer defaults
+editbind KP0 [ if $blendpaintmode [setblendpaintmode 0] [setblendpaintmode 1] ] // Toggle blend mode
+
+bind KP1 [ if $blendpaintmode [setblendpaintmode 0] [left] ]
+bind KP2 [ if $blendpaintmode [setblendpaintmode 1] [backward] ]
+bind KP3 [ if $blendpaintmode [setblendpaintmode 2] [right] ]
+bind KP4 [ if $blendpaintmode [setblendpaintmode 3] [turn_left] ]
+bind KP6 turn_right
+bind KP8 [ if $blendpaintmode [scrollblendbrush -1] [forward] ]
+
+editbind KP1 [ if $blendpaintmode [setblendpaintmode 0] [left] ]
+editbind KP2 [ if $blendpaintmode [setblendpaintmode 1] [backward] ]
+editbind KP3 [ if $blendpaintmode [setblendpaintmode 2] [right] ]
+editbind KP4 [ if $blendpaintmode [setblendpaintmode 3] [turn_left] ]
+editbind KP6 turn_right
+editbind KP8 [ if $blendpaintmode [scrollblendbrush -1] [forward] ]
+
+editbind F7 [ actionkey0 ]
+
+sayteamcommand = [ echo "Team chat not yet implemented" ]
+
+grassheight 10
+
+editbind P [ centerent ]
 ]])

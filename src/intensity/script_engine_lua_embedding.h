@@ -1,102 +1,102 @@
 #include <cmath>
 
 #ifdef CLIENT
-    #include "client_engine_additions.h"
-    #include "intensity_gui.h"
-    #include "intensity_texture.h"
+	#include "client_engine_additions.h"
+	#include "intensity_gui.h"
+	#include "intensity_texture.h"
 #endif
 
 #ifdef SERVER
-    #include "NPC.h"
+	#include "NPC.h"
 #endif
 
 #include "intensity_physics.h"
 
 #define RETURN_VECTOR3(sauervec) \
 { \
-    LuaEngine::getGlobal("Vector3"); \
-    LuaEngine::pushValue(sauervec.x); \
-    LuaEngine::pushValue(sauervec.y); \
-    LuaEngine::pushValue(sauervec.z); \
-    /* after call, the vec is on stack */ \
-    LuaEngine::call(3, 1); \
+	LuaEngine::getGlobal("Vector3"); \
+	LuaEngine::pushValue(sauervec.x); \
+	LuaEngine::pushValue(sauervec.y); \
+	LuaEngine::pushValue(sauervec.z); \
+	/* after call, the vec is on stack */ \
+	LuaEngine::call(3, 1); \
 }
 
 // done before everything else, required during initialization.
 LUA_EMBED_is(log, 0, {
-    Logging::log_noformat(arg1, arg2);
+	Logging::log_noformat(arg1, arg2);
 });
 
 LUA_EMBED_s(echo, 0, {
-    conoutf("\f1%s", arg1.c_str());
+	conoutf("\f1%s", arg1.c_str());
 });
 
 // HERE BEGINS CAPI, exports of functions from C++ to Lua.
 // General
 LUA_EMBED_NOPARAM(currTime, 1, {
-    LuaEngine::pushValue(Utility::SystemInfo::currTime());
+	LuaEngine::pushValue(Utility::SystemInfo::currTime());
 });
 
 // Math extensions
 LUA_EMBED_ii(lsh, 1, {
-    LuaEngine::pushValue(arg1 << arg2);
+	LuaEngine::pushValue(arg1 << arg2);
 });
 
 LUA_EMBED_ii(rsh, 1, {
-    LuaEngine::pushValue(arg1 >> arg2);
+	LuaEngine::pushValue(arg1 >> arg2);
 });
 
 LUA_EMBED_NOPARAM(bor, 1, {
-    int out = 0;
-    int n = LuaEngine::gettop();
-    for (int i = 1; i <= n; i++) out |= LuaEngine::getInteger(i);
-    LuaEngine::pushValue(out);
+	int out = LuaEngine::getInteger(1);
+	int n = LuaEngine::gettop();
+	for (int i = 2; i <= n; i++) out |= LuaEngine::getInteger(i);
+	LuaEngine::pushValue(out);
 });
 
 LUA_EMBED_NOPARAM(band, 1, {
-    int out = 0;
-    int n = LuaEngine::gettop();
-    for (int i = 1; i <= n; i++) out &= LuaEngine::getInteger(i);
-    LuaEngine::pushValue(out);
+	int out = LuaEngine::getInteger(1);
+	int n = LuaEngine::gettop();
+	for (int i = 2; i <= n; i++) out &= LuaEngine::getInteger(i);
+	LuaEngine::pushValue(out);
 });
 
 LUA_EMBED_i(bnot, 1, {
-    LuaEngine::pushValue(~arg1);
+	LuaEngine::pushValue(~arg1);
 });
 
 // Entity management
 
 //LUA_EMBED_i(registerLogicEntityNonSauer, 0, {
-//    LogicSystem::registerLogicEntityNonSauer(arg1);
+//	LogicSystem::registerLogicEntityNonSauer(arg1);
 //}); DEPRECATED
 
 LUA_EMBED_i(unregisterLogicEntity, 0, {
-    LogicSystem::unregisterLogicEntityByUniqueId(arg1);
+	LogicSystem::unregisterLogicEntityByUniqueId(arg1);
 });
 
 LUA_EMBED_ii(placeInWorld, 0, {
-    WorldSystem::placeInWorld(arg1, arg2);
+	WorldSystem::placeInWorld(arg1, arg2);
 });
 
 LUA_EMBED_Z(setupExtent, 0, idddiiii, {
-    
-    LogicSystem::setupExtent(ref, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+	
+	LogicSystem::setupExtent(ref, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
 });
 
 LUA_EMBED_Z(setupCharacter, 0, , {
-    LogicSystem::setupCharacter(ref);
+	LogicSystem::setupCharacter(ref);
 });
 
 LUA_EMBED_Z(setupNonSauer, 0, , {
-    LogicSystem::setupNonSauer(ref);
+	LogicSystem::setupNonSauer(ref);
 });
 
 LUA_EMBED_Z(dismantleExtent, 0, , {
-    LogicSystem::dismantleExtent(ref);
+	LogicSystem::dismantleExtent(ref);
 });
 
 LUA_EMBED_Z(dismantleCharacter, 0, , {
-    LogicSystem::dismantleCharacter(ref);
+	LogicSystem::dismantleCharacter(ref);
 });
 
 // Worldsystem
@@ -106,66 +106,66 @@ void addentity(extentity* entity);
 // Entity attribs
 
 LUA_EMBED_T(setAnimation, 1, i, {
-    self.get()->setAnimation(arg2);
+	self.get()->setAnimation(arg2);
 });
 
 LUA_EMBED_T(getStartTime, 1, , {
-    LuaEngine::pushValue(self.get()->getStartTime());
+	LuaEngine::pushValue(self.get()->getStartTime());
 });
 
 LUA_EMBED_T(setModelName, 0, s, {
-    Logging::log(Logging::DEBUG, "setModelName(%s)\r\n", arg2.c_str());
-    self.get()->setModel(arg2);
+	Logging::log(Logging::DEBUG, "setModelName(%s)\r\n", arg2.c_str());
+	self.get()->setModel(arg2);
 });
 
 LUA_EMBED_T(setSoundName, 0, s, {
-    Logging::log(Logging::DEBUG, "setSoundName(%s)\r\n", arg2.c_str());
-    self.get()->setSound(arg2);
+	Logging::log(Logging::DEBUG, "setSoundName(%s)\r\n", arg2.c_str());
+	self.get()->setSound(arg2);
 });
 
 LUA_EMBED_T(setSoundVolume, 0, i, {
-    Logging::log(Logging::DEBUG, "setSoundVolume(%i)\r\n", arg2);
-    extentity* e = self.get()->staticEntity;
-    assert(e);
-    if (!WorldSystem::loadingWorld) removeentity(e);
-    e->attr4 = arg2;
-    if (!WorldSystem::loadingWorld) addentity(e);
-    // finally reload sound, so everything gets applied
-    self.get()->setSound(self.get()->soundName.c_str());
+	Logging::log(Logging::DEBUG, "setSoundVolume(%i)\r\n", arg2);
+	extentity* e = self.get()->staticEntity;
+	assert(e);
+	if (!WorldSystem::loadingWorld) removeentity(e);
+	e->attr4 = arg2;
+	if (!WorldSystem::loadingWorld) addentity(e);
+	// finally reload sound, so everything gets applied
+	self.get()->setSound(self.get()->soundName.c_str());
 });
 
 LUA_EMBED_T(setAttachments_raw, 0, s, { self.get()->setAttachments(arg2); } );
 
 LUA_EMBED_T(getAttachmentPosition, 1, s, {
-    vec& vposition = self->getAttachmentPosition(arg2);
-    RETURN_VECTOR3(vposition);
+	vec& vposition = self->getAttachmentPosition(arg2);
+	RETURN_VECTOR3(vposition);
 });
 
 LUA_EMBED_T(setCanMove, 0, b, {
-    self.get()->setCanMove(arg2);
+	self.get()->setCanMove(arg2);
 });
 
 // Extents
 
 #define EXTENT_ACCESSORS(getterName, setterName, attribName) \
 LUA_EMBED_T(getterName, 1, , { \
-    extentity* e = self.get()->staticEntity; \
-    assert(e); \
-    LuaEngine::pushValue(e->attribName); \
+	extentity* e = self.get()->staticEntity; \
+	assert(e); \
+	LuaEngine::pushValue(e->attribName); \
 }); \
  \
 LUA_EMBED_T(setterName, 0, i, { \
-    extentity* e = self.get()->staticEntity; \
-    assert(e); \
-    if (!WorldSystem::loadingWorld) removeentity(e); /* Need to remove, then add, to the world on each change, if not during load. */ \
-    e->attribName = arg2; \
-    if (!WorldSystem::loadingWorld) addentity(e); \
+	extentity* e = self.get()->staticEntity; \
+	assert(e); \
+	if (!WorldSystem::loadingWorld) removeentity(e); /* Need to remove, then add, to the world on each change, if not during load. */ \
+	e->attribName = arg2; \
+	if (!WorldSystem::loadingWorld) addentity(e); \
 }); \
  \
 LUA_EMBED_T(FAST_##setterName, 0, i, { /* Fast version - no removeentity/addentity. Use with care! */ \
-    extentity* e = self.get()->staticEntity; \
-    assert(e); \
-    e->attribName = arg2; \
+	extentity* e = self.get()->staticEntity; \
+	assert(e); \
+	e->attribName = arg2; \
 });
 
 EXTENT_ACCESSORS(getAttr1, setAttr1, attr1);
@@ -175,15 +175,15 @@ EXTENT_ACCESSORS(getAttr4, setAttr4, attr4);
 
 #define EXTENT_LE_ACCESSORS(getterName, setterName, attribName) \
 LUA_EMBED_T(getterName, 1, , { \
-    LuaEngine::pushValue(self->attribName); \
+	LuaEngine::pushValue(self->attribName); \
 }); \
  \
 LUA_EMBED_T(setterName, 0, d, { \
-    Logging::log(Logging::DEBUG, "ACCESSOR: Setting %s to %d\r\n", #setterName, arg2); \
-    assert(self->staticEntity); \
-    if (!WorldSystem::loadingWorld) removeentity(self->staticEntity); /* Need to remove, then add, to the octa world on each change. */ \
-    self->attribName = arg2; \
-    if (!WorldSystem::loadingWorld) addentity(self->staticEntity); \
+	Logging::log(Logging::DEBUG, "ACCESSOR: Setting %s to %d\r\n", #setterName, arg2); \
+	assert(self->staticEntity); \
+	if (!WorldSystem::loadingWorld) removeentity(self->staticEntity); /* Need to remove, then add, to the octa world on each change. */ \
+	self->attribName = arg2; \
+	if (!WorldSystem::loadingWorld) addentity(self->staticEntity); \
 });
 
 EXTENT_LE_ACCESSORS(getCollisionRadiusWidth, setCollisionRadiusWidth, collisionRadiusWidth);
@@ -194,24 +194,24 @@ EXTENT_LE_ACCESSORS(getCollisionRadiusHeight, setCollisionRadiusHeight, collisio
 
 
 LUA_EMBED_T(getExtent0_raw, 1, i, {
-    extentity* e = self.get()->staticEntity;
-    assert(e);
-    assert(arg2 >= 0 && arg2 <= 2);
+	extentity* e = self.get()->staticEntity;
+	assert(e);
+	assert(arg2 >= 0 && arg2 <= 2);
 
-    Logging::log(Logging::INFO, "getExtentO_raw(%d): %f\r\n", arg2, e->o[arg2]);
+	Logging::log(Logging::INFO, "getExtentO_raw(%d): %f\r\n", arg2, e->o[arg2]);
 
-    LuaEngine::pushValue(e->o[arg2]);
+	LuaEngine::pushValue(e->o[arg2]);
 });
 
 LUA_EMBED_T(setExtent0_raw, 0, ddd, {
-    extentity* e = self.get()->staticEntity;
-    assert(e);
+	extentity* e = self.get()->staticEntity;
+	assert(e);
 
-    removeentity(e); /* Need to remove, then add, to the octa world on each change. */
-    e->o.x = arg2;
-    e->o.y = arg3;
-    e->o.z = arg4;
-    addentity(e);
+	removeentity(e); /* Need to remove, then add, to the octa world on each change. */
+	e->o.x = arg2;
+	e->o.y = arg3;
+	e->o.z = arg4;
+	addentity(e);
 });
 
 
@@ -219,15 +219,15 @@ LUA_EMBED_T(setExtent0_raw, 0, ddd, {
 
 #define DYNENT_ACCESSORS(getterName, setterName, type_code, type_BOLD, attribName) \
 LUA_EMBED_T(getterName, 1, , { \
-    fpsent* e = (fpsent*)(self.get()->dynamicEntity); \
-    assert(e); \
-    LuaEngine::pushValue((type_BOLD)e->attribName); \
+	fpsent* e = (fpsent*)(self.get()->dynamicEntity); \
+	assert(e); \
+	LuaEngine::pushValue((type_BOLD)e->attribName); \
 }); \
  \
 LUA_EMBED_T(setterName, 0, type_code, { \
-    fpsent* e = dynamic_cast<fpsent*>(self.get()->dynamicEntity); \
-    assert(e); \
-    e->attribName = arg2; \
+	fpsent* e = dynamic_cast<fpsent*>(self.get()->dynamicEntity); \
+	assert(e); \
+	e->attribName = arg2; \
 });
 
 DYNENT_ACCESSORS(getMaxSpeed, setMaxSpeed, d, double, maxspeed);
@@ -253,159 +253,159 @@ DYNENT_ACCESSORS(getTimeInAir, setTimeInAir, i, int, timeinair);
 // letting scripting specify a feet position, and we work relative to their height - add to
 // assignments, subtract from readings
 LUA_EMBED_T(getDynent0_raw, 1, i, {
-    fpsent* d = dynamic_cast<fpsent*>(self.get()->dynamicEntity);
-    assert(d);
-    assert(arg2 >= 0 && arg2 <= 2);
+	fpsent* d = dynamic_cast<fpsent*>(self.get()->dynamicEntity);
+	assert(d);
+	assert(arg2 >= 0 && arg2 <= 2);
 
-    if (arg2 != 2) {
-        LuaEngine::pushValue(d->o[arg2]);
-    } else {
-        LuaEngine::pushValue(d->o.z - d->eyeheight);// - d->aboveeye);
-    }
+	if (arg2 != 2) {
+		LuaEngine::pushValue(d->o[arg2]);
+	} else {
+		LuaEngine::pushValue(d->o.z - d->eyeheight);// - d->aboveeye);
+	}
 });
 
 LUA_EMBED_T(setDynent0_raw, 0, ddd, {
-    fpsent* d = dynamic_cast<fpsent*>(self.get()->dynamicEntity);
-    assert(d);
+	fpsent* d = dynamic_cast<fpsent*>(self.get()->dynamicEntity);
+	assert(d);
 
-    d->o.x = arg2;
-    d->o.y = arg3;
-    d->o.z = arg4 + d->eyeheight;// + d->aboveeye;
+	d->o.x = arg2;
+	d->o.y = arg3;
+	d->o.z = arg4 + d->eyeheight;// + d->aboveeye;
 
-    // Also set 'newpos', otherwise this change may get overwritten
-    d->newpos = d->o;
+	// Also set 'newpos', otherwise this change may get overwritten
+	d->newpos = d->o;
 
-    d->resetinterp(); // No need to interpolate to last position - just jump
+	d->resetinterp(); // No need to interpolate to last position - just jump
 
-    Logging::log(Logging::INFO, "(%d).setDynentO(%f, %f, %f)\r\n", d->uniqueId, d->o.x, d->o.y, d->o.z);
+	Logging::log(Logging::INFO, "(%d).setDynentO(%f, %f, %f)\r\n", d->uniqueId, d->o.x, d->o.y, d->o.z);
 });
 
 LUA_EMBED_T(getDynentVel_raw, 1, i, {
-    fpsent* d = (fpsent*)(self.get()->dynamicEntity);
-    assert(d);
-    assert(arg2 >= 0 && arg2 <= 2);
+	fpsent* d = (fpsent*)(self.get()->dynamicEntity);
+	assert(d);
+	assert(arg2 >= 0 && arg2 <= 2);
 
-    LuaEngine::pushValue(d->vel[arg2]);
+	LuaEngine::pushValue(d->vel[arg2]);
 });
 
 LUA_EMBED_T(setDynentVel_raw, 0, ddd, {
-    fpsent* d = dynamic_cast<fpsent*>(self.get()->dynamicEntity);
-    assert(d);
+	fpsent* d = dynamic_cast<fpsent*>(self.get()->dynamicEntity);
+	assert(d);
 
-    d->vel.x = arg2;
-    d->vel.y = arg3;
-    d->vel.z = arg4;
+	d->vel.x = arg2;
+	d->vel.y = arg3;
+	d->vel.z = arg4;
 });
 
 LUA_EMBED_T(getDynentFalling_raw, 1, i, {
-    fpsent* d = (fpsent*)(self.get()->dynamicEntity);
-    assert(d);
-    assert(arg2 >= 0 && arg2 <= 2);
+	fpsent* d = (fpsent*)(self.get()->dynamicEntity);
+	assert(d);
+	assert(arg2 >= 0 && arg2 <= 2);
 
-    LuaEngine::pushValue(d->falling[arg2]);
+	LuaEngine::pushValue(d->falling[arg2]);
 });
 
 LUA_EMBED_T(setDynentFalling_raw, 0, ddd, {
-    fpsent* d = dynamic_cast<fpsent*>(self.get()->dynamicEntity);
-    assert(d);
+	fpsent* d = dynamic_cast<fpsent*>(self.get()->dynamicEntity);
+	assert(d);
 
-    d->falling.x = arg2;
-    d->falling.y = arg3;
-    d->falling.z = arg4;
+	d->falling.x = arg2;
+	d->falling.y = arg3;
+	d->falling.z = arg4;
 });
 
 // Geometry utilities
 
 LUA_EMBED_dddddd(rayLos, 1, {
-    vec a(arg1, arg2, arg3);
-    vec b(arg4, arg5, arg6);
-    vec target;
+	vec a(arg1, arg2, arg3);
+	vec b(arg4, arg5, arg6);
+	vec target;
 
-    bool ret = raycubelos(a, b, target);
-    LuaEngine::pushValue(ret);
+	bool ret = raycubelos(a, b, target);
+	LuaEngine::pushValue(ret);
 });
 
 LUA_EMBED_ddddddd(rayPos, 1, {
-    vec o(arg1, arg2, arg3);
-    vec ray(arg4, arg5, arg6);
-    vec hitpos(0);
+	vec o(arg1, arg2, arg3);
+	vec ray(arg4, arg5, arg6);
+	vec hitpos(0);
 
-    LuaEngine::pushValue(raycubepos(o, ray, hitpos, arg7, RAY_CLIPMAT|RAY_POLY));
+	LuaEngine::pushValue(raycubepos(o, ray, hitpos, arg7, RAY_CLIPMAT|RAY_POLY));
 });
 
 LUA_EMBED_dddd(rayFloor, 1, {
-    vec o(arg1, arg2, arg3);
-    vec floor(0);
-    LuaEngine::pushValue(rayfloor(o, floor, 0, arg4));
+	vec o(arg1, arg2, arg3);
+	vec floor(0);
+	LuaEngine::pushValue(rayfloor(o, floor, 0, arg4));
 });
 
 // World
 
 LUA_EMBED_ddddi(isColliding, 1, {
-    vec position(arg1, arg2, arg3);
-    LuaEngine::pushValue(PhysicsManager::getEngine()->isColliding(
-        position,
-        arg4,
-        arg5 != -1 ? LogicSystem::getLogicEntity(arg5).get() : NULL)
-    ); // TODO: Make faster, avoid this lookup
+	vec position(arg1, arg2, arg3);
+	LuaEngine::pushValue(PhysicsManager::getEngine()->isColliding(
+		position,
+		arg4,
+		arg5 != -1 ? LogicSystem::getLogicEntity(arg5).get() : NULL)
+	); // TODO: Make faster, avoid this lookup
 });
 
 LUA_EMBED_d(setGravity, 0, {
-    if (PhysicsManager::hasEngine())
-    {
-        PhysicsManager::getEngine()->setGravity(arg1);
-    } else {
-        Logging::log(Logging::DEBUG, "Setting gravity using sauer system, as no physics engine\r\n");
-        extern float GRAVITY;
-        GRAVITY = arg1;
-    }
+	if (PhysicsManager::hasEngine())
+	{
+		PhysicsManager::getEngine()->setGravity(arg1);
+	} else {
+		Logging::log(Logging::DEBUG, "Setting gravity using sauer system, as no physics engine\r\n");
+		extern float GRAVITY;
+		GRAVITY = arg1;
+	}
 });
 
 LUA_EMBED_ddd(getMaterial, 1, {
-    LuaEngine::pushValue(lookupmaterial(vec(arg1, arg2, arg3)));
+	LuaEngine::pushValue(lookupmaterial(vec(arg1, arg2, arg3)));
 });
 
 // Textures
 
 #ifdef CLIENT
 LUA_EMBED_ss(convertPNGtoDDS, 0, {
-    assert(Utility::validateRelativePath(arg1));
-    assert(Utility::validateRelativePath(arg2));
-    IntensityTexture::convertPNGtoDDS(arg1, arg2);
+	assert(Utility::validateRelativePath(arg1));
+	assert(Utility::validateRelativePath(arg2));
+	IntensityTexture::convertPNGtoDDS(arg1, arg2);
 });
 #else
 LUA_EMBED_ss(convertPNGtoDDS, 0, {
-    arg1 = arg1; arg2 = arg2; // warning otherwise
+	arg1 = arg1; arg2 = arg2; // warning otherwise
 });
 #endif
 
 #ifdef CLIENT
 LUA_EMBED_sss(combineImages, 0, {
-    assert(Utility::validateRelativePath(arg1));
-    assert(Utility::validateRelativePath(arg2));
-    assert(Utility::validateRelativePath(arg3));
-    IntensityTexture::combineImages(arg1, arg2, arg3);
+	assert(Utility::validateRelativePath(arg1));
+	assert(Utility::validateRelativePath(arg2));
+	assert(Utility::validateRelativePath(arg3));
+	IntensityTexture::combineImages(arg1, arg2, arg3);
 });
 #else
 LUA_EMBED_sss(combineImages, 0, {
-    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+	arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
 });
 #endif
 
 // Sounds
 
 #ifdef CLIENT
-    LUA_EMBED_sdddi(playSoundByName, 0, {
-        vec loc(arg2, arg3, arg4);
-        if (loc.x || loc.y || loc.z)
-            playsoundname(arg1.c_str(), &loc, arg5);
-        else
-            playsoundname(arg1.c_str());
-    });
+	LUA_EMBED_sdddi(playSoundByName, 0, {
+		vec loc(arg2, arg3, arg4);
+		if (loc.x || loc.y || loc.z)
+			playsoundname(arg1.c_str(), &loc, arg5);
+		else
+			playsoundname(arg1.c_str());
+	});
 
-    LUA_EMBED_si(stopSoundByName, 0, {
-        stopsoundbyid(getsoundid(arg1.c_str(), arg2));
-    });
+	LUA_EMBED_si(stopSoundByName, 0, {
+		stopsoundbyid(getsoundid(arg1.c_str(), arg2));
+	});
 #endif
 
 void startmusic(char *name, char *cmd);
@@ -415,31 +415,31 @@ LUA_EMBED_STD_CLIENT(music, startmusic, s, (char*)arg1.c_str(), (char*)"Sound.mu
 #ifdef CLIENT
 extern int preload_sound(char *name, int vol);
 LUA_EMBED_si(preloadSound, 1, {
-    std::string str = "preloading sound '";
-    str += arg1;
-    str += "'...";
-    renderprogress(0, str.c_str());
+	std::string str = "preloading sound '";
+	str += arg1;
+	str += "'...";
+	renderprogress(0, str.c_str());
 
-    arg2 = min(arg2, 100); // Do not let scripts set high volumes for griefing
-    LuaEngine::pushValue(preload_sound((char*)arg1.c_str(), arg2));
+	arg2 = min(arg2, 100); // Do not let scripts set high volumes for griefing
+	LuaEngine::pushValue(preload_sound((char*)arg1.c_str(), arg2));
 });
 #else
 LUA_EMBED_si(preloadSound, 0, {
-    arg1 = arg1; arg2 = arg2; // warning otherwise
+	arg1 = arg1; arg2 = arg2; // warning otherwise
 });
 #endif
 
 #ifdef CLIENT
 LUA_EMBED_i(playSound, 0, {
-    playsound(arg1); // TODO: Sound position
+	playsound(arg1); // TODO: Sound position
 });
 #else
 LUA_EMBED_i(playSound, 0, {
-    MessageSystem::send_SoundToClients(
-        -1,
-        arg1,
-        -1
-    );
+	MessageSystem::send_SoundToClients(
+		-1,
+		arg1,
+		-1
+	);
 });
 #endif
 
@@ -447,106 +447,106 @@ LUA_EMBED_i(playSound, 0, {
 
 #ifdef CLIENT
 
-    LUA_EMBED_idddddddiiii(addDecal, 0, {
-        vec  center(arg2, arg3, arg4);
-        vec  surface(arg5, arg6, arg7);
-        bvec color(arg9, arg10, arg11);
+	LUA_EMBED_idddddddiiii(addDecal, 0, {
+		vec  center(arg2, arg3, arg4);
+		vec  surface(arg5, arg6, arg7);
+		bvec color(arg9, arg10, arg11);
 
-        adddecal(arg1, center, surface, arg8, color, arg12);
-    });
+		adddecal(arg1, center, surface, arg8, color, arg12);
+	});
 
-    LUA_EMBED_iiidddidiibibi(particleSplash, 0, {
-        if (arg1 == PART_BLOOD && !GETIV(blood)) return 0;
-        vec p(arg4, arg5, arg6);
-        particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-    });
+	LUA_EMBED_iiidddidiibibi(particleSplash, 0, {
+		if (arg1 == PART_BLOOD && !GETIV(blood)) return 0;
+		vec p(arg4, arg5, arg6);
+		particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
+	});
 
-    LUA_EMBED_iiidddidiiibi(particleSplashRegular, 0, {
-        if (arg1 == PART_BLOOD && !GETIV(blood)) return 0;
-        vec p(arg4, arg5, arg6);
-        regular_particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-    });
+	LUA_EMBED_iiidddidiiibi(particleSplashRegular, 0, {
+		if (arg1 == PART_BLOOD && !GETIV(blood)) return 0;
+		vec p(arg4, arg5, arg6);
+		regular_particle_splash(arg1, arg2, arg3, p, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
+	});
 
-    LUA_EMBED_ddddiiid(particleFireball, 0, {
-        vec dest(arg1, arg2, arg3);
-        particle_fireball(dest, arg4, arg5, arg6, arg7, arg8);
-    });
+	LUA_EMBED_ddddiiid(particleFireball, 0, {
+		vec dest(arg1, arg2, arg3);
+		particle_fireball(dest, arg4, arg5, arg6, arg7, arg8);
+	});
 
-    LUA_EMBED_dddiiiiii(particleExplodeSplash, 0, {
-        vec o(arg1, arg2, arg3);
-        particle_explodesplash(o, arg4, arg5, arg6, arg7, arg8, arg9);
-    });
+	LUA_EMBED_dddiiiiii(particleExplodeSplash, 0, {
+		vec o(arg1, arg2, arg3);
+		particle_explodesplash(o, arg4, arg5, arg6, arg7, arg8, arg9);
+	});
 
-    LUA_EMBED_ddddddiiidii(particleFlare, 0, {
-        vec p(arg1, arg2, arg3);
-        vec dest(arg4, arg5, arg6);
-        if (arg12 < 0)
-            particle_flare(p, dest, arg7, arg8, arg9, arg10, NULL, arg11);
-        else
-        {
-            LogicEntityPtr owner = LogicSystem::getLogicEntity(arg12);
-            assert(owner.get()->dynamicEntity);
-            particle_flare(p, dest, arg7, arg8, arg9, arg10, (fpsent*)(owner.get()->dynamicEntity), arg11);
-        }
-    });
+	LUA_EMBED_ddddddiiidii(particleFlare, 0, {
+		vec p(arg1, arg2, arg3);
+		vec dest(arg4, arg5, arg6);
+		if (arg12 < 0)
+			particle_flare(p, dest, arg7, arg8, arg9, arg10, NULL, arg11);
+		else
+		{
+			LogicEntityPtr owner = LogicSystem::getLogicEntity(arg12);
+			assert(owner.get()->dynamicEntity);
+			particle_flare(p, dest, arg7, arg8, arg9, arg10, (fpsent*)(owner.get()->dynamicEntity), arg11);
+		}
+	});
 
-    LUA_EMBED_ddddddiiidi(particleFlyingFlare, 0, {
-        vec p(arg1, arg2, arg3);
-        vec dest(arg4, arg5, arg6);
-        particle_flying_flare(p, dest, arg7, arg8, arg9, arg10, arg11);
-    });
+	LUA_EMBED_ddddddiiidi(particleFlyingFlare, 0, {
+		vec p(arg1, arg2, arg3);
+		vec dest(arg4, arg5, arg6);
+		particle_flying_flare(p, dest, arg7, arg8, arg9, arg10, arg11);
+	});
 
-    LUA_EMBED_iiddddddidib(particleTrail, 0, {
-        vec from(arg3, arg4, arg5);
-        vec to(arg6, arg7, arg8);
-        particle_trail(arg1, arg2, from, to, arg9, arg10, arg11, arg12);
-    });
+	LUA_EMBED_iiddddddidib(particleTrail, 0, {
+		vec from(arg3, arg4, arg5);
+		vec to(arg6, arg7, arg8);
+		particle_trail(arg1, arg2, from, to, arg9, arg10, arg11, arg12);
+	});
 
-    LUA_EMBED_idddddiidddi(particleFlame, 0, {
-        regular_particle_flame(arg1, vec(arg2, arg3, arg4), arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-    });
+	LUA_EMBED_idddddiidddi(particleFlame, 0, {
+		regular_particle_flame(arg1, vec(arg2, arg3, arg4), arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
+	});
 
-    LUA_EMBED_dddddddiiidddd(addDynlight, 0, {
-        vec o(arg1, arg2, arg3);
-        vec color(float(arg5)/255.0, float(arg6)/255.0, float(arg7)/255.0);
-        vec initcolor(float(arg12)/255.0, float(arg13)/255.0, float(arg14)/255.0);
+	LUA_EMBED_dddddddiiidddd(addDynlight, 0, {
+		vec o(arg1, arg2, arg3);
+		vec color(float(arg5)/255.0, float(arg6)/255.0, float(arg7)/255.0);
+		vec initcolor(float(arg12)/255.0, float(arg13)/255.0, float(arg14)/255.0);
 
-        LightControl::queueDynamicLight(o, arg4, color, arg8, arg9, arg10, arg11, initcolor, NULL);
-    });
+		LightControl::queueDynamicLight(o, arg4, color, arg8, arg9, arg10, arg11, initcolor, NULL);
+	});
 
-    LUA_EMBED_idddidddi(spawnDebris, 0, {
-        vec v(arg2, arg3, arg4);
-        vec debrisvel(arg6, arg7, arg8);
+	LUA_EMBED_idddidddi(spawnDebris, 0, {
+		vec v(arg2, arg3, arg4);
+		vec debrisvel(arg6, arg7, arg8);
 
-        LogicEntityPtr owner = LogicSystem::getLogicEntity(arg9);
-        assert(owner->dynamicEntity);
-        FPSClientInterface::spawnDebris(arg1, v, arg5, debrisvel, (dynent*)(owner->dynamicEntity));
-    });
+		LogicEntityPtr owner = LogicSystem::getLogicEntity(arg9);
+		assert(owner->dynamicEntity);
+		FPSClientInterface::spawnDebris(arg1, v, arg5, debrisvel, (dynent*)(owner->dynamicEntity));
+	});
 
-    LUA_EMBED_ddddii(particleMeter, 0, {
-        vec s(arg1, arg2, arg3);
+	LUA_EMBED_ddddii(particleMeter, 0, {
+		vec s(arg1, arg2, arg3);
 
-        particle_meter(s, arg4, arg5, arg6);
-    });
+		particle_meter(s, arg4, arg5, arg6);
+	});
 
-    LUA_EMBED_dddsiiidi(particleText, 0, {
-        vec s(arg1, arg2, arg3);
-        particle_textcopy(s, arg4.c_str(), arg5, arg6, arg7, arg8, arg9);
-    });
+	LUA_EMBED_dddsiiidi(particleText, 0, {
+		vec s(arg1, arg2, arg3);
+		particle_textcopy(s, arg4.c_str(), arg5, arg6, arg7, arg8, arg9);
+	});
 
-    LUA_EMBED_ii(clientDamageEffect, 0, {
-        dynamic_cast<fpsent*>(player)->damageroll(arg1);
-        damageblend(arg2);
-    });
+	LUA_EMBED_ii(clientDamageEffect, 0, {
+		dynamic_cast<fpsent*>(player)->damageroll(arg1);
+		damageblend(arg2);
+	});
 
-    LUA_EMBED_ddddid(showHUDRect, 0, { ClientSystem::addHUDRect(arg1, arg2, arg3, arg4, arg5, arg6); });
+	LUA_EMBED_ddddid(showHUDRect, 0, { ClientSystem::addHUDRect(arg1, arg2, arg3, arg4, arg5, arg6); });
 
-    LUA_EMBED_sddddid(showHUDImage, 0, { ClientSystem::addHUDImage(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
+	LUA_EMBED_sddddid(showHUDImage, 0, { ClientSystem::addHUDImage(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
 
-    LUA_EMBED_sdddi(showHUDText, 0, {
-        // text, x, y, scale, color
-        ClientSystem::addHUDText(arg1, arg2, arg3, arg4, arg5);
-    });
+	LUA_EMBED_sdddi(showHUDText, 0, {
+		// text, x, y, scale, color
+		ClientSystem::addHUDText(arg1, arg2, arg3, arg4, arg5);
+	});
 
 #endif // CLIENT
 
@@ -570,51 +570,51 @@ LUA_EMBED_iissdddiiii(ExtentCompleteNotification, 0, { send_ExtentCompleteNotifi
 // File access
 
 LUA_EMBED_s(readFile, 1, {
-    try
-    {
-        REFLECT_PYTHON( read_file_safely );
+	try
+	{
+		REFLECT_PYTHON( read_file_safely );
 
-        boost::python::object data = read_file_safely(arg1);
-        std::string text = boost::python::extract<std::string>(data);
+		boost::python::object data = read_file_safely(arg1);
+		std::string text = boost::python::extract<std::string>(data);
 
-        LuaEngine::pushValue(text);
-    }
-    catch(boost::python::error_already_set const &)
-    {
-        printf("Error in Python execution of embedded read_file_safely\r\n");
-        PyErr_Print();
-        assert(0 && "Halting on Python error");
-    }
+		LuaEngine::pushValue(text);
+	}
+	catch(boost::python::error_already_set const &)
+	{
+		printf("Error in Python execution of embedded read_file_safely\r\n");
+		PyErr_Print();
+		assert(0 && "Halting on Python error");
+	}
 });
 
 // Mapping
 
 void texturereset(int *n);
 LUA_EMBED_NOPARAM(textureReset, 0, {
-    int num = 0;
-    texturereset(&num);
+	int num = 0;
+	texturereset(&num);
 });
 
 void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale, int *forcedindex);
 LUA_EMBED_ssiiidi(texture, 0, {
-    float arg6f = arg6;
-    // XXX: arg7 may not be given, in which case it is undefined, and turns into 0.
-    texture((char*)arg1.c_str(), (char*)arg2.c_str(), &arg3, &arg4, &arg5, &arg6f, &arg7);
+	float arg6f = arg6;
+	// XXX: arg7 may not be given, in which case it is undefined, and turns into 0.
+	texture((char*)arg1.c_str(), (char*)arg2.c_str(), &arg3, &arg4, &arg5, &arg6f, &arg7);
 });
 
 void mapmodelreset(int *n);
 LUA_EMBED_i(mapmodelReset, 0, {
-    mapmodelreset(&arg1);
+	mapmodelreset(&arg1);
 });
 
 void mmodel(char *name);
 LUA_EMBED_s(mapmodel, 0, {
-    mmodel((char*)arg1.c_str());
+	mmodel((char*)arg1.c_str());
 });
 
 void autograss(char *name);
 LUA_EMBED_s(autograss, 0, {
-    autograss((char*)arg1.c_str());
+	autograss((char*)arg1.c_str());
 });
 
 void texlayer(int *layer, char *name, int *mode, float *scale);
@@ -725,7 +725,7 @@ void objnoclip(char *meshname, int *noclip);
 
 void setmd5dir(char *name);  
 void md5load(char *meshfile, char *skelname, float *smooth);
-void md5tag(char *name, char *tagname);        
+void md5tag(char *name, char *tagname);		
 void md5pitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
 void md5adjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
 void md5skin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
@@ -748,7 +748,7 @@ void md5noclip(char *meshname, int *noclip);
 
 void setiqmdir(char *name);  
 void iqmload(char *meshfile, char *skelname);
-void iqmtag(char *name, char *tagname);        
+void iqmtag(char *name, char *tagname);		
 void iqmpitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
 void iqmadjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
 void iqmskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
@@ -771,7 +771,7 @@ void iqmnoclip(char *meshname, int *noclip);
 
 void setsmddir(char *name);  
 void smdload(char *meshfile, char *skelname);
-void smdtag(char *name, char *tagname);        
+void smdtag(char *name, char *tagname);		
 void smdpitch(char *name, float *pitchscale, float *pitchoffset, float *pitchmin, float *pitchmax);
 void smdadjust(char *name, float *yaw, float *pitch, float *roll, float *tx, float *ty, float *tz);
 void smdskin(char *meshname, char *tex, char *masks, float *envmapmax, float *envmapmin);
@@ -927,249 +927,249 @@ extern bool getmousedown();
 extern bool getmouseup();
 
 LUA_EMBED_NOPARAM(isKeyDown, 1, {
-    LuaEngine::pushValue(getkeydown());
+	LuaEngine::pushValue(getkeydown());
 });
 
 LUA_EMBED_NOPARAM(isKeyUp, 1, {
-    LuaEngine::pushValue(getkeyup());
+	LuaEngine::pushValue(getkeyup());
 });
 
 LUA_EMBED_NOPARAM(isMouseDown, 1, {
-    LuaEngine::pushValue(getmousedown());
+	LuaEngine::pushValue(getmousedown());
 });
 
 LUA_EMBED_NOPARAM(isMouseUp, 1, {
-    LuaEngine::pushValue(getmouseup());
+	LuaEngine::pushValue(getmouseup());
 });
 
 // Code
 
 LUA_EMBED_s(compile, 0, {
-    LuaEngine::runScript(arg1);
+	LuaEngine::runScript(arg1);
 });
 
 // Components
 
 LUA_EMBED_ss(signalComponent, 1, {
-    try
-    {
-        REFLECT_PYTHON( signal_signal_component );
+	try
+	{
+		REFLECT_PYTHON( signal_signal_component );
 
-        boost::python::object data = signal_signal_component(arg1, arg2);
-        std::string stringData = boost::python::extract<std::string>(data);
-        LuaEngine::pushValue(stringData);
-    } catch(boost::python::error_already_set const &)
-    {
-        printf("Error in signalling python component initialization\r\n");
-        PyErr_Print();
-        assert(0 && "Halting on Python error");
-    }
+		boost::python::object data = signal_signal_component(arg1, arg2);
+		std::string stringData = boost::python::extract<std::string>(data);
+		LuaEngine::pushValue(stringData);
+	} catch(boost::python::error_already_set const &)
+	{
+		printf("Error in signalling python component initialization\r\n");
+		PyErr_Print();
+		assert(0 && "Halting on Python error");
+	}
 });
 
 // Models
 
 LUA_EMBED_s(preloadModel, 0, {
-    preloadmodel(arg1.c_str());
+	preloadmodel(arg1.c_str());
 });
 
 LUA_EMBED_s(reloadModel, 0, {
-    void clearmodel(char *name);
-    clearmodel((char*)arg1.c_str());
-    if (!loadmodel((char*)arg1.c_str())) LuaEngine::error("Cannot load model.");
+	void clearmodel(char *name);
+	clearmodel((char*)arg1.c_str());
+	if (!loadmodel((char*)arg1.c_str())) LuaEngine::error("Cannot load model.");
 });
 
 // HUD
 
 #ifdef CLIENT
-    LUA_EMBED_NOPARAM(getTargetPosition, 1, {
-        TargetingControl::determineMouseTarget(true); // Force a determination, if needed
+	LUA_EMBED_NOPARAM(getTargetPosition, 1, {
+		TargetingControl::determineMouseTarget(true); // Force a determination, if needed
 
-        RETURN_VECTOR3(TargetingControl::targetPosition);
-    });
+		RETURN_VECTOR3(TargetingControl::targetPosition);
+	});
 
-    LUA_EMBED_NOPARAM(getTargetEntity, 1, {
-        TargetingControl::determineMouseTarget(true); // Force a determination, if needed
+	LUA_EMBED_NOPARAM(getTargetEntity, 1, {
+		TargetingControl::determineMouseTarget(true); // Force a determination, if needed
 
-        LogicEntityPtr target = TargetingControl::targetLogicEntity;
-        if (target.get() && !target->isNone() && target->luaRef >= 0)
-            LuaEngine::getRef(target->luaRef);
-        else
-            LuaEngine::pushValue();
-    });
+		LogicEntityPtr target = TargetingControl::targetLogicEntity;
+		if (target.get() && !target->isNone() && target->luaRef >= 0)
+			LuaEngine::getRef(target->luaRef);
+		else
+			LuaEngine::pushValue();
+	});
 
 // Rendering
 
-    static int oldThirdperson = -1;
+	static int oldThirdperson = -1;
 
-    void prepareRagdoll(int& anim, LogicEntityPtr self)
-    {
-        if (anim&ANIM_RAGDOLL)
-        {
-//            if (!ragdoll || loadmodel(mdl);
-            fpsent* fpsEntity = (fpsent*)self->dynamicEntity;
+	void prepareRagdoll(int& anim, LogicEntityPtr self)
+	{
+		if (anim&ANIM_RAGDOLL)
+		{
+//			if (!ragdoll || loadmodel(mdl);
+			fpsent* fpsEntity = (fpsent*)self->dynamicEntity;
 
-            if (fpsEntity->clientnum == ClientSystem::playerNumber)
-            {
+			if (fpsEntity->clientnum == ClientSystem::playerNumber)
+			{
 
-                if (oldThirdperson == -1 && GETIV(thirdperson) == 0)
-                {
-                    oldThirdperson = GETIV(thirdperson);
-                    SETV(thirdperson, 1);
-                }
-            }
+				if (oldThirdperson == -1 && GETIV(thirdperson) == 0)
+				{
+					oldThirdperson = GETIV(thirdperson);
+					SETV(thirdperson, 1);
+				}
+			}
 
-            if (fpsEntity->ragdoll || !GETIV(ragdoll) || !PhysicsManager::getEngine()->prepareRagdoll(self))
-            {
-                anim &= ~ANIM_RAGDOLL;
-                LuaEngine::getRef(self->luaRef);
-                LuaEngine::getTableItem("setLocalAnimation");
-                LuaEngine::pushValueFromIndex(-2);
-                LuaEngine::pushValue(anim);
-                LuaEngine::call(2, 0); // Set new animation locally - in state data and C++
-                LuaEngine::pop(1);
-            }
-        } else {
-            if (self->dynamicEntity)
-            {
-                fpsent* fpsEntity = (fpsent*)self->dynamicEntity;
+			if (fpsEntity->ragdoll || !GETIV(ragdoll) || !PhysicsManager::getEngine()->prepareRagdoll(self))
+			{
+				anim &= ~ANIM_RAGDOLL;
+				LuaEngine::getRef(self->luaRef);
+				LuaEngine::getTableItem("setLocalAnimation");
+				LuaEngine::pushValueFromIndex(-2);
+				LuaEngine::pushValue(anim);
+				LuaEngine::call(2, 0); // Set new animation locally - in state data and C++
+				LuaEngine::pop(1);
+			}
+		} else {
+			if (self->dynamicEntity)
+			{
+				fpsent* fpsEntity = (fpsent*)self->dynamicEntity;
 
-                if (fpsEntity->clientnum == ClientSystem::playerNumber && oldThirdperson != -1)
-                {
-                    SETV(thirdperson, oldThirdperson);
-                    oldThirdperson = -1;
-                }
-            }
-        }
-    }
+				if (fpsEntity->clientnum == ClientSystem::playerNumber && oldThirdperson != -1)
+				{
+					SETV(thirdperson, oldThirdperson);
+					oldThirdperson = -1;
+				}
+			}
+		}
+	}
 
-    fpsent* getProxyFpsEntityLua(LogicEntityPtr self)
-    {
-        LuaEngine::getRef(self->luaRef);
-        LuaEngine::getTableItem("renderingHashHint");
+	fpsent* getProxyFpsEntityLua(LogicEntityPtr self)
+	{
+		LuaEngine::getRef(self->luaRef);
+		LuaEngine::getTableItem("renderingHashHint");
 
-        if (!LuaEngine::isNoneNil(-1))
-        {
-            static bool initialized = false;
-            static fpsent* fpsEntitiesForRendering[1024];
+		if (!LuaEngine::isNoneNil(-1))
+		{
+			static bool initialized = false;
+			static fpsent* fpsEntitiesForRendering[1024];
 
-            if (!initialized)
-            {
-                for (int i = 0; i < 1024; i++)
-                    fpsEntitiesForRendering[i] = new fpsent;
+			if (!initialized)
+			{
+				for (int i = 0; i < 1024; i++)
+					fpsEntitiesForRendering[i] = new fpsent;
 
-                initialized = true;
-            }
+				initialized = true;
+			}
 
-            int renderingHashHint = LuaEngine::getInteger(-1);
-            LuaEngine::pop(2);
-            renderingHashHint = renderingHashHint & 1023;
-            assert(renderingHashHint >= 0 && renderingHashHint < 1024);
-            return fpsEntitiesForRendering[renderingHashHint];
-        }
-        else
-        {
-            LuaEngine::pop(1);
-            return NULL;
-        }
-    }
+			int renderingHashHint = LuaEngine::getInteger(-1);
+			LuaEngine::pop(2);
+			renderingHashHint = renderingHashHint & 1023;
+			assert(renderingHashHint >= 0 && renderingHashHint < 1024);
+			return fpsEntitiesForRendering[renderingHashHint];
+		}
+		else
+		{
+			LuaEngine::pop(1);
+			return NULL;
+		}
+	}
 
-    #define PREP_RENDER_MODEL \
-        int anim = arg3; \
-        prepareRagdoll(anim, self); \
-        vec o(arg4, arg5, arg6); \
-        fpsent *fpsEntity = NULL; \
-        if (self->dynamicEntity) \
-            fpsEntity = dynamic_cast<fpsent*>(self->dynamicEntity); \
-        else \
-            fpsEntity = getProxyFpsEntityLua(self);
+	#define PREP_RENDER_MODEL \
+		int anim = arg3; \
+		prepareRagdoll(anim, self); \
+		vec o(arg4, arg5, arg6); \
+		fpsent *fpsEntity = NULL; \
+		if (self->dynamicEntity) \
+			fpsEntity = dynamic_cast<fpsent*>(self->dynamicEntity); \
+		else \
+			fpsEntity = getProxyFpsEntityLua(self);
 
-    LUA_EMBED_T(renderModel2, 0, siddddddii, {
-        PREP_RENDER_MODEL
-        rendermodel(NULL, arg2.c_str(), anim, o, self, arg7, arg8, arg9, arg10, fpsEntity, self->attachments, arg11);
-    });
+	LUA_EMBED_T(renderModel2, 0, siddddddii, {
+		PREP_RENDER_MODEL
+		rendermodel(NULL, arg2.c_str(), anim, o, self, arg7, arg8, arg9, arg10, fpsEntity, self->attachments, arg11);
+	});
 
-    LUA_EMBED_T(renderModel3, 0, siddddddiidddd, {
-        PREP_RENDER_MODEL
-        quat rotation(arg12, arg13, arg14, arg15);
-        rendermodel(NULL, arg2.c_str(), anim, o, self, arg7, arg8, arg9, arg10, fpsEntity, self->attachments, arg11, 0, 1, rotation);
-    });
+	LUA_EMBED_T(renderModel3, 0, siddddddiidddd, {
+		PREP_RENDER_MODEL
+		quat rotation(arg12, arg13, arg14, arg15);
+		rendermodel(NULL, arg2.c_str(), anim, o, self, arg7, arg8, arg9, arg10, fpsEntity, self->attachments, arg11, 0, 1, rotation);
+	});
 
 // GUI
 
-    LUA_EMBED_s(showMessage, 0, {
-        IntensityGUI::showMessage("Script message", arg1);
-    });
+	LUA_EMBED_s(showMessage, 0, {
+		IntensityGUI::showMessage("Script message", arg1);
+	});
 
-    LUA_EMBED_s(showInputDialog, 0, {
-        IntensityGUI::showInputDialog("Script input", arg1);
-    });
+	LUA_EMBED_s(showInputDialog, 0, {
+		IntensityGUI::showInputDialog("Script input", arg1);
+	});
 
-    LUA_EMBED_i(setDefaultThirdpersonMode, 0, {
-        // Only allow this to be done once
-        if (LuaEngine::engineParameters.count("setDefaultThirdpersonMode") == 0)
-        {
-            LuaEngine::engineParameters["setDefaultThirdpersonMode"] = "set";
-            SETV(thirdperson, arg1);
-        } else
-            Logging::log(Logging::WARNING, "Can only set default thirdperson mode once per map\r\n");
-    });
+	LUA_EMBED_i(setDefaultThirdpersonMode, 0, {
+		// Only allow this to be done once
+		if (LuaEngine::engineParameters.count("setDefaultThirdpersonMode") == 0)
+		{
+			LuaEngine::engineParameters["setDefaultThirdpersonMode"] = "set";
+			SETV(thirdperson, arg1);
+		} else
+			Logging::log(Logging::WARNING, "Can only set default thirdperson mode once per map\r\n");
+	});
 
 // Network
 
-    LUA_EMBED_si(connect, 0, {
-        ClientSystem::connect(arg1, arg2);
-    });
+	LUA_EMBED_si(connect, 0, {
+		ClientSystem::connect(arg1, arg2);
+	});
 
 // Camera
 
-    LUA_EMBED_ddddddd(forceCamera, 0, {
-        vec position(arg1, arg2, arg3);
-        CameraControl::forceCamera(position, arg4, arg5, arg6, arg7);
-    });
+	LUA_EMBED_ddddddd(forceCamera, 0, {
+		vec position(arg1, arg2, arg3);
+		CameraControl::forceCamera(position, arg4, arg5, arg6, arg7);
+	});
 
-    LUA_EMBED_ddd(forcePosition, 0, {
-        vec position(arg1, arg2, arg3);
-        CameraControl::forcePosition(position);
-    });
+	LUA_EMBED_ddd(forcePosition, 0, {
+		vec position(arg1, arg2, arg3);
+		CameraControl::forcePosition(position);
+	});
 
-    LUA_EMBED_d(forceYaw, 0, {
-        CameraControl::forceYaw(arg1);
-    });
+	LUA_EMBED_d(forceYaw, 0, {
+		CameraControl::forceYaw(arg1);
+	});
 
-    LUA_EMBED_d(forcePitch, 0, {
-        CameraControl::forcePitch(arg1);
-    });
+	LUA_EMBED_d(forcePitch, 0, {
+		CameraControl::forcePitch(arg1);
+	});
 
-    LUA_EMBED_d(forceRoll, 0, {
-        CameraControl::forceRoll(arg1);
-    });
+	LUA_EMBED_d(forceRoll, 0, {
+		CameraControl::forceRoll(arg1);
+	});
 
-    LUA_EMBED_d(forceFov, 0, {
-        CameraControl::forceFov(arg1);
-    });
+	LUA_EMBED_d(forceFov, 0, {
+		CameraControl::forceFov(arg1);
+	});
 
-    LUA_EMBED_NOPARAM(resetCamera, 0, {
-        CameraControl::positionCamera(CameraControl::getCamera());
-    });
+	LUA_EMBED_NOPARAM(resetCamera, 0, {
+		CameraControl::positionCamera(CameraControl::getCamera());
+	});
 
-    LUA_EMBED_NOPARAM(getCamera, 1, {
-        physent *camera = CameraControl::getCamera();
+	LUA_EMBED_NOPARAM(getCamera, 1, {
+		physent *camera = CameraControl::getCamera();
 
-        LuaEngine::newTable();
-        LuaEngine::pushValue("position");
-        RETURN_VECTOR3(camera->o); // usually used for returning, but does not actually return
-        LuaEngine::setTableIndex();
+		LuaEngine::newTable();
+		LuaEngine::pushValue("position");
+		RETURN_VECTOR3(camera->o); // usually used for returning, but does not actually return
+		LuaEngine::setTableIndex();
 
-        LuaEngine::setTable("yaw", camera->yaw);
-        LuaEngine::setTable("pitch", camera->pitch);
-        LuaEngine::setTable("roll", camera->roll);
-    });
+		LuaEngine::setTable("yaw", camera->yaw);
+		LuaEngine::setTable("pitch", camera->pitch);
+		LuaEngine::setTable("roll", camera->roll);
+	});
 
-    LUA_EMBED_NOPARAM(getCameraPosition, 1, {
-        physent *camera = CameraControl::getCamera();
-        vec& pos = camera->o;
-        RETURN_VECTOR3(pos);
-    });
+	LUA_EMBED_NOPARAM(getCameraPosition, 1, {
+		physent *camera = CameraControl::getCamera();
+		vec& pos = camera->o;
+		RETURN_VECTOR3(pos);
+	});
 #endif
 
 // Editing
@@ -1177,204 +1177,204 @@ LUA_EMBED_s(reloadModel, 0, {
 #include "editing_system.h"
 
 LUA_EMBED_NOPARAM(editing_getWorldSize, 1, {
-    LuaEngine::pushValue(EditingSystem::getWorldSize());
+	LuaEngine::pushValue(EditingSystem::getWorldSize());
 });
 
 LUA_EMBED_NOPARAM(editing_getGridSize, 1, {
-    LuaEngine::pushValue(1<<getvar("gridpower"));
+	LuaEngine::pushValue(1<<getvar("gridpower"));
 });
 
 LUA_EMBED_NOPARAM(editing_eraseGeometry, 0, {
-    EditingSystem::eraseGeometry();
+	EditingSystem::eraseGeometry();
 });
 
 LUA_EMBED_iiii(editing_createCube, 0, {
-    EditingSystem::createCube(arg1, arg2, arg3, arg4);
+	EditingSystem::createCube(arg1, arg2, arg3, arg4);
 });
 
 LUA_EMBED_iiii(editing_deleteCube, 0, {
-    EditingSystem::deleteCube(arg1, arg2, arg3, arg4);
+	EditingSystem::deleteCube(arg1, arg2, arg3, arg4);
 });
 
 LUA_EMBED_iiiiii(editing_setCubeTexture, 0, {
-    EditingSystem::setCubeTexture(arg1, arg2, arg3, arg4, arg5, arg6);
+	EditingSystem::setCubeTexture(arg1, arg2, arg3, arg4, arg5, arg6);
 });
 
 LUA_EMBED_iiiii(editing_setCubeMaterial, 0, {
-    EditingSystem::setCubeMaterial(arg1, arg2, arg3, arg4, arg5);
+	EditingSystem::setCubeMaterial(arg1, arg2, arg3, arg4, arg5);
 });
 
 LUA_EMBED_iiiiiii(editing_pushCubeCorner, 0, {
-    EditingSystem::pushCubeCorner(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+	EditingSystem::pushCubeCorner(arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 });
 
 LUA_EMBED_NOPARAM(editing_getSelectedEntity, 1, {
-    LogicEntityPtr ret = EditingSystem::getSelectedEntity();
-    if (ret.get() && !ret->isNone() && ret->luaRef >= 0) LuaEngine::getRef(ret->luaRef);
-    else LuaEngine::pushValue();
+	LogicEntityPtr ret = EditingSystem::getSelectedEntity();
+	if (ret.get() && !ret->isNone() && ret->luaRef >= 0) LuaEngine::getRef(ret->luaRef);
+	else LuaEngine::pushValue();
 });
 
 LUA_EMBED_ds(renderProgress, 0, {
-    renderprogress(arg1, arg2.c_str());
+	renderprogress(arg1, arg2.c_str());
 });
 
 LUA_EMBED_NOPARAM(getMapversion, 1, {
-    LuaEngine::pushValue(GETIV(mapversion));
+	LuaEngine::pushValue(GETIV(mapversion));
 });
 
 // Models
 
 #define RETURN_CENTER_RADIUS \
 { \
-    LuaEngine::newTable(); \
+	LuaEngine::newTable(); \
 \
-    LuaEngine::pushValue("center"); \
-    RETURN_VECTOR3(center); \
-    LuaEngine::setTableIndex(); \
+	LuaEngine::pushValue("center"); \
+	RETURN_VECTOR3(center); \
+	LuaEngine::setTableIndex(); \
 \
-    LuaEngine::pushValue("radius"); \
-    RETURN_VECTOR3(radius); \
-    LuaEngine::setTableIndex(); \
+	LuaEngine::pushValue("radius"); \
+	RETURN_VECTOR3(radius); \
+	LuaEngine::setTableIndex(); \
 }
 
 LUA_EMBED_s(modelBoundingBox, 1, {
-    model* theModel = loadmodel(arg1.c_str());
-    if (!theModel)
-    {
-        LuaEngine::pushValue();
-        return 1;
-    }
-    vec center;
-    vec radius;
-    theModel->boundbox(0, center, radius);
+	model* theModel = loadmodel(arg1.c_str());
+	if (!theModel)
+	{
+		LuaEngine::pushValue();
+		return 1;
+	}
+	vec center;
+	vec radius;
+	theModel->boundbox(0, center, radius);
 
-    RETURN_CENTER_RADIUS;
+	RETURN_CENTER_RADIUS;
 });
 
 LUA_EMBED_s(modelCollisionBox, 1, {
-    model* theModel = loadmodel(arg1.c_str());
-    if (!theModel)
-    {
-        LuaEngine::pushValue();
-        return 1;
-    }
-    vec center;
-    vec radius;
-    theModel->collisionbox(0, center, radius);
+	model* theModel = loadmodel(arg1.c_str());
+	if (!theModel)
+	{
+		LuaEngine::pushValue();
+		return 1;
+	}
+	vec center;
+	vec radius;
+	theModel->collisionbox(0, center, radius);
 
-    RETURN_CENTER_RADIUS;
+	RETURN_CENTER_RADIUS;
 });
 
 LUA_EMBED_s(modelMesh, 1, {
-    model* theModel = loadmodel(arg1.c_str());
-    if (!theModel)
-    {
-        LuaEngine::pushValue();
-        return 1;
-    }
+	model* theModel = loadmodel(arg1.c_str());
+	if (!theModel)
+	{
+		LuaEngine::pushValue();
+		return 1;
+	}
 
-    vector<BIH::tri> tris2[2];
-    theModel->gentris(0, tris2);
-    vector<BIH::tri>& tris = tris2[0];
+	vector<BIH::tri> tris2[2];
+	theModel->gentris(0, tris2);
+	vector<BIH::tri>& tris = tris2[0];
 
-    LuaEngine::newTable();
-    LuaEngine::setTable("length", tris.length());
+	LuaEngine::newTable();
+	LuaEngine::setTable("length", tris.length());
 
-    for (int i = 0; i < tris.length(); i++)
-    {
-        BIH::tri& bt = tris[i];
+	for (int i = 0; i < tris.length(); i++)
+	{
+		BIH::tri& bt = tris[i];
 
-        LuaEngine::pushValue(Utility::toString(i));
+		LuaEngine::pushValue(Utility::toString(i));
 
-        LuaEngine::newTable();
-        LuaEngine::pushValue("a");
-        RETURN_VECTOR3(bt.a);
-        LuaEngine::setTableIndex();
-        LuaEngine::pushValue("b");
-        RETURN_VECTOR3(bt.b);
-        LuaEngine::setTableIndex();
-        LuaEngine::pushValue("c");
-        RETURN_VECTOR3(bt.c);
-        LuaEngine::setTableIndex();
+		LuaEngine::newTable();
+		LuaEngine::pushValue("a");
+		RETURN_VECTOR3(bt.a);
+		LuaEngine::setTableIndex();
+		LuaEngine::pushValue("b");
+		RETURN_VECTOR3(bt.b);
+		LuaEngine::setTableIndex();
+		LuaEngine::pushValue("c");
+		RETURN_VECTOR3(bt.c);
+		LuaEngine::setTableIndex();
 
-        LuaEngine::setTableIndex();
-    }
+		LuaEngine::setTableIndex();
+	}
 });
 
 // NPCs/bots
 
 #ifdef SERVER
-    LUA_EMBED_s(addNPC, 1, {
-        int _ref = NPC::add(arg1);
-        if (_ref >= 0)
-            LuaEngine::getRef(_ref); // this "pushes" so it returns the table
-        else
-            LuaEngine::pushValue();
-    });
+	LUA_EMBED_s(addNPC, 1, {
+		int _ref = NPC::add(arg1);
+		if (_ref >= 0)
+			LuaEngine::getRef(_ref); // this "pushes" so it returns the table
+		else
+			LuaEngine::pushValue();
+	});
 
-    LUA_EMBED_T(removeNPC, 0, , {
-        fpsent* fpsEntity = (fpsent*)self->dynamicEntity;
-        NPC::remove(fpsEntity->clientnum);
-    });
+	LUA_EMBED_T(removeNPC, 0, , {
+		fpsent* fpsEntity = (fpsent*)self->dynamicEntity;
+		NPC::remove(fpsEntity->clientnum);
+	});
 #endif
 
 // data/ directory embeds, this is client-only, so we put it in ifdef. For server, they're just dummies
 // dummies are needed because we don't want to check further in CAPIExtras.
 
 #ifdef CLIENT
-    void keymap(int *code, char *key);
-    void newfont(char *name, char *tex, int *defaultw, int *defaulth, int *offsetx, int *offsety, int *offsetw, int *offseth);
-    void fontoffset(char *c);
-    void fontchar(int *x, int *y, int *w, int *h);
-    void registersound(char *name, int *vol);
+	void keymap(int *code, char *key);
+	void newfont(char *name, char *tex, int *defaultw, int *defaulth, int *offsetx, int *offsety, int *offsetw, int *offseth);
+	void fontoffset(char *c);
+	void fontchar(int *x, int *y, int *w, int *h);
+	void registersound(char *name, int *vol);
 
-    LUA_EMBED_is(keymap, 0, {
-        keymap(&arg1, (char *)arg2.c_str());
-    });
+	LUA_EMBED_is(keymap, 0, {
+		keymap(&arg1, (char *)arg2.c_str());
+	});
 
-    LUA_EMBED_si(registerSound, 0, {
-        registersound((char *)arg1.c_str(), &arg2);
-    });
+	LUA_EMBED_si(registerSound, 0, {
+		registersound((char *)arg1.c_str(), &arg2);
+	});
 
-    LUA_EMBED_ssiiiiii(font, 0, {
-        newfont((char *)arg1.c_str(), (char *)arg2.c_str(), &arg3, &arg4, &arg5, &arg6, &arg7, &arg8);
-    });
+	LUA_EMBED_ssiiiiii(font, 0, {
+		newfont((char *)arg1.c_str(), (char *)arg2.c_str(), &arg3, &arg4, &arg5, &arg6, &arg7, &arg8);
+	});
 
-    LUA_EMBED_s(fontOffset, 0, {
-        fontoffset((char *)arg1.c_str());
-    });
+	LUA_EMBED_s(fontOffset, 0, {
+		fontoffset((char *)arg1.c_str());
+	});
 
-    LUA_EMBED_iiii(fontChar, 0, {
-        fontchar(&arg1, &arg2, &arg3, &arg4);
-    });
+	LUA_EMBED_iiii(fontChar, 0, {
+		fontchar(&arg1, &arg2, &arg3, &arg4);
+	});
 #else
-    LUA_EMBED_is(keymap, 0, {
-        arg1 = arg1;
-        arg2 = arg2;
-    });
-    LUA_EMBED_si(registerSound, 0, {
-        arg1 = arg1;
-        arg2 = arg2;
-    });
-    LUA_EMBED_ssiiiiii(font, 0, {
-        arg1 = arg1;
-        arg2 = arg2;
-        arg3 = arg3;
-        arg4 = arg4;
-        arg5 = arg5;
-        arg6 = arg6;
-        arg7 = arg7;
-        arg8 = arg8;
-    });
-    LUA_EMBED_s(fontOffset, 0, {
-        arg1 = arg1;
-    });
-    LUA_EMBED_iiii(fontChar, 0, {
-        arg1 = arg1;
-        arg2 = arg2;
-        arg3 = arg3;
-        arg4 = arg4;
-    });
+	LUA_EMBED_is(keymap, 0, {
+		arg1 = arg1;
+		arg2 = arg2;
+	});
+	LUA_EMBED_si(registerSound, 0, {
+		arg1 = arg1;
+		arg2 = arg2;
+	});
+	LUA_EMBED_ssiiiiii(font, 0, {
+		arg1 = arg1;
+		arg2 = arg2;
+		arg3 = arg3;
+		arg4 = arg4;
+		arg5 = arg5;
+		arg6 = arg6;
+		arg7 = arg7;
+		arg8 = arg8;
+	});
+	LUA_EMBED_s(fontOffset, 0, {
+		arg1 = arg1;
+	});
+	LUA_EMBED_iiii(fontChar, 0, {
+		arg1 = arg1;
+		arg2 = arg2;
+		arg3 = arg3;
+		arg4 = arg4;
+	});
 #endif
 
 // Variable manipulation, this is valid for BOTH client and server
@@ -1391,47 +1391,47 @@ void setsvarchecked(ident *id, const char *val);
 void alias(const char *name, const char *action);
 
 LUA_EMBED_s(getVariable, 1, {
-    ident *ident = idents->access(arg1.c_str());
-    if (ident)
-    {
-        switch(ident->type)
-        {
-            case ID_VAR:
-                LuaEngine::pushValue(*ident->storage.i);
-                break;
-            case ID_FVAR:
-                LuaEngine::pushValue(*ident->storage.f);
-                break;
-            case ID_SVAR:
-                LuaEngine::pushValue(std::string(*ident->storage.s));
-                break;
-            case ID_ALIAS:
-                LuaEngine::pushValue(std::string(ident->action));
-                break;
-        }
-    }
+	ident *ident = idents->access(arg1.c_str());
+	if (ident)
+	{
+		switch(ident->type)
+		{
+			case ID_VAR:
+				LuaEngine::pushValue(*ident->storage.i);
+				break;
+			case ID_FVAR:
+				LuaEngine::pushValue(*ident->storage.f);
+				break;
+			case ID_SVAR:
+				LuaEngine::pushValue(std::string(*ident->storage.s));
+				break;
+			case ID_ALIAS:
+				LuaEngine::pushValue(std::string(ident->action));
+				break;
+		}
+	}
 });
 
 LUA_EMBED_ss(setVariable, 0, {
-    ident *ident = idents->access(arg1.c_str());
-    if (ident)
-    {
-        switch(ident->type)
-        {
-            case ID_VAR:
-                setvarchecked(ident, atoi(arg2.c_str()));
-                break;
-            case ID_FVAR:
-                setfvarchecked(ident, strtod(arg2.c_str(), NULL));
-                break;
-            case ID_SVAR:
-                setsvarchecked(ident, arg2.c_str());
-                break;
-            case ID_ALIAS:
-                alias(ident->name, arg2.c_str());
-                break;
-        }
-    }
+	ident *ident = idents->access(arg1.c_str());
+	if (ident)
+	{
+		switch(ident->type)
+		{
+			case ID_VAR:
+				setvarchecked(ident, atoi(arg2.c_str()));
+				break;
+			case ID_FVAR:
+				setfvarchecked(ident, strtod(arg2.c_str(), NULL));
+				break;
+			case ID_SVAR:
+				setsvarchecked(ident, arg2.c_str());
+				break;
+			case ID_ALIAS:
+				alias(ident->name, arg2.c_str());
+				break;
+		}
+	}
 });
 
 // isn't really noparam, but we want to get various types from stack
@@ -1528,4 +1528,81 @@ LUA_EMBED_STD(GUIKeyfield, guikeyfield, sis, (char*)arg1.c_str(), (int*)&arg2, (
 LUA_EMBED_STD(GUIEditor, guieditor, siii, (char*)arg1.c_str(), (int*)&arg2, (int*)&arg3, (int*)&arg4);
 LUA_EMBED_STD(GUIColor, guicolor, i, (int*)&arg1);
 LUA_EMBED_STD(GUITextBox, guitextbox, siii, (char*)arg1.c_str(), (int*)&arg2, (int*)&arg3, (int*)&arg4);
+
+void force_quit();
+void quit();
+void screenres(int *w, int *h);
+void resetgl();
+void getfps_(int *raw);
+
+LUA_EMBED_STD(quit, quit, NOPARAM);
+LUA_EMBED_STD(forceQuit, force_quit, NOPARAM);
+LUA_EMBED_STD(screenRes, screenres, ii, (int*)&arg1, (int*)&arg2)
+LUA_EMBED_STD(resetGl, resetgl, NOPARAM);
+LUA_EMBED_STD(getFps, getfps_, i, (int*)&arg1);
+
+void resetlightmaps(bool fullclean);
+void calclight(int *quality);
+void patchlight(int *quality);
+void clearlightmaps();
+void dumplms();
+
+LUA_EMBED_STD(resetLightMaps, resetlightmaps, b, arg1);
+LUA_EMBED_STD(calcLight, calclight, i, (int*)&arg1);
+LUA_EMBED_STD(patchLight, patchlight, i, (int*)&arg1);
+LUA_EMBED_STD(clearLightMaps, clearlightmaps, NOPARAM);
+LUA_EMBED_STD(dumpLms, dumplms, NOPARAM);
+
 #endif
+
+void clearblendbrushes();
+void delblendbrush(const char *name);
+void addblendbrush(const char *name, const char *imgname);
+void nextblendbrush(int *dir);
+void setblendbrush(const char *name);
+void getblendbrushname(int *n);
+void curblendbrush();
+void rotateblendbrush(int *val);
+void paintblendmap(bool msg);
+
+extern int paintingblendmap;
+
+void clearblendmapsel();
+void invertblendmapsel();
+void invertblendmap();
+void showblendmap();
+void optimizeblendmap();
+void resetblendmap();
+
+LUA_EMBED_STD(clearBlendBrushes, clearblendbrushes, NOPARAM);
+LUA_EMBED_STD(delBlendBrush, delblendbrush, s, arg1.c_str());
+LUA_EMBED_STD(addBlendBrush, addblendbrush, ss, arg1.c_str(), arg2.c_str());
+LUA_EMBED_STD(nextBlendBrush, nextblendbrush, i, (int*)&arg1);
+LUA_EMBED_STD(setBlendBrush, setblendbrush, s, arg1.c_str());
+LUA_EMBED_i(getBlendBrushName, 1, { getblendbrushname((int*)&arg1); });
+LUA_EMBED_NOPARAM(curBlendBrush, 1, { curblendbrush(); });
+LUA_EMBED_STD(rotateBlendBrush, rotateblendbrush, i, (int*)&arg1);
+
+LUA_EMBED_k(paintBlendMap, 0, {
+	if (arg1)
+	{
+		if (!paintingblendmap)
+		{
+			paintblendmap(true);
+			paintingblendmap = totalmillis;
+		}
+	}
+	else stoppaintblendmap();
+});
+
+LUA_EMBED_STD(clearBlendMapSel, clearblendmapsel, NOPARAM);
+LUA_EMBED_STD(invertBlendMapSel, invertblendmapsel, NOPARAM);
+LUA_EMBED_STD(invertBlendMap, invertblendmap, NOPARAM);
+LUA_EMBED_STD(showBlendMap, showblendmap, NOPARAM);
+LUA_EMBED_STD(optimizeBlendMap, optimizeblendmap, NOPARAM);
+
+LUA_EMBED_NOPARAM(clearBlendMap, 0, {
+	if(noedit(true) || (GETIV(nompedit) && multiplayer())) return 0;
+	resetblendmap();
+	showblendmap();
+});

@@ -493,35 +493,6 @@ void guiservers()
     }
 }
 
-COMMAND(newgui, "sss");
-COMMAND(guibutton, "sss");
-COMMAND(guitext, "ss");
-COMMAND(guiservers, "s");
-ICOMMAND(cleargui, "i", (int *n), intret(cleargui(*n)));
-COMMAND(showgui, "s");
-COMMAND(guionclear, "s");
-COMMAND(guistayopen, "s");
-COMMAND(guinoautotab, "s");
-
-COMMAND(guilist, "s");
-COMMAND(guialign, "is");
-COMMAND(guititle, "s");
-COMMAND(guibar,"");
-COMMAND(guistrut,"fi");
-COMMAND(guiimage,"ssfis");
-COMMAND(guislider,"siis");
-COMMAND(guilistslider, "sss");
-COMMAND(guinameslider, "ssss");
-COMMAND(guiradio,"ssfs");
-COMMAND(guibitfield, "ssis");
-COMMAND(guicheckbox, "ssffs");
-COMMAND(guitab, "s");
-COMMAND(guifield, "sisi"); // INTENSITY: Added final parameter, for password fields
-COMMAND(guikeyfield, "sis");
-COMMAND(guieditor, "siii");
-COMMAND(guicolor, "i");
-COMMAND(guitextbox, "siii");
-
 struct change
 {
     int type;

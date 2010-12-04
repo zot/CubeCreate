@@ -47,8 +47,6 @@ void force_quit() // INTENSITY - change quit to force_quit
     exit(EXIT_SUCCESS);
 }
 
-COMMAND(force_quit, ""); // INTENSITY
-
 void fatal(const char *s, ...)    // failure exit
 {
     static int errors = 0;
@@ -170,8 +168,6 @@ bool execinitcfg(const char *cfgfile, bool msg)
     delete value;
     return true;
 }
-
-COMMAND(quit, "");
 
 static void getbackgroundres(int &w, int &h)
 {
@@ -611,8 +607,6 @@ void screenres(int *w, int *h)
 #endif
 }
 
-COMMAND(screenres, "ii");
-
 void resetgamma()
 {
     float f = GETIV(gamma)/100.0f;
@@ -804,8 +798,6 @@ void resetgl()
     initlights();
     allchanged(true);
 }
-
-COMMAND(resetgl, "");
 
 static int ignoremouse = 5;
 
@@ -1093,8 +1085,6 @@ void getfps_(int *raw)
     else getfps(fps, bestdiff, worstdiff);
     intret(fps);
 }
-
-COMMANDN(getfps, getfps_, "i");
 
 bool inbetweenframes = false, renderedframe = true;
 

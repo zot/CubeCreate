@@ -591,21 +591,13 @@ void setblendbrush(const char *name)
 
 void getblendbrushname(int *n)
 {
-    result(brushes.inrange(*n) ? brushes[*n]->name : "");
+    LuaEngine::pushValue(brushes.inrange(*n) ? std::string(brushes[*n]->name) : "");
 }
 
 void curblendbrush()
 {
-    intret(curbrush);
+    LuaEngine::pushValue(curbrush);
 }
-
-COMMAND(clearblendbrushes, "");
-COMMAND(delblendbrush, "s");
-COMMAND(addblendbrush, "ss");
-COMMAND(nextblendbrush, "i");
-COMMAND(setblendbrush, "s");
-COMMAND(getblendbrushname, "i");
-COMMAND(curblendbrush, "");
 
 extern int nompedit;
 
@@ -633,8 +625,6 @@ void rotateblendbrush(int *val)
     BlendBrush *brush = brushes[curbrush];
     brush->reorient(numrots>=2 && numrots<=4, numrots<=2 || numrots==5, (numrots&5)==1);
 }
-
-COMMAND(rotateblendbrush, "i");
 
 void paintblendmap(bool msg)
 {
@@ -668,15 +658,6 @@ void trypaintblendmap()
     else lastpaintblendmap = totalmillis;
     paintblendmap(false);
 }
-
-ICOMMAND(paintblendmap, "D", (int *isdown),
-{
-    if(*isdown)
-    {
-        if(!paintingblendmap) { paintblendmap(true); paintingblendmap = totalmillis; }
-    }
-    else stoppaintblendmap();
-});
     
 void clearblendmapsel()
 {
@@ -690,8 +671,6 @@ void clearblendmapsel()
                   ivec((x2-x1)<<BM_SCALE, (y2-y1)<<BM_SCALE, GETIV(mapsize)));
 }
 
-COMMAND(clearblendmapsel, "");
-
 void invertblendmapsel()
 {
     if(noedit(false) || (GETIV(nompedit) && multiplayer())) return;
@@ -704,8 +683,6 @@ void invertblendmapsel()
                   ivec((x2-x1)<<BM_SCALE, (y2-y1)<<BM_SCALE, GETIV(mapsize)));
 }
 
-COMMAND(invertblendmapsel, "");
-
 void invertblendmap()
 {
     if(noedit(false) || (GETIV(nompedit) && multiplayer())) return;
@@ -713,22 +690,11 @@ void invertblendmap()
     previewblends(ivec(0, 0, 0), ivec(GETIV(mapsize), GETIV(mapsize), GETIV(mapsize)));
 }
 
-COMMAND(invertblendmap, "");
-
 void showblendmap()
 {
     if(noedit(true) || (GETIV(nompedit) && multiplayer())) return;
     previewblends(ivec(0, 0, 0), ivec(GETIV(mapsize), GETIV(mapsize), GETIV(mapsize)));
 }
-
-COMMAND(showblendmap, "");
-COMMAND(optimizeblendmap, "");
-ICOMMAND(clearblendmap, "", (),
-{
-    if(noedit(true) || (GETIV(nompedit) && multiplayer())) return;
-    resetblendmap();
-    showblendmap();
-});
 
 void renderblendbrush()
 {

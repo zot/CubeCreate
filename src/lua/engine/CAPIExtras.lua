@@ -622,32 +622,6 @@ function CAPI.showHUDImage(tex, centerx, centery, width, height, color, alpha)
 	oldShowHUDImage(tex, centerx, centery, width, height, color, alpha)
 end
 
--- data/ directory embeds
-
-Data = {
-	keymap = CAPI.keymap,
-
-	registerSound = function(sound, vol)
-		vol = defaultValue(vol, 0)
-		CAPI.registerSound(sound, vol)
-	end,
-
-	font = function(name, tex, defaultw, defaulth, offsetx, offsety, offsetw, offseth)
-		offsetx = defaultValue(offsetx, 0)
-		offsety = defaultValue(offsety, 0)
-		offsetw = defaultValue(offsetw, 0)
-		offseth = defaultValue(offseth, 0)
-		CAPI.font(name, tex, defaultw, defaulth, offsetx, offsety, offsetw, offseth)
-	end,
-
-	fontOffset = CAPI.fontOffset,
-
-	fontChar = function(x, y, w, h)
-		h = defaultValue(h, 0)
-		CAPI.fontChar(x, y, w, h)
-	end,
-}
-
 -- variable namespace
 
 local _CV = class()
@@ -663,7 +637,13 @@ function _CV:run(c)
 end
 CV = _CV()
 
--- 3dgui
+-- input functions
+
+Input = {
+	keymap = CAPI.keymap,
+}
+
+-- user interface functions
 
 GUI = {
 	new = CAPI.newGUI,
@@ -691,5 +671,64 @@ GUI = {
 	keyField = CAPI.GUIKeyfield,
 	editor = CAPI.GUIEditor,
 	color = CAPI.GUIColor,
-	textBox = CAPI.GUITextBox
+	textBox = CAPI.GUITextBox,
+	font = function(name, tex, defaultw, defaulth, offsetx, offsety, offsetw, offseth)
+		offsetx = defaultValue(offsetx, 0)
+		offsety = defaultValue(offsety, 0)
+		offsetw = defaultValue(offsetw, 0)
+		offseth = defaultValue(offseth, 0)
+		CAPI.font(name, tex, defaultw, defaulth, offsetx, offsety, offsetw, offseth)
+	end,
+
+	fontOffset = CAPI.fontOffset,
+
+	fontChar = function(x, y, w, h)
+		h = defaultValue(h, 0)
+		CAPI.fontChar(x, y, w, h)
+	end
+}
+
+-- Engine functions
+
+Engine = {
+	quit = CAPI.quit,
+	forceQuit = CAPI.forceQuit,
+
+	screenRes = CAPI.screenRes,
+	resetGl = CAPI.resetGl,
+	getFps = CAPI.getFps
+}
+
+-- Lightmap functions
+
+Lightmap = {
+	resetMaps = CAPI.resetLightMaps,
+	calc = CAPI.calcLight,
+	patch = CAPI.patchLight,
+	clearMaps = CAPI.clearLightMaps,
+	dumpLms = CAPI.dumpLms
+}
+
+-- Blending functions
+
+Blend = {
+	brush = {
+		clearAll = CAPI.clearBlendBrushes,
+		del = CAPI.delBlendBrush,
+		add = CAPI.addBlendBrush,
+		next = CAPI.nextBlendBrush,
+		set = CAPI.setBlendBrush,
+		getName = CAPI.getBlendBrushName,
+		cur = CAPI.curBlendBrush,
+		rotate = CAPI.rotateBlendBrush
+	},
+	map = {
+		paint = CAPI.paintBlendMap,
+		clearSel = CAPI.clearBlendMapSel,
+		invertSel = CAPI.invertBlendMapSel,
+		invert = CAPI.invertBlendMap,
+		show = CAPI.showBlendMap,
+		optimize = CAPI.optimizeBlendMap,
+		clear = CAPI.claerBlendMap
+	}
 }

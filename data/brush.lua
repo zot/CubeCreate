@@ -140,34 +140,31 @@ newbrush "Noise 25x25 Brush" 12 12 [
 
 do [ brush_2 ] // 421
 
-
-
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-//Texture blending // INTENSITY: TODO
-
-addblendbrush "Circle 16px soft" "packages/brushes/circle_16_soft.png"
-addblendbrush "Circle 16px hard" "packages/brushes/circle_16_hard.png"
-addblendbrush "Circle 16px solid" "packages/brushes/circle_16_solid.png"
-addblendbrush "Circle 32px soft" "packages/brushes/circle_32_soft.png"
-addblendbrush "Circle 32px hard" "packages/brushes/circle_32_hard.png"
-addblendbrush "Circle 32px solid" "packages/brushes/circle_32_solid.png"
-addblendbrush "Circle 64px soft" "packages/brushes/circle_64_soft.png"
-addblendbrush "Circle 64px hard" "packages/brushes/circle_64_hard.png"
-addblendbrush "Circle 64px solid" "packages/brushes/circle_64_solid.png"
-addblendbrush "Circle 128px soft" "packages/brushes/circle_128_soft.png"
-addblendbrush "Circle 128px hard" "packages/brushes/circle_128_hard.png"
-addblendbrush "Circle 128px solid" "packages/brushes/circle_128_solid.png"
-addblendbrush "Noise 64px" "packages/brushes/noise_64.png"
-addblendbrush "Noise 128px" "packages/brushes/noise_128.png"
-addblendbrush "Square 16px hard" "packages/brushes/square_16_hard.png"
-addblendbrush "Square 16px solid" "packages/brushes/square_16_solid.png"
-addblendbrush "Square 32px hard" "packages/brushes/square_32_hard.png"
-addblendbrush "Square 32px solid" "packages/brushes/square_32_solid.png"
-addblendbrush "Square 64px hard" "packages/brushes/square_64_hard.png"
-addblendbrush "Square 64px solid" "packages/brushes/square_64_solid.png"
-addblendbrush "Gradient 16px" "packages/brushes/gradient_16.png"
-addblendbrush "Gradient 32px" "packages/brushes/gradient_32.png"
-addblendbrush "Gradient 64px" "packages/brushes/gradient_64.png"
-addblendbrush "Gradient 128px" "packages/brushes/gradient_128.png"
 ]])
+
+-- Texture blending
+
+Blend.brush.add("Circle, 16px, soft", "packages/brushes/circle_16_soft.png")
+Blend.brush.add("Circle, 16px, hard", "packages/brushes/circle_16_hard.png")
+Blend.brush.add("Circle, 16px, solid", "packages/brushes/circle_16_solid.png")
+Blend.brush.add("Circle, 32px, soft", "packages/brushes/circle_32_soft.png")
+Blend.brush.add("Circle, 32px, hard", "packages/brushes/circle_32_hard.png")
+Blend.brush.add("Circle, 32px, solid", "packages/brushes/circle_32_solid.png")
+Blend.brush.add("Circle, 64px, soft", "packages/brushes/circle_64_soft.png")
+Blend.brush.add("Circle, 64px, hard", "packages/brushes/circle_64_hard.png")
+Blend.brush.add("Circle, 64px, solid", "packages/brushes/circle_64_solid.png")
+Blend.brush.add("Circle, 128px, soft", "packages/brushes/circle_128_soft.png")
+Blend.brush.add("Circle, 128px, hard", "packages/brushes/circle_128_hard.png")
+Blend.brush.add("Circle, 128px, solid", "packages/brushes/circle_128_solid.png")
+Blend.brush.add("Noise, 64px", "packages/brushes/noise_64.png")
+Blend.brush.add("Noise, 128px", "packages/brushes/noise_128.png")
+Blend.brush.add("Square, 16px, hard", "packages/brushes/square_16_hard.png")
+Blend.brush.add("Square, 16px, solid", "packages/brushes/square_16_solid.png")
+Blend.brush.add("Square, 32px, hard", "packages/brushes/square_32_hard.png")
+Blend.brush.add("Square, 32px, solid", "packages/brushes/square_32_solid.png")
+Blend.brush.add("Square, 64px, hard", "packages/brushes/square_64_hard.png")
+Blend.brush.add("Square, 64px, solid", "packages/brushes/square_64_solid.png")
+Blend.brush.add("Gradient, 16px", "packages/brushes/gradient_16.png")
+Blend.brush.add("Gradient, 32px", "packages/brushes/gradient_32.png")
+Blend.brush.add("Gradient, 64px", "packages/brushes/gradient_64.png")
+Blend.brush.add("Gradient, 128px", "packages/brushes/gradient_128.png")

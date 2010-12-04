@@ -747,27 +747,4 @@ void smdlink(int *parent, int *child, char *tagname, float *x, float *y, float *
 void smdnoclip(char *meshname, int *noclip)
 {
     loopsmdmeshes(meshname, m, m.noclip = *noclip!=0);
-}
-
-COMMANDN(smddir, setsmddir, "s");
-COMMAND(smdload, "ss");
-COMMAND(smdtag, "ss");
-COMMAND(smdpitch, "sffff");
-COMMAND(smdadjust, "sffffff");
-COMMAND(smdskin, "sssff");
-COMMAND(smdspec, "si");
-COMMAND(smdambient, "si");
-COMMAND(smdglow, "si");
-COMMAND(smdglare, "sff");
-COMMAND(smdalphatest, "sf");
-COMMAND(smdalphablend, "si");
-COMMAND(smdcullface, "si");
-COMMAND(smdenvmap, "ss");
-COMMAND(smdbumpmap, "sss");
-COMMAND(smdfullbright, "sf");
-COMMAND(smdshader, "ss");
-COMMAND(smdscroll, "sff");
-COMMAND(smdanimpart, "s");
-COMMAND(smdanim, "ssfi");
-COMMAND(smdlink, "iisfff");
-COMMAND(smdnoclip, "si");            
+}     

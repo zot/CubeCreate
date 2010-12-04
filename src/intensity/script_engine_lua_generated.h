@@ -130,6 +130,32 @@
 
 
 /**
+ * @def LUA_EMBED_k
+ * @ingroup Lua_Engine_Group
+ * @brief Wrapper over LUA_EMBED_GEN, accepting arguments k.
+ * @param name Name of embedded lua function
+ * @param numreturns Number of items the function returns onto stack
+ * @param wrapped_code The code to wrap itself
+ * 
+ * THIS MACRO IS AUTO-GENERATED.\n
+ * -----------------------------\n
+ * This macro wraps over LUA_EMBED_GEN and sets up arguments - arg1 to argN of proper types.
+ * Those can be later used. No need to pop them, it all happens automatically.
+ * @code
+ * LUA_EMBED_si("foo", 1, {
+ *     printf("Foo: %s\n", arg1);
+ *     LuaEngine::pushValue(arg2);
+ * });
+ * @endcode
+ * @see LUA_EMBED_GEN()
+ */
+#define LUA_EMBED_k(name, numreturns, wrapped_code) \
+    LUA_EMBED_GEN(__script__##name, numreturns, \
+        _UNUSED_ bool arg1 = addreleaseaction(#name) ? true : false; \
+        , wrapped_code)
+
+
+/**
  * @def LUA_EMBED_ii
  * @ingroup Lua_Engine_Group
  * @brief Wrapper over LUA_EMBED_GEN, accepting arguments ii.

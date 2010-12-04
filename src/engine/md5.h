@@ -719,27 +719,4 @@ void md5link(int *parent, int *child, char *tagname, float *x, float *y, float *
 void md5noclip(char *meshname, int *noclip)
 {
     loopmd5meshes(meshname, m, m.noclip = *noclip!=0);
-}
-
-COMMANDN(md5dir, setmd5dir, "s");
-COMMAND(md5load, "ssf");
-COMMAND(md5tag, "ss");
-COMMAND(md5pitch, "sffff");
-COMMAND(md5adjust, "sffffff");
-COMMAND(md5skin, "sssff");
-COMMAND(md5spec, "si");
-COMMAND(md5ambient, "si");
-COMMAND(md5glow, "si");
-COMMAND(md5glare, "sff");
-COMMAND(md5alphatest, "sf");
-COMMAND(md5alphablend, "si");
-COMMAND(md5cullface, "si");
-COMMAND(md5envmap, "ss");
-COMMAND(md5bumpmap, "sss");
-COMMAND(md5fullbright, "sf");
-COMMAND(md5shader, "ss");
-COMMAND(md5scroll, "sff");
-COMMAND(md5animpart, "s");
-COMMAND(md5anim, "ssfi");
-COMMAND(md5link, "iisfff");
-COMMAND(md5noclip, "si");            
+}    

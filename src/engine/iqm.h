@@ -663,26 +663,3 @@ void iqmnoclip(char *meshname, int *noclip)
 {
     loopiqmmeshes(meshname, m, m.noclip = *noclip!=0);
 }
-
-COMMANDN(iqmdir, setiqmdir, "s");
-COMMAND(iqmload, "ss");
-COMMAND(iqmtag, "ss");
-COMMAND(iqmpitch, "sffff");
-COMMAND(iqmadjust, "sffffff");
-COMMAND(iqmskin, "sssff");
-COMMAND(iqmspec, "si");
-COMMAND(iqmambient, "si");
-COMMAND(iqmglow, "si");
-COMMAND(iqmglare, "sff");
-COMMAND(iqmalphatest, "sf");
-COMMAND(iqmalphablend, "si");
-COMMAND(iqmcullface, "si");
-COMMAND(iqmenvmap, "ss");
-COMMAND(iqmbumpmap, "sss");
-COMMAND(iqmfullbright, "sf");
-COMMAND(iqmshader, "ss");
-COMMAND(iqmscroll, "sff");
-COMMAND(iqmanimpart, "s");
-COMMAND(iqmanim, "ssfi");
-COMMAND(iqmlink, "iisfff");
-COMMAND(iqmnoclip, "si");            

@@ -358,21 +358,3 @@ void objnoclip(char *meshname, int *noclip)
 {
     loopobjmeshes(meshname, m, m.noclip = *noclip!=0);
 }
-
-COMMAND(objload, "sf");
-COMMAND(objpitch, "ffff");
-COMMAND(objskin, "sssff");
-COMMAND(objspec, "si");
-COMMAND(objambient, "si");
-COMMAND(objglow, "si");
-COMMAND(objglare, "sff");
-COMMAND(objalphatest, "sf");
-COMMAND(objalphablend, "si");
-COMMAND(objcullface, "si");
-COMMAND(objenvmap, "ss");
-COMMAND(objbumpmap, "sss");
-COMMAND(objfullbright, "sf");
-COMMAND(objshader, "ss");
-COMMAND(objscroll, "sff");
-COMMAND(objnoclip, "si");
-

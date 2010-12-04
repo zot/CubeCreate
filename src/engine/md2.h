@@ -314,7 +314,3 @@ void md2anim(char *anim, int *frame, int *range, float *speed, int *priority)
         loadingmd2->parts.last()->setanim(0, anims[i], *frame, *range, *speed, *priority);
     }
 }
-
-COMMAND(md2pitch, "ffff");
-COMMAND(md2anim, "siifi");
-

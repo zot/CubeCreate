@@ -852,21 +852,19 @@ function bumpvariantshader(...)
 			}
 		]]
 	)
-	bumpvariantargs = nil
 end
 
 bumpshaderargs = {}
 function bumpshader (...)
 	bumpshaderargs = { ... }
 	Shader.defer(string.find(bumpshaderargs[2], "e") and 7 or 5, bumpshaderargs[1],
-		[[
-			bumpvariantshader(bumpshaderargs[1], bumpshaderargs[2])
+		string.format([[
+			bumpvariantshader("%s", "%s")
 			if btopt("g") or btopt("s") then
-				bumpvariantshader(bumpshaderargs[1], string.gsub(bumpshaderargs[2], "i", "r"))
+				bumpvariantshader("%s", "%s")
 			end
-		]]
+		]], bumpshaderargs[1], bumpshaderargs[2], bumpshaderargs[1], string.gsub(bumpshaderargs[2], "i", "r"))
 	)
-	bumpshaderargs = nil
 end
 
 bumpshader("bumpworld", "")

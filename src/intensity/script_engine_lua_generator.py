@@ -1,7 +1,7 @@
 import os
 
 strings = [
-    'i', 's', 'd', 'o', 'b',
+    'i', 's', 'd', 'o', 'b', 'k',
     'ii', 'is', 'ss', 'sd', 'si', 'oi', 'ob', 'os', 'od', 'dd', 'ds', 'do', 'di',
     'iis', 'iii', 'iid', 'ddd', 'sdd', 'sss', 'dds', 'ssd', 'ssi', 'iss', 'sis',
     'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdi', 'ssdd', 'iiii', 'iidd', 'isss', 'siis', 'ssss', 'ssds', 'ssis', 'sisi', 'siii', 'siii',
@@ -55,6 +55,8 @@ for string in strings:
             out.write('_UNUSED_ double arg%(indexplus)d = LuaEngine::getDouble(%(indexplus)d); \\\n' % temp)
         elif param == 'b':
             out.write('_UNUSED_ bool arg%(indexplus)d = LuaEngine::getBool(%(indexplus)d); \\\n' % temp)
+        elif param == 'k':
+            out.write('_UNUSED_ bool arg%(indexplus)d = addreleaseaction(#name) ? true : false; \\\n' % temp)
         elif param == 'o':
             out.write('/* arg%(indexplus)d reserved for object */ \\\n' %temp)
         else:

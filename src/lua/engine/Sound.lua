@@ -47,5 +47,10 @@ Sound = {
 		if Sound.musicHandler then
 			Sound.musicHandler()
 		end
+	end,
+
+	register = function(sound, vol)
+		vol = defaultValue(vol, 0)
+		CAPI.registerSound(sound, vol)
 	end
 }

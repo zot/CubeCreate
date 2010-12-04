@@ -1858,8 +1858,6 @@ void resetlightmaps(bool fullclean)
     if(fullclean) while(lightmapworkers.length()) delete lightmapworkers.pop();
 }
 
-COMMAND(resetlightmaps, ""); // INTENSITY
-
 lightmapworker::lightmapworker()
 {
     buf = new uchar[LIGHTMAPBUFSIZE];
@@ -2039,8 +2037,6 @@ void calclight(int *quality)
             (end - start) / 1000.0f);
 }
 
-COMMAND(calclight, "i");
-
 void patchlight(int *quality)
 {
     if(noedit(true)) return;
@@ -2093,8 +2089,6 @@ void patchlight(int *quality)
             (end - start) / 1000.0f); 
 }
 
-COMMAND(patchlight, "i");
-
 void clearlightmaps()
 {
     if(noedit(true)) return;
@@ -2104,8 +2098,6 @@ void clearlightmaps()
     initlights();
     allchanged();
 }
-
-COMMAND(clearlightmaps, "");
 
 void setfullbrightlevel(int fullbrightlevel)
 {
@@ -2576,6 +2568,3 @@ void dumplms()
         savepng(buf, temp, true);
     }
 }
-
-COMMAND(dumplms, "");
-
