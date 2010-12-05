@@ -35,12 +35,14 @@ void force_quit() // INTENSITY - change quit to force_quit
     extern void writeinitcfg();
     writeinitcfg();
 
-    SystemManager::quit(); // INTENSITY
     abortconnect();
     disconnect();
     localdisconnect();
     writecfg();
     cleanup();
+
+    SystemManager::quit(); // INTENSITY
+    EngineVariables::flush(); // CubeCreate
 
     EXEC_PYTHON_FILE("intensity/quit.py"); // INTENSITY
 

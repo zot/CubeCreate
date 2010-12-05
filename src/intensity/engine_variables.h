@@ -116,6 +116,42 @@ public:
 		bool override = false
 	);
     /**
+     * @brief Integer alias constructor.
+     * @param aname Name of the alias.
+     * @param val Value of the alias.
+     * 
+     * Construct an integer alias.
+     */
+	EngineVariable(
+		const std::string& aname,
+		int val,
+		_UNUSED_ bool alias // hacky, fixme. It's used to make sure we're constructing actual alias
+	);
+    /**
+     * @brief Float alias constructor.
+     * @param aname Name of the alias.
+     * @param val Value of the alias.
+     * 
+     * Construct a float alias.
+     */
+	EngineVariable(
+		const std::string& aname,
+		float val,
+		_UNUSED_ bool alias
+	);
+    /**
+     * @brief String alias constructor.
+     * @param aname Name of the alias.
+     * @param val Value of the alias.
+     * 
+     * Construct a string alias.
+     */
+	EngineVariable(
+		const std::string& aname,
+		const std::string& val,
+		_UNUSED_ bool alias
+	);
+    /**
      * @brief Get a name of the variable.
      * @return A string containing name of the variable.
      * 
@@ -201,6 +237,15 @@ public:
      */
 	bool isOverridable();
     /**
+     * @brief Gets if the variable is alias.
+     * @return If alias, then true, otherwise false.
+     * 
+     * Gets if the variable is alias. That means that the range of values is not limited, it's written to cfg
+     * and has no global since it's not initialized in a standard way. Also can't have callback. Doesn't handle persistency
+     * in a standard way, too, can't be read only and is always non-overridable (gets stored through maps and restarts).
+     */
+	bool isAlias();
+    /**
      * @brief Registers integer Lua variable based on C++ representation it's ran for.
      * 
      * Registers integer Lua variable based on C++ representation it's ran for.
@@ -234,6 +279,8 @@ private:
 	bool readOnly;
 	// is overridable
 	bool override;
+	// is alias
+	bool alias;
 
 	// anytypes storing the values
 	boost::any prev;
@@ -250,12 +297,10 @@ private:
 	};
 };
 
-/// Typedef shared_ptr of EngineVariable to EngineVariablePtr for simpler syntax.
-typedef boost::shared_ptr<EngineVariable> EngineVariablePtr;
 /// Typedef map of string and variable ptr to EVMap for simpler syntax.
-typedef std::map<std::string, EngineVariablePtr> EVMap;
+typedef std::map<std::string, EngineVariable *> EVMap;
 /// Typedef pair of string and variable ptr to EVPair for simpler syntax.
-typedef std::pair<std::string, EngineVariablePtr> EVPair;
+typedef std::pair<std::string, EngineVariable *> EVPair;
 
 /**
  * @class EngineVariables
@@ -267,17 +312,23 @@ public:
     /**
      * @brief Register a variable into storage.
      * @param name Name of the variable.
-     * @param var EngineVariablePtr representing the variable.
+     * @param var EngineVariable pointer representing the variable.
      * 
      * Register a variable into storage.
      */
-	static void reg(const std::string& name, EngineVariablePtr var);
+	static void reg(const std::string& name, EngineVariable *var);
     /**
      * @brief Clear the storage (but save persistents in special map)
      * 
      * Clear the storage (but save persistents in special map)
      */
 	static void clear();
+    /**
+     * @brief Flush the storage (free the memory from all storages)
+     * 
+     * Flush the storage (free the memory from all storages)
+     */
+	static void flush();
     /**
      * @brief Fill the storage from persistents and register all other vars.
      * 
@@ -321,17 +372,17 @@ public:
      */
 	static void syncFromLua(const std::string& name, const std::string& value);
     /**
-     * @brief Get the EngineVariablePtr for specified name.
+     * @brief Get the EngineVariable pointer for specified name.
      * @param name Name of the variable to get shared ptr for.
-     * @return The EngineVariablePtr for specified name.
+     * @return The EngineVariable pointer for specified name.
      * 
      * Changes done with the returned ptr reflect in storage too, i.e.
      * @code
-     * EngineVariables::get("blah").get()->set(5);
-     * int woot = EngineVariables::get("blah").get()->getInteger();
+     * EngineVariables::get("blah")->set(5);
+     * int woot = EngineVariables::get("blah")->getInteger();
      * @endcode
      */
-	static EngineVariablePtr& get(const std::string& name);
+	static EngineVariable *get(const std::string& name);
 private:
 	// storage and persistent storage. First one is cleared, second one is cleared just on persistent values transfer to standard storage.
 	static EVMap storage;
@@ -342,7 +393,7 @@ private:
 #ifdef REGVAR
 #undef REGVAR
 #endif
-#define REGVAR(name, ...) extern EngineVariablePtr _EV_##name
+#define REGVAR(name, ...) extern EngineVariable *_EV_##name
 #define _EV_NODEF
 #include "engine_variables_registers.h"
 #undef _EV_NODEF
@@ -360,7 +411,7 @@ private:
  * (min, max, prev, cur). For string variable, you pass just cur value (no min, max),
  * and callback accepts just two arguments (prev and cur).
  */
-#define REGVAR(name, ...) EngineVariablePtr _EV_##name = EngineVariablePtr(new EngineVariable(#name, __VA_ARGS__))
+#define REGVAR(name, ...) EngineVariable *_EV_##name = new EngineVariable(#name, __VA_ARGS__)
 
 /**
  * @def ICB
@@ -408,7 +459,7 @@ private:
  * int i = GETIV(foo);
  * @endcode
  */
-#define GETIV(name) _EV_##name.get()->getInteger()
+#define GETIV(name) _EV_##name->getInteger()
 
 /**
  * @def GETFV
@@ -420,7 +471,7 @@ private:
  * float d = GETFV(foo);
  * @endcode
  */
-#define GETFV(name) _EV_##name.get()->getFloat()
+#define GETFV(name) _EV_##name->getFloat()
 
 /**
  * @def GETSV
@@ -432,7 +483,7 @@ private:
  * std::string s = GETSV(foo);
  * @endcode
  */
-#define GETSV(name) _EV_##name.get()->getString()
+#define GETSV(name) _EV_##name->getString()
 
 /**
  * @def SETV
@@ -445,7 +496,7 @@ private:
  * SETV(foo, 15);
  * @endcode
  */
-#define SETV(name, value) _EV_##name.get()->set(value)
+#define SETV(name, value) _EV_##name->set(value)
 
 /**
  * @def SETVN
@@ -459,7 +510,7 @@ private:
  * SETVN(foo, 65536);
  * @endcode
  */
-#define SETVN(name, value) _EV_##name.get()->set(value, true, false, false)
+#define SETVN(name, value) _EV_##name->set(value, true, false, false)
 
 /**
  * @def SETVF
@@ -472,7 +523,7 @@ private:
  * SETVF(foo, 15);
  * @endcode
  */
-#define SETVF(name, value) _EV_##name.get()->set(value, true, true, true)
+#define SETVF(name, value) _EV_##name->set(value, true, true, true)
 
 /**
  * @def SETVFN
@@ -486,7 +537,7 @@ private:
  * SETVFN(foo, 65536);
  * @endcode
  */
-#define SETVFN(name, value) _EV_##name.get()->set(value, true, true, false)
+#define SETVFN(name, value) _EV_##name->set(value, true, true, false)
 
 /**
  * @}

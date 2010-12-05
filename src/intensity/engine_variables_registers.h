@@ -127,7 +127,7 @@ REGVAR(grasscolour, 0, 0xFFFFFF, 0xFFFFFF, ICB({
 	int c = curv;
     if(!curv)
     {
-		_EV_grasscolour.get()->set(0xFFFFFF);
+		_EV_grasscolour->set(0xFFFFFF);
 		c = 0xFFFFFF;
 	}
     grasscolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
@@ -153,7 +153,7 @@ REGVAR(ambient, 1, 0x191919, 0xFFFFFF, ICB({
 	int c = curv;
     if(curv <= 255)
     {
-		_EV_ambient.get()->set(curv | (curv<<8) | (curv<<16));
+		_EV_ambient->set(curv | (curv<<8) | (curv<<16));
 		c = curv | (curv<<8) | (curv<<16);
 	}
     ambientcolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
@@ -162,7 +162,7 @@ REGVAR(skylight, 0, 0, 0xFFFFFF, ICB({
 	int c = curv;
     if(curv <= 255)
     {
-		_EV_skylight.get()->set(curv | (curv<<8) | (curv<<16));
+		_EV_skylight->set(curv | (curv<<8) | (curv<<16));
 		c = curv | (curv<<8) | (curv<<16);
 	}
     skylightcolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
@@ -225,8 +225,8 @@ REGVAR(iskeydown, 0, 0, 1);
 REGVAR(iskeyup, 0, 0, 1);
 REGVAR(ismousedown, 0, 0, 1);
 REGVAR(ismouseup, 0, 0, 1);
-REGVAR(gamespeed, 10, 100, 1000, ICB({ if(multiplayer()) _EV_gamespeed.get()->set(100); }));
-REGVAR(paused, 0, 0, 1, ICB({ if(multiplayer()) _EV_paused.get()->set(0); }));
+REGVAR(gamespeed, 10, 100, 1000, ICB({ if(multiplayer()) _EV_gamespeed->set(100); }));
+REGVAR(paused, 0, 0, 1, ICB({ if(multiplayer()) _EV_paused->set(0); }));
 REGVAR(mainmenufps, 0, 60, 1000);
 REGVAR(maxfps, 0, 100, 1000, NULL, true);
 REGVAR(clockerror, 990000, 1000000, 1010000, ICB({ clockreset(); }), true);
@@ -293,12 +293,12 @@ REGVAR(dragging, 0, 0, 1, ICB({
 REGVAR(moving, 0, 0, 1, ICB({
     if(!curv) return;
     vec v(cur.v); v.add(1);
-    _EV_moving.get()->set(pointinsel(sel, v));
-    if(_EV_moving.get()->getInteger()) havesel = false; // tell cursorupdate to create handle
+    _EV_moving->set(pointinsel(sel, v));
+    if(_EV_moving->getInteger()) havesel = false; // tell cursorupdate to create handle
 }));
 
 REGVAR(gridpower, 0, 3, 12, ICB({
-    if(_EV_dragging.get()->getInteger()) return;
+    if(_EV_dragging->getInteger()) return;
     gridsize = 1<<curv;
     if(gridsize>=GETIV(mapsize)) gridsize = GETIV(mapsize)/2;
     cancelsel();
@@ -609,7 +609,7 @@ REGVAR(updatemaster, 0, 1, 1); // globalname was allowupdatemaster
 REGVAR(mastername, std::string(server::defaultmaster()), SCB({ disconnectmaster(); }));
 REGVAR(serveruprate, 0, 0, INT_MAX);
 REGVAR(serverip, "");
-REGVAR(serverport, 0, server::serverport(), 0xFFFF, ICB({ if(!curv) _EV_serverport.get()->set(server::serverport()); })); // not hex var
+REGVAR(serverport, 0, server::serverport(), 0xFFFF, ICB({ if(!curv) _EV_serverport->set(server::serverport()); })); // not hex var
 
 #ifdef CLIENT
 // engine/shader.cpp
@@ -658,7 +658,7 @@ REGVAR(shadowmapambient, 0, 0, 0xFFFFFF, ICB({
 	int v = curv;
     if(v <= 255) v |= (v<<8) | (v<<16);
     shadowmapambientcolor = bvec((v>>16)&0xFF, (v>>8)&0xFF, v&0xFF);
-    _EV_shadowmapambient.get()->set(v);
+    _EV_shadowmapambient->set(v);
 }), false, true);
 REGVAR(shadowmapintensity, 0, 40, 100, NULL, true);
 REGVAR(blurshadowmap, 0, 1, 3, NULL, true);
@@ -685,7 +685,7 @@ void setmusicvol(int musicvol);
 #define MIX_DEFAULT_FREQUENCY 22050
 #endif
 REGVAR(soundvol, 0, 255, 255, ICB({ if(!curv) { stopchannels(); setmusicvol(0); } }), true);
-REGVAR(musicvol, 0, 128, 255, ICB({ setmusicvol(_EV_soundvol.get()->getInteger() ? curv : 0); }), true);
+REGVAR(musicvol, 0, 128, 255, ICB({ setmusicvol(_EV_soundvol->getInteger() ? curv : 0); }), true);
 REGVAR(soundchans, 1, 32, 128, ICB({ initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); }));
 REGVAR(soundfreq, 0, MIX_DEFAULT_FREQUENCY, 44100, ICB({ initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); }));
 REGVAR(soundbufferlen, 128, 1024, 4096, ICB({ initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); }));
@@ -752,7 +752,7 @@ REGVAR(watercolour, 0, 0x144650, 0xFFFFFF, ICB({
 	int c = curv;
     if(!c) c = 0x144650;
     watercolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
-    _EV_watercolour.get()->set(c);
+    _EV_watercolour->set(c);
 }), false, true);
 REGVAR(waterfog, 0, 150, 10000, NULL, false, true);
 REGVAR(waterfallcolour, 0, 0, 0xFFFFFF, ICB({
@@ -762,7 +762,7 @@ REGVAR(lavacolour, 0, 0xFF4000, 0xFFFFFF, ICB({
 	int c = curv;
     if(!c) c = 0xFF4000;
     lavacolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
-    _EV_lavacolour.get()->set(c);
+    _EV_lavacolour->set(c);
 }), false, true);
 REGVAR(lavafog, 0, 50, 10000, NULL, false, true);
 REGVAR(waterspec, 0, 150, 1000, NULL, false, true);
@@ -803,7 +803,7 @@ REGVAR(entmoving, 0, 0, 2, ICB({
     else if(c == 1) c = enttoggle(enthover);
     else if(c == 2 && entgroup.find(enthover) < 0) entadd(enthover);
     if(c > 0) initentdragging = true;
-    _EV_entmoving.get()->set(c);
+    _EV_entmoving->set(c);
 }));
 REGVAR(entautoviewdist, 0, 25, 100);
 REGVAR(entdrop, 0, 2, 3);

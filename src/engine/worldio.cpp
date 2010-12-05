@@ -663,7 +663,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
             case ID_VAR:
             {
                 int val = f->getlil<int>();
-                if(exists && id->minval <= id->maxval) EngineVariables::get(std::string(name)).get()->set(val, true, true, false);
+                if(exists && id->minval <= id->maxval) EngineVariables::get(std::string(name))->set(val, true, true, false);
                 if(GETIV(dbgvars)) conoutf(CON_DEBUG, "read var %s: %d", name, val);
                 break;
             }
@@ -671,7 +671,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
             case ID_FVAR:
             {
                 float val = f->getlil<float>();
-                if(exists && id->minvalf <= id->maxvalf) EngineVariables::get(std::string(name)).get()->set(val, true, true, false);
+                if(exists && id->minvalf <= id->maxvalf) EngineVariables::get(std::string(name))->set(val, true, true, false);
                 if(GETIV(dbgvars)) conoutf(CON_DEBUG, "read fvar %s: %f", name, val);
                 break;
             }
@@ -683,7 +683,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
                 f->read(val, min(slen, MAXSTRLEN-1));
                 val[min(slen, MAXSTRLEN-1)] = '\0';
                 if(slen >= MAXSTRLEN) f->seek(slen - (MAXSTRLEN-1), SEEK_CUR);
-                if(exists) EngineVariables::get(std::string(name)).get()->set(std::string(val), true, true, true);
+                if(exists) EngineVariables::get(std::string(name))->set(std::string(val), true, true, true);
                 if(GETIV(dbgvars)) conoutf(CON_DEBUG, "read svar %s: %s", name, val);
                 break;
             }

@@ -136,7 +136,7 @@ def show_gui(sender, **kwargs):
     else:
         CModule.run_script('''
             GUI.text("Local server: (not active)")
-            if CV.logged_into_master == 0 then
+            if EV.logged_into_master == 0 then
 				GUI.text("   << not logged into master >>")
 			end
 
@@ -147,10 +147,10 @@ def show_gui(sender, **kwargs):
             ]])
             GUI.stayOpen([[
 			    GUI.button("  start", [=[
-			        if CV.logged_into_master == 1 then
-						CAPI.runPython(string.format("intensity.components.server_runner.run_server('%s')", CV.local_server_location))
+			        if EV.logged_into_master == 1 then
+						CAPI.runPython(string.format("intensity.components.server_runner.run_server('%s')", EV.local_server_location))
 					else
-					    CAPI.runPython(string.format("intensity.components.server_runner.run_server('%s', False)", CV.local_server_location))
+					    CAPI.runPython(string.format("intensity.components.server_runner.run_server('%s', False)", EV.local_server_location))
 					end
 			    ]=])
             ]])
@@ -162,7 +162,7 @@ show_components.connect(show_gui, weak=False)
 
 # Always enter private edit mode if masterless
 def request_private_edit(sender, **kwargs):
-    if not CModule.run_script_int("CV.logged_into_master"):
+    if not CModule.run_script_int("EV.logged_into_master"):
         MessageSystem.send(CModule.RequestPrivateEditMode)
 map_load_finish.connect(request_private_edit, weak=False)
 

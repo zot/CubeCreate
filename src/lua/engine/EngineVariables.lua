@@ -56,7 +56,7 @@ end
 EV = _VARS()
 
 _VAR = class()
-function _VAR:__init(name, minv, curv, maxv, onchange, readonly)
+function _VAR:__init(name, minv, curv, maxv, onchange, readonly, alias)
 	assert(name, "Cannot register variable: name is missing.")
 	assert(curv, "Cannot register variable: no value set.")
 	self.name = name
@@ -65,21 +65,23 @@ function _VAR:__init(name, minv, curv, maxv, onchange, readonly)
 	self.curv = curv
 	self.chng = onchange
 	self.read = readonly
+	self.alias = alias
 end
 
 IVAR = class(_VAR)
 function IVAR:__tostring() return "IVAR" end
-function IVAR:__init(name, minv, curv, maxv, readonly)
+function IVAR:__init(name, minv, curv, maxv, readonly, alias)
 	assert(type(minv) == "number" and type(curv) == "number" and type(maxv) == "number", "Wrong value type provided to IVAR.")
-	self[_VAR].__user_init(self, name, minv, curv, maxv, nil, readonly)
+	self[_VAR].__user_init(self, name, minv, curv, maxv, nil, readonly, alias)
 end
 function IVAR:isInReach(v)
-	if self.read then
-		log(ERROR, "Variable is read only.")
-		return false
-	end
 	if type(v) ~= "number" then
 		log(ERROR, "Wrong value type passed to variable.")
+		return false
+	end
+	if self.alias then return true end
+	if self.read then
+		log(ERROR, "Variable is read only.")
 		return false
 	end
 	if v < self.minv or v > self.maxv then
@@ -91,10 +93,10 @@ end
 
 IVARF = class(IVAR)
 function IVARF:__tostring() return "IVARF" end
-function IVARF:__init(name, minv, curv, maxv, onchange, readonly)
+function IVARF:__init(name, minv, curv, maxv, onchange, readonly, alias)
 	assert(type(minv) == "number" and type(curv) == "number" and type(maxv) == "number", "Wrong value type provided to IVARF.")
 	assert(onchange and type(onchange) == "function", "Wrong type of onchange callback to IVARF.")
-	self[_VAR].__user_init(self, name, minv, curv, maxv, onchange, readonly)
+	self[_VAR].__user_init(self, name, minv, curv, maxv, onchange, readonly, alias)
 end
 
 FVAR = class(IVAR)
@@ -104,17 +106,18 @@ function FVARF:__tostring() return "FVARF" end
 
 SVAR = class(_VAR)
 function SVAR:__tostring() return "SVAR" end
-function SVAR:__init(name, curv, readonly)
+function SVAR:__init(name, curv, readonly, alias)
 	assert(type(curv) == "string", "Wrong value type provided to SVAR.")
-	self[_VAR].__user_init(self, name, nil, curv, nil, nil, readonly)
+	self[_VAR].__user_init(self, name, nil, curv, nil, nil, readonly, alias)
 end
 function SVAR:isInReach(v)
-	if self.read then
-		log(ERROR, "Variable is read only.")
-		return false
-	end
 	if type(v) ~= "string" then
 		log(ERROR, "Wrong value type passed to variable.")
+		return false
+	end
+	if self.alias then return true end
+	if self.read then
+		log(ERROR, "Variable is read only.")
 		return false
 	end
 	return true
@@ -122,10 +125,10 @@ end
 
 SVARF = class(SVAR)
 function SVARF:__tostring() return "SVARF" end
-function SVARF:__init(name, curv, onchange, readonly)
+function SVARF:__init(name, curv, onchange, readonly, alias)
 	assert(type(curv) == "string", "Wrong value type provided to SVARF.")
 	assert(onchange and type(onchange) == "function", "Wrong type of onchange callback to SVARF.")
-	self[_VAR].__user_init(self, name, nil, curv, nil, onchange, readonly)
+	self[_VAR].__user_init(self, name, nil, curv, nil, onchange, readonly, alias)
 end
 
 function ivar  (name, ...) EV:r("IVAR",   name, ...) end

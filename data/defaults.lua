@@ -23,7 +23,7 @@ EV.soundvol = 255      -- sounds average volume is actually set per sound, avera
 
 EV.gamma = 100          -- set to your liking, 100 = default
 
-fullbrightmodels = 60 -- make player models a bit easier to see
+EV.fullbrightmodels = 60 -- make player models a bit easier to see
 
 -- console
 

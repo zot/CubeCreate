@@ -22,7 +22,7 @@ function setup_main_menu()
 			GUI.button("plugins...", [=[ GUI.show("plugins") ]=])
 			GUI.button("options...", [=[ GUI.show("options") ]=])
 			GUI.button("help...", [=[ GUI.show("help") ]=])
-			GUI.button("quit", [=[ CAPI.quit() ]=], "exit")
+			GUI.button("quit", [=[ Engine.quit() ]=], "exit")
 		]])
 	end
 	if EV.logged_into_master == 1 then
@@ -39,7 +39,7 @@ function setup_main_menu()
 			GUI.button("options...", [=[ GUI.show("options") ]=])
 			GUI.button("special...", [=[ GUI.show("special") ]=])
 			GUI.button("help...", [=[ GUI.show("help") ]=])
-			GUI.button("quit", [=[ CAPI.quit() ]=], "exit")
+			GUI.button("quit", [=[ Engine.quit() ]=], "exit")
 		]])
 	end
 end

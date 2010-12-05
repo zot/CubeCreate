@@ -405,8 +405,8 @@ void prepare_entity_gui()
         std::string fieldName = "entity_gui_field_" + Utility::toString(i);
         std::string labelName = "entity_gui_label_" + Utility::toString(i);
 
-        EngineVariables::get(fieldName).get()->set(value, true, true, true);
-        EngineVariables::get(labelName).get()->set(guiName, true, true, true);
+        EngineVariables::get(fieldName)->set(value, true, true, true);
+        EngineVariables::get(labelName)->set(guiName, true, true, true);
     }
 
     // Title

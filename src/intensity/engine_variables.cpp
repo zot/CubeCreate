@@ -98,6 +98,48 @@ EngineVariable::EngineVariable
 	hasCB = cb ? true : false;
 }
 
+// integer alias
+EngineVariable::EngineVariable(const std::string& aname, int val, bool alias)
+{
+	name = aname;
+	readOnly = false;
+	minv = -1; maxv = -1; prev = val; curv = val;
+	floatCB = NULL;
+	persistent = false;
+	hasCB = false;
+	type = "IVAR";
+	alias = true;
+	if (LuaEngine::exists()) registerLuaIVAR();
+}
+
+// float alias
+EngineVariable::EngineVariable(const std::string& aname, float val, bool alias)
+{
+	name = aname;
+	readOnly = false;
+	minv = -1.0f; maxv = -1.0f; prev = val; curv = val;
+	floatCB = NULL;
+	persistent = false;
+	hasCB = false;
+	type = "FVAR";
+	alias = true;
+	if (LuaEngine::exists()) registerLuaFVAR();
+}
+
+// string alias
+EngineVariable::EngineVariable(const std::string& aname, const std::string& val, bool alias)
+{
+	name = aname;
+	readOnly = false;
+	curv = val; prev = val;
+	stringCB = NULL;
+	persistent = false;
+	hasCB = false;
+	type = "SVAR";
+	alias = true;
+	if (LuaEngine::exists()) registerLuaSVAR();
+}
+
 /*
  * Getters
  */
@@ -116,7 +158,7 @@ std::string EngineVariable::getString()  { return anystring(curv); }
 void EngineVariable::set(int val, bool luaSync, bool forceCB, bool clamp)
 {
 	prev = curv;
-	if (clamp && (val < anyint(minv) || val > anyint(maxv))) curv = clamp(val, anyint(minv), anyint(maxv));
+	if (clamp && (val < anyint(minv) || val > anyint(maxv)) && !alias) curv = clamp(val, anyint(minv), anyint(maxv));
 	else curv = val;
 	callCB(luaSync, forceCB);
 }
@@ -125,7 +167,7 @@ void EngineVariable::set(int val, bool luaSync, bool forceCB, bool clamp)
 void EngineVariable::set(float val, bool luaSync, bool forceCB, bool clamp)
 {
 	prev = curv;
-	if (clamp && (val < anyfloat(minv) || val > anyfloat(maxv))) curv = clamp(val, anyfloat(minv), anyfloat(maxv));
+	if (clamp && (val < anyfloat(minv) || val > anyfloat(maxv)) && !alias) curv = clamp(val, anyfloat(minv), anyfloat(maxv));
 	else curv = val;
 	callCB(luaSync, forceCB);
 }
@@ -156,6 +198,12 @@ bool EngineVariable::isOverridable()
 	return override;
 }
 
+// check if it's alias
+bool EngineVariable::isAlias()
+{
+	return alias;
+}
+
 // these are used for registration of Lua variables after one is registered in C++
 void EngineVariable::registerLuaIVAR()
 {
@@ -165,7 +213,8 @@ void EngineVariable::registerLuaIVAR()
 	LuaEngine::pushValue(anyint(curv));
 	LuaEngine::pushValue(anyint(maxv));
 	LuaEngine::pushValue(readOnly);
-	LuaEngine::call(5, 0);
+	LuaEngine::pushValue(alias);
+	LuaEngine::call(6, 0);
 }
 
 void EngineVariable::registerLuaFVAR()
@@ -176,7 +225,8 @@ void EngineVariable::registerLuaFVAR()
 	LuaEngine::pushValue(anyfloat(curv));
 	LuaEngine::pushValue(anyfloat(maxv));
 	LuaEngine::pushValue(readOnly);
-	LuaEngine::call(5, 0);
+	LuaEngine::pushValue(alias);
+	LuaEngine::call(6, 0);
 }
 
 void EngineVariable::registerLuaSVAR()
@@ -185,7 +235,8 @@ void EngineVariable::registerLuaSVAR()
 	LuaEngine::pushValue(name);
 	LuaEngine::pushValue(anystring(curv));
 	LuaEngine::pushValue(readOnly);
-	LuaEngine::call(3, 0);
+	LuaEngine::pushValue(alias);
+	LuaEngine::call(4, 0);
 }
 
 /*
@@ -196,7 +247,7 @@ void EngineVariable::registerLuaSVAR()
 void EngineVariable::callCB(bool luaSync, bool forceCB)
 {
 	#define SYNCV(val) \
-	if (luaSync || LuaEngine::exists()) \
+	if ((luaSync || alias) && LuaEngine::exists()) \
 	{ \
 		LuaEngine::getGlobal("EV"); \
 		LuaEngine::setTable(name + "_ns", val); \
@@ -207,19 +258,19 @@ void EngineVariable::callCB(bool luaSync, bool forceCB)
 	{
 		case 'I':
 		{
-			if (hasCB && (!luaSync || forceCB)) intCB(anyint(minv), anyint(maxv), anyint(prev), anyint(curv));
+			if (hasCB && (!luaSync || forceCB) && !alias) intCB(anyint(minv), anyint(maxv), anyint(prev), anyint(curv));
 			SYNCV(anyint(curv));
 			break;
 		}
 		case 'F':
 		{
-			if (hasCB && (!luaSync || forceCB)) floatCB(anyfloat(minv), anyfloat(maxv), anyfloat(prev), anyfloat(curv));
+			if (hasCB && (!luaSync || forceCB) && !alias) floatCB(anyfloat(minv), anyfloat(maxv), anyfloat(prev), anyfloat(curv));
 			SYNCV(anyfloat(curv));
 			break;
 		}
 		case 'S':
 		{
-			if (hasCB && (!luaSync || forceCB)) stringCB(anystring(prev), anystring(curv));
+			if (hasCB && (!luaSync || forceCB) && !alias) stringCB(anystring(prev), anystring(curv));
 			SYNCV(anystring(curv));
 			break;
 		}
@@ -244,9 +295,9 @@ EVMap EngineVariables::persistentStorage;
  * PUBLICS
  */
 
-// register EngineVariablePtr into storage; doesn't call callbacks or set values or anything.
+// register EngineVariable pointer into storage; doesn't call callbacks or set values or anything.
 // won't register a variable that is already registered. (but won't fail either)
-void EngineVariables::reg(const std::string& name, EngineVariablePtr var)
+void EngineVariables::reg(const std::string& name, EngineVariable *var)
 {
 	if (storage.find(name) != storage.end()) return;
 	storage.insert(EVPair(name, var));
@@ -272,21 +323,21 @@ void EngineVariables::fillLua()
 {
 	for (EVMap::iterator it = storage.begin(); it != storage.end(); it++)
 	{
-		switch (it->second.get()->getType()[0])
+		switch (it->second->getType()[0])
 		{
 			case 'I':
 			{
-				it->second.get()->registerLuaIVAR();
+				it->second->registerLuaIVAR();
 				break;
 			}
 			case 'F':
 			{
-				it->second.get()->registerLuaFVAR();
+				it->second->registerLuaFVAR();
 				break;
 			}
 			case 'S':
 			{
-				it->second.get()->registerLuaSVAR();
+				it->second->registerLuaSVAR();
 				break;
 			}
 			default: break;
@@ -294,13 +345,28 @@ void EngineVariables::fillLua()
 	}
 }
 
-// clears the storage, but keeps non-overridable variables in persistentStorage
+// clears the storage, but keeps non-overridable variables and aliases in persistentStorage
 void EngineVariables::clear()
 {
 	for (EVMap::iterator it = storage.begin(); it != storage.end(); it++)
-		if (!it->second.get()->isOverridable())
+		if (it->second->isAlias() || !it->second->isOverridable())
 			persistentStorage.insert(*it);
+		else
+			delete it->second; // delete it if it shouldn't go into persistent storage and thus free the memory
 
+	storage.clear();
+}
+
+// frees all pointers in storage
+void EngineVariables::flush()
+{
+	for (EVMap::iterator it = persistentStorage.begin(); it != persistentStorage.end(); it++) // make sure the persistent storage is clear too
+		delete it->second;
+
+	for (EVMap::iterator it = storage.begin(); it != storage.end(); it++)
+		delete it->second;
+
+	persistentStorage.clear();
 	storage.clear();
 }
 
@@ -315,22 +381,23 @@ void EngineVariables::fillFromPersistent()
 // those are called from Lua and take care of syncing Lua values into C++
 void EngineVariables::syncFromLua(const std::string& name, int value)
 {
-	storage[name].get()->set(value, false);
+	storage[name]->set(value, false);
 }
 
 void EngineVariables::syncFromLua(const std::string& name, float value)
 {
-	storage[name].get()->set(value, false);
+	storage[name]->set(value, false);
 }
 
 void EngineVariables::syncFromLua(const std::string& name, const std::string& value)
 {
-	storage[name].get()->set(value, false);
+	storage[name]->set(value, false);
 }
 
-// this one gets the EngineVariablePtr from storage assuming you know its name.
+// this one gets the EngineVariable pointer from storage assuming you know its name.
 // Then you can get, set etc, things done with shared ptr are reflected in storage too
-EngineVariablePtr& EngineVariables::get(const std::string& name)
+EngineVariable *EngineVariables::get(const std::string& name)
 {
-	return storage[name];
+	if (storage.find(name) != storage.end()) return storage[name];
+	else return NULL;
 }

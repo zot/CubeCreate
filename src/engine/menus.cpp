@@ -33,79 +33,106 @@ struct menu : g3d_callback
     }
 };
 
-struct delayedupdate
+class delayedUpdate
 {
-    enum
-    {
-        INT,
-        FLOAT,
-        STRING,
-        ACTION
-    } type;
-    ident *id;
-    union
-    {
-        int i;
-        float f;
-        char *s;
-    } val;
-    delayedupdate() : type(ACTION), id(NULL) { val.s = NULL; }
-    ~delayedupdate() { if(type == STRING || type == ACTION) DELETEA(val.s); }
+private:
+	enum
+	{
+		INT,
+		FLOAT,
+		STRING,
+		ACTION
+	} type;
 
-    void schedule(const char *s) { type = ACTION; val.s = newstring(s); }
-    void schedule(ident *var, int i) { type = INT; id = var; val.i = i; }
-    void schedule(ident *var, float f) { type = FLOAT; id = var; val.f = f; }
-    void schedule(ident *var, char *s) { type = STRING; id = var; val.s = newstring(s); }
+	EngineVariable *var;
+	boost::any val;
 
-    int getint() const
-    {
-        switch(type)
-        {
-            case INT: return val.i;
-            case FLOAT: return int(val.f);
-            case STRING: return int(strtol(val.s, NULL, 0));
-            default: return 0;
-        }
-    }
+public:
+	delayedUpdate(): type(ACTION), val(NULL) {}
 
-    float getfloat() const
-    {
-        switch(type)
-        {
-            case INT: return float(val.i);
-            case FLOAT: return val.f;
-            case STRING: return float(parsefloat(val.s));
-            default: return 0;
-        }
-    }
-   
-    const char *getstring() const
-    {
-        switch(type)
-        {
-            case INT: return intstr(val.i);
-            case FLOAT: return intstr(int(floor(val.f)));
-            case STRING: return val.s;
-            default: return "";
-        }
-    }
+	void schedule(const std::string& s)
+	{
+		type = ACTION;
+		val = s;
+	}
+	void schedule(EngineVariable *v, int i)
+	{
+		type = INT;
+		var = v;
+		val = i;
 
-    void run()
-    {
-        if(type == ACTION) { if(val.s) LuaEngine::runScript(val.s); }
-        else if(id) switch(id->type)
-        {
-            case ID_VAR: setvarchecked(id, getint()); break;
-            case ID_FVAR: setfvarchecked(id, getfloat()); break;
-            case ID_SVAR: setsvarchecked(id, getstring()); break;
-            case ID_ALIAS: alias(id->name, getstring()); break;
-        }
-    }
+		// make sure they're registered in lua.
+		// no kittens are hurt when registering variable that's already registered
+		var->registerLuaIVAR();
+	}
+	void schedule(EngineVariable *v, float f)
+	{
+		type = FLOAT;
+		var = v;
+		val = f;
+
+		var->registerLuaFVAR();
+	}
+	void schedule(EngineVariable *v, const std::string& s)
+	{
+		type = STRING;
+		var = v;
+		val = s;
+
+		var->registerLuaSVAR();
+	}
+
+	int getInt()
+	{
+		switch (type)
+		{
+			case INT:
+			case FLOAT:
+			case STRING: return anyint(val);
+			default: return 0;
+		}
+	}
+
+	float getFloat()
+	{
+		switch (type)
+		{
+			case INT:
+			case FLOAT:
+			case STRING: return anyfloat(val);
+			default: return 0;
+		}
+	}
+
+	std::string getString()
+	{
+		switch (type)
+		{
+			case INT:
+			case FLOAT:
+			case STRING: return anystring(val);
+			default: return std::string();
+		}
+	}
+
+	void run()
+	{
+		if (type == ACTION)
+		{
+			if (!anystring(val).empty()) LuaEngine::runScript(anystring(val));
+		}
+		else if (var) switch (var->getType()[0])
+		{
+			case 'I': var->set(getInt(), true, true, true); break;
+			case 'F': var->set(getFloat(), true, true, true); break;
+			case 'S': var->set(getString(), true, true); break;
+		}
+	}
 };
-     
+
+static std::vector<delayedUpdate> updateLater;
 static hashtable<const char *, menu> guis;
 static vector<menu *> guistack;
-static vector<delayedupdate> updatelater;
 static bool shouldclearmenu = true, clearlater = false;
 
 vec menuinfrontofplayer()
@@ -131,7 +158,7 @@ void removegui(menu *m)
         m->clear();
         return;
     }
-}    
+}
 
 void pushgui(menu *m, int pos = -1)
 {
@@ -212,7 +239,8 @@ void guibutton(char *name, char *action, char *icon)
     int ret = cgui->button(name, GUI_BUTTON_COLOR, hideicon ? NULL : (icon[0] ? icon : (strstr(action, "showgui") ? "menu" : "action")));
     if(ret&G3D_UP) 
     {
-        updatelater.add().schedule(action[0] ? action : name);
+		updateLater.push_back(delayedUpdate());
+		updateLater.back().schedule(action[0] ? std::string(action) : std::string(name));
         if(shouldclearmenu) clearlater = true;
     }
     else if(ret&G3D_ROLLOVER)
@@ -236,7 +264,8 @@ void guiimage(char *path, char *action, float *scale, int *overlaid, char *alt)
     {
         if(*action)
         {
-            updatelater.add().schedule(action);
+			updateLater.push_back(delayedUpdate());
+			updateLater.back().schedule(std::string(action));
             if(shouldclearmenu) clearlater = true;
         }
     }
@@ -292,53 +321,72 @@ void guistrut(float *strut, int *alt)
     }
 }
 
-template<class T> static void updateval(char *var, T val, char *onchange)
+template<class T> static void updateval(const std::string& var, T val, const std::string& onchange)
 {
-    ident *id = newident(var);
-    updatelater.add().schedule(id, val);
-    if(onchange[0]) updatelater.add().schedule(onchange);
+	// try to lookup the variable in map too
+	EngineVariable *ev = EngineVariables::get(var);
+	if (!ev)
+	{
+		ev = new EngineVariable(var, val, true);
+		EngineVariables::reg(var, ev); // when creating new, that means it should also get pushed into storage, and here we have to do it manually
+		// registering into storage will also take care of further memory release
+	}
+
+	updateLater.push_back(delayedUpdate());
+	updateLater.back().schedule(ev, val);
+	if (onchange[0])
+	{
+		updateLater.push_back(delayedUpdate());
+		updateLater.back().schedule(onchange);
+	}
 }
 
 static int getval(char *var)
 {
-    ident *id = getident(var);
-    if(!id) return 0;
-    switch(id->type)
-    {
-        case ID_VAR: return *id->storage.i;
-        case ID_FVAR: return int(*id->storage.f);
-        case ID_SVAR: return parseint(*id->storage.s);
-        case ID_ALIAS: return parseint(id->action);
-        default: return 0;
-    }
+	if (!EngineVariables::get(std::string(var))) return 0;
+	else
+	{
+		EngineVariable *ev = EngineVariables::get(std::string(var));
+		switch (ev->getType()[0])
+		{
+			case 'I': return anyint(ev->getInteger()); break;
+			case 'F': return (int)anyfloat(ev->getFloat()); break;
+			case 'S': return 0; break;
+		}
+	}
+	return 0;
 }
 
 static float getfval(char *var)
 {
-    ident *id = getident(var);
-    if(!id) return 0;
-    switch(id->type)
-    {
-        case ID_VAR: return *id->storage.i;
-        case ID_FVAR: return *id->storage.f;
-        case ID_SVAR: return parsefloat(*id->storage.s);
-        case ID_ALIAS: return parsefloat(id->action);
-        default: return 0;
-    }
+	if (!EngineVariables::get(std::string(var))) return 0;
+	else
+	{
+		EngineVariable *ev = EngineVariables::get(std::string(var));
+		switch (ev->getType()[0])
+		{
+			case 'I': return (float)anyint(ev->getInteger()); break;
+			case 'F': return anyfloat(ev->getFloat()); break;
+			case 'S': return 0; break;
+		}
+	}
+	return 0;
 }
 
 static const char *getsval(char *var)
 {
-    ident *id = getident(var);
-    if(!id) return "";
-    switch(id->type)
-    {
-        case ID_VAR: return intstr(*id->storage.i);
-        case ID_FVAR: return floatstr(*id->storage.f);
-        case ID_SVAR: return *id->storage.s;
-        case ID_ALIAS: return id->action;
-        default: return "";
-    }
+	if (!EngineVariables::get(std::string(var))) return "";
+	else
+	{
+		EngineVariable *ev = EngineVariables::get(std::string(var));
+		switch (ev->getType()[0])
+		{
+			case 'I': return intstr(anyint(ev->getInteger())); break;
+			case 'F': return floatstr(anyfloat(ev->getFloat())); break;
+			case 'S': return anystring(ev->getString()).c_str(); break;
+		}
+	}
+	return "";
 }
 
 void guislider(char *var, int *min, int *max, char *onchange)
@@ -487,7 +535,8 @@ void guiservers()
         char *command = showservers(cgui);
         if(command)
         {
-            updatelater.add().schedule(command);
+			updateLater.push_back(delayedUpdate());
+			updateLater.back().schedule(std::string(command));
             if(shouldclearmenu) clearlater = true;
         }
     }
@@ -517,8 +566,16 @@ static struct applymenu : menu
         {
             int changetypes = 0;
             loopv(needsapply) changetypes |= needsapply[i].type;
-            if(changetypes&CHANGE_GFX) updatelater.add().schedule("resetgl");
-            if(changetypes&CHANGE_SOUND) updatelater.add().schedule("resetsound");
+			if (changetypes & CHANGE_GFX)
+			{
+				updateLater.push_back(delayedUpdate());
+				updateLater.back().schedule("Engine.resetGl()");
+			}
+			if (changetypes & CHANGE_SOUND)
+			{
+				updateLater.push_back(delayedUpdate());
+				updateLater.back().schedule("Sound.reset()");
+			}
             clearlater = true;
         }
         if(g.button("no", GUI_BUTTON_COLOR, "action")&G3D_UP)
@@ -561,8 +618,9 @@ void menuprocess()
 {
     processingmenu = true;
     int wasmain = GETIV(mainmenu), level = guistack.length();
-    loopv(updatelater) updatelater[i].run();
-    updatelater.shrink(0);
+    for (unsigned int i = 0; i < updateLater.size(); i++) updateLater[0].run();
+    updateLater.clear();
+    
     if(wasmain > GETIV(mainmenu) || clearlater)
     {
         if(wasmain > GETIV(mainmenu) || level==guistack.length()) 

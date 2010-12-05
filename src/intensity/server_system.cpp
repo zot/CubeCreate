@@ -224,6 +224,8 @@ int main(int argc, char **argv)
     // Start the main Python script that runs it all
     EXEC_PYTHON_FILE("../../intensity_server.py");
 
+    EngineVariables::flush(); // CubeCreate: flush all variables after successful run
+
     return 0;
 }
 
