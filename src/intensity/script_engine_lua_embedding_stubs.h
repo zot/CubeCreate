@@ -422,5 +422,28 @@ luaL_Reg CAPI[] = {
 	STDREG(optimizeBlendMap),
 	STDREG(clearBlendMap),
 
+#ifdef CLIENT
+	// console
+	STDREG(toggleConsole),
+	STDREG(conSkip),
+	STDREG(miniConSkip),
+	STDREG(clearConsole),
+	STDREG(bind),
+	STDREG(specBind),
+	STDREG(editBind),
+	STDREG(getBind),
+	STDREG(getSpecBind),
+	STDREG(getEditBind),
+	STDREG(searchBinds),
+	STDREG(searchSpecBinds),
+	STDREG(searchEditBinds),
+	STDREG(sayCommand),
+	STDREG(inputCommand),
+	STDREG(history),
+	STDREG(onRelease),
+	STDREG(complete),
+	STDREG(listComplete),
+#endif
+
 	{0,0}
 };

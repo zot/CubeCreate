@@ -4,7 +4,6 @@ Texture *sky[6] = { 0, 0, 0, 0, 0, 0 }, *clouds[6] = { 0, 0, 0, 0, 0, 0 }, *star
 
 void loadsky(const char *basename, Texture *texs[6])
 {
-	Logging::log(Logging::ERROR, "Loading sky %s", basename);
     loopi(6)
     {
         const char *side = cubemapsides[i].name;

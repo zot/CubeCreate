@@ -639,7 +639,28 @@ CV = _CV()
 
 -- input functions
 
-Input = {
+Console = {
+	toggle = CAPI.toggleConsole,
+	skip = CAPI.conSkip,
+	miniSkip = CAPI.miniConSkip,
+	clear = CAPI.clearConsole,
+	binds = {
+		add = CAPI.bind,
+		addSpec = CAPI.specBind,
+		addEdit = CAPI.editBind,
+		get = CAPI.getBind,
+		getSpec = CAPI.getSpecBind,
+		getEdit = CAPI.getEditBind,
+		search = CAPI.searchBinds,
+		searchSpec = CAPI.searchSpecBinds,
+		searchEdit = CAPI.searchEditBinds,
+	},
+	sayCommand = CAPI.sayCommand,
+	inputCommand = CAPI.inputCommand,
+	history = CAPI.history,
+	onRelease = CAPI.onRelease,
+	complete = CAPI.complete,
+	listComplete = CAPI.listComplete,
 	keymap = CAPI.keymap,
 }
 

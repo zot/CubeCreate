@@ -35,30 +35,29 @@ EV.miniconfilter = 0x300  -- display chat and team chat in mini-console
 EV.confilter = math.band(0x2FFF, math.bnot(EV.miniconfilter)) -- don't display other player frags or mini-console stuff in console
 EV.fullconfilter = 0xFFFF -- display all messages in full console
 
+-- WSAD
+
+Console.binds.add("W", [[ CV:run("forward") ]])
+Console.binds.add("S", [[ CV:run("backward") ]])
+Console.binds.add("A", [[ CV:run("left") ]])
+Console.binds.add("D", [[ CV:run("right") ]])
+
+Console.binds.add("UP", [[ CV:run("forward") ]])
+Console.binds.add("DOWN", [[ CV:run("backward") ]])
+Console.binds.add("LEFT", [[ CV:run("left") ]])
+Console.binds.add("RIGHT", [[ CV:run("right") ]])
+
+Console.binds.add("SPACE", [[ CV:run("jump") ]])
+Console.binds.add("MOUSE2", [[ CV:run("jump") ]])
+Console.binds.add("MOUSE1", [[ CV:run("attack") ]])
+Console.binds.add("MOUSE3", [[ CV:run("weapon") ]])
+
+Console.binds.addSpec("MOUSE1", [[ CV:run("nextfollow") ]])
+Console.binds.addSpec("MOUSE2", [[ CV:run("nextfollow -1") ]])
+Console.binds.addSpec("MOUSE3", [[ CV:run("follow") ]])
+Console.binds.addSpec("SPACE", [[ CV:run("follow") ]])
+
 CV:run([[
-// WASD
-
-bind W forward
-bind A left
-bind S backward
-bind D right
-
-bind UP "forward"
-bind DOWN "backward"
-bind RIGHT "right"
-bind LEFT "left"
-
-bind SPACE "jump"
-bind MOUSE2 "jump"
-bind MOUSE1 "attack"
-bind MOUSE3 "weapon"
-specbind MOUSE1 "nextfollow"
-specbind MOUSE2 "nextfollow -1"
-specbind MOUSE3 "follow"
-specbind SPACE "follow"
-
-//bind R dropflag
-
 bind TAB "showscores"
 
 bind T "saycommand"

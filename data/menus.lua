@@ -2,14 +2,12 @@
 -- do not modify
 
 -- Cubescript ugliness to replace
-CV:run([[
-	bind ESCAPE [
-		menu_key_click_trigger
-		if (cleargui 1) [] [
-			save_mouse_pos // Useful for New Light GUI and so forth.
-			showgui main
-		]
-	]
+Console.binds.add("ESCAPE", [[
+	CV:run("menu_key_click_trigger")
+	if GUI.clear() ~= 1 then
+		CV:run("save_mouse_pos") -- Useful for New Light GUI and so forth.
+		GUI.show("main")
+	end
 ]])
 
 -- Main menu - has two forms, for logging into the master, or for entering an instance
@@ -46,7 +44,7 @@ end
 
 function show_login()
 	if EV.hashed_password ~= "" then
-		CV:run("entered_password '--------'") -- 8 '-'s: means "use existing hashed password"
+		EV.entered_password = '--------' -- 8 '-'s: means "use existing hashed password"
 											  -- which we need if there was a password entered before
 	end
 	GUI.show("login")

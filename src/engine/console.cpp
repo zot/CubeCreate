@@ -48,8 +48,6 @@ void conoutf(int type, const char *fmt, ...)
     va_end(args);
 }
 
-ICOMMAND(toggleconsole, "", (), { SETV(fullconsole, GETIV(fullconsole) ^ 1); });
-
 int rendercommand(int x, int y, int w)
 {
     if(commandmillis < 0) return 0;
@@ -79,11 +77,6 @@ void setconskip(int &skip, int filter, int n)
         if(conlines[skip].type&filter) --offset;
     }
 }
-
-ICOMMAND(conskip, "i", (int *n), setconskip(conskip, GETIV(fullconsole) ? GETIV(fullconfilter) : GETIV(confilter), *n));
-ICOMMAND(miniconskip, "i", (int *n), setconskip(miniconskip, GETIV(miniconfilter), *n));
-
-ICOMMAND(clearconsole, "", (), { while(conlines.length()) delete[] conlines.pop().line; });
 
 int drawconlines(int conskip, int confade, int conwidth, int conheight, int conoff, int filter, int y = 0, int dir = 1)
 {
@@ -144,25 +137,6 @@ int renderconsole(int w, int h, int abovehud)                   // render buffer
 
 // keymap is defined externally in keymap.cfg
 
-struct keym
-{
-    enum
-    {
-        ACTION_DEFAULT = 0,
-        ACTION_SPECTATOR,
-        ACTION_EDITING,
-        NUMACTIONS
-    };
-    
-    int code;
-    char *name;
-    char *actions[NUMACTIONS];
-    bool pressed;
-
-    keym() : code(-1), name(NULL), pressed(false) { loopi(NUMACTIONS) actions[i] = newstring(""); }
-    ~keym() { DELETEA(name); loopi(NUMACTIONS) DELETEA(actions[i]); }
-};
-
 hashtable<int, keym> keyms(128);
 
 void keymap(int *code, char *key)
@@ -195,7 +169,7 @@ void searchbinds(char *action, int type)
         }
     });
     names.add('\0');
-    result(names.getbuf());
+    LuaEngine::pushValue(std::string(names.getbuf()));
 }
 
 keym *findbind(char *key)
@@ -210,7 +184,7 @@ keym *findbind(char *key)
 void getbind(char *key, int type)
 {
     keym *km = findbind(key);
-    result(km ? km->actions[type] : "");
+    LuaEngine::pushValue(km ? std::string(km->actions[type]) : "");
 }   
 
 void bindkey(char *key, char *action, int state, const char *cmd)
@@ -227,16 +201,6 @@ void bindkey(char *key, char *action, int state, const char *cmd)
     binding = newstring(action, len);
 }
 
-ICOMMAND(bind,     "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_DEFAULT, "bind"));
-ICOMMAND(specbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_SPECTATOR, "specbind"));
-ICOMMAND(editbind, "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_EDITING, "editbind"));
-ICOMMAND(getbind,     "s", (char *key), getbind(key, keym::ACTION_DEFAULT));
-ICOMMAND(getspecbind, "s", (char *key), getbind(key, keym::ACTION_SPECTATOR));
-ICOMMAND(geteditbind, "s", (char *key), getbind(key, keym::ACTION_EDITING));
-ICOMMAND(searchbinds,     "s", (char *action), searchbinds(action, keym::ACTION_DEFAULT));
-ICOMMAND(searchspecbinds, "s", (char *action), searchbinds(action, keym::ACTION_SPECTATOR));
-ICOMMAND(searcheditbinds, "s", (char *action), searchbinds(action, keym::ACTION_EDITING));
-
 void inputcommand(char *init, char *action = NULL, char *prompt = NULL) // turns input to the command line on or off
 {
     commandmillis = init ? totalmillis : -1;
@@ -249,9 +213,6 @@ void inputcommand(char *init, char *action = NULL, char *prompt = NULL) // turns
     if(action && action[0]) commandaction = newstring(action);
     if(prompt && prompt[0]) commandprompt = newstring(prompt);
 }
-
-ICOMMAND(saycommand, "C", (char *init), inputcommand(init));
-COMMAND(inputcommand, "sss");
 
 #if !defined(WIN32) && !defined(__APPLE__)
 #include <X11/Xlib.h>
@@ -356,8 +317,6 @@ void history_(int *n)
     }
 }
 
-COMMANDN(history, history_, "i");
-
 struct releaseaction
 {
     keym *key;
@@ -379,8 +338,6 @@ void onrelease(char *s)
     addreleaseaction(s);
 }
 
-COMMAND(onrelease, "s");
-
 void execbind(keym &k, bool isdown)
 {
     loopv(releaseactions)
@@ -388,7 +345,7 @@ void execbind(keym &k, bool isdown)
         releaseaction &ra = releaseactions[i];
         if(ra.key==&k)
         {
-            if(!isdown) execute(ra.action);
+            if(!isdown) LuaEngine::runScript(std::string(ra.action)); // CubeCreate
             delete[] ra.action;
             releaseactions.remove(i--);
         }
@@ -404,7 +361,7 @@ void execbind(keym &k, bool isdown)
         char *&action = k.actions[state][0] ? k.actions[state] : k.actions[keym::ACTION_DEFAULT];
         keyaction = action;
         keypressed = &k;
-        execute(keyaction);
+        LuaEngine::runScript(std::string(keyaction)); // CubeCreate
         keypressed = NULL;
         if(keyaction!=action) delete[] keyaction;
     }
@@ -691,9 +648,6 @@ void addlistcomplete(char *command, char *list)
 {
     addcomplete(command, FILES_LIST, list, NULL);
 }
-
-COMMANDN(complete, addfilecomplete, "sss");
-COMMANDN(listcomplete, addlistcomplete, "ss");
 
 void complete(char *s)
 {

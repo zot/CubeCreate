@@ -444,6 +444,25 @@ extern JSONObject writecompletions();
 
 struct cline { char *line; int type, outtime; };
 
+struct keym
+{
+    enum
+    {
+        ACTION_DEFAULT = 0,
+        ACTION_SPECTATOR,
+        ACTION_EDITING,
+        NUMACTIONS
+    };
+    
+    int code;
+    char *name;
+    char *actions[NUMACTIONS];
+    bool pressed;
+
+    keym() : code(-1), name(NULL), pressed(false) { loopi(NUMACTIONS) actions[i] = newstring(""); }
+    ~keym() { DELETEA(name); loopi(NUMACTIONS) DELETEA(actions[i]); }
+};
+
 // main
 enum
 {

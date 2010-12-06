@@ -1614,3 +1614,47 @@ LUA_EMBED_NOPARAM(clearBlendMap, 0, {
 	resetblendmap();
 	showblendmap();
 });
+
+#ifdef CLIENT
+
+extern int conskip, miniconskip;
+void setconskip(int &skip, int filter, int n);
+extern vector<cline> conlines;
+void bindkey(char *key, char *action, int state, const char *cmd);
+void getbind(char *key, int type);
+void searchbinds(char *action, int type);
+void inputcommand(char *init, char *action = NULL, char *prompt = NULL);
+void addfilecomplete(char *command, char *dir, char *ext);
+void addlistcomplete(char *command, char *list);
+void history_(int *n);
+void onrelease(char *s);
+
+LUA_EMBED_NOPARAM(toggleConsole, 0, { SETV(fullconsole, GETIV(fullconsole) ^ 1); });
+LUA_EMBED_i(conSkip, 0, { setconskip(conskip, GETIV(fullconsole) ? GETIV(fullconfilter) : GETIV(confilter), arg1); });
+LUA_EMBED_i(miniConSkip, 0, { setconskip(miniconskip, GETIV(miniconfilter), arg1); });
+LUA_EMBED_NOPARAM(clearConsole, 0, { while(conlines.length()) delete[] conlines.pop().line; });
+
+LUA_EMBED_ss(bind, 0,     { bindkey((char*)arg1.c_str(), (char*)arg2.c_str(), keym::ACTION_DEFAULT, "bind"); });
+LUA_EMBED_ss(specBind, 0, { bindkey((char*)arg1.c_str(), (char*)arg2.c_str(), keym::ACTION_SPECTATOR, "specbind"); });
+LUA_EMBED_ss(editBind, 0, { bindkey((char*)arg1.c_str(), (char*)arg2.c_str(), keym::ACTION_EDITING, "editbind"); });
+LUA_EMBED_s(getBind, 1,     { getbind((char*)arg1.c_str(), keym::ACTION_DEFAULT); });
+LUA_EMBED_s(getSpecBind, 1, { getbind((char*)arg1.c_str(), keym::ACTION_SPECTATOR); });
+LUA_EMBED_s(getEditBind, 1, { getbind((char*)arg1.c_str(), keym::ACTION_EDITING); });
+LUA_EMBED_s(searchBinds, 1,     { searchbinds((char*)arg1.c_str(), keym::ACTION_DEFAULT); });
+LUA_EMBED_s(searchSpecBinds, 1, { searchbinds((char*)arg1.c_str(), keym::ACTION_SPECTATOR); });
+LUA_EMBED_s(searchEditBinds, 1, { searchbinds((char*)arg1.c_str(), keym::ACTION_EDITING); });
+
+LUA_EMBED_NOPARAM(sayCommand, 0, {
+	std::string init = LuaEngine::getString(1);
+	int n = LuaEngine::gettop();
+	for (int i = 2; i <= n; i++) init += LuaEngine::getString(i);
+	inputcommand((char*)init.c_str());
+});
+LUA_EMBED_STD(inputCommand, inputcommand, sss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str());
+LUA_EMBED_STD(history, history_, i, (int*)&arg1);
+
+LUA_EMBED_STD(onRelease, onrelease, s, (char*)arg1.c_str());
+
+LUA_EMBED_STD(complete, addfilecomplete, sss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str());
+LUA_EMBED_STD(listComplete, addlistcomplete, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+#endif
