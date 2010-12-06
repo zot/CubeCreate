@@ -167,7 +167,7 @@ hashtable<int, keym> keyms(128);
 
 void keymap(int *code, char *key)
 {
-    if(overrideidents) { conoutf(CON_ERROR, "cannot override keymap %s", code); return; }
+    if(EngineVariables::overrideVars) { conoutf(CON_ERROR, "cannot override keymap %s", code); return; }
     keym &km = keyms[*code];
     km.code = *code;
     DELETEA(km.name);
@@ -215,7 +215,7 @@ void getbind(char *key, int type)
 
 void bindkey(char *key, char *action, int state, const char *cmd)
 {
-    if(overrideidents) { conoutf(CON_ERROR, "cannot override %s \"%s\"", cmd, key); return; }
+    if(EngineVariables::overrideVars) { conoutf(CON_ERROR, "cannot override %s \"%s\"", cmd, key); return; }
     keym *km = findbind(key);
     if(!km) { conoutf(CON_ERROR, "unknown key \"%s\"", key); return; }
     char *&binding = km->actions[state];
@@ -646,7 +646,7 @@ void resetcomplete() { completesize = 0; }
 
 void addcomplete(char *command, int type, char *dir, char *ext)
 {
-    if(overrideidents)
+    if(EngineVariables::overrideVars)
     {
         conoutf(CON_ERROR, "cannot override complete %s", command);
         return;

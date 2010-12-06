@@ -198,16 +198,16 @@ struct obj : vertmodel
         defformatstring(cfgname)("packages/models/%s/obj.lua", loadname); // INTENSITY
 
         loadingobj = this;
-        persistidents = false;
+        EngineVariables::persistVars = false;
         if(LuaEngine::runFile(std::string(path(cfgname))).empty() && parts.length()) // INTENSITY configured obj, will call the obj* commands below
         {
-            persistidents = true;
+            EngineVariables::persistVars = true;
             loadingobj = NULL;
             loopv(parts) if(!parts[i]->meshes) return false;
         }
         else // obj without configuration, try default tris and skin
         {
-            persistidents = true;
+            EngineVariables::persistVars = true;
             loadingobj = NULL;
             if(!loaddefaultparts()) return false;
         }

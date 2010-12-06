@@ -1465,9 +1465,17 @@ LUA_EMBED_s(runCS, 0, {
 	execute(arg1.c_str());
 });
 
-// not safe, quick, FIXME
-LUA_EMBED_s(runPython, 0, {
-	run_python((char*)arg1.c_str());
+LUA_EMBED_NOPARAM(startStopLocalServer, 0, {
+	if (!LuaEngine::getString(1)[0])
+		run_python((char*)"intensity.components.server_runner.stop_server()");
+	else
+	{
+		std::string cmd = "intensity.components.server_runner.run_server('";
+		cmd += LuaEngine::getString(1) + "'";
+		if (!_EV_logged_into_master->getInteger()) cmd += ", False";
+		cmd += ")";
+		run_python((char*)cmd.c_str());
+	}
 });
 
 #ifdef CLIENT

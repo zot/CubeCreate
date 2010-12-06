@@ -75,7 +75,7 @@ public:
 		int maxvi,
 		void (_cb_ cb)(int, int, int, int) = NULL,
 		bool persist = false,
-		bool override = false
+		bool overridable = false
 	);
     /**
      * @brief Float variable constructor.
@@ -96,7 +96,7 @@ public:
 		float maxvf,
 		void (_cb_ cb)(float, float, float, float) = NULL,
 		bool persist = false,
-		bool override = false
+		bool overridable = false
 	);
     /**
      * @brief String variable constructor.
@@ -113,7 +113,7 @@ public:
 		const std::string& curvs,
 		void (_cb_ cb)(const std::string&, const std::string&) = NULL,
 		bool persist = false,
-		bool override = false
+		bool overridable = false
 	);
     /**
      * @brief Integer alias constructor.
@@ -313,10 +313,11 @@ public:
      * @brief Register a variable into storage.
      * @param name Name of the variable.
      * @param var EngineVariable pointer representing the variable.
+     * @return Pointer to the registered variable.
      * 
      * Register a variable into storage.
      */
-	static void reg(const std::string& name, EngineVariable *var);
+	static EngineVariable *reg(const std::string& name, EngineVariable *var);
     /**
      * @brief Clear the storage (but save persistents in special map)
      * 
@@ -383,6 +384,10 @@ public:
      * @endcode
      */
 	static EngineVariable *get(const std::string& name);
+	/// when set to true, variables are always taken as persistent, when false, they never persist (not written to file)
+	static bool persistVars;
+	/// when set to true, variables are always taken as overridable
+	static bool overrideVars;
 private:
 	// storage and persistent storage. First one is cleared, second one is cleared just on persistent values transfer to standard storage.
 	static EVMap storage;
@@ -411,7 +416,7 @@ private:
  * (min, max, prev, cur). For string variable, you pass just cur value (no min, max),
  * and callback accepts just two arguments (prev and cur).
  */
-#define REGVAR(name, ...) EngineVariable *_EV_##name = new EngineVariable(#name, __VA_ARGS__)
+#define REGVAR(name, ...) EngineVariable *_EV_##name
 
 /**
  * @def ICB

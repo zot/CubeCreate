@@ -119,7 +119,7 @@ def show_gui(sender, **kwargs):
         if check_server_ready():
             CModule.run_script('''
                 GUI.text("Local server: Running")
-                GUI.stayOpen([[ GUI.button("  stop", [=[ CAPI.runPython("intensity.components.server_runner.stop_server()") ]=]) ]])
+                GUI.stayOpen([[ GUI.button("  stop", [=[ Engine.startStopLocalServer() ]=]) ]])
                 GUI.button("  show output", [[ GUI.show("local_server_output") ]])
                 GUI.stayOpen([[ GUI.button("  save map", [=[ CV:run("do_upload") ]=]) ]])
                 GUI.button("  restart map", [[ GUI.show("restart_map") ]])
@@ -131,7 +131,7 @@ def show_gui(sender, **kwargs):
         else:
             CModule.run_script('''
                 GUI.text("Local server: ...preparing...")
-                GUI.stayOpen([[ GUI.button("  stop", [=[ CAPI.runPython("intensity.components.server_runner.stop_server()") ]=]) ]])
+                GUI.stayOpen([[ GUI.button("  stop", [=[ Engine.startStopLocalServer() ]=]) ]])
             ''')
     else:
         CModule.run_script('''
@@ -147,11 +147,7 @@ def show_gui(sender, **kwargs):
             ]])
             GUI.stayOpen([[
 			    GUI.button("  start", [=[
-			        if EV.logged_into_master == 1 then
-						CAPI.runPython(string.format("intensity.components.server_runner.run_server('%s')", EV.local_server_location))
-					else
-					    CAPI.runPython(string.format("intensity.components.server_runner.run_server('%s', False)", EV.local_server_location))
-					end
+					Engine.startStopLocalServer(EV.local_server_location)
 			    ]=])
             ]])
             GUI.button("  show output", [[ GUI.show("local_server_output") ]])

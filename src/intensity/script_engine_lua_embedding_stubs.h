@@ -361,7 +361,7 @@ luaL_Reg CAPI[] = {
 	STDREG(setVariable),
 	STDREG(syncVariableFromLua),
 	STDREG(runCS),
-	STDREG(runPython),
+	STDREG(startStopLocalServer),
 	// menus
 #ifdef CLIENT
 	STDREG(newGUI),

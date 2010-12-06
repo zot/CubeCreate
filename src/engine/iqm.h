@@ -384,16 +384,16 @@ struct iqm : skelmodel
         defformatstring(cfgname)("packages/models/%s/iqm.lua", loadname); // INTENSITY
 
         loadingiqm = this;
-        persistidents = false;
+        EngineVariables::persistVars = false;
         if (LuaEngine::runFile(std::string(path(cfgname))).empty() && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured iqm, will call the iqm* commands below
         {
-            persistidents = true;
+            EngineVariables::persistVars = true;
             loadingiqm = NULL;
             loopv(parts) if(!parts[i]->meshes) return false;
         }
         else // iqm without configuration, try default tris and skin 
         {
-            persistidents = true;
+            EngineVariables::persistVars = true;
             if(!loaddefaultparts()) 
             {
                 loadingiqm = NULL;

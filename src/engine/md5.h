@@ -441,16 +441,16 @@ struct md5 : skelmodel
         defformatstring(cfgname)("packages/models/%s/md5.lua", loadname); // INTENSITY
 
         loadingmd5 = this;
-        persistidents = false;
+        EngineVariables::persistVars = false;
         if(LuaEngine::runFile(std::string(path(cfgname))).empty() && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured md5, will call the md5* commands below
         {
-            persistidents = true;
+            EngineVariables::persistVars = true;
             loadingmd5 = NULL;
             loopv(parts) if(!parts[i]->meshes) return false;
         }
         else // md5 without configuration, try default tris and skin 
         {
-            persistidents = true;
+            EngineVariables::persistVars = true;
             if(!loaddefaultparts()) 
             {
                 loadingmd5 = NULL;

@@ -1016,13 +1016,13 @@ bool load_world(const char *mname, const char *cname)        // still supports a
 
     clearmainmenu();
 
-    overrideidents = true;
+    EngineVariables::overrideVars = true;
     if (LuaEngine::exists())
     {
         LuaEngine::runFile("data/default_map_settings.lua");
         WorldSystem::runMapScript();
     }
-    overrideidents = false;
+    EngineVariables::overrideVars = false;
    
 #ifdef CLIENT // INTENSITY: Stop, finish loading later when we have all the entities
     renderprogress(0, "requesting entities...");

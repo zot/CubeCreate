@@ -28,8 +28,10 @@
     #include "targeting.h"
 #endif
 
-// actually create the pointers
+// declare the pointers
+#define _EV_NODEF
 #include "engine_variables_registers.h"
+#undef _EV_NODEF
 
 ///////////////////////////
 // ENGINE VARIABLE CLASS //
@@ -45,7 +47,7 @@
 
 // this one is used for any type of integer variables. Arguments "cb" and "persist" are optional.
 EngineVariable::EngineVariable
-(const std::string& vname, int minvi, int curvi, int maxvi, void (_cb_ cb)(int, int, int, int), bool persist, bool override)
+(const std::string& vname, int minvi, int curvi, int maxvi, void (_cb_ cb)(int, int, int, int), bool persist, bool overridable)
 {
 	name = vname;
 	if (minvi > maxvi)
@@ -62,11 +64,13 @@ EngineVariable::EngineVariable
 	persistent = persist;
 	type = cb ? ( persist ? "IVARFP" : "IVARF" ) : ( persist ? "IVARP" : "IVAR" );
 	hasCB = cb ? true : false;
+	override = overridable;
+	alias = false;
 }
 
 // this one is used for float variables. Arguments cb and persist are also optional.
 EngineVariable::EngineVariable
-(const std::string& vname, float minvf, float curvf, float maxvf, void (_cb_ cb)(float, float, float, float), bool persist, bool override)
+(const std::string& vname, float minvf, float curvf, float maxvf, void (_cb_ cb)(float, float, float, float), bool persist, bool overridable)
 {
 	name = vname;
 	if (minvf > maxvf)
@@ -83,11 +87,13 @@ EngineVariable::EngineVariable
 	persistent = persist;
 	type = cb ? ( persist ? "FVARFP" : "FVARF" ) : ( persist ? "FVARP" : "FVAR" );
 	hasCB = cb ? true : false;
+	override = overridable;
+	alias = false;
 }
 
 // string variables. cb and persist are optional
 EngineVariable::EngineVariable
-(const std::string& vname, const std::string& curvs, void (_cb_ cb)(const std::string&, const std::string&), bool persist, bool override)
+(const std::string& vname, const std::string& curvs, void (_cb_ cb)(const std::string&, const std::string&), bool persist, bool overridable)
 {
 	name = vname;
 	readOnly = false;
@@ -96,6 +102,8 @@ EngineVariable::EngineVariable
 	persistent = persist;
 	type = cb ? ( persist ? "SVARFP" : "SVARF" ) : ( persist ? "SVARP" : "SVAR" );
 	hasCB = cb ? true : false;
+	override = overridable;
+	alias = false;
 }
 
 // integer alias
@@ -109,6 +117,7 @@ EngineVariable::EngineVariable(const std::string& aname, int val, bool alias)
 	hasCB = false;
 	type = "IVAR";
 	alias = true;
+	override = false;
 	if (LuaEngine::exists()) registerLuaIVAR();
 }
 
@@ -123,6 +132,7 @@ EngineVariable::EngineVariable(const std::string& aname, float val, bool alias)
 	hasCB = false;
 	type = "FVAR";
 	alias = true;
+	override = false;
 	if (LuaEngine::exists()) registerLuaFVAR();
 }
 
@@ -137,6 +147,7 @@ EngineVariable::EngineVariable(const std::string& aname, const std::string& val,
 	hasCB = false;
 	type = "SVAR";
 	alias = true;
+	override = false;
 	if (LuaEngine::exists()) registerLuaSVAR();
 }
 
@@ -297,10 +308,11 @@ EVMap EngineVariables::persistentStorage;
 
 // register EngineVariable pointer into storage; doesn't call callbacks or set values or anything.
 // won't register a variable that is already registered. (but won't fail either)
-void EngineVariables::reg(const std::string& name, EngineVariable *var)
+EngineVariable *EngineVariables::reg(const std::string& name, EngineVariable *var)
 {
-	if (storage.find(name) != storage.end()) return;
+	if (storage.find(name) != storage.end()) return storage[name];
 	storage.insert(EVPair(name, var));
+	return var;
 }
 
 // lets the storage fill from the other map and do new registrations into map.
@@ -309,10 +321,8 @@ void EngineVariables::fill()
 	fillFromPersistent();
 	#define _RV REGVAR
 	#undef REGVAR
-	#define REGVAR(name, ...) EngineVariables::reg(#name, _EV_##name)
-	#define _EV_NODEF
+	#define REGVAR(name, ...) _EV_##name = EngineVariables::reg(#name, new EngineVariable(#name, __VA_ARGS__))
 	#include "engine_variables_registers.h"
-	#undef _EV_NODEF
 	#undef REGVAR
 	#define REGVAR _RV
 	#undef _RV
@@ -374,7 +384,10 @@ void EngineVariables::flush()
 // used on script engine reinitialization to reset overridable vars
 void EngineVariables::fillFromPersistent()
 {
-	storage = persistentStorage;
+	for (EVMap::iterator it = persistentStorage.begin(); it != persistentStorage.end(); it++)
+	{
+		storage.insert(*it);
+	}
 	persistentStorage.clear();
 }
 
@@ -401,3 +414,8 @@ EngineVariable *EngineVariables::get(const std::string& name)
 	if (storage.find(name) != storage.end()) return storage[name];
 	else return NULL;
 }
+
+// when set to true, variables are always taken as persistent, when false, they never persist (not written to file)
+bool EngineVariables::persistVars = false;
+// when set to true, variables are always taken as overridable
+bool EngineVariables::overrideVars = false;

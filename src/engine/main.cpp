@@ -1208,7 +1208,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     if(!notexture) fatal("could not find core textures");
 
     initlog("console");
-    persistidents = false;
+    EngineVariables::persistVars = false;
     if(!LuaEngine::runFile("data/stdlib.lua").empty()) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
     if(!LuaEngine::runFile("data/font.lua").empty()) fatal("cannot find font definitions");
     if(!setfont("default")) fatal("no default font specified");
@@ -1238,7 +1238,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     LuaEngine::runFile("mybrushes.lua");
     if(game::savedservers()) LuaEngine::runFile(std::string(game::savedservers()));
     
-    persistidents = true;
+    EngineVariables::persistVars = true;
     
     initing = INIT_LOAD;
     if(!config_exec_json(game::savedconfig(), false)) 
@@ -1249,11 +1249,11 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     LuaEngine::runFile(std::string(game::autoexec()));
     initing = NOT_INITING;
 
-    persistidents = false;
+    EngineVariables::persistVars = false;
 
     game::loadconfigs();
 
-    persistidents = true;
+    EngineVariables::persistVars = true;
 
     initlog("Intensity Engine System Initialization");
     SystemManager::init(); // INTENSITY

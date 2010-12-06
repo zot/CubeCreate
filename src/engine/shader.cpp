@@ -1434,13 +1434,13 @@ void useshader(Shader *s)
         
     char *defer = s->defer;
     s->defer = NULL;
-    bool wasstandard = standardshader, wasforcing = forceshaders, waspersisting = persistidents;
+    bool wasstandard = standardshader, wasforcing = forceshaders, waspersisting = EngineVariables::persistVars;
     standardshader = s->standard;
     forceshaders = false;
-    persistidents = false;
+    EngineVariables::persistVars = false;
     curparams.shrink(0);
     LuaEngine::runScript(defer); // CubeCreate: lua
-    persistidents = waspersisting;
+    EngineVariables::persistVars = waspersisting;
     forceshaders = wasforcing;
     standardshader = wasstandard;
     delete[] defer;
@@ -2162,9 +2162,9 @@ void cleanupshaders()
 
 void reloadshaders()
 {
-    persistidents = false;
+    EngineVariables::persistVars = false;
     loadshaders();
-    persistidents = true;
+    EngineVariables::persistVars = true;
     if(GETIV(renderpath)==R_FIXEDFUNCTION) return;
     linkslotshaders();
     enumerate(shaders, Shader, s, 

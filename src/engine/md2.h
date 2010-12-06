@@ -266,14 +266,14 @@ struct md2 : vertmodel
         mdl.initskins(tex, masks);
         if(tex==notexture) conoutf("could not load model skin for %s", name1);
         loadingmd2 = this;
-        persistidents = false;
+        EngineVariables::persistVars = false;
         defformatstring(name3)("packages/models/%s/md2.lua", loadname); // INTENSITY
         if(!LuaEngine::runFile(std::string(path(name3))).empty()) // INTENSITY
         {
             formatstring(name3)("packages/models/%s/md2.lua", pname); // INTENSITY
             LuaEngine::runFile(std::string(path(name3))); // INTENSITY
         }
-        persistidents = true;
+        EngineVariables::persistVars = true;
         loadingmd2 = 0;
         scale /= 4;
         translate.y = -translate.y;

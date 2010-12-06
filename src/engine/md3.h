@@ -207,16 +207,16 @@ struct md3 : vertmodel
         defformatstring(cfgname)("packages/models/%s/md3.lua", loadname); // INTENSITY
 
         loadingmd3 = this;
-        persistidents = false;
+        EngineVariables::persistVars = false;
         if(LuaEngine::runFile(std::string(path(cfgname))).empty() && parts.length()) // INTENSITY configured md3, will call the md3* commands below
         {
-            persistidents = true;
+            EngineVariables::persistVars = true;
             loadingmd3 = NULL;
             loopv(parts) if(!parts[i]->meshes) return false;
         }
         else // md3 without configuration, try default tris and skin
         {
-            persistidents = true;
+            EngineVariables::persistVars = true;
             loadingmd3 = NULL;
             if(!loaddefaultparts()) return false;
         }

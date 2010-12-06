@@ -746,11 +746,7 @@ int name(lua_State *L) \
  */
 #define LUA_EMBED_STD(name, func, type_codes, ...) \
     LUA_EMBED_##type_codes(name, 0, { \
-        /* for now mess with overrideidents, TODO: get rid of this */ \
-        bool old = overrideidents; \
-        overrideidents = true; \
         func(__VA_ARGS__); \
-        overrideidents = old; \
     });
 
 /**

@@ -696,7 +696,9 @@ Engine = {
 
 	screenRes = CAPI.screenRes,
 	resetGl = CAPI.resetGl,
-	getFps = CAPI.getFps
+	getFps = CAPI.getFps,
+
+	startStopLocalServer = CAPI.startStopLocalServer
 }
 
 -- Lightmap functions

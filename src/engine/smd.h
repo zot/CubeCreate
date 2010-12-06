@@ -457,16 +457,16 @@ struct smd : skelmodel
         defformatstring(cfgname)("packages/models/%s/smd.lua", loadname); // INTENSITY
 
         loadingsmd = this;
-        persistidents = false;
+        EngineVariables::persistVars = false;
         if(LuaEngine::runFile(std::string(path(cfgname))).empty() && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured smd, will call the smd* commands below
         {
-            persistidents = true;
+            EngineVariables::persistVars = true;
             loadingsmd = NULL;
             loopv(parts) if(!parts[i]->meshes) return false;
         }
         else // smd without configuration, try default tris and skin 
         {
-            persistidents = true;
+            EngineVariables::persistVars = true;
             if(!loaddefaultparts()) 
             {
                 loadingsmd = NULL;
