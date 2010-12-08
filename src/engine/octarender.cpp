@@ -1788,5 +1788,3 @@ void recalc()
     allchanged(true);
 }
 
-COMMAND(recalc, "");
-

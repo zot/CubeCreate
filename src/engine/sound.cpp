@@ -200,8 +200,6 @@ void startmusic(char *name, char *cmd)
     }
 }
 
-COMMANDN(music, startmusic, "ss");
-
 hashtable<const char *, soundsample> samples;
 vector<soundslot> gamesounds, mapsounds;
 
@@ -241,10 +239,9 @@ int addsound(const char *name, int vol, int maxuses, vector<soundslot> &sounds)
 }
 
 int preload_sound(char *name, int vol); // INTENSITY
-void registersound(char *name, int *vol) { intret(preload_sound(name, *vol)); } // INTENSITY
+void registersound(char *name, int *vol) { LuaEngine::pushValue(preload_sound(name, *vol)); } // INTENSITY
 
 void mapsound(char *name, int *vol, int *maxuses) { intret(addsound(name, *vol, *maxuses < 0 ? 0 : max(1, *maxuses), mapsounds)); }
-COMMAND(mapsound, "sii");
 
 void resetchannels()
 {
@@ -566,9 +563,6 @@ int playsoundname(const char *s, const vec *loc, int vol, int loops, int fade, i
     return playsound(id, loc, NULL, loops, fade, chanid, radius, expire);
 }
 
-void sound(int *n) { playsound(*n); }
-COMMAND(sound, "i");
-
 void resetsound()
 {
     const SDL_version *v = Mix_Linked_Version();
@@ -612,8 +606,6 @@ void resetsound()
         DELETEA(musicdonecmd);
     }
 }
-
-COMMAND(resetsound, "");
 
 #ifdef WIN32
 

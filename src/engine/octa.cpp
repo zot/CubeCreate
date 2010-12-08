@@ -139,8 +139,6 @@ void printcube()
     conoutf(CON_DEBUG, " z  %.8x", c.faces[2]);
 }
 
-COMMAND(printcube, "");
-
 bool isvalidcube(cube &c)
 {
     clipplanes p;
@@ -525,8 +523,6 @@ void remip_()
     mpremip(true);
     allchanged();
 }
-
-COMMANDN(remip, remip_, "");
 
 static inline int edgeval(cube &c, const ivec &p, int dim, int coord)
 {

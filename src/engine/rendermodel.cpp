@@ -190,10 +190,8 @@ void mdlextendbb(float *x, float *y, float *z)
 void mdlname()
 {
     checkmdl;
-    result(loadingmodel->name());
+    LuaEngine::pushValue(std::string(loadingmodel->name()));
 }
-
-COMMAND(mdlname, "");
 
 #define checkragdoll \
     skelmodel *m = dynamic_cast<skelmodel *>(loadingmodel); \
@@ -291,12 +289,6 @@ void mapmodelreset(int *n)
 mapmodelinfo &getmminfo(int i) { return /*mapmodels.inrange(i) ? mapmodels[i] :*/ *(mapmodelinfo *)0; } // INTENSITY
 const char *mapmodelname(int i) { return /*mapmodels.inrange(i) ? mapmodels[i].name :*/ NULL; } // INTENSITY
 
-COMMAND(mmodel, "s");
-COMMANDN(mapmodel, mapmodelcompat, "iiiss");
-COMMAND(mapmodelreset, "i");
-ICOMMAND(mapmodelname, "i", (int *index), { result(mapmodels.inrange(*index) ? mapmodels[*index].name : ""); });
-ICOMMAND(nummapmodels, "", (), { intret(mapmodels.length()); });
-
 // model registry
 
 hashtable<const char *, model *> mdllookup;
@@ -381,8 +373,6 @@ void clearmodel(char *name)
     delete *m;
     conoutf("cleared model %s", name);
 }
-
-COMMAND(clearmodel, "s");
 
 bool modeloccluded(const vec &center, float radius)
 {

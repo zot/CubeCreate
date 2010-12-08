@@ -1011,6 +1011,3 @@ void movie(char *name)
     if(name[0] == '\0') recorder::stop();
     else if(!recorder::isrecording()) recorder::start(name, GETIV(moviefps), GETIV(moview) ? GETIV(moview) : screen->w, GETIV(movieh) ? GETIV(movieh) : screen->h, GETIV(moviesound)!=0);
 }
-
-COMMAND(movie, "s");
-

@@ -57,21 +57,18 @@ Console.binds.addSpec("MOUSE2", [[ CV:run("nextfollow -1") ]])
 Console.binds.addSpec("MOUSE3", [[ CV:run("follow") ]])
 Console.binds.addSpec("SPACE", [[ CV:run("follow") ]])
 
+Console.binds.add("TAB", [[ CV:run("showscores") ]])
+
+Console.binds.add("T", [[ Console.sayCommand() ]])
+--Console.binds.add("T", [[ Console.sayTeamCommand() ]])
+Console.binds.add("BACKQUOTE", [[ Console.sayCommand("/") ]])
+Console.binds.add("SLASH", [[ Console.sayCommand("/") ]])
+
+Console.binds.add("I", [[ CV:run("taunt") ]])
+Console.binds.add("E", [[ CV:run([=[ if (< (getmode) 0) [ echo "^f3Please press F1 to enter editmode from a local game" ] [ edittoggle ] ]=]) ]])
+Console.binds.add("F1", [[ CV:run("edittoggle") ]])
+
 CV:run([[
-bind TAB "showscores"
-
-bind T "saycommand"
-bind Y "sayteamcommand"
-bind BACKQUOTE "saycommand /"
-bind SLASH "saycommand /"
-
-bind I taunt
-
-bind E [ // to stop people accidently pressing E in SP
-	if (< (getmode) 0) [ echo "^f3Please press F1 to enter editmode from a local game" ] [ edittoggle ]
-]
-bind F1 "edittoggle"
-
 bind KP_MINUS "conskip 5"
 bind KP_PLUS "conskip -1000"
 

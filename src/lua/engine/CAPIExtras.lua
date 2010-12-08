@@ -258,6 +258,7 @@ Library = {
 -- Models
 
 Model = {
+	name = CAPI.mdlName,
 	shadow = CAPI.modelShadow,
 	collide = CAPI.modelCollide,
 	perEntityCollisionBoxes = CAPI.modelPerEntityCollisionBoxes,
@@ -719,7 +720,10 @@ Engine = {
 	resetGl = CAPI.resetGl,
 	getFps = CAPI.getFps,
 
-	startStopLocalServer = CAPI.startStopLocalServer
+	startStopLocalServer = CAPI.startStopLocalServer,
+
+	recalc = CAPI.recalc,
+	glExt = CAPI.glExt
 }
 
 -- Lightmap functions

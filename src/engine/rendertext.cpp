@@ -106,9 +106,7 @@ void tabify(const char *str, int *numtabs)
     tabbed.add('\0');
     result(tabbed.getbuf());
 }
-
-COMMAND(tabify, "si");
-    
+  
 void draw_textf(const char *fstr, int left, int top, ...)
 {
     defvformatstring(str, top, fstr);

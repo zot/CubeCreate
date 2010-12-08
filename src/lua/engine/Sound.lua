@@ -34,9 +34,7 @@ Sound = {
 		end
 	end,
 
-	playMusic = function (_name)
-		CAPI.music(_name)
-	end,
+	playMusic = CAPI.music,
 
 	setMusicHandler = function(func)
 		Sound.musicHandler = func
@@ -52,5 +50,7 @@ Sound = {
 	register = function(sound, vol)
 		vol = defaultValue(vol, 0)
 		CAPI.registerSound(sound, vol)
-	end
+	end,
+
+	reset = CAPI.resetSound
 }

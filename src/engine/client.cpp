@@ -44,25 +44,10 @@ bool isconnected(bool attempt)
     return curpeer || (attempt && connpeer);
 }
 
-ICOMMAND(isconnected, "i", (int *attempt), intret(isconnected(*attempt > 0) ? 1 : 0));
-
 const ENetAddress *connectedpeer()
 {
     return curpeer ? &curpeer->address : NULL;
 }
-
-ICOMMAND(connectedip, "", (),
-{
-    const ENetAddress *address = connectedpeer();
-    string hostname;
-    result(address && enet_address_get_host_ip(address, hostname, sizeof(hostname)) >= 0 ? hostname : "");
-});
-
-ICOMMAND(connectedport, "", (),
-{
-    const ENetAddress *address = connectedpeer();
-    intret(address ? address->port : -1);
-});
 
 void abortconnect()
 {
@@ -165,12 +150,6 @@ void trydisconnect()
     }
     else conoutf("not connected");
 }
-
-ICOMMAND(connect, "sis", (char *name, int *port, char *pw), connectserv(name, *port, pw));
-ICOMMAND(lanconnect, "is", (int *port, char *pw), connectserv(NULL, *port, pw));
-COMMANDN(disconnect, trydisconnect, "");
-ICOMMAND(localconnect, "", (), { if(!isconnected() && !haslocalclients()) localconnect(); });
-ICOMMAND(localdisconnect, "", (), { if(haslocalclients()) localdisconnect(); });
 
 void sendclientpacket(ENetPacket *packet, int chan, int cn) // INTENSITY: added cn
 {

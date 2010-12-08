@@ -984,8 +984,6 @@ void clearpvs()
     lockpvs_(false);
 }
 
-COMMAND(clearpvs, "");
-
 static void findwaterplanes()
 {
     extern vector<vtxarray *> valist;
@@ -1060,8 +1058,6 @@ void testpvs(int *vcsize)
     numwaterplanes = oldnumwaterplanes;
     loopi(numwaterplanes) waterplanes[i].height = oldwaterplanes[i];
 }
-
-COMMAND(testpvs, "i");
 
 void genpvs(int *viewcellsize)
 {
@@ -1143,15 +1139,11 @@ void genpvs(int *viewcellsize)
             pvs.length(), pvsbuf.length()/1024.0f, pvsbuf.length()/max(pvs.length(), 1), (end - start) / 1000.0f);
 }
 
-COMMAND(genpvs, "i");
-
 void pvsstats()
 {
     conoutf("%d unique view cells totaling %.1f kB and averaging %d B",          
         pvs.length(), pvsbuf.length()/1024.0f, pvsbuf.length()/max(pvs.length(), 1));
 }
-
-COMMAND(pvsstats, "");
 
 static inline bool pvsoccluded(uchar *buf, const ivec &co, int size, const ivec &bborigin, const ivec &bbsize)
 {

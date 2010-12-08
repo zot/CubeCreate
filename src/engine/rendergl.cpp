@@ -624,9 +624,8 @@ void gl_checkextensions()
 void glext(char *ext)
 {
     const char *exts = (const char *)glGetString(GL_EXTENSIONS);
-    intret(strstr(exts, ext) ? 1 : 0);
+    LuaEngine::pushValue(strstr(exts, ext) ? 1 : 0);
 }
-COMMAND(glext, "s");
 
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
 {
@@ -700,12 +699,6 @@ void cleanupgl()
 
 #define VARRAY_INTERNAL
 #include "varray.h"
-
-ICOMMAND(getcampos, "", (), 
-{
-    defformatstring(pos)("%s %s %s", floatstr(camera1->o.x), floatstr(camera1->o.y), floatstr(camera1->o.z));
-    result(pos);
-});
 
 vec worldpos, camdir, camright, camup;
 
@@ -1992,8 +1985,6 @@ void loadcrosshair_(const char *name, int *i)
 {
     loadcrosshair(name, *i);
 }
-
-COMMANDN(loadcrosshair, loadcrosshair_, "si");
 
 JSONObject writecrosshairs()
 {

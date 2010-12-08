@@ -148,6 +148,8 @@ luaL_Reg CAPI[] = {
 	STDREG(texture),
 	STDREG(mapmodelReset),
 	STDREG(mapmodel),
+	STDREG(numMapModels),
+	STDREG(clearModel),
 	STDREG(autograss),
 	STDREG(texLayer),
 	STDREG(texAlpha),
@@ -176,6 +178,7 @@ luaL_Reg CAPI[] = {
 	STDREG(setPostFX),
 	STDREG(clearPostFX),
 	// models
+	STDREG(mdlName),
 	STDREG(mdlAlphatest),
 	STDREG(mdlAlphablend),
 	STDREG(mdlAlphadepth),
@@ -443,7 +446,56 @@ luaL_Reg CAPI[] = {
 	STDREG(onRelease),
 	STDREG(complete),
 	STDREG(listComplete),
+	// textedit
+	STDREG(textList),
+	STDREG(textShow),
+	STDREG(textFocus),
+	STDREG(textPrev),
+	STDREG(textMode),
+	STDREG(textSave),
+	STDREG(textLoad),
+	STDREG(textInit),
+	STDREG(textCopy),
+	STDREG(textPaste),
+	STDREG(textMark),
+	STDREG(textSelectAll),
+	STDREG(textClear),
+	STDREG(textCurrentLine),
+	STDREG(textExec),
+	// movie
+	STDREG(movie),
+	// octarender
+	STDREG(recalc),
+	// rendergl
+	STDREG(glExt),
+	STDREG(getCamPos),
+	STDREG(loadCrosshair),
+	// rendertext
+	STDREG(tabify),
+	// sound
+	STDREG(resetSound),
 #endif
-
+	// client
+	STDREG(isConnected),
+	STDREG(connectedIP),
+	STDREG(connectedPort),
+	STDREG(connectServ),
+	STDREG(lanConnect),
+	STDREG(disconnect),
+	STDREG(localConnect),
+	STDREG(localDisconnect),
+	// octa
+	STDREG(printCube),
+	STDREG(remip),
+	// physics
+	STDREG(physTest),
+	// pvs
+	STDREG(genPvs),
+	STDREG(testPvs),
+	STDREG(clearPvs),
+	STDREG(pvsStats),
+	// server
+	STDREG(startListenServer),
+	STDREG(stopListenServer),
 	{0,0}
 };

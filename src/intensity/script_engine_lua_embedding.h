@@ -612,6 +612,12 @@ LUA_EMBED_s(mapmodel, 0, {
 	mmodel((char*)arg1.c_str());
 });
 
+extern vector<mapmodelinfo> mapmodels;
+LUA_EMBED_NOPARAM(numMapModels, 1, { LuaEngine::pushValue(mapmodels.length()); });
+
+void clearmodel(char *name);
+LUA_EMBED_STD(clearModel, clearmodel, s, (char*)arg1.c_str());
+
 void autograss(char *name);
 LUA_EMBED_s(autograss, 0, {
 	autograss((char*)arg1.c_str());
@@ -674,6 +680,7 @@ LUA_EMBED_STD_CLIENT(clearPostFX, clearpostfx, NOPARAM);
 
 // Models
 
+void mdlname();
 void mdlalphatest(float *cutoff);
 void mdlalphablend(int *blend);
 void mdlalphadepth(int *depth);
@@ -791,6 +798,8 @@ void smdanim(char *anim, char *animfile, float *speed, int *priority);
 void smdanimpart(char *maskstr);
 void smdlink(int *parent, int *child, char *tagname, float *x, float *y, float *z);
 void smdnoclip(char *meshname, int *noclip);
+
+LUA_EMBED_STD(mdlName, mdlname, NOPARAM);
 
 LUA_EMBED_STD(mdlAlphatest, mdlalphatest, d, (float*)&arg1);
 LUA_EMBED_STD(mdlAlphablend, mdlalphablend, i, (int*)&arg1);
@@ -1634,13 +1643,13 @@ LUA_EMBED_i(conSkip, 0, { setconskip(conskip, GETIV(fullconsole) ? GETIV(fullcon
 LUA_EMBED_i(miniConSkip, 0, { setconskip(miniconskip, GETIV(miniconfilter), arg1); });
 LUA_EMBED_NOPARAM(clearConsole, 0, { while(conlines.length()) delete[] conlines.pop().line; });
 
-LUA_EMBED_ss(bind, 0,     { bindkey((char*)arg1.c_str(), (char*)arg2.c_str(), keym::ACTION_DEFAULT, "bind"); });
+LUA_EMBED_ss(bind, 0,	 { bindkey((char*)arg1.c_str(), (char*)arg2.c_str(), keym::ACTION_DEFAULT, "bind"); });
 LUA_EMBED_ss(specBind, 0, { bindkey((char*)arg1.c_str(), (char*)arg2.c_str(), keym::ACTION_SPECTATOR, "specbind"); });
 LUA_EMBED_ss(editBind, 0, { bindkey((char*)arg1.c_str(), (char*)arg2.c_str(), keym::ACTION_EDITING, "editbind"); });
-LUA_EMBED_s(getBind, 1,     { getbind((char*)arg1.c_str(), keym::ACTION_DEFAULT); });
+LUA_EMBED_s(getBind, 1,	 { getbind((char*)arg1.c_str(), keym::ACTION_DEFAULT); });
 LUA_EMBED_s(getSpecBind, 1, { getbind((char*)arg1.c_str(), keym::ACTION_SPECTATOR); });
 LUA_EMBED_s(getEditBind, 1, { getbind((char*)arg1.c_str(), keym::ACTION_EDITING); });
-LUA_EMBED_s(searchBinds, 1,     { searchbinds((char*)arg1.c_str(), keym::ACTION_DEFAULT); });
+LUA_EMBED_s(searchBinds, 1,	 { searchbinds((char*)arg1.c_str(), keym::ACTION_DEFAULT); });
 LUA_EMBED_s(searchSpecBinds, 1, { searchbinds((char*)arg1.c_str(), keym::ACTION_SPECTATOR); });
 LUA_EMBED_s(searchEditBinds, 1, { searchbinds((char*)arg1.c_str(), keym::ACTION_EDITING); });
 
@@ -1657,4 +1666,172 @@ LUA_EMBED_STD(onRelease, onrelease, s, (char*)arg1.c_str());
 
 LUA_EMBED_STD(complete, addfilecomplete, sss, (char*)arg1.c_str(), (char*)arg2.c_str(), (char*)arg3.c_str());
 LUA_EMBED_STD(listComplete, addlistcomplete, ss, (char*)arg1.c_str(), (char*)arg2.c_str());
+
+
+#include "textedit.h"
+
+#define LUA_EMBED_TEXT(name, numreturns, types, wrapped_code) \
+LUA_EMBED_##types(name, numreturns, { \
+	editor *top = currentfocus(); \
+	if (!top) return 0; \
+	wrapped_code \
+})
+
+LUA_EMBED_NOPARAM(textList, 1, { // return list of all editors
+	std::string s;
+	loopv(editors)
+	{
+		if (i > 0) s += ", ";
+		s += editors[i]->name;
+	}
+	LuaEngine::pushValue(s);
+});
+
+LUA_EMBED_TEXT(textShow, 1, NOPARAM, { // return the start of the buffer
+	editline line;
+	line.combinelines(top->lines);
+	LuaEngine::pushValue(std::string(line.text));
+	line.clear();
+});
+
+LUA_EMBED_si(textFocus, 1, { // focus on a (or create a persistent) specific editor, else returns current name
+	if (arg1[0])
+	{
+		useeditor(arg1.c_str(), arg2 <= 0 ? EDITORFOREVER : arg2, true);
+		LuaEngine::pushValue();
+	}
+	else if (editors.length() > 0) LuaEngine::pushValue(std::string(editors.last()->name));
+	else LuaEngine::pushValue();
+});
+
+LUA_EMBED_TEXT(textPrev, 0, NOPARAM, { // return to the previous editor
+	editors.insert(0, top); editors.pop();
+});
+
+LUA_EMBED_TEXT(textMode, 1, i, { // (1= keep while focused, 2= keep while used in gui, 3= keep forever (i.e. until mode changes)) topmost editor, return current setting if no args
+	if (arg1)
+	{
+		top->mode = arg1;
+		LuaEngine::pushValue();
+	}
+	else LuaEngine::pushValue(top->mode);
+});
+
+LUA_EMBED_TEXT(textSave, 0, s, { // saves the topmost (filename is optional)
+	if (arg1[0]) top->setfile(path(arg1.c_str(), true));
+	top->save();
+});
+
+LUA_EMBED_TEXT(textLoad, 1, s, {
+	if (arg1[0])
+	{
+		top->setfile(path(arg1.c_str(), true));
+		top->load();
+		LuaEngine::pushValue();
+	}
+	else if (top->filename) LuaEngine::pushValue(std::string(top->filename));
+	else LuaEngine::pushValue();
+});
+
+LUA_EMBED_TEXT(textInit, 0, sss, {
+	editor *e = NULL;
+	loopv(editors) if(!arg1.compare(editors[i]->name))
+	{
+		e = editors[i];
+		break;
+	}
+	if(e && e->rendered && !e->filename && arg2[0] && (e->lines.empty() || (e->lines.length() == 1 && !arg3.compare(e->lines[0].text))))
+	{
+		e->setfile(path(arg2.c_str(), true));
+		e->load();
+	}
+});
+ 
+#define PASTEBUFFER "#pastebuffer"
+
+LUA_EMBED_TEXT(textCopy, 0, NOPARAM, { editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false); top->copyselectionto(b); });
+LUA_EMBED_TEXT(textPaste, 0, NOPARAM, { editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false); top->insertallfrom(b); });
+LUA_EMBED_TEXT(textMark, 1, i, { // (1=mark, 2=unmark), return current mark setting if no args
+	editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false); top->insertallfrom(b);
+	if (arg1)
+	{
+		top->mark(arg1 == 1);
+		LuaEngine::pushValue();
+	}
+	else LuaEngine::pushValue(top->region() ? 1 : 2);
+});
+LUA_EMBED_TEXT(textSelectAll, 0, NOPARAM, { top->selectall(); });
+LUA_EMBED_TEXT(textClear, 0, NOPARAM, { top->clear(); });
+LUA_EMBED_TEXT(textCurrentLine, 1, NOPARAM, { LuaEngine::pushValue(std::string(top->currentline().text)); });
+
+LUA_EMBED_TEXT(textExec, 0, i, { // execute script commands from the buffer (0=all, 1=selected region only)
+	std::string script(arg1 ? top->selectiontostring() : top->tostring());
+	LuaEngine::runScript(script);
+});
+
+void movie(char *name);
+LUA_EMBED_STD(movie, movie, s, (char*)arg1.c_str());
+
+void recalc();
+LUA_EMBED_STD(recalc, recalc, NOPARAM);
+
+void glext(char *ext);
+void loadcrosshair_(const char *name, int *i);
+
+LUA_EMBED_STD(glExt, glext, s, (char*)arg1.c_str());
+LUA_EMBED_NOPARAM(getCamPos, 1, {
+	RETURN_VECTOR3(camera1->o);
+});
+LUA_EMBED_STD(loadCrosshair, loadcrosshair_, si, (char*)arg1.c_str(), (int*)&arg2);
+
+void tabify(const char *str, int *numtabs);
+LUA_EMBED_STD(tabify, tabify, si, (char*)arg1.c_str(), (int*)&arg2);
+
+void resetsound();
+LUA_EMBED_STD(resetSound, resetsound, NOPARAM);
+
 #endif
+
+void trydisconnect();
+
+LUA_EMBED_i(isConnected, 1, { LuaEngine::pushValue(isconnected(arg1 > 0) ? 1 : 0); });
+LUA_EMBED_NOPARAM(connectedIP, 1, {
+	const ENetAddress *address = connectedpeer();
+	string hostname;
+	LuaEngine::pushValue(std::string(address && enet_address_get_host_ip(address, hostname, sizeof(hostname)) >= 0 ? hostname : ""));
+});
+LUA_EMBED_NOPARAM(connectedPort, 1, {
+	const ENetAddress *address = connectedpeer();
+	LuaEngine::pushValue(address ? address->port : -1);
+});
+LUA_EMBED_sis(connectServ, 0, { connectserv(arg1.c_str(), arg2, arg3.c_str()); });
+LUA_EMBED_is(lanConnect, 0, { connectserv(NULL, arg1, arg2.c_str()); });
+LUA_EMBED_STD(disconnect, trydisconnect, NOPARAM);
+LUA_EMBED_NOPARAM(localConnect, 0, { if(!isconnected() && !haslocalclients()) localconnect(); });
+LUA_EMBED_NOPARAM(localDisconnect, 0, { if(haslocalclients()) localdisconnect(); });
+
+void printcube();
+void remip_();
+
+LUA_EMBED_STD(printCube, printcube, NOPARAM);
+LUA_EMBED_STD(remip, remip_, NOPARAM);
+
+void phystest();
+
+LUA_EMBED_STD(physTest, phystest, NOPARAM);
+
+void clearpvs();
+void testpvs(int *vcsize);
+void genpvs(int *viewcellsize);
+void pvsstats();
+
+LUA_EMBED_STD(genPvs, genpvs, i, (int*)&arg1);
+LUA_EMBED_STD(testPvs, testpvs, i, (int*)&arg1);
+LUA_EMBED_STD(clearPvs, clearpvs, NOPARAM);
+LUA_EMBED_STD(pvsStats, pvsstats, NOPARAM);
+
+void startlistenserver(int *usemaster);
+void stoplistenserver();
+
+LUA_EMBED_STD(startListenServer, startlistenserver, i, (int*)&arg1);
+LUA_EMBED_STD(stopListenServer, stoplistenserver, NOPARAM);

@@ -600,11 +600,6 @@ void updatefrommaster()
     refreshservers();
 }
 
-ICOMMAND(addserver, "sis", (const char *name, int *port, const char *password), addserver(name, *port, password[0] ? password : NULL));
-ICOMMAND(keepserver, "sis", (const char *name, int *port, const char *password), addserver(name, *port, password[0] ? password : NULL, true));
-ICOMMAND(clearservers, "i", (int *full), clearservers(*full!=0));
-COMMAND(updatefrommaster, "");
-
 void writeservercfg()
 {
     if(!game::savedservers()) return;
