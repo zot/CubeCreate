@@ -7,7 +7,6 @@
 #include "game.h"
 
 #include "fpsserver_interface.h"
-#include "utility.h"
 
 #include "NPC.h"
 
@@ -22,8 +21,8 @@ int add(std::string _class)
 
     Logging::log(Logging::DEBUG, "New NPC with client number: %d\r\n", clientNumber);
 
-    // Create scripting entity (players do this when they log in, NPCs do it here
-    return server::createScriptingEntity(clientNumber, _class);
+    // Create lua entity (players do this when they log in, NPCs do it here
+    return server::createluaEntity(clientNumber, _class);
 }
 
 void remove(int clientNumber)

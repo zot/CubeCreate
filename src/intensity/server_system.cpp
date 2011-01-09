@@ -10,7 +10,6 @@
 #include "server_system.h"
 #include "world_system.h"
 #include "editing_system.h"
-#include "utility.h"
 
 #include "shared_module_members_boost.h"
 
@@ -150,9 +149,9 @@ void update_username(int clientNumber, std::string username)
     FPSServerInterface::getUsername(clientNumber) = username; // Signals that this client is logged in TODO: Nicer
 }
 
-void create_scripting_entities()
+void create_lua_entities()
 {
-    server::createScriptingEntity(-1);
+    server::createluaEntity(-1);
 }
 
 void set_admin(int clientNumber, bool isAdmin)
@@ -180,6 +179,26 @@ void send_text_message(int clientNumber, std::string text, bool sound)
     MessageSystem::send_PersonalServerMessage(clientNumber, -1, "", text);
     if (sound)
         MessageSystem::send_SoundToClientsByName(clientNumber, 0, 0, 0, "olpc/FlavioGaete/Vla_G_Major", -1);
+}
+
+// wrappers for boost exports
+inline void wrapLuaEngineCreate() { lua::engine.Create(); }
+inline bool wrapLuaEngineExists() { return lua::engine.HasHandle(); }
+inline bool wrapLuaEngineRunScript(const std::string& s)
+{
+    return lua::engine.RunString(s);
+}
+inline std::string wrapLuaEngineRunScriptString(const std::string& s)
+{
+    return lua::engine.RunString<std::string>(s);
+}
+inline int wrapLuaEngineRunScriptInt(const std::string& s)
+{
+    return lua::engine.RunString<int>(s);
+}
+inline double wrapLuaEngineRunScriptDouble(const std::string& s)
+{
+    return lua::engine.RunString<double>(s);
 }
 
 //! Main starting point - initialize Python, set up the embedding, and
@@ -213,7 +232,7 @@ int main(int argc, char **argv)
     exposeToPython("force_network_flush", force_network_flush);
     exposeToPython("update_username", update_username);
     exposeToPython("disconnect_client", disconnect_client);
-    exposeToPython("create_scripting_entities", create_scripting_entities);
+    exposeToPython("create_lua_entities", create_lua_entities);
     exposeToPython("set_admin", set_admin);
     exposeToPython("keep_alive", keep_alive);
     exposeToPython("send_text_message", send_text_message);
@@ -267,7 +286,7 @@ void conoutf(const char *fmt, ...)
 }
 
 // Stubs to avoid 'missing command' warnings on server when executing .cfg's
-void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale, int *forcedindex) { }
+void texture(const char *type, const char *name, int rot, int xoffset, int yoffset, float scale, int forcedindex) { }
 COMMAND(texture, "ssiiif");
 
 VARR(fog, 1, 2, 300000);
@@ -290,9 +309,6 @@ COMMAND(music, "s");
 
 void materialreset() { }
 COMMAND(materialreset, "");
-
-void texturereset() { }
-COMMAND(texturereset, "");
 
 void autograss(char *t) { }
 COMMAND(autograss, "");
@@ -500,7 +516,7 @@ void initenvmaps() { };
 void guessshadowdir() { };
 void genenvmaps() { };
 int optimizematsurfs(materialsurface *matbuf, int matsurfs) { return 0; };
-void texturereset(int *n) { };
+void texturereset(int n) { };
 
 void seedparticles() { };
 

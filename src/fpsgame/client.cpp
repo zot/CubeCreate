@@ -10,7 +10,6 @@
 #include "client_system.h"
 #include "message_system.h"
 #include "network_system.h"
-#include "utility.h"
 
 #ifdef SERVER
     #include "server_system.h"

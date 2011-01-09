@@ -20,12 +20,12 @@
 #include "message_system.h"
 
 #include "fpsclient_interface.h"
-#include "utility.h"
 
 #ifdef CLIENT
     #include "client_system.h"
 #endif
 
+using namespace lua;
 
 namespace server
 {
@@ -123,15 +123,11 @@ namespace server
         int uniqueId = _ci->uniqueId;
 
         // If there are entities to remove, remove. For NPCs/bots, however, do not do this - we are in fact being called from there
-        // Also do not do this if the uniqueId is negative - it means we are disconnecting this client *before* a scripting
+        // Also do not do this if the uniqueId is negative - it means we are disconnecting this client *before* a lua
         // entity is actually created for them (this can happen in the rare case of a network error causing a disconnect
         // between ENet connection and completing the login process).
-        if (LuaEngine::exists() && !_ci->local && uniqueId >= 0)
-        {
-            LuaEngine::getGlobal("removeEntity");
-            LuaEngine::pushValue(uniqueId);
-            LuaEngine::call(1, 0); // Will also disconnect from FPSClient
-        }
+        if (engine.HasHandle() && !_ci->local && uniqueId >= 0)
+            engine.GetGlobal("removeEntity").Push(uniqueId).Call(1, 0); // Will also disconnect from FPSClient
         
 //        // Remove from internal mini FPSclient as well
 //        FPSClientInterface::clientDisconnected(_ci->clientnum); // XXX No - do in parallel to character
@@ -393,7 +389,7 @@ namespace server
             // ones, a single manual sending suffices, which is done to the singleton dummy client
             fpsent* currClient = dynamic_cast<fpsent*>( FPSClientInterface::getPlayerByNumber(ci.clientnum) );
             if (!currClient) continue; // We have a server client, but no FPSClient client yet, because we have not yet
-                                       // finished the player's login, only after which do we create the scripting entity,
+                                       // finished the player's login, only after which do we create the lua entity,
                                        // which then gets a client added to the FPSClient (and the remote client's FPSClient)
             if (!currClient->serverControlled || ci.uniqueId == DUMMY_SINGLETON_CLIENT_UNIQUE_ID) // Send also to singleton dummy client
 #endif
@@ -560,24 +556,17 @@ namespace server
                 REFLECT_PYTHON( signal_text_message );
                 signal_text_message(sender, text);
 
-                if (!LuaEngine::exists())
+                if (!engine.HasHandle())
                 {
                     QUEUE_INT(type);
                     QUEUE_STR(text);
                     break;
                 }
 
-                LuaEngine::getGlobal("ApplicationManager");
-                LuaEngine::getTableItem("instance");
-                LuaEngine::getTableItem("handleTextMessage");
-                // args, first is self
-                LuaEngine::pushValueFromIndex(-2);
-                LuaEngine::pushValue(ci->uniqueId);
-                LuaEngine::pushValue(std::string(text));
-                // end args
-                LuaEngine::call(3, 1);
-                bool handleTextMessage = LuaEngine::getBool(-1);
-                LuaEngine::pop(3);
+                engine.GetGlobal("ApplicationManager").GetTableRaw("instance");
+                engine.GetTableRaw("handleTextMessage").PushIndex(-2).Push(ci->uniqueId).Push(text).Call(3, 1);
+                bool handleTextMessage = engine.Get<bool>(-1);
+                engine.ClearStack(3);
 
                 if (!handleTextMessage)
                 {
@@ -712,7 +701,7 @@ namespace server
         ci->isAdmin = isAdmin;
 
         if (ci->isAdmin && ci->uniqueId >= 0) // If an entity was already created, update it
-            LuaEngine::runScript("getEntity(" + Utility::toString(ci->uniqueId) + ")._canEdit = true");
+            engine.RunString("getEntity(" + Utility::toString(ci->uniqueId) + ")._canEdit = true");
     }
 
     bool isAdmin(int clientNumber)
@@ -723,9 +712,9 @@ namespace server
     }
 
     // INTENSITY: Called when logging in, and also when the map restarts (need a new entity).
-    // Creates a new scripting entity, in the process of which a uniqueId is generated.
+    // Creates a new lua entity, in the process of which a uniqueId is generated.
     // returns its ref, no need to store it anywhere.
-    int createScriptingEntity(int cn, std::string _class)
+    int createluaEntity(int cn, std::string _class)
     {
 #ifdef CLIENT
         assert(0);
@@ -747,9 +736,9 @@ namespace server
 //                                         // pending login. Also, they will create their own entities when
 //                                         // the login finishes, so it would be a bug to do it here as well.
 
-                Logging::log(Logging::DEBUG, "scriptingEntities creation: Adding %d\r\n", i);
+                Logging::log(Logging::DEBUG, "luaEntities creation: Adding %d\r\n", i);
 
-                createScriptingEntity(i);
+                createluaEntity(i);
             }
             return -1;
         }
@@ -766,17 +755,17 @@ namespace server
         if (fpsEntity)
         {
             // Already created an entity
-            Logging::log(Logging::WARNING, "createScriptingEntity(%d): already have fpsEntity, and hence scripting entity. Kicking.\r\n", cn);
+            Logging::log(Logging::WARNING, "createluaEntity(%d): already have fpsEntity, and hence lua entity. Kicking.\r\n", cn);
             disconnect_client(cn, DISC_KICK);
             return -1;
         }
 
         // Use the PC class, unless told otherwise
-        if (_class == "") _class = LuaEngine::runScriptString("return ApplicationManager.instance:getPcClass()");
+        if (_class == "") _class = engine.RunString<std::string>("return ApplicationManager.instance:getPcClass()");
 
         Logging::log(Logging::DEBUG, "Creating player entity: %s, %d", _class.c_str(), cn);
 
-        int uniqueId = LuaEngine::runScriptInt("return getNewUniqueId()");
+        int uniqueId = engine.RunString<int>("return getNewUniqueId()");
 
         // Notify of uniqueId *before* creating the entity, so when the entity is created, player realizes it is them
         // and does initial connection correctly
@@ -785,23 +774,20 @@ namespace server
 
         ci->uniqueId = uniqueId;
 
-        LuaEngine::runScript(
+        engine.RunString(
             "newEntity('" + _class + "', { clientNumber = " + Utility::toString(cn) + " }, " + Utility::toString(uniqueId) + ", true)"
         );
 
-        assert(LuaEngine::runScriptInt("return getEntity(" + Utility::toString(uniqueId) + ").clientNumber") == cn);
+        assert(engine.RunString<int>("return getEntity(" + Utility::toString(uniqueId) + ").clientNumber") == cn);
 
         // Add admin status, if relevant
         if (ci->isAdmin)
-            LuaEngine::runScript("getEntity(" + Utility::toString(uniqueId) + ")._canEdit = true");
+            engine.RunString("getEntity(" + Utility::toString(uniqueId) + ")._canEdit = true");
 
         // Add nickname
-        LuaEngine::getGlobal("getEntity");
-        LuaEngine::pushValue(uniqueId);
-        LuaEngine::call(1, 1);
+        engine.GetGlobal("getEntity").Push(uniqueId).Call(1, 1);
         // got class here
-        LuaEngine::setTable("_name", getUsername(cn));
-        LuaEngine::pop(1);
+        engine.SetTable("_name", getUsername(cn)).ClearStack(1);
 
         // For NPCs/Bots, mark them as such and prepare them, exactly as the players do on the client for themselves
         if (ci->local)
@@ -814,12 +800,8 @@ namespace server
             FPSClientInterface::spawnPlayer(fpsEntity);
         }
 
-        LuaEngine::getGlobal("getEntity");
-        LuaEngine::pushValue(uniqueId);
-        LuaEngine::call(1, 1);
-
-        int ret = LuaEngine::ref();
-        LuaEngine::pop(1);
+        engine.GetGlobal("getEntity").Push(uniqueId).Call(1, 1);
+        int ret = engine.Ref();
 
         return ret;
 #endif
@@ -830,8 +812,8 @@ namespace server
         Logging::log(Logging::DEBUG, "server::clientconnect: %d\r\n", n);
 
 /*
-// XXX This is a useful thing to test crashes on logins at odd times. See 'already have fpsEntity, and hence scripting entity'
-// XXX in createScriptingEntity (which gets called twice, if we run this code right here)
+// XXX This is a useful thing to test crashes on logins at odd times. See 'already have fpsEntity, and hence lua entity'
+// XXX in createluaEntity (which gets called twice, if we run this code right here)
 static int i = 0;
 if (i == 0) {
         REFLECT_PYTHON( restart_map );

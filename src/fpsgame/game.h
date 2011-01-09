@@ -510,11 +510,11 @@ namespace server
     extern bool serveroption(const char *arg);
 
     extern int getUniqueIdFromInfo(void *ci); // INTENSITY
-    extern int createScriptingEntity(int cn, std::string _class=""); // INTENSITY: Called when logging in,
+    extern int createluaEntity(int cn, std::string _class=""); // INTENSITY: Called when logging in,
                                                // and also when the map restarts (need a new entity)
     extern void setAdmin(int clientNumber, bool isAdmin); // INTENSITY: Called when logging in,
                                                           // and this is later applied whenever
-                                                          // creating the scripting logic entity (login and map restart)
+                                                          // creating the lua logic entity (login and map restart)
 
     extern bool isAdmin(int clientNumber); // INTENSITY
 

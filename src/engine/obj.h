@@ -199,7 +199,7 @@ struct obj : vertmodel
 
         loadingobj = this;
         EngineVariables::persistVars = false;
-        if(LuaEngine::runFile(std::string(path(cfgname))).empty() && parts.length()) // INTENSITY configured obj, will call the obj* commands below
+        if(lua::engine.RunFile(std::string(path(cfgname))) && parts.length()) // INTENSITY configured obj, will call the obj* commands below
         {
             EngineVariables::persistVars = true;
             loadingobj = NULL;

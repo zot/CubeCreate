@@ -11,7 +11,6 @@
 #include "world_system.h"
 #include "fpsserver_interface.h"
 #include "editing_system.h"
-#include "utility.h"
 #include "client_engine_additions.h"
 #include "targeting.h"
 #include "intensity_gui.h"
@@ -25,6 +24,7 @@
 
 #include "shared_module_members_boost.h"
 
+using namespace lua;
 
 std::string ClientSystem::blankPassword = "1111111111"; // TODO: We should ensure the users can never have this for a real password!
                                                         // Note: Sending CEGUI characters that are invalid to enter in the field might
@@ -144,12 +144,11 @@ bool ClientSystem::scenarioStarted()
     // If not already started, test if indeed started
     if (_mapCompletelyReceived && !_scenarioStarted)
     {
-        if (LuaEngine::exists())
+        if (engine.HasHandle())
         {
-            LuaEngine::getGlobal("testScenarioStarted");
-            LuaEngine::call(0, 1);
-            _scenarioStarted = LuaEngine::getBool(-1);
-            LuaEngine::pop(1);
+            engine.GetGlobal("testScenarioStarted").Call(0, 1);
+            _scenarioStarted = engine.Get<bool>(-1);
+            engine.ClearStack(1);
         }
     }
 
@@ -180,7 +179,7 @@ void ClientSystem::gotoLoginScreen()
     Logging::log(Logging::DEBUG, "Going to login screen\r\n");
     INDENT_LOG(Logging::DEBUG);
 
-    LogicSystem::init(); // This is also done later, but as the mainloop assumes there is always a LuaEngine, we do it here as well
+    LogicSystem::init(); // This is also done later, but as the mainloop assumes there is always a lua engine, we do it here as well
 
     ClientSystem::onDisconnect(); // disconnect has several meanings...
 
@@ -468,6 +467,25 @@ void upload_texture_data(std::string name, int x, int y, int w, int h, long long
     IntensityTexture::uploadTextureData(name, x, y, w, h, (void*)pixels);
 }
 
+// wrappers for boost exports
+inline void wrapLuaEngineCreate() { lua::engine.Create(); }
+inline bool wrapLuaEngineExists() { return lua::engine.HasHandle(); }
+inline bool wrapLuaEngineRunScript(const std::string& s)
+{
+    return lua::engine.RunString(s);
+}
+inline std::string wrapLuaEngineRunScriptString(const std::string& s)
+{
+    return lua::engine.RunString<std::string>(s);
+}
+inline int wrapLuaEngineRunScriptInt(const std::string& s)
+{
+    return lua::engine.RunString<int>(s);
+}
+inline double wrapLuaEngineRunScriptDouble(const std::string& s)
+{
+    return lua::engine.RunString<double>(s);
+}
 
 //! Main starting point - initialize Python, set up the embedding, and
 //! run the main Python script that sets everything in motion
@@ -595,9 +613,9 @@ bool ClientSystem::isAdmin()
     if (!loggedIn) return isAdmin;
     if (!playerLogicEntity.get()) return isAdmin;
 
-    LuaEngine::getRef(playerLogicEntity.get()->luaRef);
-    isAdmin = LuaEngine::getTableBool("_canEdit");
-    LuaEngine::pop(1);
+    engine.GetRef(playerLogicEntity.get()->luaRef);
+    isAdmin = engine.GetTable<bool>("_canEdit");
+    engine.ClearStack(1);
 
    // return isAdmin;
    return true;
@@ -674,7 +692,7 @@ void show_instances()
 
     Logging::log(Logging::DEBUG, "Instances GUI: %s\r\n", command.c_str());
 
-    LuaEngine::runScript(command);
+    engine.RunString(command);
 }
 
 COMMAND(show_instances, "");
@@ -684,11 +702,9 @@ COMMAND(show_instances, "");
 bool checkCompile(std::string filename)
 {
     std::string script = Utility::readFile(filename);
-    std::string errors = LuaEngine::loadScript(script.c_str());
-
-    if (errors != "")
+    if (!engine.LoadString(script))
     {
-        IntensityGUI::showMessage("Compilation failed", errors);
+        IntensityGUI::showMessage("Compilation failed", engine.GetLastError());
         return false;
     } else {
         return true;

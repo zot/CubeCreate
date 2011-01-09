@@ -34,7 +34,6 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 			if (_cc_gnucxx_cl)
 				message(STATUS "Found right G++ for building CC client: ${_cc_gnucxx_cl}. Overriding defaults because of C++0x features support.")
 				set(CMAKE_CXX_COMPILER ${_cc_gnucxx_cl})
-				add_definitions(-std=c++0x)
 				break()
 			endif (_cc_gnucxx_cl)
 		endforeach (_cc_gnucxx_ver 4.6 4.5)
@@ -43,6 +42,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 			message(FATAL_ERROR "Could not find g++ version with required C++0x features support (4.5+). You can also try using Clang.")
 		endif (NOT _cc_gnucxx_cl)
 	endif ((_cc_gnucxx_ver EQUAL 44) OR (_cc_gnucxx_ver LESS 44))
+	add_definitions(-std=c++0x)
 endif (CMAKE_COMPILER_IS_GNUCXX)
 
 # include JSON.
@@ -111,7 +111,7 @@ set(CLIENT_SOURCES
     ../intensity/targeting
     ../intensity/steering
     ../intensity/network_system
-    ../intensity/script_engine_lua
+    ../intensity/scripting_system_lua
     ../intensity/engine_variables
     ../intensity/fpsclient_interface
     ../intensity/fpsserver_interface

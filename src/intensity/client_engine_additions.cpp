@@ -8,10 +8,10 @@
 
 #include "client_system.h"
 #include "client_engine_additions.h"
-#include "utility.h"
 #include "targeting.h"
 #include "message_system.h"
 
+using namespace lua;
 
 //=========================
 // Camera stuff
@@ -25,12 +25,7 @@ void CameraControl::incrementCameraDist(int inc_dir)
 
     SETV(cam_dist, GETIV(cam_dist) + (inc_dir * GETIV(cameraMoveDist)));
 
-    if (LuaEngine::exists())
-    {
-        LuaEngine::getGlobal("Global");
-        LuaEngine::setTable("cameraDistance", GETIV(cam_dist));
-        LuaEngine::pop(1);
-    }
+    if (engine.HasHandle()) engine.GetGlobal("Global").SetTable("cameraDistance", GETIV(cam_dist)).ClearStack(1);
 }
 
 void inc_camera()
@@ -163,12 +158,10 @@ void CameraControl::positionCamera(physent* camera1)
 
     // Sync camera height to scripts, if necessary
     static double lastCameraHeight = -1;
-    if (LuaEngine::exists() && lastCameraHeight != GETFV(cameraheight))
+    if (engine.HasHandle() && lastCameraHeight != GETFV(cameraheight))
     {
         lastCameraHeight = GETFV(cameraheight);
-        LuaEngine::getGlobal("Global");
-        LuaEngine::setTable("cameraHeight", GETFV(cameraheight));
-        LuaEngine::pop(1);
+        engine.GetGlobal("Global").SetTable("cameraHeight", GETFV(cameraheight)).ClearStack(1);
     }
 
     // If we just left forced camera mode, restore thirdperson state
@@ -345,37 +338,26 @@ void prepare_entity_gui()
     int uniqueId = GuiControl::EditedEntity::currEntity->getUniqueId();
 
     // we get this beforehand because of further re-use
-    LuaEngine::getGlobal("getEntity");
-    LuaEngine::pushValue(uniqueId);
-    LuaEngine::call(1, 1);
+    engine.GetGlobal("getEntity").Push(uniqueId).Call(1, 1);
     // we've got the entity here now (popping getEntity out)
-    LuaEngine::getTableItem("createStateDataDict");
-    LuaEngine::pushValueFromIndex(-2); // let's push first argument as self
-    LuaEngine::call(1, 1);
+    engine.GetTableRaw("createStateDataDict").PushIndex(-2).Call(1, 1);
     // ok, state data are on stack, popping createStateDataDict out, let's ref it so we can easily get it later
-    int _tempRef = LuaEngine::ref();
-    LuaEngine::pop(1);
+    int _tempRef = engine.Ref();
+    engine.ClearStack(1);
 
-    LuaEngine::getGlobal("table");
-    // we've got "table" on stack
-    LuaEngine::getTableItem("keys");
-    // we've got "keys" on stack, now we push a copy of state data as argument
-    LuaEngine::getRef(_tempRef);
-    // we call the keys function with stateData copy as argument, the call pops the stateData out
-    LuaEngine::call(1, 1);
+    engine.GetGlobal("table").GetTableRaw("keys").GetRef(_tempRef).Call(1, 1);
     // we've got keys on stack. let's loop the table now.
-    LUA_TABLE_LOOP({
-        std::string key = LuaEngine::getString(-1);
-        LuaEngine::getGlobal("__getVariableGuiName");
-        LuaEngine::pushValue(uniqueId);
-        LuaEngine::pushValue(key);
-        LuaEngine::call(2, 1);
-        std::string guiName = LuaEngine::getString(-1);
-        LuaEngine::pop(1);
+    LUA_TABLE_FOREACH(engine, {
+        // we have array of keys, so the original key is a value in this case
+        std::string key = engine.Get<std::string>(-1);
 
-        LuaEngine::getRef(_tempRef);
-        std::string value = LuaEngine::getTableString(key);
-        LuaEngine::pop(1);
+        engine.GetGlobal("__getVariableGuiName").Push(uniqueId).Push(key).Call(2, 1);
+        std::string guiName = engine.Get<std::string>(-1);
+        engine.ClearStack(1);
+
+        engine.GetRef(_tempRef);
+        std::string value = engine.GetTable<std::string>(key);
+        engine.ClearStack(1);
 
         GuiControl::EditedEntity::stateData.insert(
             GuiControl::EditedEntity::StateDataMap::value_type(
@@ -390,9 +372,7 @@ void prepare_entity_gui()
         GuiControl::EditedEntity::sortedKeys.push_back( key );
         SETVN(num_entity_gui_fields, GETIV(num_entity_gui_fields)+1); // increment for later loop
     });
-
-    LuaEngine::pop(2);
-    LuaEngine::unref(_tempRef);
+    engine.ClearStack(2).UnRef(_tempRef);
 
     sort( GuiControl::EditedEntity::sortedKeys.begin(), GuiControl::EditedEntity::sortedKeys.end() ); // So order is always the same
 
@@ -410,12 +390,9 @@ void prepare_entity_gui()
     }
 
     // Title
-    std::string title;
-    LuaEngine::getGlobal("tostring");
-    LuaEngine::getRef(GuiControl::EditedEntity::currEntity->luaRef);
-    LuaEngine::call(1, 1);
-    title = LuaEngine::getString(-1, "Unknown");
-    LuaEngine::pop(1);
+    engine.GetGlobal("tostring").GetRef(GuiControl::EditedEntity::currEntity->luaRef).Call(1, 1);
+    std::string title = engine.Get(-1, "Unknown");
+    engine.ClearStack(1);
     title = Utility::toString(uniqueId) + ": " + title;
 
     SETVF(entity_gui_title, title);
@@ -456,7 +433,7 @@ void prepare_entity_gui()
     "]])\n";
 
 //    printf("Command: %s\r\n", command.c_str());
-    LuaEngine::runScript(command);
+    engine.RunString(command);
 }
 
 COMMAND(prepare_entity_gui, "");
@@ -487,30 +464,13 @@ void set_entity_gui_value(int *index, char *newValue)
         GuiControl::EditedEntity::stateData[key].second = newValue;
 
         int uniqueId = GuiControl::EditedEntity::currEntity->getUniqueId();
-        // getting args for future encodeJSON first
-        LuaEngine::getGlobal("__getVariable");
-        // __getVariable on stack
-        LuaEngine::pushValue(uniqueId);
-        LuaEngine::pushValue(key);
-        // call it with those arguments
-        LuaEngine::call(2, 1);
-        // the variable on stack now, call its fromData
-        LuaEngine::getTableItem("fromData");
-        // fromData on stack
-        LuaEngine::pushValueFromIndex(-2); // self argument
-        LuaEngine::pushValue(std::string(newValue)); // value argument
-        // call it
-        LuaEngine::call(2, 1);
-        // value here on stack. It's an argument of encodeJSON. now get encodeJSON and shift the values.
-        LuaEngine::getGlobal("encodeJSON");
-        LuaEngine::shift();
-        // call encodeJSON finally.
-        LuaEngine::call(1, 1);
-        // string on stack now
-        std::string naturalValue = LuaEngine::getString(-1, "[]");
-        LuaEngine::pop(2); // return stack into original state - get rid of the string and the variable.
+        engine.GetGlobal("__getVariable").Push(uniqueId).Push(key).Call(2, 1);
+        engine.GetTableRaw("fromData").PushIndex(-2).Push(newValue).Call(2, 1);
+        engine.GetGlobal("encodeJSON").ShiftValues().Call(1, 1);
+        std::string naturalValue = engine.Get(-1, "[]");
+        engine.ClearStack(2);
 
-        LuaEngine::runScript("getEntity(" + Utility::toString(uniqueId) + ")." + key + " = (" + naturalValue + ")");
+        engine.RunString("getEntity(" + Utility::toString(uniqueId) + ")." + key + " = (" + naturalValue + ")");
     }
 }
 
@@ -541,25 +501,20 @@ dir(turn_right, turn_move, +1, k_turn_right, k_turn_left);  // New pitching moti
 dir(look_down, look_updown_move, -1, k_look_down, k_look_up);
 dir(look_up,   look_updown_move, +1, k_look_up,   k_look_down);
 
-#define script_dir(name,v,d,s,os) ICOMMAND(name, "D", (int *down),      \
+#define script_dir(name,v,d,s,os) ICOMMAND(name, "D", (int *down), \
     if (ClientSystem::scenarioStarted()) \
     { \
-        PlayerControl::flushActions(); /* Stop current actions */         \
-        s = *down!=0;                                                \
-        LuaEngine::getGlobal("ApplicationManager"); \
-        LuaEngine::getTableItem("instance"); \
-        LuaEngine::getTableItem(#v); \
-        LuaEngine::pushValueFromIndex(-2); \
-        LuaEngine::pushValue(s ? d : (os ? -(d) : 0)); \
-        LuaEngine::pushValue(s); \
-        LuaEngine::call(3, 0); \
-        LuaEngine::pop(2); \
+        PlayerControl::flushActions(); /* Stop current actions */ \
+        s = *down!=0; \
+        engine.GetGlobal("ApplicationManager").GetTableRaw("instance"); \
+        engine.GetTableRaw(#v).PushIndex(-2).Push(s ? d : (os ? -(d) : 0)).Push(s).Call(3, 0); \
+        engine.ClearStack(2); \
     } \
 );
 
 //script_dir(turn_left,  performYaw, -1, k_turn_left,  k_turn_right); // New turning motion
 //script_dir(turn_right, performYaw, +1, k_turn_right, k_turn_left);  // New pitching motion
-// TODO: Enable these. But they do change the protocol (see Character.js), so forces everyone and everything to upgrade
+// TODO: Enable these. But they do change the protocol (see Character.lua), so forces everyone and everything to upgrade
 //script_dir(look_down, performPitch, -1, k_look_down, k_look_up);
 //script_dir(look_up,   performPitch, +1, k_look_up,   k_look_down);
 
@@ -573,13 +528,9 @@ ICOMMAND(jump, "D", (int *down), {
   if (ClientSystem::scenarioStarted())
   {
     PlayerControl::flushActions(); /* Stop current actions */
-    LuaEngine::getGlobal("ApplicationManager");
-    LuaEngine::getTableItem("instance");
-    LuaEngine::getTableItem("performJump");
-    LuaEngine::pushValueFromIndex(-2);
-    LuaEngine::pushValue((bool)*down);
-    LuaEngine::call(2, 0);
-    LuaEngine::pop(2);
+    engine.GetGlobal("ApplicationManager").GetTableRaw("instance");
+    engine.GetTableRaw("performJump").PushIndex(-2).Push((bool)*down).Call(2, 0);
+    engine.ClearStack(2);
   }
 });
 
@@ -607,8 +558,8 @@ void PlayerControl::handleExtraPlayerMovements(int millis)
 
     fpsent* fpsPlayer = dynamic_cast<fpsent*>(player);
 
-    LuaEngine::getRef(ClientSystem::playerLogicEntity.get()->luaRef);
-    float _facingSpeed = LuaEngine::getTableDouble("facingSpeed");
+    engine.GetRef(ClientSystem::playerLogicEntity.get()->luaRef);
+    float _facingSpeed = engine.GetTable<double>("facingSpeed");
 
     if (fpsPlayer->turn_move || fabs(x - 0.5) > 0.45)
         mover->yaw += _facingSpeed * (
@@ -620,7 +571,7 @@ void PlayerControl::handleExtraPlayerMovements(int millis)
                 fpsPlayer->look_updown_move ? fpsPlayer->look_updown_move : (y > 0.5 ? -1 : 1)
             ) * delta;
 
-    LuaEngine::pop(1);
+    engine.ClearStack(1);
 
     extern void fixcamerarange();
     fixcamerarange(); // Normalize and limit the yaw and pitch values to appropriate ranges
@@ -640,12 +591,9 @@ bool PlayerControl::handleClick(int button, bool up)
 
 void PlayerControl::flushActions()
 {
-    LuaEngine::getRef(ClientSystem::playerLogicEntity.get()->luaRef);
-    LuaEngine::getTableItem("actionSystem");
-    LuaEngine::getTableItem("clear");
-    LuaEngine::pushValueFromIndex(-2);
-    LuaEngine::call(1, 0);
-    LuaEngine::pop(2);
+    engine.GetRef(ClientSystem::playerLogicEntity.get()->luaRef);
+    engine.GetTableRaw("actionSystem");
+    engine.GetTableRaw("clear").PushIndex(-2).Call(1, 0).ClearStack(2);
 }
 
 void PlayerControl::toggleMainMenu()
@@ -795,37 +743,22 @@ void mouseclick(int button, bool down)
 {
     Logging::log(Logging::INFO, "mouse click: %d (down: %d)\r\n", button, down);
 
-    if (! (LuaEngine::exists() && ClientSystem::scenarioStarted()) )
+    if (! (engine.HasHandle() && ClientSystem::scenarioStarted()) )
         return;
 
     TargetingControl::determineMouseTarget(true); // A click forces us to check for clicking on entities
 
     vec pos = TargetingControl::targetPosition;
 
-    LuaEngine::getGlobal("ApplicationManager");
-    LuaEngine::getTableItem("instance");
-    LuaEngine::getTableItem("performClick");
-    LuaEngine::pushValueFromIndex(-2); // self argument
-    // pushing arguments themselves
-    LuaEngine::pushValue(button);
-    LuaEngine::pushValue(down);
-    LuaEngine::getGlobal("Vector3");
-    LuaEngine::pushValue(pos.x);
-    LuaEngine::pushValue(pos.y);
-    LuaEngine::pushValue(pos.z);
-    // after call, vec is on stack
-    LuaEngine::call(3, 1);
+    engine.GetGlobal("ApplicationManager").GetTableRaw("instance").GetTableRaw("performClick");
+    engine.PushIndex(-2).Push(button).Push(down).Push(pos);
     if (TargetingControl::targetLogicEntity.get() && !TargetingControl::targetLogicEntity->isNone())
-        LuaEngine::getRef(TargetingControl::targetLogicEntity->luaRef);
+        engine.GetRef(TargetingControl::targetLogicEntity->luaRef);
     else
-        LuaEngine::pushValue();
+        engine.Push();
     float x, y;
     g3d_cursorpos(x, y);
-    LuaEngine::pushValue(x);
-    LuaEngine::pushValue(y);
-    // call now
-    LuaEngine::call(7, 0);
-    LuaEngine::pop(2);
+    engine.Push(x).Push(y).Call(7, 0).ClearStack(2);
 }
 
 ICOMMAND(mouse1click, "D", (int *down), { mouseclick(1, *down!=0); });
@@ -838,18 +771,11 @@ ICOMMAND(mouse3click, "D", (int *down), { mouseclick(3, *down!=0); });
 
 void actionKey(int index, bool down)
 {
-    if (LuaEngine::exists())
+    if (engine.HasHandle())
     {
-        LuaEngine::getGlobal("ApplicationManager");
-        LuaEngine::getTableItem("instance");
-        LuaEngine::getTableItem("actionKey");
-        LuaEngine::pushValueFromIndex(-2); // self argument
-        // pushing arguments themselves
-        LuaEngine::pushValue(index);
-        LuaEngine::pushValue(down);
-        // call now
-        LuaEngine::call(3, 0);
-        LuaEngine::pop(2);
+        engine.GetGlobal("ApplicationManager").GetTableRaw("instance");
+        engine.GetTableRaw("actionKey").PushIndex(-2).Push(index).Push(down).Call(3, 0);
+        engine.ClearStack(2);
     }
 }
 

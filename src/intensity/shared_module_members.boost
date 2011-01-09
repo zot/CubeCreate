@@ -39,12 +39,12 @@ exposeToPython("render_progress", render_progress);
 
 // Scripting
 
-exposeToPython("create_engine", &LuaEngine::create);
-exposeToPython("has_engine", &LuaEngine::exists);
-exposeToPython("run_script", &LuaEngine::runScript);
-exposeToPython("run_script_string", &LuaEngine::runScriptString);
-exposeToPython("run_script_int", &LuaEngine::runScriptInt);
-exposeToPython("run_script_double", &LuaEngine::runScriptDouble);
+exposeToPython("create_engine", wrapLuaEngineCreate);
+exposeToPython("has_engine", wrapLuaEngineExists);
+exposeToPython("run_script", wrapLuaEngineRunScript);
+exposeToPython("run_script_string", wrapLuaEngineRunScriptString);
+exposeToPython("run_script_int", wrapLuaEngineRunScriptInt);
+exposeToPython("run_script_double", wrapLuaEngineRunScriptDouble);
 
 exposeToPython("run_cubescript", execute);
 

@@ -124,12 +124,12 @@ REGVAR(grassanimmillis, 0, 3000, 60000, NULL, false, true);
 REGVAR(grassanimscale, 0.0f, 0.03f, 1.0f, NULL, false, true);
 REGVAR(grassscale, 1, 2, 64, NULL, false, true);
 REGVAR(grasscolour, 0, 0xFFFFFF, 0xFFFFFF, ICB({
-	int c = curv;
+    int c = curv;
     if(!curv)
     {
-		_EV_grasscolour->set(0xFFFFFF);
-		c = 0xFFFFFF;
-	}
+        _EV_grasscolour->set(0xFFFFFF);
+        c = 0xFFFFFF;
+    }
     grasscolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
 }), false, true);
 REGVAR(grassalpha, 0, 1, 1, NULL, false, true);
@@ -150,21 +150,21 @@ REGVAR(lighterror, 1, 8, 16, NULL, false, true);
 REGVAR(bumperror, 1, 3, 16, NULL, false, true);
 REGVAR(lightlod, 0, 0, 10, NULL, false, true);
 REGVAR(ambient, 1, 0x191919, 0xFFFFFF, ICB({
-	int c = curv;
+    int c = curv;
     if(curv <= 255)
     {
-		_EV_ambient->set(curv | (curv<<8) | (curv<<16));
-		c = curv | (curv<<8) | (curv<<16);
-	}
+        _EV_ambient->set(curv | (curv<<8) | (curv<<16));
+        c = curv | (curv<<8) | (curv<<16);
+    }
     ambientcolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
 }), false, true);
 REGVAR(skylight, 0, 0, 0xFFFFFF, ICB({
-	int c = curv;
+    int c = curv;
     if(curv <= 255)
     {
-		_EV_skylight->set(curv | (curv<<8) | (curv<<16));
-		c = curv | (curv<<8) | (curv<<16);
-	}
+        _EV_skylight->set(curv | (curv<<8) | (curv<<16));
+        c = curv | (curv<<8) | (curv<<16);
+    }
     skylightcolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
 }), false, true);
 REGVAR(lmshadows, 0, 2, 2); // global name was lmshadows_
@@ -655,7 +655,7 @@ REGVAR(shadowmapdist, 128, 256, 512, NULL, true);
 REGVAR(fpshadowmap, 0, 0, 1, ICB({ cleanshadowmap(); }), true);
 REGVAR(shadowmapprecision, 0, 0, 1, ICB({ cleanshadowmap(); }), true);
 REGVAR(shadowmapambient, 0, 0, 0xFFFFFF, ICB({
-	int v = curv;
+    int v = curv;
     if(v <= 255) v |= (v<<8) | (v<<16);
     shadowmapambientcolor = bvec((v>>16)&0xFF, (v>>8)&0xFF, v&0xFF);
     _EV_shadowmapambient->set(v);
@@ -749,17 +749,17 @@ REGVAR(waterlod, 0, 1, 3, NULL, true);
 REGVAR(vertwater, 0, 1, 1, ICB({ allchanged(); }), true);
 REGVAR(reflectdist, 0, 2000, 10000, NULL, true);
 REGVAR(watercolour, 0, 0x144650, 0xFFFFFF, ICB({
-	int c = curv;
+    int c = curv;
     if(!c) c = 0x144650;
     watercolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
     _EV_watercolour->set(c);
 }), false, true);
 REGVAR(waterfog, 0, 150, 10000, NULL, false, true);
 REGVAR(waterfallcolour, 0, 0, 0xFFFFFF, ICB({
-	waterfallcolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF);
+    waterfallcolor = bvec((curv>>16)&0xFF, (curv>>8)&0xFF, curv&0xFF);
 }), false, true);
 REGVAR(lavacolour, 0, 0xFF4000, 0xFFFFFF, ICB({
-	int c = curv;
+    int c = curv;
     if(!c) c = 0xFF4000;
     lavacolor = bvec((c>>16)&0xFF, (c>>8)&0xFF, c&0xFF);
     _EV_lavacolour->set(c);
@@ -798,7 +798,7 @@ REGVAR(entmovingshadow, 0, 1, 1);
 REGVAR(showentradius, 0, 1, 1);
 REGVAR(entitysurf, 0, 0, 1);
 REGVAR(entmoving, 0, 0, 2, ICB({
-	int c = curv;
+    int c = curv;
     if(enthover < 0 || noentedit()) c = 0;
     else if(c == 1) c = enttoggle(enthover);
     else if(c == 2 && entgroup.find(enthover) < 0) entadd(enthover);

@@ -8,7 +8,6 @@
 #include "network_system.h"
 #include "server_system.h"
 #include "fpsclient_interface.h"
-#include "utility.h"
 #include "system_manager.h"
 
 
@@ -839,7 +838,7 @@ bool setuplistenserver(bool dedicated)
 
 void initserver(bool listen, bool dedicated)
 {
-    if(dedicated) LuaEngine::runFile("server-init.lua");
+    if(dedicated) lua::engine.RunFile("server-init.lua");
 
     if(listen) setuplistenserver(dedicated);
 

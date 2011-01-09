@@ -5,8 +5,6 @@
 #include "cube.h"
 #include "engine.h"
 
-#include "utility.h"
-
 
 namespace Logging
 {

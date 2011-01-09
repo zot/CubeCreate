@@ -9,8 +9,6 @@
 #include <dirent.h>
 #endif
 
-#include "utility.h" // INTENSITY
-
 string homedir = "";
 vector<char *> packagedirs;
 

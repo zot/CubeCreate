@@ -1885,17 +1885,18 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 #else
     if (pl->o.z < 0)
     {
-        LuaEngine::getGlobal("ApplicationManager");
-        LuaEngine::getTableItem("instance");
+        using namespace lua;
+        engine.GetGlobal("ApplicationManager");
+        engine.GetTableRaw("instance");
 #ifdef CLIENT
-        LuaEngine::getTableItem("clientOnEntityOffMap");
+        engine.GetTableRaw("clientOnEntityOffMap");
 #else
-        LuaEngine::getTableItem("onEntityOffMap");
+        engine.GetTableRaw("onEntityOffMap");
 #endif
-        LuaEngine::pushValueFromIndex(-2);
-        LuaEngine::getRef(LogicSystem::getLogicEntity((dynent*)pl).get()->luaRef);
-        LuaEngine::call(2, 0);
-        LuaEngine::pop(2);
+        engine.PushIndex(-2);
+        engine.GetRef(LogicSystem::getLogicEntity((dynent*)pl).get()->luaRef);
+        engine.Call(2, 0);
+        engine.ClearStack(2);
     }
 #endif
 

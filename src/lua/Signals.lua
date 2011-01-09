@@ -61,7 +61,7 @@ end
 -- @see _disconnectAll
 -- @see _emit
 function _disconnect (self, id)
-	if self._signalConncetions then
+	if self._signalConnections then
 		for i = 1, #self._signalConnections do
 			local connection = self._signalConnections[i]
 			if connection.id == id then
@@ -88,7 +88,7 @@ end
 function _disconnectAll (self)
 	if self._signalConncetions then
 		while #self._signalConnections > 0 do
-			_disconnect(self, self._signalConnections[1].id)
+			self:disconnect(self, self._signalConnections[1].id)
 		end
 	end
 end

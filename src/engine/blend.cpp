@@ -591,12 +591,12 @@ void setblendbrush(const char *name)
 
 void getblendbrushname(int *n)
 {
-    LuaEngine::pushValue(brushes.inrange(*n) ? std::string(brushes[*n]->name) : "");
+    lua::engine.Push(brushes.inrange(*n) ? std::string(brushes[*n]->name) : "");
 }
 
 void curblendbrush()
 {
-    LuaEngine::pushValue(curbrush);
+    lua::engine.Push(curbrush);
 }
 
 extern int nompedit;

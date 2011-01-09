@@ -70,11 +70,14 @@ print 'Config filename:', config_filename
 
 init_config(config_filename, template_filename)
 
-load_components()
-
 print "Initializing logging"
 
 CModule.init_logging()
+
+print "Initializing scripting engine"
+CModule.create_engine()
+
+load_components()
 
 print "Testing for local mode"
 
@@ -91,7 +94,6 @@ execfile( os.path.join(PYTHON_SCRIPT_DIR, "server", "server_init.py") )
 print "Initializing CModule"
 
 CModule.init()
-CModule.create_engine()
 CModule.set_home_dir( get_home_subdir() )
 
 # Utilities

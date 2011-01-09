@@ -19,7 +19,6 @@
     #include "server_system.h"
 #endif
 
-#include "utility.h"
 #include "system_manager.h"
 #include "message_system.h"
 #include "world_system.h"
@@ -29,7 +28,7 @@
 // Enable to let *server* do physics for players - useful for debugging. Must also be defined in client.cpp!
 #define SERVER_DRIVEN_PLAYERS 0
 
-
+using namespace lua;
 namespace game
 {
     int gamemode = 0;
@@ -255,7 +254,7 @@ namespace game
 
 #if (SERVER_DRIVEN_PLAYERS == 1)
             // Enable this to let server drive client movement
-            LuaEngine::runScript(
+            engine.RunString(
                 "getEntity(" + Utility::toString(d->uniqueId) + ").position = {" +
                 "getEntity(" + Utility::toString(d->uniqueId) + ").position.x," +
                 "getEntity(" + Utility::toString(d->uniqueId) + ").position.y," +
@@ -270,8 +269,8 @@ namespace game
 #ifdef CLIENT
         if ( ClientSystem::playerLogicEntity.get() )
         {
-            LuaEngine::getRef(ClientSystem::playerLogicEntity.get()->luaRef);
-            if (LuaEngine::getTableBool("initialized"))
+            engine.GetRef(ClientSystem::playerLogicEntity.get()->luaRef);
+            if (engine.GetTable<bool>("initialized"))
             {
                 Logging::log(Logging::INFO, "Player %d (%lu) is initialized, run moveplayer(): %f,%f,%f.\r\n",
                     player1->uniqueId, (unsigned long)player1,
@@ -302,7 +301,7 @@ namespace game
             } else
                 Logging::log(Logging::INFO, "Player is not yet initialized, do not run moveplayer() etc.\r\n");
 
-            LuaEngine::pop(1);
+            engine.ClearStack(1);
         }
         else
             Logging::log(Logging::INFO, "Player does not yet exist, or scenario not started, do not run moveplayer() etc.\r\n");
@@ -316,7 +315,7 @@ namespace game
             if (!npc->serverControlled || npc->uniqueId == DUMMY_SINGLETON_CLIENT_UNIQUE_ID)
                 continue;
 
-            // We do this so scripting need not worry in the NPC behaviour code
+            // We do this so lua need not worry in the NPC behaviour code
             while(npc->yaw < -180.0f) npc->yaw += 360.0f;
             while(npc->yaw > +180.0f) npc->yaw -= 360.0f;
 
@@ -358,7 +357,7 @@ namespace game
 #ifdef CLIENT
         bool runWorld = ClientSystem::scenarioStarted();
 #else
-        bool runWorld = LuaEngine::exists();
+        bool runWorld = engine.HasHandle();
 #endif
         static Benchmarker physicsBenchmarker;
 
@@ -376,12 +375,13 @@ namespace game
                 // Additional physics: Collisions
                 //============================================
 
-                // If triggering collisions can be done by the scripting library code, use that
+                // If triggering collisions can be done by the lua library code, use that
 
-                LuaEngine::getGlobal("manageTriggeringCollisions");
-                if (!LuaEngine::isNoneNil(-1)) LuaEngine::call(0, 0);
+                engine.GetGlobal("manageTriggeringCollisions");
+                if (!engine.Is<void>(-1)) engine.Call(0, 0);
                 else
                 {
+                    engine.ClearStack(1);
                     loopv(players)
                     {
                         fpsent* fpsEntity = players[i];
@@ -407,9 +407,7 @@ namespace game
         actionsBenchmarker.start();
             if (runWorld)
             {
-                LuaEngine::getGlobal("startFrame");
-                LuaEngine::call(0, 0);
-
+                engine.GetGlobal("startFrame").Call(0, 0);
                 LogicSystem::manageActions(curtime);
             }
         actionsBenchmarker.stop();
@@ -623,12 +621,10 @@ namespace game
 
     std::string scriptname(fpsent *d)
     {
-        LuaEngine::getGlobal("getEntity");
-        LuaEngine::pushValue(LogicSystem::getUniqueId(d));
-        LuaEngine::call(1, 1);
+        engine.GetGlobal("getEntity").Push(LogicSystem::getUniqueId(d)).Call(1, 1);
         // got class here
-        std::string ret = LuaEngine::getTableString("_name");
-        LuaEngine::pop(1);
+        std::string ret = engine.GetTable<std::string>("_name");
+        engine.ClearStack(1);
         return ret;
     }
 

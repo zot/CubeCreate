@@ -990,11 +990,11 @@ MSlot materialslots[MATF_VOLUME+1];
 Slot dummyslot;
 VSlot dummyvslot(&dummyslot);
 
-void texturereset(int *n)
+void texturereset(int n)
 {
     if(!EngineVariables::overrideVars && !game::allowedittoggle()) return;
     resetslotshader();
-    int limit = clamp(*n, 0, slots.length());
+    int limit = clamp(n, 0, slots.length());
     for(int i = limit; i < slots.length(); i++) 
     {
         Slot *s = slots[i];
@@ -1003,8 +1003,6 @@ void texturereset(int *n)
     }
     slots.setsize(limit);
 }
-
-COMMAND(texturereset, "i");
 
 void materialreset()
 {
@@ -1351,7 +1349,7 @@ ICOMMAND(fixinsidefaces, "i", (int *tex),
     allchanged();
 });
 
-void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale, int *forcedindex) // INTENSITY: forcedindex
+void texture(const char *type, const char *name, int rot, int xoffset, int yoffset, float scale, int forcedindex) // INTENSITY: forcedindex
 {
     if(slots.length()>=0x10000) return;
     static const struct { const char *name; int type; } types[] =
@@ -1374,10 +1372,10 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
     else if(lastmatslot>=0) matslot = lastmatslot;
     else if(slots.empty()) return;
     
-    assert(*forcedindex <= 0 || slots.inrange(*forcedindex)); // INTENSITY
-    if (*forcedindex > 0 && tnum==TEX_DIFFUSE) // INTENSITY: reset old slots we force the index of
-        slots[*forcedindex]->reset();
-    Slot &s = matslot>=0 ? materialslots[matslot] : (*forcedindex <= 0 ? *(tnum!=TEX_DIFFUSE ? slots.last() : slots.add(new Slot(slots.length()))) : *slots[*forcedindex]); // INTENSITY: Allow forced indexes
+    assert(forcedindex <= 0 || slots.inrange(forcedindex)); // INTENSITY
+    if (forcedindex > 0 && tnum==TEX_DIFFUSE) // INTENSITY: reset old slots we force the index of
+        slots[forcedindex]->reset();
+    Slot &s = matslot>=0 ? materialslots[matslot] : (forcedindex <= 0 ? *(tnum!=TEX_DIFFUSE ? slots.last() : slots.add(new Slot(slots.length()))) : *slots[forcedindex]); // INTENSITY: Allow forced indexes
 
     s.loaded = false;
     s.texmask |= 1<<tnum;
@@ -1393,15 +1391,13 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
         setslotshader(s);
         VSlot &vs = matslot >= 0 ? materialslots[matslot] : *emptyvslot(s);
         vs.reset();
-        vs.rotation = clamp(*rot, 0, 5);
-        vs.xoffset = max(*xoffset, 0);
-        vs.yoffset = max(*yoffset, 0);
-        vs.scale = *scale <= 0 ? 1 : *scale;
+        vs.rotation = clamp(rot, 0, 5);
+        vs.xoffset = max(xoffset, 0);
+        vs.yoffset = max(yoffset, 0);
+        vs.scale = scale <= 0 ? 1 : scale;
         propagatevslot(&vs, (1<<VSLOT_NUM)-1);
     }
 }
-
-COMMAND(texture, "ssiiifi");
 
 void autograss(char *name)
 {

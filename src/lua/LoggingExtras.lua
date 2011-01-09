@@ -31,3 +31,5 @@ ERROR = Logging.ERROR
 -- @class function
 -- @name echo
 echo = Logging.echo
+
+echo("Test message")

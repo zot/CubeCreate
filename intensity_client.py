@@ -40,8 +40,6 @@ template_filename = os.path.join( os.getcwd(), 'data', 'client_settings_template
 
 init_config(config_filename, template_filename)
 
-load_components()
-
 print "Initializing logging"
 
 CModule.init_logging()
@@ -51,6 +49,11 @@ CModule.init_logging()
 log(logging.DEBUG, "Setting C home dir")
 
 CModule.set_home_dir( get_home_subdir() )
+
+print "Initializing scripting engine"
+CModule.create_engine()
+
+load_components()
 
 # Utilities
 

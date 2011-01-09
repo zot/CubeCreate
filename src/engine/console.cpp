@@ -169,7 +169,7 @@ void searchbinds(char *action, int type)
         }
     });
     names.add('\0');
-    LuaEngine::pushValue(std::string(names.getbuf()));
+    lua::engine.Push(std::string(names.getbuf()));
 }
 
 keym *findbind(char *key)
@@ -184,7 +184,7 @@ keym *findbind(char *key)
 void getbind(char *key, int type)
 {
     keym *km = findbind(key);
-    LuaEngine::pushValue(km ? std::string(km->actions[type]) : "");
+    lua::engine.Push(km ? std::string(km->actions[type]) : "");
 }   
 
 void bindkey(char *key, char *action, int state, const char *cmd)
@@ -299,7 +299,7 @@ struct hline
             alias("commandbuf", buf);
             execute(action);
         }
-        else if(buf[0]=='/') LuaEngine::runScript(buf+1);
+        else if(buf[0]=='/') lua::engine.RunString(buf+1);
         else game::toserver(buf);
     }
 };
@@ -345,7 +345,7 @@ void execbind(keym &k, bool isdown)
         releaseaction &ra = releaseactions[i];
         if(ra.key==&k)
         {
-            if(!isdown) LuaEngine::runScript(std::string(ra.action)); // CubeCreate
+            if(!isdown) lua::engine.RunString(std::string(ra.action)); // CubeCreate
             delete[] ra.action;
             releaseactions.remove(i--);
         }
@@ -361,7 +361,7 @@ void execbind(keym &k, bool isdown)
         char *&action = k.actions[state][0] ? k.actions[state] : k.actions[keym::ACTION_DEFAULT];
         keyaction = action;
         keypressed = &k;
-        LuaEngine::runScript(std::string(keyaction)); // CubeCreate
+        lua::engine.RunString(std::string(keyaction)); // CubeCreate
         keypressed = NULL;
         if(keyaction!=action) delete[] keyaction;
     }

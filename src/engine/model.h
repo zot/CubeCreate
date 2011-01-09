@@ -103,13 +103,13 @@ struct model
         float height = entity->collisionRadiusHeight;
 
         if (width < 0) // If never loaded, load once from Python now. This occurs once per instance.
-                        // This is necessary because these are values cached from Scripting, unlike normal
-                        // Sauer C++ variables that are managed in C++. Here, the *true* values are in Scripting
+                        // This is necessary because these are values cached from lua, unlike normal
+                        // Sauer C++ variables that are managed in C++. Here, the *true* values are in lua
         {
-            LuaEngine::getRef(entity->luaRef);
-            width = LuaEngine::getTableDouble("collisionRadiusWidth");
-            height = LuaEngine::getTableDouble("collisionRadiusHeight");
-            LuaEngine::pop(1);
+            lua::engine.GetRef(entity->luaRef);
+            width = lua::engine.GetTable<double>("collisionRadiusWidth");
+            height = lua::engine.GetTable<double>("collisionRadiusHeight");
+            lua::engine.ClearStack(1);
         }
 
         center[0] = center[1] = 0;

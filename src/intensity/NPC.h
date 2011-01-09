@@ -7,7 +7,7 @@
 namespace NPC
 {
     //! Creates a new NPC client, as if another client logged in (using
-    //! a localconnect, and then creates a scripting entity for the NPC
+    //! a localconnect, and then creates a lua entity for the NPC
     //! so as to enter the game.
     //! @param _class The class of the new NPC
     //! @return The newly created NPC entity

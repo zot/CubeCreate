@@ -14,7 +14,6 @@
 #include "editing_system.h"
 #include "targeting.h"
 #include "client_system.h"
-#include "utility.h"
 
 // Kripken:
 // sel.corner: The face corner the mouse pointer is closest to.
@@ -76,14 +75,11 @@ void prepareentityclasses()
 {
     entityClasses.clear();
 
-    LuaEngine::getGlobal("listEntityClasses");
-    LuaEngine::call(0, 1);
-
-    LUA_TABLE_LOOP({
-        entityClasses.push_back(LuaEngine::getString(-1));
+    lua::engine.GetGlobal("listEntityClasses").Call(0, 1);
+    LUA_TABLE_FOREACH(lua::engine, {
+        entityClasses.push_back(lua::engine.Get<std::string>(-1));
     });
-
-    LuaEngine::pop(1);
+    lua::engine.ClearStack(1);
 }
 
 COMMAND(prepareentityclasses, "");

@@ -102,7 +102,7 @@ struct CLogicEntity
     //! calculation of per-frame models, which is also needed on the server
     int getAnimationFrame();
 
-    //! Gets the Scripting class name of a logic entity (e.g., Mapmodel, Player, Door)
+    //! Gets the lua class name of a logic entity (e.g., Mapmodel, Player, Door)
     std::string getClass();
 
     //! Returns the model used to render this entity
@@ -111,16 +111,16 @@ struct CLogicEntity
     //! returns the sound used for this entity
     const char *getSound();
 
-    //! Updates the model based on Scripting information. Refreshes what is needed in Sauer
+    //! Updates the model based on lua information. Refreshes what is needed in Sauer
     void setModel(std::string name);
 
-    //! Updates the sound based on Scripting information. Refreshes what is needed in Sauer
+    //! Updates the sound based on lua information. Refreshes what is needed in Sauer
     void setSound(std::string _sound);
 
-    //! Updates the attachments based on Scripting information. Refreshes what is needed in Sauer
+    //! Updates the attachments based on lua information. Refreshes what is needed in Sauer
     void setAttachments(std::string _attachments);
 
-    //! Updates the animation based on Scripting information. Refreshes what is needed in Sauer. In particular sets the start time.
+    //! Updates the animation based on lua information. Refreshes what is needed in Sauer. In particular sets the start time.
     void setAnimation(int _animation);
 
     bool getCanMove() { return canMove; };
@@ -150,10 +150,10 @@ struct LogicSystem
 
     static LogicEntityMap logicEntities; //!< All the entities in the scenario
 
-    //! Called before a map loads. Empties list of entities, and unloads the PC logic entity. Removes the scripting engine
+    //! Called before a map loads. Empties list of entities, and unloads the PC logic entity. Removes the lua engine
     static void clear();
 
-    //! Calls clear(), and creates a new scripting engine
+    //! Calls clear(), and creates a new lua engine
     static void init();
 
     //! Register a logic entity in the LogicSystem system. Must be done so that entities are accessible and are managed.
@@ -169,7 +169,7 @@ struct LogicSystem
     static void          unregisterLogicEntity(LogicEntityPtr entity);
 
     //! Unregisters a C++ GE, removes it from the set of currently running entities. Needs to not overload the other,
-    //! but have a different name, because we expose this in the scripting embedding
+    //! but have a different name, because we expose this in the lua embedding
     static void          unregisterLogicEntityByUniqueId(int uniqueId);
 
     //! Tells the ActionSystems of all of our logic entities to manage themselves, i.e., to run their actions accordingly

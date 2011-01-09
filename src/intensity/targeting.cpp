@@ -6,7 +6,6 @@
 #include "engine.h"
 #include "game.h"
 
-#include "utility.h"
 #include "fpsclient_interface.h"
 #include "intensity_physics.h"
 

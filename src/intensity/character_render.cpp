@@ -32,13 +32,13 @@ void CharacterRendering::render(fpsent* entity)
         return;
     }
 
-    LuaEngine::getRef(logicEntity.get()->luaRef);
-    if (!LuaEngine::getTableBool("initialized"))
+    lua::engine.GetRef(logicEntity.get()->luaRef);
+    if (!lua::engine.GetTable<bool>("initialized"))
     {
         Logging::log(Logging::INFO, "Not initialized, so not rendering\r\n");
         return;
     }
-    LuaEngine::pop(1);
+    lua::engine.ClearStack(1);
 
     // Render client using model name, attachments, and animation information
 

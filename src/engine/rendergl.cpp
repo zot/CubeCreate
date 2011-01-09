@@ -380,9 +380,9 @@ void gl_checkextensions()
 
         if(strstr(vendor, "ATI"))
         {
-		    SETV(ati_dph_bug, 1);
-		    SETV(ati_line_bug, 1);
-		}
+            SETV(ati_dph_bug, 1);
+            SETV(ati_line_bug, 1);
+        }
         else if(strstr(vendor, "Tungsten")) SETV(mesa_program_bug, 1);
 
 #ifdef __APPLE__
@@ -624,7 +624,7 @@ void gl_checkextensions()
 void glext(char *ext)
 {
     const char *exts = (const char *)glGetString(GL_EXTENSIONS);
-    LuaEngine::pushValue(strstr(exts, ext) ? 1 : 0);
+    lua::engine.Push(strstr(exts, ext) ? 1 : 0);
 }
 
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
@@ -807,22 +807,18 @@ void mousemove(int dx, int dy)
     cursens /= 33.0f*GETFV(sensitivityscale);
 
     // INTENSITY: Let scripts customize mousemoving
-    if (LuaEngine::exists())
+    using namespace lua;
+    if (engine.HasHandle())
     {
-        LuaEngine::getGlobal("ApplicationManager");
-        LuaEngine::getTableItem("instance");
-        LuaEngine::getTableItem("performMousemove");
-        LuaEngine::pushValueFromIndex(-2);
-        LuaEngine::pushValue(dx * cursens);
-        LuaEngine::pushValue(-dy * cursens * (GETIV(invmouse) ? -1 : 1));
-        LuaEngine::call(3, 1);
+        engine.GetGlobal("ApplicationManager").GetTableRaw("instance").GetTableRaw("performMousemove");
+        engine.PushIndex(-2).Push(dx * cursens).Push(-dy * cursens * (GETIV(invmouse) ? -1 : 1)).Call(3, 1);
 
-        LuaEngine::getTableItem("yaw");
-        if (!LuaEngine::isNoneNil(-1))
+        engine.GetTableRaw("yaw");
+        if (!engine.Is<void>(-1))
         {
-            camera1->yaw += LuaEngine::getDouble(-1);
-            LuaEngine::pop(1);
-            camera1->pitch += LuaEngine::getTableDouble("pitch");
+            camera1->yaw += engine.Get<double>(-1);
+            engine.ClearStack(1).GetTableRaw("pitch");
+            camera1->pitch += engine.Get<double>(-1);
 
             fixcamerarange();
             if(camera1!=player && !detachedcamera)
@@ -831,7 +827,7 @@ void mousemove(int dx, int dy)
                 player->pitch = camera1->pitch;
             }
         }
-        LuaEngine::pop(3);
+        engine.ClearStack(4);
     }
 }
 
@@ -2014,15 +2010,13 @@ void drawcrosshair(int w, int h)
     else
     { 
         std::string crosshairName = ""; // INTENSITY: Start script-controlled crosshairs
-        if (LuaEngine::exists())
+        using namespace lua;
+        if (engine.HasHandle())
         {
-            LuaEngine::getGlobal("ApplicationManager");
-            LuaEngine::getTableItem("instance");
-            LuaEngine::getTableItem("getCrosshair");
-            LuaEngine::pushValueFromIndex(-2);
-            LuaEngine::call(1, 1);
-            crosshairName = LuaEngine::getString(-1, "data/crosshair.png");
-            LuaEngine::pop(3);
+            engine.GetGlobal("ApplicationManager").GetTableRaw("instance").GetTableRaw("getCrosshair");
+            engine.PushIndex(-2).Call(1, 1);
+            crosshairName = engine.Get(-1, "data/crosshair.png");
+            engine.ClearStack(3);
         }
         crosshair = textureload(crosshairName.c_str(), 3, true, false);
         if (crosshair == notexture) return;

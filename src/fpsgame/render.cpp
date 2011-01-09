@@ -43,13 +43,10 @@ namespace game
             if (editmode)
                 particle_text(entity->abovehead(), logicEntity.get()->getClass(), 16, 1);
         */
-#else // Scripting rendering system
+#else // lua rendering system
 //        fpsent *exclude = isthirdperson() ? NULL : followingplayer(), *d; // XXX: Apply this!
 //        if(isthirdperson() && !followingplayer()) // XXX Apply this!
-
-        LuaEngine::getGlobal("renderDynamic");
-        LuaEngine::pushValue(isthirdperson());
-        LuaEngine::call(1, 0);
+        lua::engine.GetGlobal("renderDynamic").Push(isthirdperson()).Call(1, 0);
 #endif
 
 //        ExtraRendering::renderShadowingMapmodels(); // Kripken: Mapmodels with dynamic shadows, we draw them now
@@ -77,8 +74,7 @@ namespace game
 
     void renderavatar()
     {
-        LuaEngine::getGlobal("renderHUDModels");
-        LuaEngine::call(0, 0);
+        lua::engine.GetGlobal("renderHUDModels").Call(0, 0);
     }
 }
 

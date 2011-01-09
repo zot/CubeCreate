@@ -4,7 +4,6 @@
 #include "game.h"
 
 #include "network_system.h"
-#include "utility.h"
 
 
 namespace game
@@ -20,15 +19,13 @@ namespace game
         g.pushlist(); // horizontal
             g.background(0x808080, 5);
 
-            LuaEngine::getGlobal("ApplicationManager");
-            LuaEngine::getTableItem("instance");
-            LuaEngine::getTableItem("getScoreboardText");
-            LuaEngine::pushValueFromIndex(-2);
-            LuaEngine::call(1, 1);
+            using namespace lua;
+            engine.GetGlobal("ApplicationManager").GetTableRaw("instance");
+            engine.GetTableRaw("getScoreboardText").PushIndex(-2).Call(1, 1);
             // we get a table here
-            LUA_TABLE_LOOP({
-                int lineUniqueId = LuaEngine::getTableInteger(1);
-                std::string lineText = LuaEngine::getTableString(2);
+            LUA_TABLE_FOREACH(engine, {
+                int lineUniqueId = engine.GetTable<int>(1);
+                std::string lineText = engine.GetTable<std::string>(2);
                 if (lineUniqueId != -1)
                 {
                     LogicEntityPtr entity = LogicSystem::getLogicEntity(lineUniqueId);
@@ -52,7 +49,7 @@ namespace game
                 }
                 g.text(lineText.c_str(), 0xFFFFDD, NULL);
             });
-            LuaEngine::pop(3);
+            engine.ClearStack(3);
 
         g.poplist();
         g.poplist();
@@ -108,7 +105,7 @@ namespace game
 
     void showscores(bool on)
     {
-		SETV(scoreboard, on ? 1 : 0);
+        SETV(scoreboard, on ? 1 : 0);
         scoreboard.show(on);
     }
     ICOMMAND(showscores, "D", (int *down), showscores(*down!=0));
@@ -117,5 +114,5 @@ namespace game
 // CubeCreate: temporary for variable exports >.>
 void scorebshow(bool on)
 {
-	game::scoreboard.show(on);
+    game::scoreboard.show(on);
 }

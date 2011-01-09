@@ -7,7 +7,6 @@
 #include "game.h"
 
 #include "message_system.h"
-#include "utility.h"
 
 #ifdef CLIENT
     #include "client_system.h"
@@ -24,7 +23,7 @@ void SystemManager::init()
 {
     printf("SystemManager::init()\r\n");
 
-    LuaEngine::create(); // init lua engine if required. It'll simply return if already initialized
+    lua::engine.Create(); // init lua engine if required. It'll simply return if already initialized
 
     printf("SystemManager::MessageSystem setup\r\n");
     MessageSystem::MessageManager::registerAll();
@@ -34,7 +33,7 @@ void SystemManager::init()
         SETVF(have_master, haveMaster);
         if (!haveMaster)
         {
-			SETVF(logged_into_master, 1);
+            SETVF(logged_into_master, 1);
             execute("setup_main_menu");
             Logging::log(Logging::DEBUG, "No master server; working entirely remotely\r\n");
         }
@@ -43,7 +42,7 @@ void SystemManager::init()
 
 void SystemManager::quit()
 {
-    LuaEngine::destroy();
+    lua::engine.Destroy();
 }
 
 // XXX Not used, deprecated

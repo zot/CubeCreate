@@ -8,7 +8,6 @@
 
 #include "network_system.h"
 #include "fpsclient_interface.h"
-#include "utility.h"
 
 
 namespace NetworkSystem

@@ -4,7 +4,6 @@
 
 #include "engine.h"
 
-#include "utility.h"
 
 #include "intensity_physics.h"
 #include "intensity_physics_realistic.h"

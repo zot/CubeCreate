@@ -68,15 +68,15 @@ public:
      * 
      * Construct an integer variable.
      */
-	EngineVariable(
-		const std::string& vname,
-		int minvi,
-		int curvi,
-		int maxvi,
-		void (_cb_ cb)(int, int, int, int) = NULL,
-		bool persist = false,
-		bool overridable = false
-	);
+    EngineVariable(
+        const std::string& vname,
+        int minvi,
+        int curvi,
+        int maxvi,
+        void (_cb_ cb)(int, int, int, int) = NULL,
+        bool persist = false,
+        bool overridable = false
+    );
     /**
      * @brief Float variable constructor.
      * @param vname Name of future variable.
@@ -89,15 +89,15 @@ public:
      * 
      * Construct a float variable.
      */
-	EngineVariable(
-		const std::string& vname,
-		float minvf,
-		float curvf,
-		float maxvf,
-		void (_cb_ cb)(float, float, float, float) = NULL,
-		bool persist = false,
-		bool overridable = false
-	);
+    EngineVariable(
+        const std::string& vname,
+        float minvf,
+        float curvf,
+        float maxvf,
+        void (_cb_ cb)(float, float, float, float) = NULL,
+        bool persist = false,
+        bool overridable = false
+    );
     /**
      * @brief String variable constructor.
      * @param vname Name of future variable.
@@ -108,13 +108,13 @@ public:
      * 
      * Construct a string variable. Doesn't have min, max because it makes no sense for strings.
      */
-	EngineVariable(
-		const std::string& vname,
-		const std::string& curvs,
-		void (_cb_ cb)(const std::string&, const std::string&) = NULL,
-		bool persist = false,
-		bool overridable = false
-	);
+    EngineVariable(
+        const std::string& vname,
+        const std::string& curvs,
+        void (_cb_ cb)(const std::string&, const std::string&) = NULL,
+        bool persist = false,
+        bool overridable = false
+    );
     /**
      * @brief Integer alias constructor.
      * @param aname Name of the alias.
@@ -122,11 +122,11 @@ public:
      * 
      * Construct an integer alias.
      */
-	EngineVariable(
-		const std::string& aname,
-		int val,
-		_UNUSED_ bool alias // hacky, fixme. It's used to make sure we're constructing actual alias
-	);
+    EngineVariable(
+        const std::string& aname,
+        int val,
+        _UNUSED_ bool alias // hacky, fixme. It's used to make sure we're constructing actual alias
+    );
     /**
      * @brief Float alias constructor.
      * @param aname Name of the alias.
@@ -134,11 +134,11 @@ public:
      * 
      * Construct a float alias.
      */
-	EngineVariable(
-		const std::string& aname,
-		float val,
-		_UNUSED_ bool alias
-	);
+    EngineVariable(
+        const std::string& aname,
+        float val,
+        _UNUSED_ bool alias
+    );
     /**
      * @brief String alias constructor.
      * @param aname Name of the alias.
@@ -146,46 +146,46 @@ public:
      * 
      * Construct a string alias.
      */
-	EngineVariable(
-		const std::string& aname,
-		const std::string& val,
-		_UNUSED_ bool alias
-	);
+    EngineVariable(
+        const std::string& aname,
+        const std::string& val,
+        _UNUSED_ bool alias
+    );
     /**
      * @brief Get a name of the variable.
      * @return A string containing name of the variable.
      * 
      * Get a name of the variable.
      */
-	std::string getName();
+    std::string getName();
     /**
      * @brief Get a type of the variable.
      * @return A string containing type of the variable.
      * 
      * Get a type of the variable.
      */
-	std::string getType();
+    std::string getType();
     /**
      * @brief Get a string value of the variable.
      * @return A string containing value of the variable.
      * 
      * Get a string value of the variable.
      */
-	std::string getString();
+    std::string getString();
     /**
      * @brief Get an integer value of the variable.
      * @return An integer containing value of the variable.
      * 
      * Get an integer value of the variable.
      */
-	int getInteger();
+    int getInteger();
     /**
      * @brief Get a float value of the variable.
      * @return A float containing value of the variable.
      * 
      * Get a float value of the variable.
      */
-	float getFloat();
+    float getFloat();
     /**
      * @brief Set an integer value of the variable.
      * @param val The value itself.
@@ -195,7 +195,7 @@ public:
      * 
      * Sets an integer value of the variable.
      */
-	void set(int val, bool luaSync = true, bool forceCB = false, bool clamp = true);
+    void set(int val, bool luaSync = true, bool forceCB = false, bool clamp = true);
     /**
      * @brief Set a float value of the variable.
      * @param val The value itself.
@@ -205,7 +205,7 @@ public:
      * 
      * Sets a float value of the variable.
      */
-	void set(float val, bool luaSync = true, bool forceCB = false, bool clamp = true);
+    void set(float val, bool luaSync = true, bool forceCB = false, bool clamp = true);
     /**
      * @brief Set a string value of the variable.
      * @param val The value itself.
@@ -214,28 +214,28 @@ public:
      * 
      * Sets a string value of the variable.
      */
-	void set(std::string val, bool luaSync = true, bool forceCB = false, _UNUSED_ bool dummy = true); // EEEEEK HACK DETECTED, find a better way! lazy coder
+    void set(std::string val, bool luaSync = true, bool forceCB = false, _UNUSED_ bool dummy = true); // EEEEEK HACK DETECTED, find a better way! lazy coder
     /**
      * @brief Gets if the variable is persistent.
      * @return If persistent, then true, otherwise false.
      * 
      * Gets if the variable is persistent.
      */
-	bool isPersistent();
+    bool isPersistent();
     /**
      * @brief Gets if the variable is read only.
      * @return If read only, then true, otherwise false.
      * 
      * Gets if the variable is read only (only from Lua though!).
      */
-	bool isReadOnly();
+    bool isReadOnly();
     /**
      * @brief Gets if the variable is overridable.
      * @return If overridable, then true, otherwise false.
      * 
      * Gets if the variable is overridable. That means, if it gets re-set through Lua engine reinitializations.
      */
-	bool isOverridable();
+    bool isOverridable();
     /**
      * @brief Gets if the variable is alias.
      * @return If alias, then true, otherwise false.
@@ -244,57 +244,57 @@ public:
      * and has no global since it's not initialized in a standard way. Also can't have callback. Doesn't handle persistency
      * in a standard way, too, can't be read only and is always non-overridable (gets stored through maps and restarts).
      */
-	bool isAlias();
+    bool isAlias();
     /**
      * @brief Registers integer Lua variable based on C++ representation it's ran for.
      * 
      * Registers integer Lua variable based on C++ representation it's ran for.
      */
-	void registerLuaIVAR();
+    void registerLuaIVAR();
     /**
      * @brief Registers float Lua variable based on C++ representation it's ran for.
      * 
      * Registers integer Lua variable based on C++ representation it's ran for.
      */
-	void registerLuaFVAR();
+    void registerLuaFVAR();
     /**
      * @brief Registers string Lua variable based on C++ representation it's ran for.
      * 
      * Registers integer Lua variable based on C++ representation it's ran for.
      */
-	void registerLuaSVAR();
+    void registerLuaSVAR();
 private:
-	// this one can call a callback if set; it also does a value sync with Lua which can call lua callback.
-	void callCB(bool luaSync, bool forceCB);
+    // this one can call a callback if set; it also does a value sync with Lua which can call lua callback.
+    void callCB(bool luaSync, bool forceCB);
 
-	// is the var persistent?
-	bool persistent;
-	// has the var a C++ callback?
-	bool hasCB;
-	// var name
-	std::string name;
-	// var type
-	std::string type;
-	// is readonly (only from lua, C++ is writable)?
-	bool readOnly;
-	// is overridable
-	bool override;
-	// is alias
-	bool alias;
+    // is the var persistent?
+    bool persistent;
+    // has the var a C++ callback?
+    bool hasCB;
+    // var name
+    std::string name;
+    // var type
+    std::string type;
+    // is readonly (only from lua, C++ is writable)?
+    bool readOnly;
+    // is overridable
+    bool override;
+    // is alias
+    bool alias;
 
-	// anytypes storing the values
-	boost::any prev;
-	boost::any minv;
-	boost::any curv;
-	boost::any maxv;
+    // anytypes storing the values
+    boost::any prev;
+    boost::any minv;
+    boost::any curv;
+    boost::any maxv;
 
-	// union storing the callback (for memory save)
-	union
-	{
-		void (_cb_ intCB)(int, int, int, int);
-		void (_cb_ floatCB)(float, float, float, float);
-		void (_cb_ stringCB)(const std::string&, const std::string&);
-	};
+    // union storing the callback (for memory save)
+    union
+    {
+        void (_cb_ intCB)(int, int, int, int);
+        void (_cb_ floatCB)(float, float, float, float);
+        void (_cb_ stringCB)(const std::string&, const std::string&);
+    };
 };
 
 /// Typedef map of string and variable ptr to EVMap for simpler syntax.
@@ -317,37 +317,37 @@ public:
      * 
      * Register a variable into storage.
      */
-	static EngineVariable *reg(const std::string& name, EngineVariable *var);
+    static EngineVariable *reg(const std::string& name, EngineVariable *var);
     /**
      * @brief Clear the storage (but save persistents in special map)
      * 
      * Clear the storage (but save persistents in special map)
      */
-	static void clear();
+    static void clear();
     /**
      * @brief Flush the storage (free the memory from all storages)
      * 
      * Flush the storage (free the memory from all storages)
      */
-	static void flush();
+    static void flush();
     /**
      * @brief Fill the storage from persistents and register all other vars.
      * 
      * Fill the storage from persistents and register all other vars. Doesn't fill Lua.
      */
-	static void fill();
+    static void fill();
     /**
      * @brief Fill Lua script engine with variables from storage.
      * 
      * Fill Lua script engine with variables from storage.
      */
-	static void fillLua();
+    static void fillLua();
     /**
      * @brief Fill storage from persistents.
      * 
      * Fill storage from persistents.
      */
-	static void fillFromPersistent();
+    static void fillFromPersistent();
     /**
      * @brief Sync an integer value from Lua.
      * @param name Name of the variable.
@@ -355,7 +355,7 @@ public:
      * 
      * When setting value in Lua, this is called to change state in C++.
      */
-	static void syncFromLua(const std::string& name, int value);
+    static void syncFromLua(const std::string& name, int value);
     /**
      * @brief Sync a float value from Lua.
      * @param name Name of the variable.
@@ -363,7 +363,7 @@ public:
      * 
      * When setting value in Lua, this is called to change state in C++.
      */
-	static void syncFromLua(const std::string& name, float value);
+    static void syncFromLua(const std::string& name, float value);
     /**
      * @brief Sync a string value from Lua.
      * @param name Name of the variable.
@@ -371,7 +371,7 @@ public:
      * 
      * When setting value in Lua, this is called to change state in C++.
      */
-	static void syncFromLua(const std::string& name, const std::string& value);
+    static void syncFromLua(const std::string& name, const std::string& value);
     /**
      * @brief Get the EngineVariable pointer for specified name.
      * @param name Name of the variable to get shared ptr for.
@@ -383,15 +383,15 @@ public:
      * int woot = EngineVariables::get("blah")->getInteger();
      * @endcode
      */
-	static EngineVariable *get(const std::string& name);
-	/// when set to true, variables are always taken as persistent, when false, they never persist (not written to file)
-	static bool persistVars;
-	/// when set to true, variables are always taken as overridable
-	static bool overrideVars;
+    static EngineVariable *get(const std::string& name);
+    /// when set to true, variables are always taken as persistent, when false, they never persist (not written to file)
+    static bool persistVars;
+    /// when set to true, variables are always taken as overridable
+    static bool overrideVars;
 private:
-	// storage and persistent storage. First one is cleared, second one is cleared just on persistent values transfer to standard storage.
-	static EVMap storage;
-	static EVMap persistentStorage; // used just on clear() - persistent vars get moved here
+    // storage and persistent storage. First one is cleared, second one is cleared just on persistent values transfer to standard storage.
+    static EVMap storage;
+    static EVMap persistentStorage; // used just on clear() - persistent vars get moved here
 };
 
 // extern all registered variables

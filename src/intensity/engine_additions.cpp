@@ -10,11 +10,11 @@
 #include "client_system.h"
 #include "fpsserver_interface.h"
 #include "world_system.h"
-#include "utility.h"
 #include "fpsclient_interface.h"
 #include "NPC.h"
 #include "intensity_physics.h"
 
+using namespace lua;
 
 // WorldSystem
 extern void removeentity(extentity* entity);
@@ -126,7 +126,7 @@ float CLogicEntity::getRadius()
 
 void CLogicEntity::setOrigin(vec &newOrigin)
 {
-    LuaEngine::runScript("getEntity(" + Utility::toString(getUniqueId()) + ").position = {" +
+    engine.RunString("getEntity(" + Utility::toString(getUniqueId()) + ").position = {" +
         Utility::toString(newOrigin.x) + "," +
         Utility::toString(newOrigin.y) + "," +
         Utility::toString(newOrigin.z) + "}"
@@ -158,12 +158,9 @@ int CLogicEntity::getAnimationFrame()
 
 std::string CLogicEntity::getClass()
 {
-    std::string _class;
-    LuaEngine::getGlobal("tostring");
-    LuaEngine::getRef(luaRef);
-    LuaEngine::call(1, 1);
-    _class = LuaEngine::getString(-1, "Unknown");
-    LuaEngine::pop(1);
+    engine.GetGlobal("tostring").GetRef(luaRef).Call(1, 1);
+    std::string _class = engine.Get(-1, "Unknown");
+    engine.ClearStack(1);
     return _class;
 }
 
@@ -374,10 +371,9 @@ void LogicSystem::clear()
     Logging::log(Logging::DEBUG, "clear()ing LogicSystem\r\n");
     INDENT_LOG(Logging::DEBUG);
 
-    if (LuaEngine::exists())
+    if (engine.HasHandle())
     {
-        LuaEngine::getGlobal("removeAllEntities");
-        LuaEngine::call(0, 0);
+        engine.GetGlobal("removeAllEntities").Call(0, 0);
         assert(logicEntities.size() == 0);
 
         // For client, remove player logic entity
@@ -385,7 +381,7 @@ void LogicSystem::clear()
             ClientSystem::clearPlayerEntity();
         #endif
 
-        LuaEngine::destroy();
+        engine.Destroy();
     }
 
     PhysicsManager::destroyEngine();
@@ -395,8 +391,7 @@ void LogicSystem::init()
 {
     clear();
 
-    LuaEngine::create();
-
+    engine.Create();
     PhysicsManager::createEngine();
 }
 
@@ -409,12 +404,8 @@ void LogicSystem::registerLogicEntity(LogicEntityPtr newEntity)
     assert(logicEntities.find(uniqueId) == logicEntities.end());
     logicEntities.insert( LogicEntityMap::value_type( uniqueId, newEntity ) );
 
-    LuaEngine::getGlobal("getEntity");
-    LuaEngine::pushValue(uniqueId);
-    LuaEngine::call(1, 1);
-
-    newEntity.get()->luaRef = LuaEngine::ref();
-    LuaEngine::pop(1);
+    engine.GetGlobal("getEntity").Push(uniqueId).Call(1, 1);
+    newEntity.get()->luaRef = engine.Ref();
 
     assert(newEntity.get()->luaRef >= 0);
 
@@ -478,8 +469,7 @@ void LogicSystem::unregisterLogicEntity(LogicEntityPtr entity)
 
     logicEntities.erase(uniqueId);
 
-    if (entity.get()->luaRef >= 0)
-        LuaEngine::unref(entity.get()->luaRef);
+    if (entity.get()->luaRef >= 0) engine.UnRef(entity.get()->luaRef);
 }
 
 void LogicSystem::unregisterLogicEntityByUniqueId(int uniqueId)
@@ -493,13 +483,8 @@ void LogicSystem::manageActions(long millis)
     Logging::log(Logging::INFO, "manageActions: %d\r\n", millis);
     INDENT_LOG(Logging::INFO);
 
-    if (LuaEngine::exists())
-    {
-        LuaEngine::getGlobal("manageActions");
-        LuaEngine::pushValue(double(millis) / 1000.0f);
-        LuaEngine::pushValue(lastmillis);
-        LuaEngine::call(2, 0);
-    }
+    if (engine.HasHandle())
+        engine.GetGlobal("manageActions").Push(double(millis) / 1000.0f).Push(lastmillis).Call(2, 0);
 
     Logging::log(Logging::INFO, "manageActions complete\r\n");
 }
@@ -571,9 +556,9 @@ void LogicSystem::setUniqueId(physent* dynamicEntity, int uniqueId)
 
 void LogicSystem::setupExtent(int ref, int type, float x, float y, float z, int attr1, int attr2, int attr3, int attr4)
 {
-    LuaEngine::getRef(ref);
-    int uniqueId = LuaEngine::getTableInteger("uniqueId", -1);
-    LuaEngine::pop(1);
+    engine.GetRef(ref);
+    int uniqueId = engine.GetTable("uniqueId", -1);
+    engine.ClearStack(1);
 
     Logging::log(Logging::DEBUG, "setupExtent: %d,  %d : %f,%f,%f : %d,%d,%d,%d\r\n", uniqueId, type, x, y, z, attr1, attr2, attr3, attr4);
     INDENT_LOG(Logging::DEBUG);
@@ -611,25 +596,25 @@ void LogicSystem::setupCharacter(int ref)
 //        assert(0); // until we figure this out
 //    #endif
 
-    LuaEngine::getRef(ref);
-    int uniqueId = LuaEngine::getTableInteger("uniqueId", -1);
+    engine.GetRef(ref);
+    int uniqueId = engine.GetTable("uniqueId", -1);
 
     Logging::log(Logging::DEBUG, "setupCharacter: %d\r\n", uniqueId);
     INDENT_LOG(Logging::DEBUG);
 
     fpsent* fpsEntity;
 
-    int clientNumber = LuaEngine::getTableInteger("clientNumber", -1);
+    int clientNumber = engine.GetTable("clientNumber", -1);
     Logging::log(Logging::DEBUG, "(a) clientNumber: %d\r\n", clientNumber);
 
     #ifdef CLIENT
         Logging::log(Logging::DEBUG, "client numbers: %d, %d\r\n", ClientSystem::playerNumber, clientNumber);
 
-        if (uniqueId == ClientSystem::uniqueId) LuaEngine::setTable("clientNumber", ClientSystem::playerNumber);
+        if (uniqueId == ClientSystem::uniqueId) engine.SetTable("clientNumber", ClientSystem::playerNumber);
     #endif
 
     // nothing else will happen with lua table got from ref, so let's pop it out
-    LuaEngine::pop(1);
+    engine.ClearStack(1);
 
     Logging::log(Logging::DEBUG, "(b) clientNumber: %d\r\n", clientNumber);
 
@@ -666,9 +651,9 @@ void LogicSystem::setupCharacter(int ref)
 
 void LogicSystem::setupNonSauer(int ref)
 {
-    LuaEngine::getRef(ref);
-    int uniqueId = LuaEngine::getTableInteger("uniqueId", -1);
-    LuaEngine::pop(1);
+    engine.GetRef(ref);
+    int uniqueId = engine.GetTable("uniqueId", -1);
+    engine.ClearStack(1);
 
     Logging::log(Logging::DEBUG, "setupNonSauer: %d\r\n", uniqueId);
     INDENT_LOG(Logging::DEBUG);
@@ -678,9 +663,9 @@ void LogicSystem::setupNonSauer(int ref)
 
 void LogicSystem::dismantleExtent(int ref)
 {
-    LuaEngine::getRef(ref);
-    int uniqueId = LuaEngine::getTableInteger("uniqueId", -1);
-    LuaEngine::pop(1);
+    engine.GetRef(ref);
+    int uniqueId = engine.GetTable("uniqueId", -1);
+    engine.ClearStack(1);
 
     Logging::log(Logging::DEBUG, "Dismantle extent: %d\r\n", uniqueId);
 
@@ -697,9 +682,9 @@ void LogicSystem::dismantleExtent(int ref)
 
 void LogicSystem::dismantleCharacter(int ref)
 {
-    LuaEngine::getRef(ref);
-    int clientNumber = LuaEngine::getTableInteger("clientNumber", -1);
-    LuaEngine::pop(1);
+    engine.GetRef(ref);
+    int clientNumber = engine.GetTable("clientNumber", -1);
+    engine.ClearStack(1);
     #ifdef CLIENT
     if (clientNumber == ClientSystem::playerNumber)
         Logging::log(Logging::DEBUG, "Not dismantling own client\r\n", clientNumber);

@@ -4,6 +4,9 @@
 
 //! General utilities
 
+#ifndef UTILITY_H
+#define UTILITY_H
+
 struct Utility
 {
     //! SHA256-hash. We use Python for convenience to implement this
@@ -83,4 +86,6 @@ struct Benchmarker : Timer
     float percentage() { return 100.0f * float(totalTime) / totalPassed(); };
     virtual void reset() { Timer::reset(); currStartTime = -1; totalTime = 0; };
 };
+
+#endif
 

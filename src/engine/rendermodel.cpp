@@ -36,8 +36,6 @@ MODELTYPE(MDL_OBJ, obj);
 MODELTYPE(MDL_SMD, smd);
 MODELTYPE(MDL_IQM, iqm);
 
-#include "utility.h" // INTENSITY
-
 #define checkmdl if(!loadingmodel) { conoutf(CON_ERROR, "not loading a model"); return; }
 
 void mdlcullface(int *cullface)
@@ -190,7 +188,7 @@ void mdlextendbb(float *x, float *y, float *z)
 void mdlname()
 {
     checkmdl;
-    LuaEngine::pushValue(std::string(loadingmodel->name()));
+    lua::engine.Push(std::string(loadingmodel->name()));
 }
 
 #define checkragdoll \

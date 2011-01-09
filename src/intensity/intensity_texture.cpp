@@ -8,8 +8,6 @@
 #include "openjpeg.h"
 #endif
 
-#include "utility.h"
-
 
 // 'Background' loading system for texture slots
 

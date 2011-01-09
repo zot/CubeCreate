@@ -7,7 +7,6 @@
 #include "game.h"
 
 #include "client_system.h"
-#include "utility.h"
 #include "editing_system.h"
 #include "message_system.h"
 
@@ -62,11 +61,11 @@ void showInputDialog(std::string title, std::string content)
 
 void input_callback(char *input)
 {
-    LuaEngine::getGlobal("UserInterface");
-    LuaEngine::getTableItem("inputDialogCallback");
-    LuaEngine::pushValue(std::string(input));
-    LuaEngine::call(1, 0);
-    LuaEngine::pop(1);
+    lua::engine.GetGlobal("UserInterface")
+        .GetTableRaw("inputDialogCallback")
+        .Push(input)
+        .Call(1, 0)
+        .ClearStack(1);
 }
 
 COMMAND(input_callback, "s");

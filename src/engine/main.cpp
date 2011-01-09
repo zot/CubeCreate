@@ -2,7 +2,6 @@
 
 #include "engine.h"
 
-#include "utility.h" // INTENSITY
 #include "system_manager.h" // INTENSITY
 #include "client_system.h" // INTENSITY
 #include "intensity_gui.h" // INTENSITY
@@ -572,16 +571,17 @@ void setfullscreen(bool enable)
 
 void setScreenScriptValues() // INTENSITY: New function
 {
-    if (LuaEngine::exists())
+    using namespace lua;
+    if (engine.HasHandle())
     {
-        LuaEngine::getGlobal("Global");
-        LuaEngine::setTable("aspectRatio", float(GETIV(scr_w))/float(GETIV(scr_h)));
-        LuaEngine::setTable("screenWidth", GETIV(scr_w));
-        LuaEngine::setTable("screenHeight", GETIV(scr_h));
-        LuaEngine::setTable("fontHeight", FONTH);
-        LuaEngine::setTable("cameraDistance", GETIV(cam_dist));
-        LuaEngine::setTable("cameraHeight", GETFV(cameraheight));
-        LuaEngine::pop(1);
+        engine.GetGlobal("Global");
+        engine.SetTable("aspectRatio", float(GETIV(scr_w))/float(GETIV(scr_h)));
+        engine.SetTable("screenWidth", GETIV(scr_w));
+        engine.SetTable("screenHeight", GETIV(scr_h));
+        engine.SetTable("fontHeight", FONTH);
+        engine.SetTable("cameraDistance", GETIV(cam_dist));
+        engine.SetTable("cameraHeight", GETFV(cameraheight));
+        engine.ClearStack(1);
     }
 }
 
@@ -1119,8 +1119,8 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     // initialize Lua early so everything is available at the beginning.
     initlog("lua");
-    LuaEngine::create();
-    if (!LuaEngine::exists()) fatal("cannot initialize lua script engine");
+    lua::engine.Create();
+    if (!lua::engine.HasHandle()) fatal("cannot initialize lua script engine");
 
     for(int i = 1; i<argc; i++)
     {
@@ -1209,8 +1209,8 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     initlog("console");
     EngineVariables::persistVars = false;
-    if(!LuaEngine::runFile("data/stdlib.lua").empty()) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
-    if(!LuaEngine::runFile("data/font.lua").empty()) fatal("cannot find font definitions");
+    if(!lua::engine.RunFile("data/stdlib.lua")) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
+    if(!lua::engine.RunFile("data/font.lua")) fatal("cannot find font definitions");
     if(!setfont("default")) fatal("no default font specified");
 
     inbetweenframes = true;
@@ -1230,23 +1230,23 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     initlog("cfg");
 
-    LuaEngine::runFile("data/keymap.lua");
-    LuaEngine::runFile("data/sounds.lua");
-    LuaEngine::runFile("data/stdedit.lua");
-    LuaEngine::runFile("data/menus.lua");
-    LuaEngine::runFile("data/brush.lua");
-    LuaEngine::runFile("mybrushes.lua");
-    if(game::savedservers()) LuaEngine::runFile(std::string(game::savedservers()));
+    lua::engine.RunFile("data/keymap.lua");
+    lua::engine.RunFile("data/sounds.lua");
+    lua::engine.RunFile("data/stdedit.lua");
+    lua::engine.RunFile("data/menus.lua");
+    lua::engine.RunFile("data/brush.lua");
+    lua::engine.RunFile("mybrushes.lua");
+    if(game::savedservers()) lua::engine.RunFile(std::string(game::savedservers()));
     
     EngineVariables::persistVars = true;
     
     initing = INIT_LOAD;
     if(!config_exec_json(game::savedconfig(), false)) 
     {
-        LuaEngine::runFile(std::string(game::defaultconfig()));
+        lua::engine.RunFile(std::string(game::defaultconfig()));
         writecfg(game::restoreconfig());
     }
-    LuaEngine::runFile(std::string(game::autoexec()));
+    lua::engine.RunFile(std::string(game::autoexec()));
     initing = NOT_INITING;
 
     EngineVariables::persistVars = false;

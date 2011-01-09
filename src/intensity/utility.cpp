@@ -4,8 +4,6 @@
 
 #include "cube.h"
 
-#include "utility.h"
-
 #include <map>
 
 using namespace boost;

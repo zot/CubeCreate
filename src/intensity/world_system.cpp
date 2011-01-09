@@ -7,10 +7,10 @@
 #include "game.h"
 
 #include "message_system.h"
-#include "utility.h"
 
 #include "world_system.h"
 
+using namespace lua;
 
 // Kripken: These are bounding boxes for positioning in the octree, as opposed to bounding boxes that
 // are actually used to check for collisions. These octree-positioning bounding boxes only determine
@@ -72,16 +72,13 @@ void WorldSystem::triggerCollide(LogicEntityPtr mapmodel, physent* d, bool ellip
         return; // Most likely a raycasting collision, or camera, etc. - not things we trigger events for
     }
 
-    LuaEngine::getRef(mapmodel.get()->luaRef);
+    engine.GetRef(mapmodel.get()->luaRef);
     #ifdef SERVER
-        LuaEngine::getTableItem("onCollision");
+    engine.GetTableRaw("onCollision");
     #else
-        LuaEngine::getTableItem("clientOnCollision");
+    engine.GetTableRaw("clientOnCollision");
     #endif
-    LuaEngine::pushValueFromIndex(-2);
-    LuaEngine::getRef(colliderEntity.get()->luaRef);
-    LuaEngine::call(2, 0);
-    LuaEngine::pop(1);
+    engine.PushIndex(-2).GetRef(colliderEntity.get()->luaRef).Call(2, 0).ClearStack(1);
 }
 
 int numExpectedEntities = 0;

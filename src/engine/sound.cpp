@@ -152,7 +152,7 @@ void musicdone()
     if(!musicdonecmd) return;
     char *cmd = musicdonecmd;
     musicdonecmd = NULL;
-    LuaEngine::runScript(cmd); // CubeCreate: lua
+    lua::engine.RunString(cmd); // CubeCreate: lua
     delete[] cmd;
 }
 
@@ -239,7 +239,7 @@ int addsound(const char *name, int vol, int maxuses, vector<soundslot> &sounds)
 }
 
 int preload_sound(char *name, int vol); // INTENSITY
-void registersound(char *name, int *vol) { LuaEngine::pushValue(preload_sound(name, *vol)); } // INTENSITY
+void registersound(char *name, int *vol) { lua::engine.Push(preload_sound(name, *vol)); } // INTENSITY
 
 void mapsound(char *name, int *vol, int *maxuses) { intret(addsound(name, *vol, *maxuses < 0 ? 0 : max(1, *maxuses), mapsounds)); }
 
