@@ -310,46 +310,46 @@ namespace lua_binds
 /*
  * Things to go into Logging Lua namespace
  */
-LUA_BIND_DEF(log, Logging::log_noformat(e.Get<int>(1), e.Get<std::string>(2));)
-LUA_BIND_DEF(echo, conoutf("\f1%s", e.Get<const char*>(1));)
+LUA_BIND_DEF(log, Logging::log_noformat(e.get<int>(1), "%s\n", e.get<const char*>(2));)
+LUA_BIND_DEF(echo, conoutf("\f1%s", e.get<const char*>(1));)
 
 /*
  * Things to go into CAPI Lua namespace
  */
 
 // General
-LUA_BIND_DEF(currTime, e.Push(Utility::SystemInfo::currTime());)
+LUA_BIND_DEF(currTime, e.push(Utility::SystemInfo::currTime());)
 
 // Math extensions
-LUA_BIND_DEF(lsh, e.Push(e.Get<int>(1) << e.Get<int>(2));)
-LUA_BIND_DEF(rsh, e.Push(e.Get<int>(1) >> e.Get<int>(2));)
+LUA_BIND_DEF(lsh, e.push(e.get<int>(1) << e.get<int>(2));)
+LUA_BIND_DEF(rsh, e.push(e.get<int>(1) >> e.get<int>(2));)
 LUA_BIND_DEF(bor, {
-    int out = e.Get<int>(1);
+    int out = e.get<int>(1);
     int n   = e.TopStackItemIndex();
-    for (int i = 2; i <= n; i++) out |= e.Get<int>(i);
-    e.Push(out);
+    for (int i = 2; i <= n; i++) out |= e.get<int>(i);
+    e.push(out);
 })
 LUA_BIND_DEF(band, {
-    int out = e.Get<int>(1);
+    int out = e.get<int>(1);
     int n   = e.TopStackItemIndex();
-    for (int i = 2; i <= n; i++) out &= e.Get<int>(i);
-    e.Push(out);
+    for (int i = 2; i <= n; i++) out &= e.get<int>(i);
+    e.push(out);
 })
-LUA_BIND_DEF(bnot, e.Push(~e.Get<int>(1));)
+LUA_BIND_DEF(bnot, e.push(~e.get<int>(1));)
 
 // Entity management
-LUA_BIND_DEF(unregisterLogicEntity, LogicSystem::unregisterLogicEntityByUniqueId(e.Get<int>(1));)
-LUA_BIND_DEF(placeInWorld, WorldSystem::placeInWorld(e.Get<int>(1), e.Get<int>(2));)
+LUA_BIND_DEF(unregisterLogicEntity, LogicSystem::unregisterLogicEntityByUniqueId(e.get<int>(1));)
+LUA_BIND_DEF(placeInWorld, WorldSystem::placeInWorld(e.get<int>(1), e.get<int>(2));)
 
 LUA_BIND_SE(setupExtent, LogicSystem::setupExtent(ref,
-    e.Get<int>(2),
-    e.Get<double>(3),
-    e.Get<double>(4),
-    e.Get<double>(5),
-    e.Get<int>(6),
-    e.Get<int>(7),
-    e.Get<int>(8),
-    e.Get<int>(9));
+    e.get<int>(2),
+    e.get<double>(3),
+    e.get<double>(4),
+    e.get<double>(5),
+    e.get<int>(6),
+    e.get<int>(7),
+    e.get<int>(8),
+    e.get<int>(9));
 )
 LUA_BIND_SE(setupCharacter,     LogicSystem::setupCharacter(ref);)
 LUA_BIND_SE(setupNonSauer,      LogicSystem::setupNonSauer(ref);)
@@ -357,32 +357,32 @@ LUA_BIND_SE(dismantleExtent,    LogicSystem::dismantleExtent(ref);)
 LUA_BIND_SE(dismantleCharacter, LogicSystem::dismantleCharacter(ref);)
 
 // Entity attribs
-LUA_BIND_LE(setAnimation, self.get()->setAnimation(e.Get<int>(2));)
-LUA_BIND_LE(getStartTime, e.Push(self.get()->getStartTime());)
+LUA_BIND_LE(setAnimation, self.get()->setAnimation(e.get<int>(2));)
+LUA_BIND_LE(getStartTime, e.push(self.get()->getStartTime());)
 LUA_BIND_LE(setModelName, {
-    Logging::log(Logging::DEBUG, "setModelName(%s)\r\n", e.Get<const char*>(2));
-    self.get()->setModel(e.Get<std::string>(2));
+    Logging::log(Logging::DEBUG, "setModelName(%s)\r\n", e.get<const char*>(2));
+    self.get()->setModel(std::string(e.get<const char*>(2)));
 })
 LUA_BIND_LE(setSoundName, {
-    Logging::log(Logging::DEBUG, "setSoundName(%s)\r\n", e.Get<const char*>(2));
-    self.get()->setSound(e.Get<std::string>(2));
+    Logging::log(Logging::DEBUG, "setSoundName(%s)\r\n", e.get<const char*>(2));
+    self.get()->setSound(std::string(e.get<const char*>(2)));
 })
 LUA_BIND_LE(setSoundVolume, {
-    Logging::log(Logging::DEBUG, "setSoundVolume(%i)\r\n", e.Get<int>(2));
+    Logging::log(Logging::DEBUG, "setSoundVolume(%i)\r\n", e.get<int>(2));
     extentity *ext = self.get()->staticEntity;
     assert(ext);
     if (!WorldSystem::loadingWorld) removeentity(ext);
-    ext->attr4 = e.Get<int>(2);
+    ext->attr4 = e.get<int>(2);
     if (!WorldSystem::loadingWorld) addentity(ext);
     // finally reload sound, so everything gets applied
     self.get()->setSound(self.get()->soundName.c_str());
 })
-LUA_BIND_LE(setAttachments_raw, self.get()->setAttachments(e.Get<std::string>(2));)
+LUA_BIND_LE(setAttachments_raw, self.get()->setAttachments(std::string(e.get<const char*>(2)));)
 LUA_BIND_LE(getAttachmentPosition, {
-    vec& vp = self->getAttachmentPosition(e.Get<std::string>(2));
-    e.Push(vp);
+    vec& vp = self->getAttachmentPosition(std::string(e.get<const char*>(2)));
+    e.push(vp);
 })
-LUA_BIND_LE(setCanMove, self.get()->setCanMove(e.Get<bool>(2));)
+LUA_BIND_LE(setCanMove, self.get()->setCanMove(e.get<bool>(2));)
 
 // Extents
 
@@ -390,20 +390,20 @@ LUA_BIND_LE(setCanMove, self.get()->setCanMove(e.Get<bool>(2));)
 LUA_BIND_LE(get##name, { \
     extentity *ext = self.get()->staticEntity; \
     assert(ext); \
-    e.Push(ext->attribName); \
+    e.push(ext->attribName); \
 }) \
 LUA_BIND_LE(set##name, { \
     extentity *ext = self.get()->staticEntity; \
     assert(ext); \
     if (!WorldSystem::loadingWorld) removeentity(ext); /* Need to remove, then add, to the world on each change, if not during load. */ \
-    ext->attribName = e.Get<int>(2); \
+    ext->attribName = e.get<int>(2); \
     if (!WorldSystem::loadingWorld) addentity(ext); \
 }) \
 LUA_BIND_LE(FAST_set##name, { \
     /* Fast version - no removeentity/addentity. Use with care! */ \
     extentity *ext = self.get()->staticEntity; \
     assert(ext); \
-    ext->attribName = e.Get<int>(2); \
+    ext->attribName = e.get<int>(2); \
 })
 
 EXTENT_ACCESSORS(Attr1, attr1)
@@ -412,12 +412,12 @@ EXTENT_ACCESSORS(Attr3, attr3)
 EXTENT_ACCESSORS(Attr4, attr4)
 
 #define EXTENT_LE_ACCESSORS(name, attribName) \
-LUA_BIND_LE(get##name, e.Push(self->attribName);) \
+LUA_BIND_LE(get##name, e.push(self->attribName);) \
 LUA_BIND_LE(set##name, { \
-    Logging::log(Logging::DEBUG, "ACCESSOR: Setting %s to %f\r\n", #attribName, e.Get<double>(2)); \
+    Logging::log(Logging::DEBUG, "ACCESSOR: Setting %s to %f\r\n", #attribName, e.get<double>(2)); \
     assert(self->staticEntity); \
     if (!WorldSystem::loadingWorld) removeentity(self->staticEntity); /* Need to remove, then add, to the octa world on each change. */ \
-    self->attribName = e.Get<double>(2); \
+    self->attribName = e.get<double>(2); \
     if (!WorldSystem::loadingWorld) addentity(self->staticEntity); \
 })
 
@@ -427,14 +427,14 @@ EXTENT_LE_ACCESSORS(CollisionRadiusHeight, collisionRadiusHeight)
 // Add 'FAST' versions of accessors - no addentity/removeentity. Good to change e.g. particle parameters
 
 LUA_BIND_LE(getExtent0_raw, {
-    int arg2 = e.Get<int>(2);
+    int arg2 = e.get<int>(2);
     extentity *ext = self.get()->staticEntity;
     assert(ext);
     assert(arg2 >= 0 && arg2 <= 2);
 
     Logging::log(Logging::INFO, "getExtentO_raw(%d): %f\r\n", arg2, ext->o[arg2]);
 
-    e.Push(ext->o[arg2]);
+    e.push(ext->o[arg2]);
 })
 
 LUA_BIND_LE(setExtent0_raw, {
@@ -442,9 +442,9 @@ LUA_BIND_LE(setExtent0_raw, {
     assert(ext);
 
     removeentity(ext); /* Need to remove, then add, to the octa world on each change. */
-    ext->o.x = e.Get<double>(2);
-    ext->o.y = e.Get<double>(3);
-    ext->o.z = e.Get<double>(4);
+    ext->o.x = e.get<double>(2);
+    ext->o.y = e.get<double>(3);
+    ext->o.z = e.get<double>(4);
     addentity(ext);
 })
 
@@ -454,12 +454,12 @@ LUA_BIND_LE(setExtent0_raw, {
 LUA_BIND_LE(get##name, { \
     fpsent *d = (fpsent*)self.get()->dynamicEntity; \
     assert(d); \
-    e.Push((type)d->attribName); \
+    e.push((type)d->attribName); \
 }) \
 LUA_BIND_LE(set##name, { \
     fpsent *d = (fpsent*)self.get()->dynamicEntity; \
     assert(d); \
-    d->attribName = e.Get<type>(2); \
+    d->attribName = e.get<type>(2); \
 })
 
 DYNENT_ACCESSORS(MaxSpeed, double, maxspeed)
@@ -484,15 +484,15 @@ DYNENT_ACCESSORS(TimeInAir, int, timeinair)
 // letting lua specify a feet position, and we work relative to their height - add to
 // assignments, subtract from readings
 LUA_BIND_LE(getDynent0_raw, {
-    int arg2 = e.Get<int>(2);
+    int arg2 = e.get<int>(2);
     fpsent *d = (fpsent*)self.get()->dynamicEntity;
     assert(d);
     assert(arg2 >= 0 && arg2 <= 2);
 
     if (arg2 != 2) {
-        e.Push(d->o[arg2]);
+        e.push(d->o[arg2]);
     } else {
-        e.Push(d->o.z - d->eyeheight);// - d->aboveeye);
+        e.push(d->o.z - d->eyeheight);// - d->aboveeye);
     }
 })
 
@@ -500,9 +500,9 @@ LUA_BIND_LE(setDynent0_raw, {
     fpsent *d = (fpsent*)self.get()->dynamicEntity;
     assert(d);
 
-    d->o.x = e.Get<double>(2);
-    d->o.y = e.Get<double>(3);
-    d->o.z = e.Get<double>(4) + d->eyeheight;// + d->aboveeye;
+    d->o.x = e.get<double>(2);
+    d->o.y = e.get<double>(3);
+    d->o.z = e.get<double>(4) + d->eyeheight;// + d->aboveeye;
 
     // Also set 'newpos', otherwise this change may get overwritten
     d->newpos = d->o;
@@ -513,102 +513,102 @@ LUA_BIND_LE(setDynent0_raw, {
 })
 
 LUA_BIND_LE(getDynentVel_raw, {
-    int arg2 = e.Get<int>(2);
+    int arg2 = e.get<int>(2);
     fpsent *d = (fpsent*)self.get()->dynamicEntity;
     assert(d);
     assert(arg2 >= 0 && arg2 <= 2);
 
-    e.Push(d->vel[arg2]);
+    e.push(d->vel[arg2]);
 })
 
 LUA_BIND_LE(setDynentVel_raw, {
     fpsent *d = (fpsent*)self.get()->dynamicEntity;
     assert(d);
 
-    d->vel.x = e.Get<double>(2);
-    d->vel.y = e.Get<double>(3);
-    d->vel.z = e.Get<double>(4);
+    d->vel.x = e.get<double>(2);
+    d->vel.y = e.get<double>(3);
+    d->vel.z = e.get<double>(4);
 })
 
 LUA_BIND_LE(getDynentFalling_raw, {
-    int arg2 = e.Get<int>(2);
+    int arg2 = e.get<int>(2);
     fpsent *d = (fpsent*)self.get()->dynamicEntity;
     assert(d);
     assert(arg2 >= 0 && arg2 <= 2);
 
-    e.Push(d->falling[arg2]);
+    e.push(d->falling[arg2]);
 })
 
 LUA_BIND_LE(setDynentFalling_raw, {
     fpsent *d = (fpsent*)self.get()->dynamicEntity;
     assert(d);
 
-    d->falling.x = e.Get<double>(2);
-    d->falling.y = e.Get<double>(3);
-    d->falling.z = e.Get<double>(4);
+    d->falling.x = e.get<double>(2);
+    d->falling.y = e.get<double>(3);
+    d->falling.z = e.get<double>(4);
 })
 
 // Geometry utilities
 
 LUA_BIND_DEF(rayLos, {
-    vec a(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
-    vec b(e.Get<double>(4), e.Get<double>(5), e.Get<double>(6));
+    vec a(e.get<double>(1), e.get<double>(2), e.get<double>(3));
+    vec b(e.get<double>(4), e.get<double>(5), e.get<double>(6));
     vec target;
 
     bool ret = raycubelos(a, b, target);
-    e.Push(ret);
+    e.push(ret);
 })
 
 LUA_BIND_DEF(rayPos, {
-    vec o(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
-    vec ray(e.Get<double>(4), e.Get<double>(5), e.Get<double>(6));
+    vec o(e.get<double>(1), e.get<double>(2), e.get<double>(3));
+    vec ray(e.get<double>(4), e.get<double>(5), e.get<double>(6));
     vec hitpos(0);
-    e.Push(raycubepos(o, ray, hitpos, e.Get<double>(7), RAY_CLIPMAT|RAY_POLY));
+    e.push(raycubepos(o, ray, hitpos, e.get<double>(7), RAY_CLIPMAT|RAY_POLY));
 })
 
 LUA_BIND_DEF(rayFloor, {
-    vec o(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
+    vec o(e.get<double>(1), e.get<double>(2), e.get<double>(3));
     vec floor(0);
-    e.Push(rayfloor(o, floor, 0, e.Get<double>(4)));
+    e.push(rayfloor(o, floor, 0, e.get<double>(4)));
 })
 
 // World
 
 LUA_BIND_DEF(isColliding, {
-    vec pos(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
-    e.Push(PhysicsManager::getEngine()->isColliding(
+    vec pos(e.get<double>(1), e.get<double>(2), e.get<double>(3));
+    e.push(PhysicsManager::getEngine()->isColliding(
         pos,
-        e.Get<double>(4),
-        e.Get<int>(5) != -1 ? LogicSystem::getLogicEntity(e.Get<int>(5)).get() : NULL)
+        e.get<double>(4),
+        e.get<int>(5) != -1 ? LogicSystem::getLogicEntity(e.get<int>(5)).get() : NULL)
     ); // TODO: Make faster, avoid this lookup
 })
 
 LUA_BIND_DEF(setGravity, {
     if (PhysicsManager::hasEngine())
-        PhysicsManager::getEngine()->setGravity(e.Get<double>(1));
+        PhysicsManager::getEngine()->setGravity(e.get<double>(1));
     else
     {
         Logging::log(Logging::DEBUG, "Setting gravity using sauer system, as no physics engine\r\n");
-        GRAVITY = e.Get<double>(1);
+        GRAVITY = e.get<double>(1);
     }
 })
 
-LUA_BIND_DEF(getMaterial, e.Push(lookupmaterial(vec(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3))));)
+LUA_BIND_DEF(getMaterial, e.push(lookupmaterial(vec(e.get<double>(1), e.get<double>(2), e.get<double>(3))));)
 
 // Textures
 
 LUA_BIND_CLIENT(convertPNGtoDDS, {
-    std::string arg1 = e.Get<std::string>(1);
-    std::string arg2 = e.Get<std::string>(2);
+    std::string arg1 = std::string(e.get<const char*>(1));
+    std::string arg2 = std::string(e.get<const char*>(2));
     assert(Utility::validateRelativePath(arg1));
     assert(Utility::validateRelativePath(arg2));
     IntensityTexture::convertPNGtoDDS(arg1, arg2);
 })
 
 LUA_BIND_CLIENT(combineImages, {
-    std::string arg1 = e.Get<std::string>(1);
-    std::string arg2 = e.Get<std::string>(2);
-    std::string arg3 = e.Get<std::string>(3);
+    std::string arg1 = std::string(e.get<const char*>(1));
+    std::string arg2 = std::string(e.get<const char*>(2));
+    std::string arg3 = std::string(e.get<const char*>(3));
     assert(Utility::validateRelativePath(arg1));
     assert(Utility::validateRelativePath(arg2));
     assert(Utility::validateRelativePath(arg3));
@@ -618,192 +618,190 @@ LUA_BIND_CLIENT(combineImages, {
 // Sounds
 
 LUA_BIND_CLIENT(playSoundByName, {
-    vec loc(e.Get<double>(2), e.Get<double>(3), e.Get<double>(4));
+    vec loc(e.get<double>(2), e.get<double>(3), e.get<double>(4));
     if (loc.x || loc.y || loc.z)
-        playsoundname(e.Get<const char*>(1), &loc, e.Get<int>(5));
+        playsoundname(e.get<const char*>(1), &loc, e.get<int>(5));
     else
-        playsoundname(e.Get<const char*>(1));
+        playsoundname(e.get<const char*>(1));
 })
-LUA_BIND_STD_CLIENT(stopSoundByName, stopsoundbyid, getsoundid(e.Get<const char*>(1), e.Get<int>(2)))
-LUA_BIND_STD_CLIENT(music, startmusic, (char*)e.Get<const char*>(1), (char*)"Sound.musicCallback()")
+LUA_BIND_STD_CLIENT(stopSoundByName, stopsoundbyid, getsoundid(e.get<const char*>(1), e.get<int>(2)))
+LUA_BIND_STD_CLIENT(music, startmusic, (char*)e.get<const char*>(1), (char*)"Sound.musicCallback()")
 LUA_BIND_CLIENT(preloadSound, {
-    std::string str = "preloading sound '";
-    str += e.Get<std::string>(1);
-    str += "'...";
-    renderprogress(0, str.c_str());
+    defformatstring(str)("preloading sound '%s'...", e.Get<const char*>(1));
+    renderprogress(0, str);
 
-    e.Push(preload_sound((char*)e.Get<const char*>(1), min(e.Get<int>(2), 100)));
+    e.push(preload_sound((char*)e.get<const char*>(1), min(e.get<int>(2), 100)));
 })
 
 #ifdef CLIENT
-LUA_BIND_STD(playSound, playsound, e.Get<int>(1)) // TODO: sound position
+LUA_BIND_STD(playSound, playsound, e.get<int>(1)) // TODO: sound position
 #else
-LUA_BIND_STD(playSound, MessageSystem::send_SoundToClients, -1, e.Get<int>(1), -1)
+LUA_BIND_STD(playSound, MessageSystem::send_SoundToClients, -1, e.get<int>(1), -1)
 #endif
 
 // Effects
 
 LUA_BIND_CLIENT(addDecal, {
-    vec  center(e.Get<double>(2), e.Get<double>(3), e.Get<double>(4));
-    vec  surface(e.Get<double>(5), e.Get<double>(6), e.Get<double>(7));
-    bvec color(e.Get<int>(9), e.Get<int>(10), e.Get<int>(11));
+    vec  center(e.get<double>(2), e.get<double>(3), e.get<double>(4));
+    vec  surface(e.get<double>(5), e.get<double>(6), e.get<double>(7));
+    bvec color(e.get<int>(9), e.get<int>(10), e.get<int>(11));
 
-    adddecal(e.Get<int>(1), center, surface, e.Get<double>(8), color, e.Get<int>(12));
+    adddecal(e.get<int>(1), center, surface, e.get<double>(8), color, e.get<int>(12));
 })
 
 LUA_BIND_CLIENT(particleSplash, {
-    if (e.Get<int>(1) == PART_BLOOD && !GETIV(blood)) return;
-    vec p(e.Get<double>(4), e.Get<double>(5), e.Get<double>(6));
+    if (e.get<int>(1) == PART_BLOOD && !GETIV(blood)) return;
+    vec p(e.get<double>(4), e.get<double>(5), e.get<double>(6));
     particle_splash(
-        e.Get<int>(1),
-        e.Get<int>(2),
-        e.Get<int>(3),
+        e.get<int>(1),
+        e.get<int>(2),
+        e.get<int>(3),
         p,
-        e.Get<int>(7),
-        e.Get<double>(8),
-        e.Get<int>(9),
-        e.Get<int>(10),
-        e.Get<bool>(11),
-        e.Get<int>(12),
-        e.Get<bool>(13),
-        e.Get<int>(14)
+        e.get<int>(7),
+        e.get<double>(8),
+        e.get<int>(9),
+        e.get<int>(10),
+        e.get<bool>(11),
+        e.get<int>(12),
+        e.get<bool>(13),
+        e.get<int>(14)
     );
 })
 
 LUA_BIND_CLIENT(particleSplashRegular, {
-    if (e.Get<int>(1) == PART_BLOOD && !GETIV(blood)) return;
-    vec p(e.Get<double>(4), e.Get<double>(5), e.Get<double>(6));
+    if (e.get<int>(1) == PART_BLOOD && !GETIV(blood)) return;
+    vec p(e.get<double>(4), e.get<double>(5), e.get<double>(6));
     regular_particle_splash(
-        e.Get<int>(1),
-        e.Get<int>(2),
-        e.Get<int>(3),
+        e.get<int>(1),
+        e.get<int>(2),
+        e.get<int>(3),
         p,
-        e.Get<int>(7),
-        e.Get<double>(8),
-        e.Get<int>(9),
-        e.Get<int>(10),
-        e.Get<int>(11),
-        e.Get<bool>(12),
-        e.Get<int>(13)
+        e.get<int>(7),
+        e.get<double>(8),
+        e.get<int>(9),
+        e.get<int>(10),
+        e.get<int>(11),
+        e.get<bool>(12),
+        e.get<int>(13)
     );
 })
 
 LUA_BIND_CLIENT(particleFireball, {
-    vec dest(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
-    particle_fireball(dest, e.Get<double>(4), e.Get<int>(5), e.Get<int>(6), e.Get<int>(7), e.Get<double>(8));
+    vec dest(e.get<double>(1), e.get<double>(2), e.get<double>(3));
+    particle_fireball(dest, e.get<double>(4), e.get<int>(5), e.get<int>(6), e.get<int>(7), e.get<double>(8));
 })
 
 LUA_BIND_CLIENT(particleExplodeSplash, {
-    vec o(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
-    particle_explodesplash(o, e.Get<int>(4), e.Get<int>(5), e.Get<int>(6), e.Get<int>(7), e.Get<int>(8), e.Get<int>(9));
+    vec o(e.get<double>(1), e.get<double>(2), e.get<double>(3));
+    particle_explodesplash(o, e.get<int>(4), e.get<int>(5), e.get<int>(6), e.get<int>(7), e.get<int>(8), e.get<int>(9));
 })
 
 LUA_BIND_CLIENT(particleFlare, {
-    vec p(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
-    vec dest(e.Get<double>(4), e.Get<double>(5), e.Get<double>(6));
-    if (e.Get<int>(12) < 0)
-        particle_flare(p, dest, e.Get<int>(7), e.Get<int>(8), e.Get<int>(9), e.Get<double>(10), NULL, e.Get<int>(11));
+    vec p(e.get<double>(1), e.get<double>(2), e.get<double>(3));
+    vec dest(e.get<double>(4), e.get<double>(5), e.get<double>(6));
+    if (e.get<int>(12) < 0)
+        particle_flare(p, dest, e.get<int>(7), e.get<int>(8), e.get<int>(9), e.get<double>(10), NULL, e.get<int>(11));
     else
     {
-        LogicEntityPtr owner = LogicSystem::getLogicEntity(e.Get<int>(12));
+        LogicEntityPtr owner = LogicSystem::getLogicEntity(e.get<int>(12));
         assert(owner.get()->dynamicEntity);
-        particle_flare(p, dest, e.Get<int>(7), e.Get<int>(8), e.Get<int>(9), e.Get<double>(10), (fpsent*)(owner.get()->dynamicEntity), e.Get<int>(11));
+        particle_flare(p, dest, e.get<int>(7), e.get<int>(8), e.get<int>(9), e.get<double>(10), (fpsent*)(owner.get()->dynamicEntity), e.get<int>(11));
     }
 })
 
 LUA_BIND_CLIENT(particleFlyingFlare, {
-    vec p(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
-    vec dest(e.Get<double>(4), e.Get<double>(5), e.Get<double>(6));
-    particle_flying_flare(p, dest, e.Get<int>(7), e.Get<int>(8), e.Get<int>(9), e.Get<double>(10), e.Get<int>(11));
+    vec p(e.get<double>(1), e.get<double>(2), e.get<double>(3));
+    vec dest(e.get<double>(4), e.get<double>(5), e.get<double>(6));
+    particle_flying_flare(p, dest, e.get<int>(7), e.get<int>(8), e.get<int>(9), e.get<double>(10), e.get<int>(11));
 })
 
 LUA_BIND_CLIENT(particleTrail, {
-    vec from(e.Get<double>(3), e.Get<double>(4), e.Get<double>(5));
-    vec to(e.Get<double>(6), e.Get<double>(7), e.Get<double>(8));
-    particle_trail(e.Get<int>(1), e.Get<int>(2), from, to, e.Get<int>(9), e.Get<double>(10), e.Get<int>(11), e.Get<bool>(12));
+    vec from(e.get<double>(3), e.get<double>(4), e.get<double>(5));
+    vec to(e.get<double>(6), e.get<double>(7), e.get<double>(8));
+    particle_trail(e.get<int>(1), e.get<int>(2), from, to, e.get<int>(9), e.get<double>(10), e.get<int>(11), e.get<bool>(12));
 })
 
 LUA_BIND_CLIENT(particleFlame, {
     regular_particle_flame(
-        e.Get<int>(1),
-        vec(e.Get<double>(2), e.Get<double>(3), e.Get<double>(4)),
-        e.Get<double>(5),
-        e.Get<double>(6),
-        e.Get<int>(7),
-        e.Get<int>(8),
-        e.Get<double>(9),
-        e.Get<double>(10),
-        e.Get<double>(11),
-        e.Get<int>(12)
+        e.get<int>(1),
+        vec(e.get<double>(2), e.get<double>(3), e.get<double>(4)),
+        e.get<double>(5),
+        e.get<double>(6),
+        e.get<int>(7),
+        e.get<int>(8),
+        e.get<double>(9),
+        e.get<double>(10),
+        e.get<double>(11),
+        e.get<int>(12)
     );
 })
 
 LUA_BIND_CLIENT(addDynlight, {
-    vec o(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
-    vec color(float(e.Get<double>(5))/255.0, float(e.Get<double>(6))/255.0, float(e.Get<double>(7))/255.0);
-    vec initcolor(float(e.Get<double>(12))/255.0, float(e.Get<double>(13))/255.0, float(e.Get<double>(14))/255.0);
+    vec o(e.get<double>(1), e.get<double>(2), e.get<double>(3));
+    vec color(float(e.get<double>(5))/255.0, float(e.get<double>(6))/255.0, float(e.get<double>(7))/255.0);
+    vec initcolor(float(e.get<double>(12))/255.0, float(e.get<double>(13))/255.0, float(e.get<double>(14))/255.0);
 
-    LightControl::queueDynamicLight(o, e.Get<double>(4), color, e.Get<int>(8), e.Get<int>(9), e.Get<int>(10), e.Get<double>(11), initcolor, NULL);
+    LightControl::queueDynamicLight(o, e.get<double>(4), color, e.get<int>(8), e.get<int>(9), e.get<int>(10), e.get<double>(11), initcolor, NULL);
 })
 
 LUA_BIND_CLIENT(spawnDebris, {
-    vec v(e.Get<double>(2), e.Get<double>(3), e.Get<double>(4));
-    vec debrisvel(e.Get<double>(6), e.Get<double>(7), e.Get<double>(8));
+    vec v(e.get<double>(2), e.get<double>(3), e.get<double>(4));
+    vec debrisvel(e.get<double>(6), e.get<double>(7), e.get<double>(8));
 
-    LogicEntityPtr owner = LogicSystem::getLogicEntity(e.Get<int>(9));
+    LogicEntityPtr owner = LogicSystem::getLogicEntity(e.get<int>(9));
     assert(owner->dynamicEntity);
-    FPSClientInterface::spawnDebris(e.Get<int>(1), v, e.Get<int>(5), debrisvel, (dynent*)(owner->dynamicEntity));
+    FPSClientInterface::spawnDebris(e.get<int>(1), v, e.get<int>(5), debrisvel, (dynent*)(owner->dynamicEntity));
 })
 
 LUA_BIND_CLIENT(particleMeter, {
-    vec s(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
-    particle_meter(s, e.Get<double>(4), e.Get<int>(5), e.Get<int>(6));
+    vec s(e.get<double>(1), e.get<double>(2), e.get<double>(3));
+    particle_meter(s, e.get<double>(4), e.get<int>(5), e.get<int>(6));
 })
 
 LUA_BIND_CLIENT(particleText, {
-    vec s(e.Get<double>(1), e.Get<double>(2), e.Get<double>(3));
-    particle_textcopy(s, e.Get<const char*>(4), e.Get<int>(5), e.Get<int>(6), e.Get<int>(7), e.Get<double>(8), e.Get<int>(9));
+    vec s(e.get<double>(1), e.get<double>(2), e.get<double>(3));
+    particle_textcopy(s, e.get<const char*>(4), e.get<int>(5), e.get<int>(6), e.get<int>(7), e.get<double>(8), e.get<int>(9));
 })
 
 LUA_BIND_CLIENT(clientDamageEffect, {
-    ((fpsent*)player)->damageroll(e.Get<int>(1));
-    damageblend(e.Get<int>(2));
+    ((fpsent*)player)->damageroll(e.get<int>(1));
+    damageblend(e.get<int>(2));
 })
 
-LUA_BIND_CLIENT(showHUDRect,  ClientSystem::addHUDRect (e.Get<double>(1), e.Get<double>(2), e.Get<double>(3), e.Get<double>(4), e.Get<int>(5), e.Get<double>(6));)
-LUA_BIND_CLIENT(showHUDImage, ClientSystem::addHUDImage(e.Get<std::string>(1), e.Get<double>(2), e.Get<double>(3), e.Get<double>(4), e.Get<double>(5), e.Get<int>(6), e.Get<double>(7));)
+LUA_BIND_CLIENT(showHUDRect,  ClientSystem::addHUDRect (e.get<double>(1), e.get<double>(2), e.get<double>(3), e.get<double>(4), e.get<int>(5), e.get<double>(6));)
+LUA_BIND_CLIENT(showHUDImage, ClientSystem::addHUDImage(std::string(e.get<const char*>(1)), e.get<double>(2), e.get<double>(3), e.get<double>(4), e.get<double>(5), e.get<int>(6), e.get<double>(7));)
 
 // text, x, y, scale, color
-LUA_BIND_CLIENT(showHUDText, ClientSystem::addHUDText(e.Get<std::string>(1), e.Get<double>(2), e.Get<double>(3), e.Get<double>(4), e.Get<int>(5));)
+LUA_BIND_CLIENT(showHUDText, ClientSystem::addHUDText(std::string(e.get<const char*>(1)), e.get<double>(2), e.get<double>(3), e.get<double>(4), e.get<int>(5));)
 
 // Messages
 
 using namespace MessageSystem;
 
-LUA_BIND_DEF(PersonalServerMessage, send_PersonalServerMessage(e.Get<int>(1), e.Get<int>(2), e.Get<std::string>(3), e.Get<std::string>(4));)
-LUA_BIND_DEF(ParticleSplashToClients, send_ParticleSplashToClients(e.Get<int>(1), e.Get<int>(2), e.Get<int>(3), e.Get<int>(4), e.Get<double>(5), e.Get<double>(6), e.Get<double>(7));)
-LUA_BIND_DEF(ParticleSplashRegularToClients, send_ParticleSplashToClients(e.Get<int>(1), e.Get<int>(2), e.Get<int>(3), e.Get<int>(4), e.Get<double>(5), e.Get<double>(6), e.Get<double>(7));)
-LUA_BIND_DEF(SoundToClientsByName, send_SoundToClientsByName(e.Get<int>(1), e.Get<double>(2), e.Get<double>(3), e.Get<double>(4), e.Get<std::string>(5), e.Get<int>(6));)
-LUA_BIND_DEF(StateDataChangeRequest, send_StateDataChangeRequest(e.Get<int>(1), e.Get<int>(2), e.Get<std::string>(3));)
-LUA_BIND_DEF(UnreliableStateDataChangeRequest, send_UnreliableStateDataChangeRequest(e.Get<int>(1), e.Get<int>(2), e.Get<std::string>(3));)
-LUA_BIND_DEF(NotifyNumEntities, send_NotifyNumEntities(e.Get<int>(1), e.Get<int>(2));)
-LUA_BIND_DEF(LogicEntityCompleteNotification, send_LogicEntityCompleteNotification(e.Get<int>(1), e.Get<int>(2), e.Get<int>(3), e.Get<std::string>(4), e.Get<std::string>(5));)
-LUA_BIND_DEF(LogicEntityRemoval, send_LogicEntityRemoval(e.Get<int>(1), e.Get<int>(2));)
-LUA_BIND_DEF(StateDataUpdate, send_StateDataUpdate(e.Get<int>(1), e.Get<int>(2), e.Get<int>(3), e.Get<std::string>(4), e.Get<int>(5));)
-LUA_BIND_DEF(UnrealiableStateDataUpdate, send_UnreliableStateDataUpdate(e.Get<int>(1), e.Get<int>(2), e.Get<int>(3), e.Get<std::string>(4), e.Get<int>(5));)
-LUA_BIND_DEF(DoClick, send_DoClick(e.Get<int>(1), e.Get<int>(2), e.Get<double>(3), e.Get<double>(4), e.Get<double>(5), e.Get<int>(6));)
+LUA_BIND_DEF(PersonalServerMessage, send_PersonalServerMessage(e.get<int>(1), e.get<int>(2), std::string(e.get<const char*>(3)), std::string(e.get<const char*>(4)));)
+LUA_BIND_DEF(ParticleSplashToClients, send_ParticleSplashToClients(e.get<int>(1), e.get<int>(2), e.get<int>(3), e.get<int>(4), e.get<double>(5), e.get<double>(6), e.get<double>(7));)
+LUA_BIND_DEF(ParticleSplashRegularToClients, send_ParticleSplashToClients(e.get<int>(1), e.get<int>(2), e.get<int>(3), e.get<int>(4), e.get<double>(5), e.get<double>(6), e.get<double>(7));)
+LUA_BIND_DEF(SoundToClientsByName, send_SoundToClientsByName(e.get<int>(1), e.get<double>(2), e.get<double>(3), e.get<double>(4), std::string(e.get<const char*>(5)), e.get<int>(6));)
+LUA_BIND_DEF(StateDataChangeRequest, send_StateDataChangeRequest(e.get<int>(1), e.get<int>(2), std::string(e.get<const char*>(3)));)
+LUA_BIND_DEF(UnreliableStateDataChangeRequest, send_UnreliableStateDataChangeRequest(e.get<int>(1), e.get<int>(2), std::string(e.get<const char*>(3)));)
+LUA_BIND_DEF(NotifyNumEntities, send_NotifyNumEntities(e.get<int>(1), e.get<int>(2));)
+LUA_BIND_DEF(LogicEntityCompleteNotification, send_LogicEntityCompleteNotification(e.get<int>(1), e.get<int>(2), e.get<int>(3), std::string(e.get<const char*>(4)), std::string(e.get<const char*>(5)));)
+LUA_BIND_DEF(LogicEntityRemoval, send_LogicEntityRemoval(e.get<int>(1), e.get<int>(2));)
+LUA_BIND_DEF(StateDataUpdate, send_StateDataUpdate(e.get<int>(1), e.get<int>(2), e.get<int>(3), std::string(e.get<const char*>(4)), e.get<int>(5));)
+LUA_BIND_DEF(UnrealiableStateDataUpdate, send_UnreliableStateDataUpdate(e.get<int>(1), e.get<int>(2), e.get<int>(3), std::string(e.get<const char*>(4)), e.get<int>(5));)
+LUA_BIND_DEF(DoClick, send_DoClick(e.get<int>(1), e.get<int>(2), e.get<double>(3), e.get<double>(4), e.get<double>(5), e.get<int>(6));)
 LUA_BIND_DEF(ExtentCompleteNotification, send_ExtentCompleteNotification(
-    e.Get<int>(1),
-    e.Get<int>(2),
-    e.Get<std::string>(3),
-    e.Get<std::string>(4),
-    e.Get<double>(5),
-    e.Get<double>(6),
-    e.Get<double>(7),
-    e.Get<int>(8),
-    e.Get<int>(9),
-    e.Get<int>(10),
-    e.Get<int>(11)
+    e.get<int>(1),
+    e.get<int>(2),
+    std::string(e.get<const char*>(3)),
+    std::string(e.get<const char*>(4)),
+    e.get<double>(5),
+    e.get<double>(6),
+    e.get<double>(7),
+    e.get<int>(8),
+    e.get<int>(9),
+    e.get<int>(10),
+    e.get<int>(11)
 );)
 
 // File access
@@ -813,10 +811,10 @@ LUA_BIND_DEF(readFile, {
     {
         REFLECT_PYTHON( read_file_safely );
 
-        boost::python::object data = read_file_safely(e.Get<std::string>(1));
-        std::string text = boost::python::extract<std::string>(data);
+        boost::python::object data = read_file_safely(std::string(e.get<const char*>(1)));
+        const char *text = boost::python::extract<const char*>(data);
 
-        e.Push(text);
+        e.push(text);
     }
     catch(boost::python::error_already_set const &)
     {
@@ -833,182 +831,182 @@ LUA_BIND_DEF(textureReset, {
 })
 LUA_BIND_DEF(texture, {
     // XXX: arg7 may not be given, in which case it is undefined, and turns into 0.
-    texture(e.Get<const char*>(1), e.Get<const char*>(2), e.Get<int>(3), e.Get<int>(4), e.Get<int>(5), (float)e.Get<double>(6), e.Get<int>(7));
+    texture(e.get<const char*>(1), e.get<const char*>(2), e.get<int>(3), e.get<int>(4), e.get<int>(5), (float)e.get<double>(6), e.get<int>(7));
 })
-LUA_BIND_DEF(mapmodelReset, mapmodelreset(e.Get<int*>(1));)
-LUA_BIND_DEF(mapmodel, mmodel(e.Get<char*>(1));)
-LUA_BIND_DEF(numMapModels, e.Push(mapmodels.length());)
-LUA_BIND_STD(clearModel, clearmodel, e.Get<char*>(1))
-LUA_BIND_DEF(autograss, autograss(e.Get<char*>(1));)
-LUA_BIND_STD_CLIENT(texLayer, texlayer, e.Get<int*>(1), (char*)"", new int(0), new float(0))
-LUA_BIND_STD_CLIENT(texAlpha, texalpha, e.Get<float*>(1), e.Get<float*>(2))
-LUA_BIND_STD_CLIENT(texColor, texcolor, e.Get<float*>(1), e.Get<float*>(2), e.Get<float*>(3))
-LUA_BIND_STD_CLIENT(texScroll, texscroll, e.Get<float*>(1), e.Get<float*>(2))
-LUA_BIND_STD_CLIENT(texFFenv, texffenv, e.Get<int*>(1))
+LUA_BIND_DEF(mapmodelReset, mapmodelreset(e.get<int*>(1));)
+LUA_BIND_DEF(mapmodel, mmodel(e.get<char*>(1));)
+LUA_BIND_DEF(numMapModels, e.push(mapmodels.length());)
+LUA_BIND_STD(clearModel, clearmodel, e.get<char*>(1))
+LUA_BIND_DEF(autograss, autograss(e.get<char*>(1));)
+LUA_BIND_STD_CLIENT(texLayer, texlayer, e.get<int*>(1), (char*)"", new int(0), new float(0))
+LUA_BIND_STD_CLIENT(texAlpha, texalpha, e.get<float*>(1), e.get<float*>(2))
+LUA_BIND_STD_CLIENT(texColor, texcolor, e.get<float*>(1), e.get<float*>(2), e.get<float*>(3))
+LUA_BIND_STD_CLIENT(texScroll, texscroll, e.get<float*>(1), e.get<float*>(2))
+LUA_BIND_STD_CLIENT(texFFenv, texffenv, e.get<int*>(1))
 LUA_BIND_STD(materialReset, materialreset)
 
 // shaders
 
-LUA_BIND_STD_CLIENT(shader, shader, e.Get<int*>(1), e.Get<char*>(2), e.Get<char*>(3), e.Get<char*>(4))
-LUA_BIND_STD_CLIENT(variantShader, variantshader, e.Get<int*>(1), e.Get<char*>(2), e.Get<int*>(3), e.Get<char*>(4), e.Get<char*>(5))
-LUA_BIND_STD_CLIENT(setShader, setshader, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(altShader, altshader, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD_CLIENT(fastShader, fastshader, e.Get<char*>(1), e.Get<char*>(2), e.Get<int*>(3))
-LUA_BIND_STD_CLIENT(deferShader, defershader, e.Get<int*>(1), e.Get<char*>(2), e.Get<char*>(3))
-LUA_BIND_STD_CLIENT(forceShader, useshaderbyname, e.Get<char*>(1))
+LUA_BIND_STD_CLIENT(shader, shader, e.get<int*>(1), e.get<char*>(2), e.get<char*>(3), e.get<char*>(4))
+LUA_BIND_STD_CLIENT(variantShader, variantshader, e.get<int*>(1), e.get<char*>(2), e.get<int*>(3), e.get<char*>(4), e.get<char*>(5))
+LUA_BIND_STD_CLIENT(setShader, setshader, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(altShader, altshader, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD_CLIENT(fastShader, fastshader, e.get<char*>(1), e.get<char*>(2), e.get<int*>(3))
+LUA_BIND_STD_CLIENT(deferShader, defershader, e.get<int*>(1), e.get<char*>(2), e.get<char*>(3))
+LUA_BIND_STD_CLIENT(forceShader, useshaderbyname, e.get<char*>(1))
 
-LUA_BIND_STD_CLIENT(isShaderDefined, isshaderdefined, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(isShaderNative, isshadernative, e.Get<char*>(1))
+LUA_BIND_STD_CLIENT(isShaderDefined, isshaderdefined, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(isShaderNative, isshadernative, e.get<char*>(1))
 
-LUA_BIND_STD_CLIENT(setVertexParam, addshaderparam, NULL, SHPARAM_VERTEX, e.Get<int>(1), e.Get<float>(2), e.Get<float>(3), e.Get<float>(4), e.Get<float>(5))
-LUA_BIND_STD_CLIENT(setPixelParam, addshaderparam, NULL, SHPARAM_VERTEX, e.Get<int>(1), e.Get<float>(2), e.Get<float>(3), e.Get<float>(4), e.Get<float>(5))
-LUA_BIND_STD_CLIENT(setUniformParam, addshaderparam, e.Get<char*>(1), SHPARAM_UNIFORM, -1, e.Get<float>(2), e.Get<float>(3), e.Get<float>(4), e.Get<float>(5))
-LUA_BIND_STD_CLIENT(setShaderParam, addshaderparam, e.Get<char*>(1), SHPARAM_LOOKUP, -1, e.Get<float>(2), e.Get<float>(3), e.Get<float>(4), e.Get<float>(5))
-LUA_BIND_STD_CLIENT(defVertexParam, addshaderparam, e.Get<char*>(1)[0] ? e.Get<char*>(1) : NULL, SHPARAM_VERTEX, e.Get<int>(2), e.Get<float>(3), e.Get<float>(4), e.Get<float>(5), e.Get<float>(6))
-LUA_BIND_STD_CLIENT(defPixelParam, addshaderparam, e.Get<char*>(1)[0] ? e.Get<char*>(1) : NULL, SHPARAM_PIXEL, e.Get<int>(2), e.Get<float>(3), e.Get<float>(4), e.Get<float>(5), e.Get<float>(6))
-LUA_BIND_STD_CLIENT(defUniformParam, addshaderparam, e.Get<char*>(1), SHPARAM_UNIFORM, -1, e.Get<float>(2), e.Get<float>(3), e.Get<float>(4), e.Get<float>(5))
+LUA_BIND_STD_CLIENT(setVertexParam, addshaderparam, NULL, SHPARAM_VERTEX, e.get<int>(1), e.get<float>(2), e.get<float>(3), e.get<float>(4), e.get<float>(5))
+LUA_BIND_STD_CLIENT(setPixelParam, addshaderparam, NULL, SHPARAM_VERTEX, e.get<int>(1), e.get<float>(2), e.get<float>(3), e.get<float>(4), e.get<float>(5))
+LUA_BIND_STD_CLIENT(setUniformParam, addshaderparam, e.get<char*>(1), SHPARAM_UNIFORM, -1, e.get<float>(2), e.get<float>(3), e.get<float>(4), e.get<float>(5))
+LUA_BIND_STD_CLIENT(setShaderParam, addshaderparam, e.get<char*>(1), SHPARAM_LOOKUP, -1, e.get<float>(2), e.get<float>(3), e.get<float>(4), e.get<float>(5))
+LUA_BIND_STD_CLIENT(defVertexParam, addshaderparam, e.get<char*>(1)[0] ? e.get<char*>(1) : NULL, SHPARAM_VERTEX, e.get<int>(2), e.get<float>(3), e.get<float>(4), e.get<float>(5), e.get<float>(6))
+LUA_BIND_STD_CLIENT(defPixelParam, addshaderparam, e.get<char*>(1)[0] ? e.get<char*>(1) : NULL, SHPARAM_PIXEL, e.get<int>(2), e.get<float>(3), e.get<float>(4), e.get<float>(5), e.get<float>(6))
+LUA_BIND_STD_CLIENT(defUniformParam, addshaderparam, e.get<char*>(1), SHPARAM_UNIFORM, -1, e.get<float>(2), e.get<float>(3), e.get<float>(4), e.get<float>(5))
 
-LUA_BIND_STD_CLIENT(addPostFX, addpostfx, e.Get<const char*>(1), e.Get<int>(2), e.Get<int>(3), e.Get<const char*>(4), e.Get<float>(5), e.Get<float>(6), e.Get<float>(7), e.Get<float>(8))
-LUA_BIND_STD_CLIENT(setPostFX, setpostfx, e.Get<const char*>(1), e.Get<float>(2), e.Get<float>(3), e.Get<float>(4), e.Get<float>(5))
+LUA_BIND_STD_CLIENT(addPostFX, addpostfx, e.get<const char*>(1), e.get<int>(2), e.get<int>(3), e.get<const char*>(4), e.get<float>(5), e.get<float>(6), e.get<float>(7), e.get<float>(8))
+LUA_BIND_STD_CLIENT(setPostFX, setpostfx, e.get<const char*>(1), e.get<float>(2), e.get<float>(3), e.get<float>(4), e.get<float>(5))
 LUA_BIND_STD_CLIENT(clearPostFX, clearpostfx)
 
 // Models
 
 LUA_BIND_STD(mdlName, mdlname)
 
-LUA_BIND_STD(mdlAlphatest, mdlalphatest, e.Get<float*>(1))
-LUA_BIND_STD(mdlAlphablend, mdlalphablend, e.Get<int*>(1))
-LUA_BIND_STD(mdlAlphadepth, mdlalphadepth, e.Get<int*>(1))
+LUA_BIND_STD(mdlAlphatest, mdlalphatest, e.get<float*>(1))
+LUA_BIND_STD(mdlAlphablend, mdlalphablend, e.get<int*>(1))
+LUA_BIND_STD(mdlAlphadepth, mdlalphadepth, e.get<int*>(1))
 
-LUA_BIND_STD(mdlBb, mdlbb, e.Get<float*>(1), e.Get<float*>(2), e.Get<float*>(3))
-LUA_BIND_STD(mdlExtendbb, mdlextendbb, e.Get<float*>(1), e.Get<float*>(2), e.Get<float*>(3))
+LUA_BIND_STD(mdlBb, mdlbb, e.get<float*>(1), e.get<float*>(2), e.get<float*>(3))
+LUA_BIND_STD(mdlExtendbb, mdlextendbb, e.get<float*>(1), e.get<float*>(2), e.get<float*>(3))
 
-LUA_BIND_STD(mdlScale, mdlscale, e.Get<int*>(1))
-LUA_BIND_STD(mdlSpec, mdlspec, e.Get<int*>(1))
-LUA_BIND_STD(mdlGlow, mdlglow, e.Get<int*>(1))
-LUA_BIND_STD(mdlGlare, mdlglare, e.Get<float*>(1), e.Get<float*>(2))
-LUA_BIND_STD(mdlAmbient, mdlambient, e.Get<int*>(1))
-LUA_BIND_STD(mdlCullface, mdlcullface, e.Get<int*>(1))
-LUA_BIND_STD(mdlDepthoffset, mdldepthoffset, e.Get<int*>(1))
-LUA_BIND_STD(mdlFullbright, mdlfullbright, e.Get<float*>(1))
-LUA_BIND_STD(mdlSpin, mdlspin, e.Get<float*>(1), e.Get<float*>(2))
-LUA_BIND_STD(mdlEnvmap, mdlenvmap, e.Get<float*>(1), e.Get<float*>(2), e.Get<char*>(3))
+LUA_BIND_STD(mdlScale, mdlscale, e.get<int*>(1))
+LUA_BIND_STD(mdlSpec, mdlspec, e.get<int*>(1))
+LUA_BIND_STD(mdlGlow, mdlglow, e.get<int*>(1))
+LUA_BIND_STD(mdlGlare, mdlglare, e.get<float*>(1), e.get<float*>(2))
+LUA_BIND_STD(mdlAmbient, mdlambient, e.get<int*>(1))
+LUA_BIND_STD(mdlCullface, mdlcullface, e.get<int*>(1))
+LUA_BIND_STD(mdlDepthoffset, mdldepthoffset, e.get<int*>(1))
+LUA_BIND_STD(mdlFullbright, mdlfullbright, e.get<float*>(1))
+LUA_BIND_STD(mdlSpin, mdlspin, e.get<float*>(1), e.get<float*>(2))
+LUA_BIND_STD(mdlEnvmap, mdlenvmap, e.get<float*>(1), e.get<float*>(2), e.get<char*>(3))
 
-LUA_BIND_STD(mdlShader, mdlshader, e.Get<char*>(1))
+LUA_BIND_STD(mdlShader, mdlshader, e.get<char*>(1))
 
-LUA_BIND_STD(mdlCollisionsOnlyForTriggering, mdlcollisionsonlyfortriggering, e.Get<int*>(1))
+LUA_BIND_STD(mdlCollisionsOnlyForTriggering, mdlcollisionsonlyfortriggering, e.get<int*>(1))
 
-LUA_BIND_STD(mdlTrans, mdltrans, e.Get<float*>(1), e.Get<float*>(2), e.Get<float*>(3))
+LUA_BIND_STD(mdlTrans, mdltrans, e.get<float*>(1), e.get<float*>(2), e.get<float*>(3))
 
-LUA_BIND_STD(modelYaw, mdlyaw, e.Get<float*>(1))
-LUA_BIND_STD(modelPitch, mdlpitch, e.Get<float*>(1))
-LUA_BIND_STD(modelShadow, mdlshadow, e.Get<int*>(1))
-LUA_BIND_STD(modelCollide, mdlcollide, e.Get<int*>(1))
-LUA_BIND_STD(modelPerEntityCollisionBoxes, mdlperentitycollisionboxes, e.Get<int*>(1))
-LUA_BIND_STD(modelEllipseCollide, mdlellipsecollide, e.Get<int*>(1))
+LUA_BIND_STD(modelYaw, mdlyaw, e.get<float*>(1))
+LUA_BIND_STD(modelPitch, mdlpitch, e.get<float*>(1))
+LUA_BIND_STD(modelShadow, mdlshadow, e.get<int*>(1))
+LUA_BIND_STD(modelCollide, mdlcollide, e.get<int*>(1))
+LUA_BIND_STD(modelPerEntityCollisionBoxes, mdlperentitycollisionboxes, e.get<int*>(1))
+LUA_BIND_STD(modelEllipseCollide, mdlellipsecollide, e.get<int*>(1))
 
-LUA_BIND_STD(objLoad, objload, e.Get<char*>(1), e.Get<float*>(2))
+LUA_BIND_STD(objLoad, objload, e.get<char*>(1), e.get<float*>(2))
 
-LUA_BIND_STD(objSkin, objskin, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3), e.Get<float*>(4), e.Get<float*>(5))
-LUA_BIND_STD(objBumpmap, objbumpmap, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3))
-LUA_BIND_STD(objEnvmap, objenvmap, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(objSpec, objspec, e.Get<char*>(1), e.Get<int*>(2))
+LUA_BIND_STD(objSkin, objskin, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3), e.get<float*>(4), e.get<float*>(5))
+LUA_BIND_STD(objBumpmap, objbumpmap, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3))
+LUA_BIND_STD(objEnvmap, objenvmap, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(objSpec, objspec, e.get<char*>(1), e.get<int*>(2))
 
-LUA_BIND_STD(objPitch, objpitch, e.Get<float*>(1), e.Get<float*>(2), e.Get<float*>(3), e.Get<float*>(4))
-LUA_BIND_STD(objAmbient, objambient, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(objGlow, objglow, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(objGlare, objglare, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3))
-LUA_BIND_STD(objAlphatest, objalphatest, e.Get<char*>(1), e.Get<float*>(2))
-LUA_BIND_STD(objAlphablend, objalphablend, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(objCullface, objcullface, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(objFullbright, objfullbright, e.Get<char*>(1), e.Get<float*>(2))
-LUA_BIND_STD(objShader, objshader, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(objScroll, objscroll, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3))
-LUA_BIND_STD(objNoclip, objnoclip, e.Get<char*>(1), e.Get<int*>(2))
+LUA_BIND_STD(objPitch, objpitch, e.get<float*>(1), e.get<float*>(2), e.get<float*>(3), e.get<float*>(4))
+LUA_BIND_STD(objAmbient, objambient, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(objGlow, objglow, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(objGlare, objglare, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3))
+LUA_BIND_STD(objAlphatest, objalphatest, e.get<char*>(1), e.get<float*>(2))
+LUA_BIND_STD(objAlphablend, objalphablend, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(objCullface, objcullface, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(objFullbright, objfullbright, e.get<char*>(1), e.get<float*>(2))
+LUA_BIND_STD(objShader, objshader, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(objScroll, objscroll, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3))
+LUA_BIND_STD(objNoclip, objnoclip, e.get<char*>(1), e.get<int*>(2))
 
-LUA_BIND_STD(md5Dir, setmd5dir, e.Get<char*>(1))
-LUA_BIND_STD(md5Load, md5load, e.Get<char*>(1), e.Get<char*>(2), e.Get<float*>(3))
-LUA_BIND_STD(md5Tag, md5tag, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(md5Pitch, md5pitch, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3), e.Get<float*>(4), e.Get<float*>(5))
-LUA_BIND_STD(md5Adjust, md5adjust, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3), e.Get<float*>(4), e.Get<float*>(5), e.Get<float*>(6), e.Get<float*>(7))
-LUA_BIND_STD(md5Skin, md5skin, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3), e.Get<float*>(4), e.Get<float*>(5))
-LUA_BIND_STD(md5Spec, md5spec, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(md5Ambient, md5ambient, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(md5Glow, md5glow, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(md5Glare, md5glare, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3))
-LUA_BIND_STD(md5Alphatest, md5alphatest, e.Get<char*>(1), e.Get<float*>(2))
-LUA_BIND_STD(md5Alphablend, md5alphablend, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(md5Cullface, md5cullface, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(md5Envmap, md5envmap, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(md5Bumpmap, md5bumpmap, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3))
-LUA_BIND_STD(md5Fullbright, md5fullbright, e.Get<char*>(1), e.Get<float*>(2))
-LUA_BIND_STD(md5Shader, md5shader, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(md5Scroll, md5scroll, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3))
-LUA_BIND_STD(md5Animpart, md5animpart, e.Get<char*>(1))
-LUA_BIND_STD(md5Anim, md5anim, e.Get<char*>(1), e.Get<char*>(2), e.Get<float*>(3), e.Get<int*>(4))
-LUA_BIND_STD(md5Link, md5link, e.Get<int*>(1), e.Get<int*>(2), e.Get<char*>(3), e.Get<float*>(4), e.Get<float*>(5), e.Get<float*>(6))
-LUA_BIND_STD(md5Noclip, md5noclip, e.Get<char*>(1), e.Get<int*>(2))
+LUA_BIND_STD(md5Dir, setmd5dir, e.get<char*>(1))
+LUA_BIND_STD(md5Load, md5load, e.get<char*>(1), e.get<char*>(2), e.get<float*>(3))
+LUA_BIND_STD(md5Tag, md5tag, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(md5Pitch, md5pitch, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3), e.get<float*>(4), e.get<float*>(5))
+LUA_BIND_STD(md5Adjust, md5adjust, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3), e.get<float*>(4), e.get<float*>(5), e.get<float*>(6), e.get<float*>(7))
+LUA_BIND_STD(md5Skin, md5skin, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3), e.get<float*>(4), e.get<float*>(5))
+LUA_BIND_STD(md5Spec, md5spec, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(md5Ambient, md5ambient, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(md5Glow, md5glow, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(md5Glare, md5glare, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3))
+LUA_BIND_STD(md5Alphatest, md5alphatest, e.get<char*>(1), e.get<float*>(2))
+LUA_BIND_STD(md5Alphablend, md5alphablend, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(md5Cullface, md5cullface, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(md5Envmap, md5envmap, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(md5Bumpmap, md5bumpmap, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3))
+LUA_BIND_STD(md5Fullbright, md5fullbright, e.get<char*>(1), e.get<float*>(2))
+LUA_BIND_STD(md5Shader, md5shader, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(md5Scroll, md5scroll, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3))
+LUA_BIND_STD(md5Animpart, md5animpart, e.get<char*>(1))
+LUA_BIND_STD(md5Anim, md5anim, e.get<char*>(1), e.get<char*>(2), e.get<float*>(3), e.get<int*>(4))
+LUA_BIND_STD(md5Link, md5link, e.get<int*>(1), e.get<int*>(2), e.get<char*>(3), e.get<float*>(4), e.get<float*>(5), e.get<float*>(6))
+LUA_BIND_STD(md5Noclip, md5noclip, e.get<char*>(1), e.get<int*>(2))
 
-LUA_BIND_STD(iqmDir, setiqmdir, e.Get<char*>(1))
-LUA_BIND_STD(iqmLoad, iqmload, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(iqmTag, iqmtag, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(iqmPitch, iqmpitch, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3), e.Get<float*>(4), e.Get<float*>(5))
-LUA_BIND_STD(iqmAdjust, iqmadjust, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3), e.Get<float*>(4), e.Get<float*>(5), e.Get<float*>(6), e.Get<float*>(7))
-LUA_BIND_STD(iqmSkin, iqmskin, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3), e.Get<float*>(4), e.Get<float*>(5))
-LUA_BIND_STD(iqmSpec, iqmspec, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(iqmAmbient, iqmambient, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(iqmGlow, iqmglow, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(iqmGlare, iqmglare, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3))
-LUA_BIND_STD(iqmAlphatest, iqmalphatest, e.Get<char*>(1), e.Get<float*>(2))
-LUA_BIND_STD(iqmAlphablend, iqmalphablend, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(iqmCullface, iqmcullface, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(iqmEnvmap, iqmenvmap, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(iqmBumpmap, iqmbumpmap, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3))
-LUA_BIND_STD(iqmFullbright, iqmfullbright, e.Get<char*>(1), e.Get<float*>(2))
-LUA_BIND_STD(iqmShader, iqmshader, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(iqmScroll, iqmscroll, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3))
-LUA_BIND_STD(iqmAnimpart, iqmanimpart, e.Get<char*>(1))
-LUA_BIND_STD(iqmAnim, iqmanim, e.Get<char*>(1), e.Get<char*>(2), e.Get<float*>(3), e.Get<int*>(4))
-LUA_BIND_STD(iqmLink, iqmlink, e.Get<int*>(1), e.Get<int*>(2), e.Get<char*>(3), e.Get<float*>(4), e.Get<float*>(5), e.Get<float*>(6))
-LUA_BIND_STD(iqmNoclip, iqmnoclip, e.Get<char*>(1), e.Get<int*>(2))
+LUA_BIND_STD(iqmDir, setiqmdir, e.get<char*>(1))
+LUA_BIND_STD(iqmLoad, iqmload, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(iqmTag, iqmtag, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(iqmPitch, iqmpitch, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3), e.get<float*>(4), e.get<float*>(5))
+LUA_BIND_STD(iqmAdjust, iqmadjust, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3), e.get<float*>(4), e.get<float*>(5), e.get<float*>(6), e.get<float*>(7))
+LUA_BIND_STD(iqmSkin, iqmskin, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3), e.get<float*>(4), e.get<float*>(5))
+LUA_BIND_STD(iqmSpec, iqmspec, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(iqmAmbient, iqmambient, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(iqmGlow, iqmglow, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(iqmGlare, iqmglare, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3))
+LUA_BIND_STD(iqmAlphatest, iqmalphatest, e.get<char*>(1), e.get<float*>(2))
+LUA_BIND_STD(iqmAlphablend, iqmalphablend, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(iqmCullface, iqmcullface, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(iqmEnvmap, iqmenvmap, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(iqmBumpmap, iqmbumpmap, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3))
+LUA_BIND_STD(iqmFullbright, iqmfullbright, e.get<char*>(1), e.get<float*>(2))
+LUA_BIND_STD(iqmShader, iqmshader, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(iqmScroll, iqmscroll, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3))
+LUA_BIND_STD(iqmAnimpart, iqmanimpart, e.get<char*>(1))
+LUA_BIND_STD(iqmAnim, iqmanim, e.get<char*>(1), e.get<char*>(2), e.get<float*>(3), e.get<int*>(4))
+LUA_BIND_STD(iqmLink, iqmlink, e.get<int*>(1), e.get<int*>(2), e.get<char*>(3), e.get<float*>(4), e.get<float*>(5), e.get<float*>(6))
+LUA_BIND_STD(iqmNoclip, iqmnoclip, e.get<char*>(1), e.get<int*>(2))
 
-LUA_BIND_STD(smdDir, setsmddir, e.Get<char*>(1))
-LUA_BIND_STD(smdLoad, smdload, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(smdTag, smdtag, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(smdPitch, smdpitch, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3), e.Get<float*>(4), e.Get<float*>(5))
-LUA_BIND_STD(smdAdjust, smdadjust, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3), e.Get<float*>(4), e.Get<float*>(5), e.Get<float*>(6), e.Get<float*>(7))
-LUA_BIND_STD(smdSkin, smdskin, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3), e.Get<float*>(4), e.Get<float*>(5))
-LUA_BIND_STD(smdSpec, smdspec, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(smdAmbient, smdambient, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(smdGlow, smdglow, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(smdGlare, smdglare, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3))
-LUA_BIND_STD(smdAlphatest, smdalphatest, e.Get<char*>(1), e.Get<float*>(2))
-LUA_BIND_STD(smdAlphablend, smdalphablend, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(smdCullface, smdcullface, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD(smdEnvmap, smdenvmap, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(smdBumpmap, smdbumpmap, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3))
-LUA_BIND_STD(smdFullbright, smdfullbright, e.Get<char*>(1), e.Get<float*>(2))
-LUA_BIND_STD(smdShader, smdshader, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD(smdScroll, smdscroll, e.Get<char*>(1), e.Get<float*>(2), e.Get<float*>(3))
-LUA_BIND_STD(smdAnimpart, smdanimpart, e.Get<char*>(1))
-LUA_BIND_STD(smdAnim, smdanim, e.Get<char*>(1), e.Get<char*>(2), e.Get<float*>(3), e.Get<int*>(4))
-LUA_BIND_STD(smdLink, smdlink, e.Get<int*>(1), e.Get<int*>(2), e.Get<char*>(3), e.Get<float*>(4), e.Get<float*>(5), e.Get<float*>(6))
-LUA_BIND_STD(smdNoclip, smdnoclip, e.Get<char*>(1), e.Get<int*>(2))
+LUA_BIND_STD(smdDir, setsmddir, e.get<char*>(1))
+LUA_BIND_STD(smdLoad, smdload, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(smdTag, smdtag, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(smdPitch, smdpitch, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3), e.get<float*>(4), e.get<float*>(5))
+LUA_BIND_STD(smdAdjust, smdadjust, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3), e.get<float*>(4), e.get<float*>(5), e.get<float*>(6), e.get<float*>(7))
+LUA_BIND_STD(smdSkin, smdskin, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3), e.get<float*>(4), e.get<float*>(5))
+LUA_BIND_STD(smdSpec, smdspec, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(smdAmbient, smdambient, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(smdGlow, smdglow, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(smdGlare, smdglare, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3))
+LUA_BIND_STD(smdAlphatest, smdalphatest, e.get<char*>(1), e.get<float*>(2))
+LUA_BIND_STD(smdAlphablend, smdalphablend, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(smdCullface, smdcullface, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD(smdEnvmap, smdenvmap, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(smdBumpmap, smdbumpmap, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3))
+LUA_BIND_STD(smdFullbright, smdfullbright, e.get<char*>(1), e.get<float*>(2))
+LUA_BIND_STD(smdShader, smdshader, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD(smdScroll, smdscroll, e.get<char*>(1), e.get<float*>(2), e.get<float*>(3))
+LUA_BIND_STD(smdAnimpart, smdanimpart, e.get<char*>(1))
+LUA_BIND_STD(smdAnim, smdanim, e.get<char*>(1), e.get<char*>(2), e.get<float*>(3), e.get<int*>(4))
+LUA_BIND_STD(smdLink, smdlink, e.get<int*>(1), e.get<int*>(2), e.get<char*>(3), e.get<float*>(4), e.get<float*>(5), e.get<float*>(6))
+LUA_BIND_STD(smdNoclip, smdnoclip, e.get<char*>(1), e.get<int*>(2))
 
-LUA_BIND_STD(rdVert, rdvert, e.Get<float*>(1), e.Get<float*>(2), e.Get<float*>(3), e.Get<float*>(4));
-LUA_BIND_STD(rdEye, rdeye, e.Get<int*>(1));
-LUA_BIND_STD(rdTri, rdtri, e.Get<int*>(1), e.Get<int*>(2), e.Get<int*>(3));
-LUA_BIND_STD(rdJoint, rdjoint, e.Get<int*>(1), e.Get<int*>(2), e.Get<char*>(3), e.Get<char*>(4), e.Get<char*>(5));
-LUA_BIND_STD(rdLimitDist, rdlimitdist, e.Get<int*>(1), e.Get<int*>(2), e.Get<float*>(3), e.Get<float*>(4));
-LUA_BIND_STD(rdLimitRot, rdlimitrot, e.Get<int*>(1), e.Get<int*>(2), e.Get<float*>(3), e.Get<float*>(4), e.Get<float*>(5), e.Get<float*>(6), e.Get<float*>(7));
-LUA_BIND_STD(rdAnimJoints, rdanimjoints, e.Get<int*>(1));
+LUA_BIND_STD(rdVert, rdvert, e.get<float*>(1), e.get<float*>(2), e.get<float*>(3), e.get<float*>(4));
+LUA_BIND_STD(rdEye, rdeye, e.get<int*>(1));
+LUA_BIND_STD(rdTri, rdtri, e.get<int*>(1), e.get<int*>(2), e.get<int*>(3));
+LUA_BIND_STD(rdJoint, rdjoint, e.get<int*>(1), e.get<int*>(2), e.get<char*>(3), e.get<char*>(4), e.get<char*>(5));
+LUA_BIND_STD(rdLimitDist, rdlimitdist, e.get<int*>(1), e.get<int*>(2), e.get<float*>(3), e.get<float*>(4));
+LUA_BIND_STD(rdLimitRot, rdlimitrot, e.get<int*>(1), e.get<int*>(2), e.get<float*>(3), e.get<float*>(4), e.get<float*>(5), e.get<float*>(6), e.get<float*>(7));
+LUA_BIND_STD(rdAnimJoints, rdanimjoints, e.get<int*>(1));
 
 // Keyboard
 
-LUA_BIND_DEF(isKeyDown, e.Push(getkeydown());)
-LUA_BIND_DEF(isKeyUp, e.Push(getkeyup());)
-LUA_BIND_DEF(isMouseDown, e.Push(getmousedown());)
-LUA_BIND_DEF(isMouseUp, e.Push(getmouseup());)
+LUA_BIND_DEF(isKeyDown, e.push(getkeydown());)
+LUA_BIND_DEF(isKeyUp, e.push(getkeyup());)
+LUA_BIND_DEF(isMouseDown, e.push(getmousedown());)
+LUA_BIND_DEF(isMouseUp, e.push(getmouseup());)
 
 // Components
 
@@ -1016,8 +1014,8 @@ LUA_BIND_DEF(signalComponent, {
     try
     {
         REFLECT_PYTHON( signal_signal_component );
-        boost::python::object data = signal_signal_component(e.Get<std::string>(1), e.Get<std::string>(2));
-        e.Push(boost::python::extract<std::string>(data));
+        boost::python::object data = signal_signal_component(std::string(e.get<const char*>(1)), std::string(e.get<const char*>(2)));
+        e.push(boost::python::extract<const char*>(data));
     }
     catch(boost::python::error_already_set const &)
     {
@@ -1029,25 +1027,25 @@ LUA_BIND_DEF(signalComponent, {
 
 // Models
 
-LUA_BIND_STD(preloadModel, preloadmodel, e.Get<const char*>(1))
+LUA_BIND_STD(preloadModel, preloadmodel, e.get<const char*>(1))
 LUA_BIND_DEF(reloadModel, {
-    clearmodel(e.Get<char*>(1));
-    if (!loadmodel(e.Get<char*>(1))) e.Error("Cannot load model.");
+    clearmodel(e.get<char*>(1));
+    if (!loadmodel(e.get<char*>(1))) e.Error("Cannot load model.");
 });
 
 // HUD
 
 LUA_BIND_CLIENT(getTargetPosition, {
     TargetingControl::determineMouseTarget(true); // Force a determination, if needed
-    e.Push(TargetingControl::targetPosition);
+    e.push(TargetingControl::targetPosition);
 })
 LUA_BIND_CLIENT(getTargetEntity, {
     TargetingControl::determineMouseTarget(true); // Force a determination, if needed
     LogicEntityPtr target = TargetingControl::targetLogicEntity;
     if (target.get() && !target->isNone() && target->luaRef >= 0)
-        e.GetRef(target->luaRef);
+        e.getRef(target->luaRef);
     else
-        e.Push();
+        e.push();
 })
 
 // Rendering
@@ -1074,7 +1072,7 @@ void prepareRagdoll(int& anim, LogicEntityPtr self)
         if (fpsEntity->ragdoll || !GETIV(ragdoll) || !PhysicsManager::getEngine()->prepareRagdoll(self))
         {
             anim &= ~ANIM_RAGDOLL;
-            engine.GetRef(self.get()->luaRef).GetTableRaw("setLocalAnimation").PushIndex(-2).Push(anim).Call(2, 0);
+            engine.getRef(self.get()->luaRef).GetTableRaw("setLocalAnimation").PushIndex(-2).Push(anim).Call(2, 0);
             engine.ClearStack(1);
         }
     }
@@ -1095,7 +1093,7 @@ void prepareRagdoll(int& anim, LogicEntityPtr self)
 
 fpsent* getProxyFpsEntityLua(LogicEntityPtr self)
 {
-    engine.GetRef(self.get()->luaRef).GetTableRaw("renderingHashHint");
+    engine.getRef(self.get()->luaRef).GetTableRaw("renderingHashHint");
     if (!engine.Is<void>(-1))
     {
         static bool initialized = false;
@@ -1109,7 +1107,7 @@ fpsent* getProxyFpsEntityLua(LogicEntityPtr self)
             initialized = true;
         }
 
-        int renderingHashHint = engine.Get<int>(-1);
+        int renderingHashHint = engine.get<int>(-1);
         engine.ClearStack(2);
         renderingHashHint = renderingHashHint & 1023;
         assert(renderingHashHint >= 0 && renderingHashHint < 1024);
@@ -1123,9 +1121,9 @@ fpsent* getProxyFpsEntityLua(LogicEntityPtr self)
 }
 
 #define PREP_RENDER_MODEL \
-    int anim = e.Get<int>(3); \
+    int anim = e.get<int>(3); \
     prepareRagdoll(anim, self); \
-    vec o(e.Get<float>(4), e.Get<float>(5), e.Get<float>(6)); \
+    vec o(e.get<float>(4), e.get<float>(5), e.get<float>(6)); \
     fpsent *fpsEntity = NULL; \
     if (self->dynamicEntity) \
         fpsEntity = (fpsent*)self->dynamicEntity; \
@@ -1135,31 +1133,31 @@ fpsent* getProxyFpsEntityLua(LogicEntityPtr self)
 LUA_BIND_LE(renderModel2, {
     PREP_RENDER_MODEL
     rendermodel(NULL,
-        e.Get<const char*>(2),
+        e.get<const char*>(2),
         anim, o, self,
-        e.Get<float>(7),
-        e.Get<float>(8),
-        e.Get<float>(9),
-        e.Get<int>(10),
+        e.get<float>(7),
+        e.get<float>(8),
+        e.get<float>(9),
+        e.get<int>(10),
         fpsEntity,
         self->attachments,
-        e.Get<int>(11)
+        e.get<int>(11)
     );
 })
 
 LUA_BIND_LE(renderModel3, {
     PREP_RENDER_MODEL
-    quat rotation(e.Get<float>(12), e.Get<float>(13), e.Get<float>(14), e.Get<float>(15));
+    quat rotation(e.get<float>(12), e.get<float>(13), e.get<float>(14), e.get<float>(15));
     rendermodel(NULL,
-        e.Get<const char*>(2),
+        e.get<const char*>(2),
         anim, o, self,
-        e.Get<float>(7),
-        e.Get<float>(8),
-        e.Get<float>(9),
-        e.Get<int>(10),
+        e.get<float>(7),
+        e.get<float>(8),
+        e.get<float>(9),
+        e.get<int>(10),
         fpsEntity,
         self->attachments,
-        e.Get<int>(11),
+        e.get<int>(11),
         0, 1, rotation
     );
 })
@@ -1170,22 +1168,22 @@ LUA_BIND_DUMMY(renderModel3)
 
 // Network
 
-LUA_BIND_STD_CLIENT(connect, ClientSystem::connect, e.Get<std::string>(1), e.Get<int>(2))
+LUA_BIND_STD_CLIENT(connect, ClientSystem::connect, std::string(e.get<const char*>(1)), e.get<int>(2))
 
 // Camera
 
 LUA_BIND_CLIENT(forceCamera, {
-    vec position(e.Get<float>(1), e.Get<float>(2), e.Get<float>(3));
-    CameraControl::forceCamera(position, e.Get<float>(4), e.Get<float>(5), e.Get<float>(6), e.Get<float>(7));
+    vec position(e.get<float>(1), e.get<float>(2), e.get<float>(3));
+    CameraControl::forceCamera(position, e.get<float>(4), e.get<float>(5), e.get<float>(6), e.get<float>(7));
 })
 LUA_BIND_CLIENT(forcePosition, {
-    vec position(e.Get<float>(1), e.Get<float>(2), e.Get<float>(3));
+    vec position(e.get<float>(1), e.get<float>(2), e.get<float>(3));
     CameraControl::forcePosition(position);
 })
-LUA_BIND_STD_CLIENT(forceYaw, CameraControl::forceYaw, e.Get<float>(1))
-LUA_BIND_STD_CLIENT(forcePitch, CameraControl::forcePitch, e.Get<float>(1))
-LUA_BIND_STD_CLIENT(forceRoll, CameraControl::forceRoll, e.Get<float>(1))
-LUA_BIND_STD_CLIENT(forceFov, CameraControl::forceFov, e.Get<float>(1))
+LUA_BIND_STD_CLIENT(forceYaw, CameraControl::forceYaw, e.get<float>(1))
+LUA_BIND_STD_CLIENT(forcePitch, CameraControl::forcePitch, e.get<float>(1))
+LUA_BIND_STD_CLIENT(forceRoll, CameraControl::forceRoll, e.get<float>(1))
+LUA_BIND_STD_CLIENT(forceFov, CameraControl::forceFov, e.get<float>(1))
 LUA_BIND_STD_CLIENT(resetCamera, CameraControl::positionCamera, CameraControl::getCamera())
 LUA_BIND_CLIENT(getCamera, {
     physent *camera = CameraControl::getCamera();
@@ -1197,55 +1195,55 @@ LUA_BIND_CLIENT(getCamera, {
 })
 LUA_BIND_CLIENT(getCameraPosition, {
     physent *camera = CameraControl::getCamera();
-    e.Push(camera->o);
+    e.push(camera->o);
 })
 
 // Editing
 
-LUA_BIND_STD(editing_getWorldSize, e.Push, EditingSystem::getWorldSize())
-LUA_BIND_STD(editing_getGridSize, e.Push, 1<<GETIV(gridpower))
+LUA_BIND_STD(editing_getWorldSize, e.push, EditingSystem::getWorldSize())
+LUA_BIND_STD(editing_getGridSize, e.push, 1<<GETIV(gridpower))
 LUA_BIND_STD(editing_eraseGeometry, EditingSystem::eraseGeometry)
-LUA_BIND_STD(editing_createCube, EditingSystem::createCube, e.Get<int>(1), e.Get<int>(2), e.Get<int>(3), e.Get<int>(4))
-LUA_BIND_STD(editing_deleteCube, EditingSystem::deleteCube, e.Get<int>(1), e.Get<int>(2), e.Get<int>(3), e.Get<int>(4))
+LUA_BIND_STD(editing_createCube, EditingSystem::createCube, e.get<int>(1), e.get<int>(2), e.get<int>(3), e.get<int>(4))
+LUA_BIND_STD(editing_deleteCube, EditingSystem::deleteCube, e.get<int>(1), e.get<int>(2), e.get<int>(3), e.get<int>(4))
 LUA_BIND_STD(editing_setCubeTexture, EditingSystem::setCubeTexture,
-    e.Get<int>(1),
-    e.Get<int>(2),
-    e.Get<int>(3),
-    e.Get<int>(4),
-    e.Get<int>(5),
-    e.Get<int>(6)
+    e.get<int>(1),
+    e.get<int>(2),
+    e.get<int>(3),
+    e.get<int>(4),
+    e.get<int>(5),
+    e.get<int>(6)
 )
 LUA_BIND_STD(editing_setCubeMaterial, EditingSystem::setCubeMaterial,
-    e.Get<int>(1),
-    e.Get<int>(2),
-    e.Get<int>(3),
-    e.Get<int>(4),
-    e.Get<int>(5)
+    e.get<int>(1),
+    e.get<int>(2),
+    e.get<int>(3),
+    e.get<int>(4),
+    e.get<int>(5)
 )
 LUA_BIND_STD(editing_pushCubeCorner, EditingSystem::pushCubeCorner,
-    e.Get<int>(1),
-    e.Get<int>(2),
-    e.Get<int>(3),
-    e.Get<int>(4),
-    e.Get<int>(5),
-    e.Get<int>(6),
-    e.Get<int>(7)
+    e.get<int>(1),
+    e.get<int>(2),
+    e.get<int>(3),
+    e.get<int>(4),
+    e.get<int>(5),
+    e.get<int>(6),
+    e.get<int>(7)
 )
 LUA_BIND_DEF(editing_getSelectedEntity, {
     LogicEntityPtr ret = EditingSystem::getSelectedEntity();
-    if (ret.get() && !ret->isNone() && ret->luaRef >= 0) e.GetRef(ret.get()->luaRef);
-    else e.Push();
+    if (ret.get() && !ret->isNone() && ret->luaRef >= 0) e.getRef(ret.get()->luaRef);
+    else e.push();
 })
-LUA_BIND_STD(renderProgress, renderprogress, e.Get<float>(1), e.Get<const char*>(2))
-LUA_BIND_STD(getMapversion, e.Push, GETIV(mapversion))
+LUA_BIND_STD(renderProgress, renderprogress, e.get<float>(1), e.get<const char*>(2))
+LUA_BIND_STD(getMapversion, e.push, GETIV(mapversion))
 
 // Models
 
 LUA_BIND_DEF(modelBoundingBox, {
-    model* theModel = loadmodel(e.Get<const char*>(1));
+    model* theModel = loadmodel(e.get<const char*>(1));
     if (!theModel)
     {
-        e.Push();
+        e.push();
         return;
     }
     vec center;
@@ -1256,10 +1254,10 @@ LUA_BIND_DEF(modelBoundingBox, {
 });
 
 LUA_BIND_DEF(modelCollisionBox, {
-    model* theModel = loadmodel(e.Get<const char*>(1));
+    model* theModel = loadmodel(e.get<const char*>(1));
     if (!theModel)
     {
-        e.Push();
+        e.push();
         return;
     }
     vec center;
@@ -1270,10 +1268,10 @@ LUA_BIND_DEF(modelCollisionBox, {
 });
 
 LUA_BIND_DEF(modelMesh, {
-    model* theModel = loadmodel(e.Get<const char*>(1));
+    model* theModel = loadmodel(e.get<const char*>(1));
     if (!theModel)
     {
-        e.Push();
+        e.push();
         return;
     }
 
@@ -1286,7 +1284,7 @@ LUA_BIND_DEF(modelMesh, {
     {
         BIH::tri& bt = tris[i];
 
-        e.Push(Utility::toString(i))
+        e.push(Utility::toString(i))
             .NewTable()
             .SetTable("a", bt.a)
             .SetTable("b", bt.b)
@@ -1298,11 +1296,11 @@ LUA_BIND_DEF(modelMesh, {
 // NPCs/bots
 
 LUA_BIND_SERVER(addNPC, {
-    int _ref = NPC::add(e.Get<std::string>(1));
+    int _ref = NPC::add(std::string(e.get<const char*>(1)));
     if (_ref >= 0)
-        e.GetRef(_ref);
+        e.getRef(_ref);
     else
-        e.Push();
+        e.push();
 })
 
 #ifdef SERVER
@@ -1317,137 +1315,137 @@ LUA_BIND_DUMMY(removeNPC)
 // data/ directory embeds, this is client-only, so we put it in ifdef. For server, they're just dummies
 // dummies are needed because we don't want to check further in CAPIExtras.
 
-LUA_BIND_STD_CLIENT(keymap, keymap, e.Get<int*>(1), e.Get<char*>(2))
-LUA_BIND_STD_CLIENT(registerSound, registersound, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD_CLIENT(font, newfont, e.Get<char*>(1), e.Get<char*>(2), e.Get<int*>(3), e.Get<int*>(4), e.Get<int*>(5), e.Get<int*>(6), e.Get<int*>(7), e.Get<int*>(8))
-LUA_BIND_STD_CLIENT(fontOffset, fontoffset, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(fontChar, fontchar, e.Get<int*>(1), e.Get<int*>(2), e.Get<int*>(3), e.Get<int*>(4))
+LUA_BIND_STD_CLIENT(keymap, keymap, e.get<int*>(1), e.get<char*>(2))
+LUA_BIND_STD_CLIENT(registerSound, registersound, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD_CLIENT(font, newfont, e.get<char*>(1), e.get<char*>(2), e.get<int*>(3), e.get<int*>(4), e.get<int*>(5), e.get<int*>(6), e.get<int*>(7), e.get<int*>(8))
+LUA_BIND_STD_CLIENT(fontOffset, fontoffset, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(fontChar, fontchar, e.get<int*>(1), e.get<int*>(2), e.get<int*>(3), e.get<int*>(4))
 
 // Variable manipulation
 
 LUA_BIND_DEF(getVariable, {
-    ident *id = idents->access(e.Get<const char*>(1));
+    ident *id = idents->access(e.get<const char*>(1));
     if (id) switch(id->type)
     {
-        case ID_VAR :  e.Push(*id->storage.i); break;
-        case ID_FVAR:  e.Push(*id->storage.f); break;
-        case ID_SVAR:  e.Push(*id->storage.s); break;
-        case ID_ALIAS: e.Push(id->action);     break;
+        case ID_VAR :  e.push(*id->storage.i); break;
+        case ID_FVAR:  e.push(*id->storage.f); break;
+        case ID_SVAR:  e.push(*id->storage.s); break;
+        case ID_ALIAS: e.push(id->action);     break;
     }
 })
 
 LUA_BIND_DEF(setVariable, {
-    ident *id = idents->access(e.Get<const char*>(1));
+    ident *id = idents->access(e.get<const char*>(1));
     if (id) switch(id->type)
     {
-        case ID_VAR :   setvarchecked(id, atoi(e.Get<const char*>(2))); break;
-        case ID_FVAR:  setfvarchecked(id, strtod(e.Get<const char*>(2), NULL)); break;
-        case ID_SVAR:  setsvarchecked(id, e.Get<const char*>(2)); break;
-        case ID_ALIAS: alias(id->name, e.Get<const char*>(2)); break;
+        case ID_VAR :   setvarchecked(id, atoi(e.get<const char*>(2))); break;
+        case ID_FVAR:  setfvarchecked(id, strtod(e.get<const char*>(2), NULL)); break;
+        case ID_SVAR:  setsvarchecked(id, e.get<const char*>(2)); break;
+        case ID_ALIAS: alias(id->name, e.get<const char*>(2)); break;
     }
 })
 
 LUA_BIND_DEF(syncVariableFromLua, {
-    std::string name = e.Get<std::string>(1);
-    std::string type = e.Get<std::string>(2);
+    std::string name = std::string(e.get<const char*>(1));
+    std::string type = std::string(e.get<const char*>(2));
     switch (type[0])
     {
         case 'I':
         {
-            EngineVariables::syncFromLua(name, e.Get<int>(3));
+            EngineVariables::syncFromLua(name, e.get<int>(3));
             break;
         }
         case 'F':
         {
-            EngineVariables::syncFromLua(name, (float)e.Get<float>(3));
+            EngineVariables::syncFromLua(name, (float)e.get<float>(3));
             break;
         }
         case 'S':
         {
-            EngineVariables::syncFromLua(name, e.Get<std::string>(3));
+            EngineVariables::syncFromLua(name, std::string(e.get<const char*>(3)));
             break;
         }
         default: break;
     }
 })
 
-LUA_BIND_STD(runCS, execute, e.Get<const char*>(1))
+LUA_BIND_STD(runCS, execute, e.get<const char*>(1))
 LUA_BIND_DEF(startStopLocalServer, {
     if (e.Is<void>(1))
         run_python((char*)"intensity.components.server_runner.stop_server()");
     else
     {
-        std::string cmd = "intensity.components.server_runner.run_server('";
-        cmd += e.Get<std::string>(1) + "'";
-        if (!_EV_logged_into_master->getInteger()) cmd += ", False";
-        cmd += ")";
-        run_python((char*)cmd.c_str());
+        defformatstring(cmd)("intensity.components.server_runner.run_server('%s'%s)",
+                             e.Get<const char*>(1),
+                             !_EV_logged_into_master->getInteger() ? ", False" : ""
+                            )
+        run_python((char*)cmd);
     }
 })
 
 // GUI
 
-LUA_BIND_STD_CLIENT(showMessage, IntensityGUI::showMessage, "Script message", e.Get<std::string>(1))
-LUA_BIND_STD_CLIENT(showInputDialog, IntensityGUI::showInputDialog, "Script input", e.Get<std::string>(1))
+LUA_BIND_STD_CLIENT(showMessage, IntensityGUI::showMessage, "Script message", std::string(e.get<const char*>(1)))
+LUA_BIND_STD_CLIENT(showInputDialog, IntensityGUI::showInputDialog, "Script input", std::string(e.get<const char*>(1)))
 LUA_BIND_CLIENT(setDefaultThirdpersonMode, {
     // Only allow this to be done once
     if (!e["setDefaultThirdpersonMode"])
     {
         e["setDefaultThirdpersonMode"] = "set";
-        SETV(thirdperson, e.Get<int>(1));
+        SETV(thirdperson, e.get<int>(1));
     } else
         Logging::log(Logging::WARNING, "Can only set default thirdperson mode once per map\r\n");
 })
 
-LUA_BIND_STD_CLIENT(newGUI, newgui, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3))
-LUA_BIND_STD_CLIENT(GUIButton, guibutton, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3))
-LUA_BIND_STD_CLIENT(GUIText, guitext, e.Get<char*>(1), e.Get<char*>(2))
-LUA_BIND_STD_CLIENT(clearGUI, e.Push, cleargui(e.Get<int>(1)))
-LUA_BIND_STD_CLIENT(showGUI, showgui, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(GUIOnClear, guionclear, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(GUIStayOpen, guistayopen, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(GUINoAutoTab, guinoautotab, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(GUIList, guilist, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(GUIAlign, guialign, e.Get<int*>(1), e.Get<char*>(2))
-LUA_BIND_STD_CLIENT(GUITitle, guititle, e.Get<char*>(1))
+LUA_BIND_STD_CLIENT(newGUI, newgui, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3))
+LUA_BIND_STD_CLIENT(GUIButton, guibutton, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3))
+LUA_BIND_STD_CLIENT(GUIText, guitext, e.get<char*>(1), e.get<char*>(2))
+LUA_BIND_STD_CLIENT(clearGUI, e.push, cleargui(e.get<int>(1)))
+LUA_BIND_STD_CLIENT(showGUI, showgui, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(GUIOnClear, guionclear, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(GUIStayOpen, guistayopen, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(GUINoAutoTab, guinoautotab, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(GUIList, guilist, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(GUIAlign, guialign, e.get<int*>(1), e.get<char*>(2))
+LUA_BIND_STD_CLIENT(GUITitle, guititle, e.get<char*>(1))
 LUA_BIND_STD_CLIENT(GUIBar, guibar)
-LUA_BIND_STD_CLIENT(GUIStrut, guistrut, e.Get<float*>(1), e.Get<int*>(2))
-LUA_BIND_STD_CLIENT(GUIImage, guiimage, e.Get<char*>(1), e.Get<char*>(2), e.Get<float*>(3), e.Get<int*>(4), e.Get<char*>(5))
-LUA_BIND_STD_CLIENT(GUISlider, guislider, e.Get<char*>(1), e.Get<int*>(2), e.Get<int*>(3), e.Get<char*>(4))
-LUA_BIND_STD_CLIENT(GUIListSlider, guilistslider, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3))
-LUA_BIND_STD_CLIENT(GUINameSlider, guinameslider, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3), e.Get<char*>(4))
-LUA_BIND_STD_CLIENT(GUIRadio, guiradio, e.Get<char*>(1), e.Get<char*>(2), e.Get<float*>(3), e.Get<char*>(4))
-LUA_BIND_STD_CLIENT(GUIBitfield, guibitfield, e.Get<char*>(1), e.Get<char*>(2), e.Get<int*>(3), e.Get<char*>(4))
-LUA_BIND_STD_CLIENT(GUICheckBox, guicheckbox, e.Get<char*>(1), e.Get<char*>(2), e.Get<float*>(3), e.Get<float*>(4), e.Get<char*>(5))
-LUA_BIND_STD_CLIENT(GUITab, guitab, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(GUIField, guifield, e.Get<char*>(1), e.Get<int*>(2), e.Get<char*>(3), e.Get<int*>(4))
-LUA_BIND_STD_CLIENT(GUIKeyfield, guikeyfield, e.Get<char*>(1), e.Get<int*>(2), e.Get<char*>(3))
-LUA_BIND_STD_CLIENT(GUIEditor, guieditor, e.Get<char*>(1), e.Get<int*>(2), e.Get<int*>(3), e.Get<int*>(4))
-LUA_BIND_STD_CLIENT(GUIColor, guicolor, e.Get<int*>(1))
-LUA_BIND_STD_CLIENT(GUITextBox, guitextbox, e.Get<char*>(1), e.Get<int*>(2), e.Get<int*>(3), e.Get<int*>(4))
+LUA_BIND_STD_CLIENT(GUIStrut, guistrut, e.get<float*>(1), e.get<int*>(2))
+LUA_BIND_STD_CLIENT(GUIImage, guiimage, e.get<char*>(1), e.get<char*>(2), e.get<float*>(3), e.get<int*>(4), e.get<char*>(5))
+LUA_BIND_STD_CLIENT(GUISlider, guislider, e.get<char*>(1), e.get<int*>(2), e.get<int*>(3), e.get<char*>(4))
+LUA_BIND_STD_CLIENT(GUIListSlider, guilistslider, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3))
+LUA_BIND_STD_CLIENT(GUINameSlider, guinameslider, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3), e.get<char*>(4))
+LUA_BIND_STD_CLIENT(GUIRadio, guiradio, e.get<char*>(1), e.get<char*>(2), e.get<float*>(3), e.get<char*>(4))
+LUA_BIND_STD_CLIENT(GUIBitfield, guibitfield, e.get<char*>(1), e.get<char*>(2), e.get<int*>(3), e.get<char*>(4))
+LUA_BIND_STD_CLIENT(GUICheckBox, guicheckbox, e.get<char*>(1), e.get<char*>(2), e.get<float*>(3), e.get<float*>(4), e.get<char*>(5))
+LUA_BIND_STD_CLIENT(GUITab, guitab, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(GUIField, guifield, e.get<char*>(1), e.get<int*>(2), e.get<char*>(3), e.get<int*>(4))
+LUA_BIND_STD_CLIENT(GUIKeyfield, guikeyfield, e.get<char*>(1), e.get<int*>(2), e.get<char*>(3))
+LUA_BIND_STD_CLIENT(GUIEditor, guieditor, e.get<char*>(1), e.get<int*>(2), e.get<int*>(3), e.get<int*>(4))
+LUA_BIND_STD_CLIENT(GUIColor, guicolor, e.get<int*>(1))
+LUA_BIND_STD_CLIENT(GUITextBox, guitextbox, e.get<char*>(1), e.get<int*>(2), e.get<int*>(3), e.get<int*>(4))
 
 LUA_BIND_STD_CLIENT(quit, quit)
 LUA_BIND_STD_CLIENT(forceQuit, force_quit)
-LUA_BIND_STD_CLIENT(screenRes, screenres, e.Get<int*>(1), e.Get<int*>(2))
+LUA_BIND_STD_CLIENT(screenRes, screenres, e.get<int*>(1), e.get<int*>(2))
 LUA_BIND_STD_CLIENT(resetGl, resetgl)
-LUA_BIND_STD_CLIENT(getFps, getfps_, e.Get<int*>(1))
+LUA_BIND_STD_CLIENT(getFps, getfps_, e.get<int*>(1))
 
-LUA_BIND_STD_CLIENT(resetLightMaps, resetlightmaps, e.Get<bool>(1))
-LUA_BIND_STD_CLIENT(calcLight, calclight, e.Get<int*>(1))
-LUA_BIND_STD_CLIENT(patchLight, patchlight, e.Get<int*>(1))
+LUA_BIND_STD_CLIENT(resetLightMaps, resetlightmaps, e.get<bool>(1))
+LUA_BIND_STD_CLIENT(calcLight, calclight, e.get<int*>(1))
+LUA_BIND_STD_CLIENT(patchLight, patchlight, e.get<int*>(1))
 LUA_BIND_STD_CLIENT(clearLightMaps, clearlightmaps)
 LUA_BIND_STD_CLIENT(dumpLms, dumplms)
 
 // blendmap
 
 LUA_BIND_STD(clearBlendBrushes, clearblendbrushes)
-LUA_BIND_STD(delBlendBrush, delblendbrush, e.Get<const char*>(1))
-LUA_BIND_STD(addBlendBrush, addblendbrush, e.Get<const char*>(1), e.Get<const char*>(2))
-LUA_BIND_STD(nextBlendBrush, nextblendbrush, e.Get<int*>(1))
-LUA_BIND_STD(setBlendBrush, setblendbrush, e.Get<const char*>(1))
-LUA_BIND_STD(getBlendBrushName, getblendbrushname, e.Get<int*>(1))
+LUA_BIND_STD(delBlendBrush, delblendbrush, e.get<const char*>(1))
+LUA_BIND_STD(addBlendBrush, addblendbrush, e.get<const char*>(1), e.get<const char*>(2))
+LUA_BIND_STD(nextBlendBrush, nextblendbrush, e.get<int*>(1))
+LUA_BIND_STD(setBlendBrush, setblendbrush, e.get<const char*>(1))
+LUA_BIND_STD(getBlendBrushName, getblendbrushname, e.get<int*>(1))
 LUA_BIND_STD(curBlendBrush, curblendbrush)
-LUA_BIND_STD(rotateBlendBrush, rotateblendbrush, e.Get<int*>(1))
+LUA_BIND_STD(rotateBlendBrush, rotateblendbrush, e.get<int*>(1))
 LUA_BIND_DEF(paintBlendMap, {
     if (addreleaseaction("paintblendmap"))
     {
@@ -1473,29 +1471,29 @@ LUA_BIND_DEF(clearBlendMap, {
 // console
 
 LUA_BIND_STD_CLIENT(toggleConsole, SETV, fullconsole, GETIV(fullconsole) ^ 1)
-LUA_BIND_STD_CLIENT(conSkip, setconskip, conskip, GETIV(fullconsole) ? GETIV(fullconfilter) : GETIV(confilter), e.Get<int>(1))
-LUA_BIND_STD_CLIENT(miniConSkip, setconskip, miniconskip, GETIV(miniconfilter), e.Get<int>(1))
+LUA_BIND_STD_CLIENT(conSkip, setconskip, conskip, GETIV(fullconsole) ? GETIV(fullconfilter) : GETIV(confilter), e.get<int>(1))
+LUA_BIND_STD_CLIENT(miniConSkip, setconskip, miniconskip, GETIV(miniconfilter), e.get<int>(1))
 LUA_BIND_CLIENT(clearConsole, while(conlines.length()) delete[] conlines.pop().line;)
-LUA_BIND_STD_CLIENT(bind, bindkey, e.Get<char*>(1), e.Get<char*>(2), keym::ACTION_DEFAULT, "bind")
-LUA_BIND_STD_CLIENT(specBind, bindkey, e.Get<char*>(1), e.Get<char*>(2), keym::ACTION_SPECTATOR, "specbind")
-LUA_BIND_STD_CLIENT(editBind, bindkey, e.Get<char*>(1), e.Get<char*>(2), keym::ACTION_EDITING, "editbind")
-LUA_BIND_STD_CLIENT(getBind, getbind, e.Get<char*>(1), keym::ACTION_DEFAULT)
-LUA_BIND_STD_CLIENT(getSpecBind, getbind, e.Get<char*>(1), keym::ACTION_SPECTATOR)
-LUA_BIND_STD_CLIENT(getEditBind, getbind, e.Get<char*>(1), keym::ACTION_EDITING)
-LUA_BIND_STD_CLIENT(searchBinds, searchbinds, e.Get<char*>(1), keym::ACTION_DEFAULT)
-LUA_BIND_STD_CLIENT(searchSpecBinds, searchbinds, e.Get<char*>(1), keym::ACTION_SPECTATOR)
-LUA_BIND_STD_CLIENT(searchEditBinds, searchbinds, e.Get<char*>(1), keym::ACTION_EDITING)
+LUA_BIND_STD_CLIENT(bind, bindkey, e.get<char*>(1), e.get<char*>(2), keym::ACTION_DEFAULT, "bind")
+LUA_BIND_STD_CLIENT(specBind, bindkey, e.get<char*>(1), e.get<char*>(2), keym::ACTION_SPECTATOR, "specbind")
+LUA_BIND_STD_CLIENT(editBind, bindkey, e.get<char*>(1), e.get<char*>(2), keym::ACTION_EDITING, "editbind")
+LUA_BIND_STD_CLIENT(getBind, getbind, e.get<char*>(1), keym::ACTION_DEFAULT)
+LUA_BIND_STD_CLIENT(getSpecBind, getbind, e.get<char*>(1), keym::ACTION_SPECTATOR)
+LUA_BIND_STD_CLIENT(getEditBind, getbind, e.get<char*>(1), keym::ACTION_EDITING)
+LUA_BIND_STD_CLIENT(searchBinds, searchbinds, e.get<char*>(1), keym::ACTION_DEFAULT)
+LUA_BIND_STD_CLIENT(searchSpecBinds, searchbinds, e.get<char*>(1), keym::ACTION_SPECTATOR)
+LUA_BIND_STD_CLIENT(searchEditBinds, searchbinds, e.get<char*>(1), keym::ACTION_EDITING)
 LUA_BIND_CLIENT(sayCommand, {
-    std::string init = e.Get<std::string>(1);
+    std::string init = std::string(e.get<const char*>(1));
     int n = e.TopStackItemIndex();
-    for (int i = 2; i <= n; i++) init += e.Get<std::string>(i);
+    for (int i = 2; i <= n; i++) init += std::string(e.get<const char*>(i));
     inputcommand((char*)init.c_str());
 })
-LUA_BIND_STD_CLIENT(inputCommand, inputcommand, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3))
-LUA_BIND_STD_CLIENT(history, history_, e.Get<int*>(1))
-LUA_BIND_STD_CLIENT(onRelease, onrelease, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(complete, addfilecomplete, e.Get<char*>(1), e.Get<char*>(2), e.Get<char*>(3))
-LUA_BIND_STD_CLIENT(listComplete, addlistcomplete, e.Get<char*>(1), e.Get<char*>(2))
+LUA_BIND_STD_CLIENT(inputCommand, inputcommand, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3))
+LUA_BIND_STD_CLIENT(history, history_, e.get<int*>(1))
+LUA_BIND_STD_CLIENT(onRelease, onrelease, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(complete, addfilecomplete, e.get<char*>(1), e.get<char*>(2), e.get<char*>(3))
+LUA_BIND_STD_CLIENT(listComplete, addlistcomplete, e.get<char*>(1), e.get<char*>(2))
 
 // textedit
 
@@ -1513,63 +1511,63 @@ LUA_BIND_CLIENT(textList, {
         if (i > 0) s += ", ";
         s += editors[i]->name;
     }
-    e.Push(s);
+    e.push(s.c_str());
 })
 // return the start of the buffer
 LUA_BIND_TEXT(textShow, {
     editline line;
     line.combinelines(top->lines);
-    e.Push(line.text);
+    e.push(line.text);
     line.clear();
 })
 // focus on a (or create a persistent) specific editor, else returns current name
 LUA_BIND_CLIENT(textFocus, {
-    if (e.Is<std::string>(1))
+    if (e.Is<const char*>(1))
     {
-        int arg2 = e.Get<int>(2);
-        useeditor(e.Get<const char*>(1), arg2 <= 0 ? EDITORFOREVER : arg2, true);
+        int arg2 = e.get<int>(2);
+        useeditor(e.get<const char*>(1), arg2 <= 0 ? EDITORFOREVER : arg2, true);
     }
-    else if (editors.length() > 0) e.Push(editors.last()->name);
-    else e.Push();
+    else if (editors.length() > 0) e.push(editors.last()->name);
+    else e.push();
 })
 // return to the previous editor
 LUA_BIND_TEXT(textPrev, editors.insert(0, top); editors.pop();)
 // (1 = keep while focused, 2 = keep while used in gui, 3 = keep forever (i.e. until mode changes)) topmost editor, return current setting if no args
 LUA_BIND_TEXT(textMode, {
-    int arg1 = e.Get<int>(2);
+    int arg1 = e.get<int>(2);
     if (arg1)
     {
         top->mode = arg1;
-        e.Push();
+        e.push();
     }
-    else e.Push(top->mode);
+    else e.push(top->mode);
 })
 // saves the topmost (filename is optional)
 LUA_BIND_TEXT(textSave, {
-    const char *arg1 = e.Get<const char*>(1);
+    const char *arg1 = e.get<const char*>(1);
     if (arg1) top->setfile(path(arg1, true));
     top->save();
 })
 LUA_BIND_TEXT(textLoad, {
-    const char *arg1 = e.Get<const char*>(1);
+    const char *arg1 = e.get<const char*>(1);
     if (arg1)
     {
         top->setfile(path(arg1, true));
         top->load();
-        e.Push();
+        e.push();
     }
-    else if (top->filename) e.Push(top->filename);
-    else e.Push();
+    else if (top->filename) e.push(top->filename);
+    else e.push();
 })
 LUA_BIND_TEXT(textInit, {
     editor *ed = NULL;
-    const char *arg2 = e.Get<const char*>(2);
-    loopv(editors) if(!e.Get<std::string>(1).compare(editors[i]->name))
+    const char *arg2 = e.get<const char*>(2);
+    loopv(editors) if(!strcmp(e.Get<const char*>(1), editors[i]->name))
     {
         ed = editors[i];
         break;
     }
-    if(ed && ed->rendered && !ed->filename && arg2 && (ed->lines.empty() || (ed->lines.length() == 1 && !e.Get<std::string>(3).compare(ed->lines[0].text))))
+    if(ed && ed->rendered && !ed->filename && arg2 && (ed->lines.empty() || (ed->lines.length() == 1 && !strcmp(e.Get<const char*>(3), ed->lines[0].text))))
     {
         ed->setfile(path(arg2, true));
         ed->load();
@@ -1582,41 +1580,41 @@ LUA_BIND_TEXT(textCopy, editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false)
 LUA_BIND_TEXT(textPaste, editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false); top->insertallfrom(b);)
 LUA_BIND_TEXT(textMark, {
     editor *b = useeditor(PASTEBUFFER, EDITORFOREVER, false); top->insertallfrom(b);
-    int arg1 = e.Get<int>(1);
+    int arg1 = e.get<int>(1);
     if (arg1)
     {
         top->mark(arg1 == 1);
-        e.Push();
+        e.push();
     }
-    else e.Push(top->region() ? 1 : 2);
+    else e.push(top->region() ? 1 : 2);
 })
 LUA_BIND_TEXT(textSelectAll, top->selectall();)
 LUA_BIND_TEXT(textClear, top->clear();)
-LUA_BIND_TEXT(textCurrentLine, e.Push(top->currentline().text);)
-LUA_BIND_TEXT(textExec, e.RunString(std::string(e.Get<int>(1) ? top->selectiontostring() : top->tostring()));)
+LUA_BIND_TEXT(textCurrentLine, e.push(top->currentline().text);)
+LUA_BIND_TEXT(textExec, e.exec(e.get<int>(1) ? top->selectiontostring() : top->tostring());)
 
 // various commands
 
-LUA_BIND_STD_CLIENT(movie, movie, e.Get<char*>(1))
+LUA_BIND_STD_CLIENT(movie, movie, e.get<char*>(1))
 LUA_BIND_STD_CLIENT(recalc, recalc)
-LUA_BIND_STD_CLIENT(glExt, glext, e.Get<char*>(1))
-LUA_BIND_STD_CLIENT(getCamPos, e.Push, camera1->o)
-LUA_BIND_STD_CLIENT(loadCrosshair, loadcrosshair_, e.Get<char*>(1), e.Get<int*>(2))
-LUA_BIND_STD_CLIENT(tabify, tabify, e.Get<char*>(1), e.Get<int*>(2))
+LUA_BIND_STD_CLIENT(glExt, glext, e.get<char*>(1))
+LUA_BIND_STD_CLIENT(getCamPos, e.push, camera1->o)
+LUA_BIND_STD_CLIENT(loadCrosshair, loadcrosshair_, e.get<char*>(1), e.get<int*>(2))
+LUA_BIND_STD_CLIENT(tabify, tabify, e.get<char*>(1), e.get<int*>(2))
 LUA_BIND_STD_CLIENT(resetSound, resetsound)
 
-LUA_BIND_STD(isConnected, e.Push, isconnected(e.Get<int>(1) > 0) ? 1 : 0)
+LUA_BIND_STD(isConnected, e.push, isconnected(e.get<int>(1) > 0) ? 1 : 0)
 LUA_BIND_DEF(connectedIP, {
     const ENetAddress *address = connectedpeer();
     string hostname;
-    e.Push(address && enet_address_get_host_ip(address, hostname, sizeof(hostname)) >= 0 ? hostname : "");
+    e.push(address && enet_address_get_host_ip(address, hostname, sizeof(hostname)) >= 0 ? hostname : "");
 })
 LUA_BIND_DEF(connectedPort, {
     const ENetAddress *address = connectedpeer();
-    e.Push(address ? address->port : -1);
+    e.push(address ? address->port : -1);
 })
-LUA_BIND_STD(connectServ, connectserv, e.Get<const char*>(1), e.Get<int>(2), e.Get<const char*>(3))
-LUA_BIND_STD(lanConnect, connectserv, NULL, e.Get<int>(1), e.Get<const char*>(2))
+LUA_BIND_STD(connectServ, connectserv, e.get<const char*>(1), e.get<int>(2), e.get<const char*>(3))
+LUA_BIND_STD(lanConnect, connectserv, NULL, e.get<int>(1), e.get<const char*>(2))
 LUA_BIND_STD(disconnect, trydisconnect)
 LUA_BIND_STD(localConnect, if(!isconnected() && !haslocalclients()) localconnect)
 LUA_BIND_STD(localDisconnect, if(haslocalclients()) localdisconnect)
@@ -1624,12 +1622,12 @@ LUA_BIND_STD(localDisconnect, if(haslocalclients()) localdisconnect)
 LUA_BIND_STD(printCube, printcube)
 LUA_BIND_STD(remip, remip_)
 LUA_BIND_STD(physTest, phystest)
-LUA_BIND_STD(genPvs, genpvs, e.Get<int*>(1))
-LUA_BIND_STD(testPvs, testpvs, e.Get<int*>(1))
+LUA_BIND_STD(genPvs, genpvs, e.get<int*>(1))
+LUA_BIND_STD(testPvs, testpvs, e.get<int*>(1))
 LUA_BIND_STD(clearPvs, clearpvs)
 LUA_BIND_STD(pvsStats, pvsstats)
 
-LUA_BIND_STD(startListenServer, startlistenserver, e.Get<int*>(1))
+LUA_BIND_STD(startListenServer, startlistenserver, e.get<int*>(1))
 LUA_BIND_STD(stopListenServer, stoplistenserver)
 
 } // namespace lua_binds

@@ -267,7 +267,7 @@ namespace lua
 
         r->f(l);
 
-        return l.Destroy();
+        return l.destroy();
     }
 
     /*
@@ -319,20 +319,20 @@ namespace lua
         }
         return NULL;
     }
-    
+
     template<>
     LogicEntityPtr lua_Engine::get(int i)
     {
         LogicEntityPtr ret;
         int id = 0;
-    
+
         push_index(i);
         id = t_get<int>("uniqueId");
         pop(1);
-    
+
         ret = LogicSystem::getLogicEntity(id);
         Logging::log(Logging::INFO, "Lua: getting the CLE for UID %d\n", id);
-    
+
         if (!ret.get())
         {
             defformatstring(err)("Cannot find CLE for entity %i", id);
@@ -588,7 +588,7 @@ namespace lua
     /*
      * call / run functions
      */
-    
+
     lua_Engine& lua_Engine::call(int a, int r)
     {
         if (!m_hashandle) return *this;
@@ -601,13 +601,13 @@ namespace lua
         }
         return *this;
     }
-    
+
     lua_Engine& lua_Engine::call()
     {
         // do not use unless you're absolutely sure your stack contains only the function + its args
         return call(-1);
     }
-    
+
     #define RUNMETHOD(t) \
     bool lua_Engine::exec##t(const char *s) \
     { \
@@ -625,12 +625,11 @@ namespace lua
         } \
         return true; \
     }
-    
+
     RUNMETHOD()
     RUNMETHOD(f)
-    
     #undef RUNMETHOD
-    
+
     bool lua_Engine::loadf(const char *s)
     {
         if (!m_hashandle) return false;
@@ -643,7 +642,7 @@ namespace lua
         fs = ftell(f);
         rewind(f);
 
-        char *s = (char*)malloc(sizeof(char)*fs);
+        char *s = new char[fs];
         if (!s)
         {
             fclose(f);
@@ -654,12 +653,12 @@ namespace lua
         if (fs != rs)
         {
             fclose(f);
-            s = NULL; free(s);
+            delete[] s;
             return false;
         }
 
         bool r = load(s);
-        s = NULL; free(s);
+        delete[] s;
         return r;
     }
 
@@ -707,7 +706,7 @@ namespace lua
     lua_Engine& lua_Engine::error(const char *m)
     {
         if (!m_hashandle) return *this;
-    
+
         lua_Debug ar;
         if (lua_getstack(m_handle, 1, &ar))
         {
@@ -723,7 +722,7 @@ namespace lua
         lua_error(m_handle);
         return *this;
     }
-    
+
     lua_Engine& lua_Engine::typeerror(int n, const char *t)
     {
         if (!m_hashandle) return *this;
@@ -752,7 +751,7 @@ namespace lua
         error(m);
         return *this;
     }
-    
+
     const char *lua_Engine::geterror()
     {
         if (!m_hashandle) return NULL;
@@ -760,17 +759,17 @@ namespace lua
         if (!err) return "Unknown Lua error";
         return err;
     }
-    
+
     const char *lua_Engine::geterror_last()
     {
         if (!m_hashandle) return NULL();
         return m_lasterror;
     }
-    
-    int lua_Engine::Ref()
+
+    int lua_Engine::ref()
     {
         if (!m_hashandle) return 0;
-    
+
         int ref;
         if (lua_isnil(m_handle, -1))
         {
@@ -793,15 +792,15 @@ namespace lua
         lua_rawseti(m_handle, LUA_REGISTRYINDEX, ref);
         return ref;
     }
-    
-    lua_Engine& lua_Engine::getRef(int r)
+
+    lua_Engine& lua_Engine::getref(int r)
     {
         if (!m_hashandle) return *this;
         lua_rawgeti(m_handle, LUA_REGISTRYINDEX, r);
         return *this;
     }
-    
-    lua_Engine& lua_Engine::UnRef(int r)
+
+    lua_Engine& lua_Engine::unref(int r)
     {
         if (!m_hashandle) return *this;
         if (r >= 0)
@@ -813,7 +812,7 @@ namespace lua
         }
         return *this;
     }
-    
+
     lua_Engine& lua_Engine::pop(int n)
     {
         if (!m_hashandle) return *this;
@@ -821,13 +820,13 @@ namespace lua
         else lua_pop(m_handle, n);
         return *this;
     }
-    
+
     int lua_Engine::gettop()
     {
         if (!m_hashandle) return 0;
         return lua_gettop(m_handle);
     }
-    
+
     const char *lua_Engine::operator[](const char *n)
     {
         return m_params[n];

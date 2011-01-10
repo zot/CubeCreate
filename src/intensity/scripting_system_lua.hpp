@@ -73,7 +73,7 @@ namespace lua
          * a few parameters and loads Lua libraries.
          * Then, it sets up bindings.
          * Automatically done from constructor if needed.
-         * @see Destroy()
+         * @see destroy()
          */
         lua_Engine& create();
         /**
