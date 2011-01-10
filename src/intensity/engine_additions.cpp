@@ -126,11 +126,8 @@ float CLogicEntity::getRadius()
 
 void CLogicEntity::setOrigin(vec &newOrigin)
 {
-    engine.exec("getEntity(" + Utility::toString(getUniqueId()) + ").position = {" +
-        Utility::toString(newOrigin.x) + "," +
-        Utility::toString(newOrigin.y) + "," +
-        Utility::toString(newOrigin.z) + "}"
-    );
+    defformatstring(c)("getEntity(%i).position = {%f,%f,%f}", getUniqueId(), newOrigin.x, newOrigin.y, newOrigin.z);
+    engine.exec(c);
 }
 
 int CLogicEntity::getAnimation()

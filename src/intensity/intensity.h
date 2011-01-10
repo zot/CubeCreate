@@ -12,7 +12,7 @@
     #include "engine_additions.h"
     #include "logging.h"
     #include "utility.h"
-    #include "lua_system_lua.hpp"
+    #include "scripting_system_lua.hpp"
 
     // Additional externs from sauer
 

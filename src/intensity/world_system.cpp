@@ -78,7 +78,7 @@ void WorldSystem::triggerCollide(LogicEntityPtr mapmodel, physent* d, bool ellip
     #else
     engine.t_getraw("clientOnCollision");
     #endif
-    engine.push_index(-2).getref(colliderEntity.get()->luaRef).call(2, 0).ClearStack(1);
+    engine.push_index(-2).getref(colliderEntity.get()->luaRef).call(2, 0).pop(1);
 }
 
 int numExpectedEntities = 0;

@@ -701,7 +701,10 @@ namespace server
         ci->isAdmin = isAdmin;
 
         if (ci->isAdmin && ci->uniqueId >= 0) // If an entity was already created, update it
-            engine.exec("getEntity(" + Utility::toString(ci->uniqueId) + ")._canEdit = true");
+        {
+            defformatstring(c)("getEntity(%i)._canEdit = true", ci->uniqueId);
+            engine.exec(c);
+        }
     }
 
     bool isAdmin(int clientNumber)
@@ -761,7 +764,7 @@ namespace server
         }
 
         // Use the PC class, unless told otherwise
-        if (_class == "") _class = engine.exec<std::string>("return ApplicationManager.instance:getPcClass()");
+        if (_class == "") _class = engine.exec<const char*>("return ApplicationManager.instance:getPcClass()");
 
         Logging::log(Logging::DEBUG, "Creating player entity: %s, %d", _class.c_str(), cn);
 
@@ -774,20 +777,23 @@ namespace server
 
         ci->uniqueId = uniqueId;
 
-        engine.exec(
-            "newEntity('" + _class + "', { clientNumber = " + Utility::toString(cn) + " }, " + Utility::toString(uniqueId) + ", true)"
-        );
+        defformatstring(c)("newEntity('%s', { clientNumber = %i }, %i, true)", _class.c_str(), cn, uniqueId);
+        engine.exec(c);
 
-        assert(engine.exec<int>("return getEntity(" + Utility::toString(uniqueId) + ").clientNumber") == cn);
+        defformatstring(a)("return getEntity(%i).clientNumber", uniqueId);
+        assert(engine.exec<int>(a) == cn);
 
         // Add admin status, if relevant
         if (ci->isAdmin)
-            engine.exec("getEntity(" + Utility::toString(uniqueId) + ")._canEdit = true");
+        {
+            defformatstring(d)("getEntity(%i)._canEdit = true", uniqueId);
+            engine.exec(d);
+        }
 
         // Add nickname
         engine.getg("getEntity").push(uniqueId).call(1, 1);
         // got class here
-        engine.t_set("_name", getUsername(cn)).ClearStack(1);
+        engine.t_set("_name", getUsername(cn).c_str()).pop(1);
 
         // For NPCs/Bots, mark them as such and prepare them, exactly as the players do on the client for themselves
         if (ci->local)

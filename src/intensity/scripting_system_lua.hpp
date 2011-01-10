@@ -118,27 +118,24 @@ namespace lua
          * bool r = e.is<int>(2);
          * @endcode
          * 
-         * Supported types are int, double, bool,
+         * Supported types are int, double, float, bool,
          * const char*, void** (table), void (nil).
          */
         template<typename T>
         bool is(int i)
         {
             if (!m_hashandle) return false;
-            switch (typeid(T))
-            {
-                case typeid(double):
-                case typeid(int):
-                    return lua_isnumber(m_handle, i);
-                case typeid(bool):
-                    return lua_isboolean(m_handle, i);
-                case typeid(const char*):
-                    return lua_isstring(m_handle, i);
-                case typeid(void**):
-                    return lua_istable(m_handle, i);
-                default:
-                    return lua_isnil(m_handle, i);
-            }
+            if (typeid(T) == typeid(int)
+                    || typeid(T) == typeid(double)
+                    || typeid(T) == typeid(float)
+            ) return lua_isnumber(m_handle, i);
+            else if (typeid(T) == typeid(bool))
+                return lua_isboolean(m_handle, i);
+            else if (typeid(T) == typeid(const char*))
+                return lua_isstring(m_handle, i);
+            else if (typeid(T) == typeid(void**))
+                return lua_istable(m_handle, i);
+            else return lua_isnil(m_handle, i);
             return false;
         }
 
@@ -647,7 +644,7 @@ namespace lua
          * Logging::log(Logging::INFO, "%s\n", e["foo"]);
          * @endcode
          */
-        const char *operator[](const char *n);
+        const char *&operator[](const char *n);
 
     private:
         /* The state handler for Lua's C API */

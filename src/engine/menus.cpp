@@ -119,7 +119,7 @@ public:
     {
         if (type == ACTION)
         {
-            if (!anystring(val).empty()) lua::engine.exec(anystring(val));
+            if (!anystring(val).empty()) lua::engine.exec(anystring(val).c_str());
         }
         else if (var) switch (var->getType()[0])
         {

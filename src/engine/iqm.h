@@ -385,7 +385,7 @@ struct iqm : skelmodel
 
         loadingiqm = this;
         EngineVariables::persistVars = false;
-        if (lua::engine.execf(std::string(path(cfgname))) && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured iqm, will call the iqm* commands below
+        if (lua::engine.execf(path(cfgname)) && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured iqm, will call the iqm* commands below
         {
             EngineVariables::persistVars = true;
             loadingiqm = NULL;

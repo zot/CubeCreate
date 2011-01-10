@@ -25,7 +25,7 @@ namespace game
             // we get a table here
             LUA_TABLE_FOREACH(engine, {
                 int lineUniqueId = engine.t_get<int>(1);
-                std::string lineText = engine.t_get<std::string>(2);
+                std::string lineText(engine.t_get<const char*>(2));
                 if (lineUniqueId != -1)
                 {
                     LogicEntityPtr entity = LogicSystem::getLogicEntity(lineUniqueId);

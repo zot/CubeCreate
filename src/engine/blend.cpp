@@ -591,7 +591,7 @@ void setblendbrush(const char *name)
 
 void getblendbrushname(int *n)
 {
-    lua::engine.push(brushes.inrange(*n) ? std::string(brushes[*n]->name) : "");
+    lua::engine.push(brushes.inrange(*n) ? brushes[*n]->name : "");
 }
 
 void curblendbrush()

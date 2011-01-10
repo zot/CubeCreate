@@ -45,8 +45,7 @@ cat << EOF > $OUT
  *
  */
 
-#define LUAREG(n) CAPI.add((LE_reg){ #n, _bind_##n })
-vector<LE_reg> CAPI;
+#define LUAREG(n) CAPI.add((LE_reg){ #n, _bind_##n });
 EOF
 
 counter=0
@@ -54,7 +53,7 @@ cat $TMP | while read x
 do
 	if [ $counter -ge 2 ]; then
 		name="$(echo $x|sed -e 's/,.*//' -e 's/.*(//')"
-		echo -e "LUAREG($name);" >> $OUT
+		echo -e "LUAREG($name)" >> $OUT
 	fi
 	let counter++
 done

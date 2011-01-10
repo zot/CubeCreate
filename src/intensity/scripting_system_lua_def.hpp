@@ -310,7 +310,7 @@ namespace lua_binds
 /*
  * Things to go into Logging Lua namespace
  */
-LUA_BIND_DEF(log, Logging::log_noformat(e.get<int>(1), "%s\n", e.get<const char*>(2));)
+LUA_BIND_DEF(log, Logging::log((Logging::Level)e.get<int>(1), "%s\n", e.get<const char*>(2));)
 LUA_BIND_DEF(echo, conoutf("\f1%s", e.get<const char*>(1));)
 
 /*
@@ -325,13 +325,13 @@ LUA_BIND_DEF(lsh, e.push(e.get<int>(1) << e.get<int>(2));)
 LUA_BIND_DEF(rsh, e.push(e.get<int>(1) >> e.get<int>(2));)
 LUA_BIND_DEF(bor, {
     int out = e.get<int>(1);
-    int n   = e.TopStackItemIndex();
+    int n   = e.gettop();
     for (int i = 2; i <= n; i++) out |= e.get<int>(i);
     e.push(out);
 })
 LUA_BIND_DEF(band, {
     int out = e.get<int>(1);
-    int n   = e.TopStackItemIndex();
+    int n   = e.gettop();
     for (int i = 2; i <= n; i++) out &= e.get<int>(i);
     e.push(out);
 })
@@ -1030,7 +1030,7 @@ LUA_BIND_DEF(signalComponent, {
 LUA_BIND_STD(preloadModel, preloadmodel, e.get<const char*>(1))
 LUA_BIND_DEF(reloadModel, {
     clearmodel(e.get<char*>(1));
-    if (!loadmodel(e.get<char*>(1))) e.Error("Cannot load model.");
+    if (!loadmodel(e.get<char*>(1))) e.error("Cannot load model.");
 });
 
 // HUD
@@ -1284,7 +1284,7 @@ LUA_BIND_DEF(modelMesh, {
     {
         BIH::tri& bt = tris[i];
 
-        e.push(Utility::toString(i))
+        e.push(Utility::toString(i).c_str())
             .t_new()
             .t_set("a", bt.a)
             .t_set("b", bt.b)
@@ -1371,14 +1371,14 @@ LUA_BIND_DEF(syncVariableFromLua, {
 
 LUA_BIND_STD(runCS, execute, e.get<const char*>(1))
 LUA_BIND_DEF(startStopLocalServer, {
-    if (e.Is<void>(1))
+    if (e.is<void>(1))
         run_python((char*)"intensity.components.server_runner.stop_server()");
     else
     {
         defformatstring(cmd)("intensity.components.server_runner.run_server('%s'%s)",
                              e.get<const char*>(1),
                              !_EV_logged_into_master->getInteger() ? ", False" : ""
-                            )
+                            );
         run_python((char*)cmd);
     }
 })
@@ -1389,9 +1389,9 @@ LUA_BIND_STD_CLIENT(showMessage, IntensityGUI::showMessage, "Script message", st
 LUA_BIND_STD_CLIENT(showInputDialog, IntensityGUI::showInputDialog, "Script input", std::string(e.get<const char*>(1)))
 LUA_BIND_CLIENT(setDefaultThirdpersonMode, {
     // Only allow this to be done once
-    if (!e["setDefaultThirdpersonMode"])
+    if (!lua::engine["setDefaultThirdpersonMode"])
     {
-        e["setDefaultThirdpersonMode"] = "set";
+        lua::engine["setDefaultThirdpersonMode"] = "set";
         SETV(thirdperson, e.get<int>(1));
     } else
         Logging::log(Logging::WARNING, "Can only set default thirdperson mode once per map\r\n");
@@ -1485,7 +1485,7 @@ LUA_BIND_STD_CLIENT(searchSpecBinds, searchbinds, e.get<char*>(1), keym::ACTION_
 LUA_BIND_STD_CLIENT(searchEditBinds, searchbinds, e.get<char*>(1), keym::ACTION_EDITING)
 LUA_BIND_CLIENT(sayCommand, {
     std::string init = std::string(e.get<const char*>(1));
-    int n = e.TopStackItemIndex();
+    int n = e.gettop();
     for (int i = 2; i <= n; i++) init += std::string(e.get<const char*>(i));
     inputcommand((char*)init.c_str());
 })
@@ -1522,7 +1522,7 @@ LUA_BIND_TEXT(textShow, {
 })
 // focus on a (or create a persistent) specific editor, else returns current name
 LUA_BIND_CLIENT(textFocus, {
-    if (e.Is<const char*>(1))
+    if (e.is<const char*>(1))
     {
         int arg2 = e.get<int>(2);
         useeditor(e.get<const char*>(1), arg2 <= 0 ? EDITORFOREVER : arg2, true);

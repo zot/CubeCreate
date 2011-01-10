@@ -692,7 +692,7 @@ void show_instances()
 
     Logging::log(Logging::DEBUG, "Instances GUI: %s\r\n", command.c_str());
 
-    engine.exec(command);
+    engine.exec(command.c_str());
 }
 
 COMMAND(show_instances, "");
@@ -702,9 +702,9 @@ COMMAND(show_instances, "");
 bool checkCompile(std::string filename)
 {
     std::string script = Utility::readFile(filename);
-    if (!engine.load(script))
+    if (!engine.load(script.c_str()))
     {
-        IntensityGUI::showMessage("Compilation failed", engine.getLastError());
+        IntensityGUI::showMessage("Compilation failed", engine.geterror_last());
         return false;
     } else {
         return true;

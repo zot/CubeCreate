@@ -25,7 +25,7 @@ void CameraControl::incrementCameraDist(int inc_dir)
 
     SETV(cam_dist, GETIV(cam_dist) + (inc_dir * GETIV(cameraMoveDist)));
 
-    if (engine.hashandle()) engine.getg("Global").t_set("cameraDistance", GETIV(cam_dist)).ClearStack(1);
+    if (engine.hashandle()) engine.getg("Global").t_set("cameraDistance", GETIV(cam_dist)).pop(1);
 }
 
 void inc_camera()
@@ -161,7 +161,7 @@ void CameraControl::positionCamera(physent* camera1)
     if (engine.hashandle() && lastCameraHeight != GETFV(cameraheight))
     {
         lastCameraHeight = GETFV(cameraheight);
-        engine.getg("Global").t_set("cameraHeight", GETFV(cameraheight)).ClearStack(1);
+        engine.getg("Global").t_set("cameraHeight", GETFV(cameraheight)).pop(1);
     }
 
     // If we just left forced camera mode, restore thirdperson state
@@ -349,14 +349,14 @@ void prepare_entity_gui()
     // we've got keys on stack. let's loop the table now.
     LUA_TABLE_FOREACH(engine, {
         // we have array of keys, so the original key is a value in this case
-        std::string key = engine.get<std::string>(-1);
+        const char *key = engine.get<const char*>(-1);
 
         engine.getg("__getVariableGuiName").push(uniqueId).push(key).call(2, 1);
-        std::string guiName = engine.get<std::string>(-1);
+        const char *guiName = engine.get<const char*>(-1);
         engine.pop(1);
 
         engine.getref(_tempRef);
-        std::string value = engine.t_get<std::string>(key);
+        const char *value = engine.t_get<const char*>(key);
         engine.pop(1);
 
         GuiControl::EditedEntity::stateData.insert(
@@ -372,7 +372,7 @@ void prepare_entity_gui()
         GuiControl::EditedEntity::sortedKeys.push_back( key );
         SETVN(num_entity_gui_fields, GETIV(num_entity_gui_fields)+1); // increment for later loop
     });
-    engine.pop(2).UnRef(_tempRef);
+    engine.pop(2).unref(_tempRef);
 
     sort( GuiControl::EditedEntity::sortedKeys.begin(), GuiControl::EditedEntity::sortedKeys.end() ); // So order is always the same
 
@@ -433,7 +433,7 @@ void prepare_entity_gui()
     "]])\n";
 
 //    printf("Command: %s\r\n", command.c_str());
-    engine.exec(command);
+    engine.exec(command.c_str());
 }
 
 COMMAND(prepare_entity_gui, "");
@@ -456,10 +456,10 @@ COMMAND(get_entity_gui_value, "i");
 
 void set_entity_gui_value(int *index, char *newValue)
 {
-    std::string key = GuiControl::EditedEntity::sortedKeys[*index];
-    std::string oldValue = GuiControl::EditedEntity::stateData[key].second;
+    const char *key = GuiControl::EditedEntity::sortedKeys[*index].c_str();
+    const char *oldValue = GuiControl::EditedEntity::stateData[key].second.c_str();
 
-    if (oldValue != newValue)
+    if (strcmp(oldValue, newValue))
     {
         GuiControl::EditedEntity::stateData[key].second = newValue;
 
@@ -467,10 +467,11 @@ void set_entity_gui_value(int *index, char *newValue)
         engine.getg("__getVariable").push(uniqueId).push(key).call(2, 1);
         engine.t_getraw("fromData").push_index(-2).push(newValue).call(2, 1);
         engine.getg("encodeJSON").shift().call(1, 1);
-        std::string naturalValue = engine.get(-1, "[]");
+        const char *naturalValue = engine.get(-1, "[]");
         engine.pop(2);
 
-        engine.exec("getEntity(" + Utility::toString(uniqueId) + ")." + key + " = (" + naturalValue + ")");
+        defformatstring(c)("getEntity(%i).%s = '%s'", uniqueId, key, naturalValue);
+        engine.exec(c);
     }
 }
 
@@ -593,7 +594,7 @@ void PlayerControl::flushActions()
 {
     engine.getref(ClientSystem::playerLogicEntity.get()->luaRef);
     engine.t_getraw("actionSystem");
-    engine.t_getraw("clear").push_index(-2).call(1, 0).ClearStack(2);
+    engine.t_getraw("clear").push_index(-2).call(1, 0).pop(2);
 }
 
 void PlayerControl::toggleMainMenu()
@@ -758,7 +759,7 @@ void mouseclick(int button, bool down)
         engine.push();
     float x, y;
     g3d_cursorpos(x, y);
-    engine.push(x).push(y).call(7, 0).ClearStack(2);
+    engine.push(x).push(y).call(7, 0).pop(2);
 }
 
 ICOMMAND(mouse1click, "D", (int *down), { mouseclick(1, *down!=0); });

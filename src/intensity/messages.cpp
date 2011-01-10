@@ -519,7 +519,7 @@ namespace MessageSystem
         // Add entity
         Logging::log(Logging::DEBUG, "Creating new entity, %s   %f,%f,%f   %s\r\n", _class.c_str(), x, y, z, stateData.c_str());
         if ( !server::isRunningCurrentScenario(sender) ) return; // Silently ignore info from previous scenario
-        engine.getg("getEntitySauerType").push(_class).call(1, 1);
+        engine.getg("getEntitySauerType").push(_class.c_str()).call(1, 1);
         std::string sauerType = engine.get(-1, "extent");
         engine.pop(1);
         Logging::log(Logging::DEBUG, "Sauer type: %s\r\n", sauerType.c_str());
@@ -530,14 +530,14 @@ namespace MessageSystem
         params.append(y);
         params.append(z);
         // Create
-        engine.getg("newEntity").push(_class);
+        engine.getg("newEntity").push(_class.c_str());
         engine.t_new();
         engine.push("position")
             .t_new()
             .t_set("x", x)
             .t_set("y", y)
             .t_set("z", z);
-        engine.t_set().t_set("stateData", stateData);
+        engine.t_set().t_set("stateData", stateData.c_str());
         engine.call(2, 1);
         int newUniqueId = engine.t_get<int>("uniqueId");
         engine.pop(1);
@@ -627,7 +627,7 @@ namespace MessageSystem
                 if (!engine.hashandle()) \
                     return; \
                 \
-                engine.getg("setStateDatum").push(uniqueId).push(keyProtocolId).push(value).call(3, 0);
+                engine.getg("setStateDatum").push(uniqueId).push(keyProtocolId).push(value.c_str()).call(3, 0);
         #endif
         STATE_DATA_UPDATE
     }
@@ -671,7 +671,7 @@ namespace MessageSystem
         \
         if ( !server::isRunningCurrentScenario(sender) ) return; /* Silently ignore info from previous scenario */ \
         \
-        engine.getg("setStateDatum").push(uniqueId).push(keyProtocolId).push(value).push(actorUniqueId).call(4, 0);
+        engine.getg("setStateDatum").push(uniqueId).push(keyProtocolId).push(value.c_str()).push(actorUniqueId).call(4, 0);
         STATE_DATA_REQUEST
     }
 #endif
@@ -933,7 +933,7 @@ namespace MessageSystem
                     .push(FPSServerInterface::getUniqueId(sender))
                     .call(1, 1)
                 .call(2, 0)
-                .ClearStack(2);
+                .pop(2);
         #else // CLIENT
             // Send just enough info for the player's LE
             send_LogicEntityCompleteNotification( sender,
@@ -1026,7 +1026,7 @@ namespace MessageSystem
         {
             Logging::log(Logging::DEBUG, "Creating new active LogicEntity\r\n");
             engine.getg("addEntity")
-                .push(otherClass)
+                .push(otherClass.c_str())
                 .push(otherUniqueId)
                 .t_new();
             if (otherClientNumber >= 0) // If this is another client, NPC, etc., then send the clientnumber, critical for setup
@@ -1058,9 +1058,9 @@ namespace MessageSystem
         engine.getref(entity.get()->luaRef)
             .t_getraw("_updateCompleteStateData")
             .push_index(-2)
-            .push(stateData)
+            .push(stateData.c_str())
             .call(2, 0)
-            .ClearStack(1);
+            .pop(1);
         #ifdef CLIENT
             // If this new entity is in fact the Player's entity, then we finally have the player's LE, and can link to it.
             if (otherUniqueId == ClientSystem::uniqueId)
@@ -1260,11 +1260,11 @@ namespace MessageSystem
         if (entity.get() == NULL)
         {
             Logging::log(Logging::DEBUG, "Creating new active LogicEntity\r\n");
-            engine.getg("getEntitySauerType").push(otherClass).call(1, 1);
+            engine.getg("getEntitySauerType").push(otherClass.c_str()).call(1, 1);
             std::string sauerType = engine.get(-1, "extent");
             engine.pop(1);
             engine.getg("addEntity")
-                .push(otherClass)
+                .push(otherClass.c_str())
                 .push(otherUniqueId)
                 .t_new()
                     .t_set("_type", findtype((char*)sauerType.c_str()))
@@ -1287,9 +1287,9 @@ namespace MessageSystem
         engine.getref(entity.get()->luaRef)
             .t_getraw("_updateCompleteStateData")
             .push_index(-2)
-            .push(stateData)
+            .push(stateData.c_str())
             .call(2, 0)
-            .ClearStack(1);
+            .pop(1);
         // Events post-reception
         WorldSystem::triggerReceivedEntity();
     }
@@ -1974,7 +1974,7 @@ namespace MessageSystem
             }
             else return; // No need to do a click that was on an entity that vanished meanwhile/does not yet exist!
         }
-        engine.call(numargs, 0).ClearStack(2);
+        engine.call(numargs, 0).pop(2);
     }
 #endif
 

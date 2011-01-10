@@ -77,7 +77,7 @@ void prepareentityclasses()
 
     lua::engine.getg("listEntityClasses").call(0, 1);
     LUA_TABLE_FOREACH(lua::engine, {
-        entityClasses.push_back(lua::engine.get<std::string>(-1));
+        entityClasses.push_back(std::string(lua::engine.get<const char*>(-1)));
     });
     lua::engine.pop(1);
 }

@@ -442,7 +442,7 @@ struct md5 : skelmodel
 
         loadingmd5 = this;
         EngineVariables::persistVars = false;
-        if(lua::engine.execf(std::string(path(cfgname))) && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured md5, will call the md5* commands below
+        if(lua::engine.execf(path(cfgname)) && parts.length()) // INTENSITY: execfile(cfgname, false) && parts.length()) // configured md5, will call the md5* commands below
         {
             EngineVariables::persistVars = true;
             loadingmd5 = NULL;

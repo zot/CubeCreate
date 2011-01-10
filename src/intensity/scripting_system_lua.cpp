@@ -57,10 +57,11 @@
 #include "editing_system.h"
 
 #include "scripting_system_lua_def.hpp"
-#include "scripting_system_lua_exp.hpp"
 
 namespace lua
 {
+    /* our bindvectors */
+    vector<LE_reg> CAPI, LAPI;
     /* externed in header */
     lua_Engine engine;
 
@@ -140,10 +141,10 @@ namespace lua
         Logging::log(Logging::DEBUG, "Registering functions into namespace.\n");
         loopv(v)
         {
-            Logging::log(Logging::INFO, "Registering: %s\n", v[i]->n);
-            lua_pushlightuserdata(m_handle, (void*)v[i]);
+            Logging::log(Logging::INFO, "Registering: %s\n", v[i].n);
+            lua_pushlightuserdata(m_handle, (void*)&v[i]);
             lua_pushcclosure(m_handle, l_disp, 1);
-            lua_setfield(m_handle, -2, v[i]->n);
+            lua_setfield(m_handle, -2, v[i].n);
         }
 
         Logging::log(Logging::DEBUG, "Namespace \"%s\" registration went properly, leaving on stack.\n", n);
@@ -173,7 +174,9 @@ namespace lua
             execf(f);
         }
 
-        setup_namespace("Logging", (LE_reg[]){ { "log", _bind_log }, { "echo", _bind_echo }, { 0, 0 } });
+        LAPI.add({ "log", _bind_log });
+        LAPI.add({ "echo", _bind_echo });
+        setup_namespace("Logging", LAPI);
         #define PUSHLEVEL(l) t_set(#l, Logging::l);
         PUSHLEVEL(INFO)
         PUSHLEVEL(DEBUG)
@@ -198,6 +201,7 @@ namespace lua
 
         getg("Global").t_set("version", m_version).pop(1);
 
+        #include "scripting_system_lua_exp.hpp"
         setup_namespace("CAPI", CAPI);
         pop(1);
 
@@ -634,7 +638,7 @@ namespace lua
     {
         if (!m_hashandle) return false;
 
-        long fs;
+        unsigned long int fs;
         size_t rs;
         FILE *f = fopen(s, "r");
         if (!f) return false;
@@ -642,23 +646,23 @@ namespace lua
         fs = ftell(f);
         rewind(f);
 
-        char *s = new char[fs];
-        if (!s)
+        char *fc = new char[fs];
+        if (!fc)
         {
             fclose(f);
             return false;
         }
 
-        rs = fread(s, 1, fs, f);
+        rs = fread(fc, 1, fs, f);
         if (fs != rs)
         {
             fclose(f);
-            delete[] s;
+            delete[] fc;
             return false;
         }
 
-        bool r = load(s);
-        delete[] s;
+        bool r = load(fc);
+        delete[] fc;
         return r;
     }
 
@@ -731,8 +735,8 @@ namespace lua
         const char *m = lua_pushfstring(m_handle, "%s expected, got %s", t, lua_typename(m_handle, lua_type(m_handle, n)));
         if (!lua_getstack(m_handle, 0, &ar))
         {
-            defformatstring(m)("bad argument #%i (%s)", n, m);
-            error(m);
+            defformatstring(e)("bad argument #%i (%s)", n, m);
+            error(e);
             return *this;
         }
         lua_getinfo(m_handle, "n", &ar);
@@ -741,14 +745,14 @@ namespace lua
             n--;
             if (!n)
             {
-                defformatstring(m)("calling %s on bad self (%s)", ar.name, m);
-                error(m);
+                defformatstring(e)("calling %s on bad self (%s)", ar.name, m);
+                error(e);
                 return *this;
             }
         }
         if (ar.name == NULL) ar.name = "?";
-        defformatstring(m)("bad argument #%i to %s (%s)", n, ar.name, m);
-        error(m);
+        defformatstring(e)("bad argument #%i to %s (%s)", n, ar.name, m);
+        error(e);
         return *this;
     }
 
@@ -762,7 +766,7 @@ namespace lua
 
     const char *lua_Engine::geterror_last()
     {
-        if (!m_hashandle) return NULL();
+        if (!m_hashandle) return NULL;
         return m_lasterror;
     }
 
@@ -827,7 +831,7 @@ namespace lua
         return lua_gettop(m_handle);
     }
 
-    const char *lua_Engine::operator[](const char *n)
+    const char *&lua_Engine::operator[](const char *n)
     {
         return m_params[n];
     }

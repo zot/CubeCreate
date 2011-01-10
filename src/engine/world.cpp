@@ -945,11 +945,10 @@ void entpaste()
         engine.getref(entity->luaRef).t_getraw("createStateDataDict");
         engine.push_index(-2).call(1, 1);
         engine.push("__intensityentcopy__TEMP").shift();
-        engine.setg().ClearStack(1);
+        engine.setg().pop(1);
 
-        engine.exec("__intensityentcopy__TEMP.position = '[" +
-            Utility::toString(o.x) + "|" + Utility::toString(o.y) + "|" + Utility::toString(o.z) +
-        "]'"); // Fix position
+        defformatstring(s)("__intensityentcopy__TEMP.position = '[%f|%f|%f]'", o.x, o.y, o.z);
+        engine.exec(s);
 
         engine.getg("encodeJSON");
         engine.getg("__intensityentcopy__TEMP").call(1, 1);
@@ -1315,10 +1314,8 @@ int getmapversion() { return GETIV(mapversion); }
 void finish_dragging()
 {
     groupeditpure(
-        lua::engine.exec(
-            "getEntity(" + Utility::toString(LogicSystem::getUniqueId(&e)) + ").position = " +
-            "{" + Utility::toString(e.o[0]) + "," + Utility::toString(e.o[1]) + "," + Utility::toString(e.o[2]) + "}"
-        );
+        defformatstring(c)("getEntity(%i).position = {%f,%f,%f}", LogicSystem::getUniqueId(&e), e.o[0], e.o[1], e.o[2]);
+        lua::engine.exec(c);
     );
 }
 

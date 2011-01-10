@@ -623,7 +623,7 @@ namespace game
     {
         engine.getg("getEntity").push(LogicSystem::getUniqueId(d)).call(1, 1);
         // got class here
-        std::string ret = engine.t_get<std::string>("_name");
+        std::string ret(engine.t_get<const char*>("_name"));
         engine.pop(1);
         return ret;
     }

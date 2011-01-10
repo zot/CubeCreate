@@ -58,10 +58,10 @@ def generate_messages():
 #include "server_system.h"
 #include "message_system.h"
 #include "editing_system.h"
-#include "utility.h"
 #include "world_system.h"
 
 using namespace boost;
+using namespace lua;
 
 namespace MessageSystem
 {

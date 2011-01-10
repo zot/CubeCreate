@@ -1236,17 +1236,17 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
     lua::engine.execf("data/menus.lua");
     lua::engine.execf("data/brush.lua");
     lua::engine.execf("mybrushes.lua");
-    if(game::savedservers()) lua::engine.execf(std::string(game::savedservers()));
+    if(game::savedservers()) lua::engine.execf(game::savedservers());
     
     EngineVariables::persistVars = true;
     
     initing = INIT_LOAD;
     if(!config_exec_json(game::savedconfig(), false)) 
     {
-        lua::engine.execf(std::string(game::defaultconfig()));
+        lua::engine.execf(game::defaultconfig());
         writecfg(game::restoreconfig());
     }
-    lua::engine.execf(std::string(game::autoexec()));
+    lua::engine.execf(game::autoexec());
     initing = NOT_INITING;
 
     EngineVariables::persistVars = false;

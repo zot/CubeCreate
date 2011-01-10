@@ -65,7 +65,7 @@ void input_callback(char *input)
         .t_getraw("inputDialogCallback")
         .push(input)
         .call(1, 0)
-        .ClearStack(1);
+        .pop(1);
 }
 
 COMMAND(input_callback, "s");

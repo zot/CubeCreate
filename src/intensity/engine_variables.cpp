@@ -218,7 +218,7 @@ bool EngineVariable::isAlias()
 void EngineVariable::registerLuaIVAR()
 {
     lua::engine.getg("ivar")
-        .push(name)
+        .push(name.c_str())
         .push(anyint(minv))
         .push(anyint(curv))
         .push(anyint(maxv))
@@ -230,7 +230,7 @@ void EngineVariable::registerLuaIVAR()
 void EngineVariable::registerLuaFVAR()
 {
     lua::engine.getg("fvar")
-        .push(name)
+        .push(name.c_str())
         .push(anyfloat(minv))
         .push(anyfloat(curv))
         .push(anyfloat(maxv))
@@ -242,8 +242,8 @@ void EngineVariable::registerLuaFVAR()
 void EngineVariable::registerLuaSVAR()
 {
     lua::engine.getg("svar")
-        .push(name)
-        .push(anystring(curv))
+        .push(name.c_str())
+        .push(anystring(curv).c_str())
         .push(readOnly)
         .push(alias)
         .call(4, 0);
@@ -258,7 +258,10 @@ void EngineVariable::callCB(bool luaSync, bool forceCB)
 {
     #define SYNCV(val) \
     if ((luaSync || alias) && lua::engine.hashandle()) \
-        lua::engine.getg("EV").t_set(name + "_ns", val).ClearStack(1);
+    { \
+        defformatstring(n)("%s_ns", name.c_str()); \
+        lua::engine.getg("EV").t_set(n, val).pop(1); \
+    }
 
     switch (type[0])
     {
@@ -277,7 +280,7 @@ void EngineVariable::callCB(bool luaSync, bool forceCB)
         case 'S':
         {
             if (hasCB && (!luaSync || forceCB) && !alias) stringCB(anystring(prev), anystring(curv));
-            SYNCV(anystring(curv));
+            SYNCV(anystring(curv).c_str());
             break;
         }
         default: break;

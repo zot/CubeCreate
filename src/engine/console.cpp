@@ -169,7 +169,7 @@ void searchbinds(char *action, int type)
         }
     });
     names.add('\0');
-    lua::engine.push(std::string(names.getbuf()));
+    lua::engine.push(names.getbuf());
 }
 
 keym *findbind(char *key)
@@ -184,7 +184,7 @@ keym *findbind(char *key)
 void getbind(char *key, int type)
 {
     keym *km = findbind(key);
-    lua::engine.push(km ? std::string(km->actions[type]) : "");
+    lua::engine.push(km ? km->actions[type] : "");
 }   
 
 void bindkey(char *key, char *action, int state, const char *cmd)
@@ -345,7 +345,7 @@ void execbind(keym &k, bool isdown)
         releaseaction &ra = releaseactions[i];
         if(ra.key==&k)
         {
-            if(!isdown) lua::engine.exec(std::string(ra.action)); // CubeCreate
+            if(!isdown) lua::engine.exec(ra.action); // CubeCreate
             delete[] ra.action;
             releaseactions.remove(i--);
         }
@@ -361,7 +361,7 @@ void execbind(keym &k, bool isdown)
         char *&action = k.actions[state][0] ? k.actions[state] : k.actions[keym::ACTION_DEFAULT];
         keyaction = action;
         keypressed = &k;
-        lua::engine.exec(std::string(keyaction)); // CubeCreate
+        lua::engine.exec(keyaction); // CubeCreate
         keypressed = NULL;
         if(keyaction!=action) delete[] keyaction;
     }
