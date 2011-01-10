@@ -1017,9 +1017,9 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     clearmainmenu();
 
     EngineVariables::overrideVars = true;
-    if (lua::engine.HasHandle())
+    if (lua::engine.hashandle())
     {
-        lua::engine.RunFile("data/default_map_settings.lua");
+        lua::engine.execf("data/default_map_settings.lua");
         WorldSystem::runMapScript();
     }
     EngineVariables::overrideVars = false;

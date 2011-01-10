@@ -182,23 +182,23 @@ void send_text_message(int clientNumber, std::string text, bool sound)
 }
 
 // wrappers for boost exports
-inline void wrapLuaEngineCreate() { lua::engine.Create(); }
-inline bool wrapLuaEngineExists() { return lua::engine.HasHandle(); }
-inline bool wrapLuaEngineRunScript(const std::string& s)
+inline void wrapLuaEngineCreate() { lua::engine.create(); }
+inline bool wrapLuaEngineExists() { return lua::engine.hashandle(); }
+inline bool wrapLuaEngineRunScript(const char *s)
 {
-    return lua::engine.RunString(s);
+    return lua::engine.exec(s);
 }
-inline std::string wrapLuaEngineRunScriptString(const std::string& s)
+inline const char *wrapLuaEngineRunScriptString(const char *s)
 {
-    return lua::engine.RunString<std::string>(s);
+    return lua::engine.exec<const char*>(s);
 }
-inline int wrapLuaEngineRunScriptInt(const std::string& s)
+inline int wrapLuaEngineRunScriptInt(const char *s)
 {
-    return lua::engine.RunString<int>(s);
+    return lua::engine.exec<int>(s);
 }
-inline double wrapLuaEngineRunScriptDouble(const std::string& s)
+inline double wrapLuaEngineRunScriptDouble(const char *s)
 {
-    return lua::engine.RunString<double>(s);
+    return lua::engine.exec<double>(s);
 }
 
 //! Main starting point - initialize Python, set up the embedding, and

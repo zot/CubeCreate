@@ -25,7 +25,7 @@ void CameraControl::incrementCameraDist(int inc_dir)
 
     SETV(cam_dist, GETIV(cam_dist) + (inc_dir * GETIV(cameraMoveDist)));
 
-    if (engine.HasHandle()) engine.GetGlobal("Global").SetTable("cameraDistance", GETIV(cam_dist)).ClearStack(1);
+    if (engine.hashandle()) engine.getg("Global").t_set("cameraDistance", GETIV(cam_dist)).ClearStack(1);
 }
 
 void inc_camera()
@@ -158,10 +158,10 @@ void CameraControl::positionCamera(physent* camera1)
 
     // Sync camera height to scripts, if necessary
     static double lastCameraHeight = -1;
-    if (engine.HasHandle() && lastCameraHeight != GETFV(cameraheight))
+    if (engine.hashandle() && lastCameraHeight != GETFV(cameraheight))
     {
         lastCameraHeight = GETFV(cameraheight);
-        engine.GetGlobal("Global").SetTable("cameraHeight", GETFV(cameraheight)).ClearStack(1);
+        engine.getg("Global").t_set("cameraHeight", GETFV(cameraheight)).ClearStack(1);
     }
 
     // If we just left forced camera mode, restore thirdperson state
@@ -338,26 +338,26 @@ void prepare_entity_gui()
     int uniqueId = GuiControl::EditedEntity::currEntity->getUniqueId();
 
     // we get this beforehand because of further re-use
-    engine.GetGlobal("getEntity").Push(uniqueId).Call(1, 1);
+    engine.getg("getEntity").push(uniqueId).call(1, 1);
     // we've got the entity here now (popping getEntity out)
-    engine.GetTableRaw("createStateDataDict").PushIndex(-2).Call(1, 1);
+    engine.t_getraw("createStateDataDict").push_index(-2).call(1, 1);
     // ok, state data are on stack, popping createStateDataDict out, let's ref it so we can easily get it later
-    int _tempRef = engine.Ref();
-    engine.ClearStack(1);
+    int _tempRef = engine.ref();
+    engine.pop(1);
 
-    engine.GetGlobal("table").GetTableRaw("keys").GetRef(_tempRef).Call(1, 1);
+    engine.getg("table").t_getraw("keys").getref(_tempRef).call(1, 1);
     // we've got keys on stack. let's loop the table now.
     LUA_TABLE_FOREACH(engine, {
         // we have array of keys, so the original key is a value in this case
-        std::string key = engine.Get<std::string>(-1);
+        std::string key = engine.get<std::string>(-1);
 
-        engine.GetGlobal("__getVariableGuiName").Push(uniqueId).Push(key).Call(2, 1);
-        std::string guiName = engine.Get<std::string>(-1);
-        engine.ClearStack(1);
+        engine.getg("__getVariableGuiName").push(uniqueId).push(key).call(2, 1);
+        std::string guiName = engine.get<std::string>(-1);
+        engine.pop(1);
 
-        engine.GetRef(_tempRef);
-        std::string value = engine.GetTable<std::string>(key);
-        engine.ClearStack(1);
+        engine.getref(_tempRef);
+        std::string value = engine.t_get<std::string>(key);
+        engine.pop(1);
 
         GuiControl::EditedEntity::stateData.insert(
             GuiControl::EditedEntity::StateDataMap::value_type(
@@ -372,7 +372,7 @@ void prepare_entity_gui()
         GuiControl::EditedEntity::sortedKeys.push_back( key );
         SETVN(num_entity_gui_fields, GETIV(num_entity_gui_fields)+1); // increment for later loop
     });
-    engine.ClearStack(2).UnRef(_tempRef);
+    engine.pop(2).UnRef(_tempRef);
 
     sort( GuiControl::EditedEntity::sortedKeys.begin(), GuiControl::EditedEntity::sortedKeys.end() ); // So order is always the same
 
@@ -390,9 +390,9 @@ void prepare_entity_gui()
     }
 
     // Title
-    engine.GetGlobal("tostring").GetRef(GuiControl::EditedEntity::currEntity->luaRef).Call(1, 1);
-    std::string title = engine.Get(-1, "Unknown");
-    engine.ClearStack(1);
+    engine.getg("tostring").getref(GuiControl::EditedEntity::currEntity->luaRef).call(1, 1);
+    std::string title = engine.get(-1, "Unknown");
+    engine.pop(1);
     title = Utility::toString(uniqueId) + ": " + title;
 
     SETVF(entity_gui_title, title);
@@ -433,7 +433,7 @@ void prepare_entity_gui()
     "]])\n";
 
 //    printf("Command: %s\r\n", command.c_str());
-    engine.RunString(command);
+    engine.exec(command);
 }
 
 COMMAND(prepare_entity_gui, "");
@@ -464,13 +464,13 @@ void set_entity_gui_value(int *index, char *newValue)
         GuiControl::EditedEntity::stateData[key].second = newValue;
 
         int uniqueId = GuiControl::EditedEntity::currEntity->getUniqueId();
-        engine.GetGlobal("__getVariable").Push(uniqueId).Push(key).Call(2, 1);
-        engine.GetTableRaw("fromData").PushIndex(-2).Push(newValue).Call(2, 1);
-        engine.GetGlobal("encodeJSON").ShiftValues().Call(1, 1);
-        std::string naturalValue = engine.Get(-1, "[]");
-        engine.ClearStack(2);
+        engine.getg("__getVariable").push(uniqueId).push(key).call(2, 1);
+        engine.t_getraw("fromData").push_index(-2).push(newValue).call(2, 1);
+        engine.getg("encodeJSON").shift().call(1, 1);
+        std::string naturalValue = engine.get(-1, "[]");
+        engine.pop(2);
 
-        engine.RunString("getEntity(" + Utility::toString(uniqueId) + ")." + key + " = (" + naturalValue + ")");
+        engine.exec("getEntity(" + Utility::toString(uniqueId) + ")." + key + " = (" + naturalValue + ")");
     }
 }
 
@@ -506,9 +506,9 @@ dir(look_up,   look_updown_move, +1, k_look_up,   k_look_down);
     { \
         PlayerControl::flushActions(); /* Stop current actions */ \
         s = *down!=0; \
-        engine.GetGlobal("ApplicationManager").GetTableRaw("instance"); \
-        engine.GetTableRaw(#v).PushIndex(-2).Push(s ? d : (os ? -(d) : 0)).Push(s).Call(3, 0); \
-        engine.ClearStack(2); \
+        engine.getg("ApplicationManager").t_getraw("instance"); \
+        engine.t_getraw(#v).push_index(-2).push(s ? d : (os ? -(d) : 0)).push(s).call(3, 0); \
+        engine.pop(2); \
     } \
 );
 
@@ -528,9 +528,9 @@ ICOMMAND(jump, "D", (int *down), {
   if (ClientSystem::scenarioStarted())
   {
     PlayerControl::flushActions(); /* Stop current actions */
-    engine.GetGlobal("ApplicationManager").GetTableRaw("instance");
-    engine.GetTableRaw("performJump").PushIndex(-2).Push((bool)*down).Call(2, 0);
-    engine.ClearStack(2);
+    engine.getg("ApplicationManager").t_getraw("instance");
+    engine.t_getraw("performJump").push_index(-2).push((bool)*down).call(2, 0);
+    engine.pop(2);
   }
 });
 
@@ -558,8 +558,8 @@ void PlayerControl::handleExtraPlayerMovements(int millis)
 
     fpsent* fpsPlayer = dynamic_cast<fpsent*>(player);
 
-    engine.GetRef(ClientSystem::playerLogicEntity.get()->luaRef);
-    float _facingSpeed = engine.GetTable<double>("facingSpeed");
+    engine.getref(ClientSystem::playerLogicEntity.get()->luaRef);
+    float _facingSpeed = engine.t_get<double>("facingSpeed");
 
     if (fpsPlayer->turn_move || fabs(x - 0.5) > 0.45)
         mover->yaw += _facingSpeed * (
@@ -571,7 +571,7 @@ void PlayerControl::handleExtraPlayerMovements(int millis)
                 fpsPlayer->look_updown_move ? fpsPlayer->look_updown_move : (y > 0.5 ? -1 : 1)
             ) * delta;
 
-    engine.ClearStack(1);
+    engine.pop(1);
 
     extern void fixcamerarange();
     fixcamerarange(); // Normalize and limit the yaw and pitch values to appropriate ranges
@@ -591,9 +591,9 @@ bool PlayerControl::handleClick(int button, bool up)
 
 void PlayerControl::flushActions()
 {
-    engine.GetRef(ClientSystem::playerLogicEntity.get()->luaRef);
-    engine.GetTableRaw("actionSystem");
-    engine.GetTableRaw("clear").PushIndex(-2).Call(1, 0).ClearStack(2);
+    engine.getref(ClientSystem::playerLogicEntity.get()->luaRef);
+    engine.t_getraw("actionSystem");
+    engine.t_getraw("clear").push_index(-2).call(1, 0).ClearStack(2);
 }
 
 void PlayerControl::toggleMainMenu()
@@ -743,22 +743,22 @@ void mouseclick(int button, bool down)
 {
     Logging::log(Logging::INFO, "mouse click: %d (down: %d)\r\n", button, down);
 
-    if (! (engine.HasHandle() && ClientSystem::scenarioStarted()) )
+    if (! (engine.hashandle() && ClientSystem::scenarioStarted()) )
         return;
 
     TargetingControl::determineMouseTarget(true); // A click forces us to check for clicking on entities
 
     vec pos = TargetingControl::targetPosition;
 
-    engine.GetGlobal("ApplicationManager").GetTableRaw("instance").GetTableRaw("performClick");
-    engine.PushIndex(-2).Push(button).Push(down).Push(pos);
+    engine.getg("ApplicationManager").t_getraw("instance").t_getraw("performClick");
+    engine.push_index(-2).push(button).push(down).push(pos);
     if (TargetingControl::targetLogicEntity.get() && !TargetingControl::targetLogicEntity->isNone())
-        engine.GetRef(TargetingControl::targetLogicEntity->luaRef);
+        engine.getref(TargetingControl::targetLogicEntity->luaRef);
     else
-        engine.Push();
+        engine.push();
     float x, y;
     g3d_cursorpos(x, y);
-    engine.Push(x).Push(y).Call(7, 0).ClearStack(2);
+    engine.push(x).push(y).call(7, 0).ClearStack(2);
 }
 
 ICOMMAND(mouse1click, "D", (int *down), { mouseclick(1, *down!=0); });
@@ -771,11 +771,11 @@ ICOMMAND(mouse3click, "D", (int *down), { mouseclick(3, *down!=0); });
 
 void actionKey(int index, bool down)
 {
-    if (engine.HasHandle())
+    if (engine.hashandle())
     {
-        engine.GetGlobal("ApplicationManager").GetTableRaw("instance");
-        engine.GetTableRaw("actionKey").PushIndex(-2).Push(index).Push(down).Call(3, 0);
-        engine.ClearStack(2);
+        engine.getg("ApplicationManager").t_getraw("instance");
+        engine.t_getraw("actionKey").push_index(-2).push(index).push(down).call(3, 0);
+        engine.pop(2);
     }
 }
 

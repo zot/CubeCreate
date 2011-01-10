@@ -188,7 +188,7 @@ void mdlextendbb(float *x, float *y, float *z)
 void mdlname()
 {
     checkmdl;
-    lua::engine.Push(std::string(loadingmodel->name()));
+    lua::engine.push(std::string(loadingmodel->name()));
 }
 
 #define checkragdoll \

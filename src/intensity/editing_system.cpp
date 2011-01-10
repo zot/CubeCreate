@@ -75,11 +75,11 @@ void prepareentityclasses()
 {
     entityClasses.clear();
 
-    lua::engine.GetGlobal("listEntityClasses").Call(0, 1);
+    lua::engine.getg("listEntityClasses").call(0, 1);
     LUA_TABLE_FOREACH(lua::engine, {
-        entityClasses.push_back(lua::engine.Get<std::string>(-1));
+        entityClasses.push_back(lua::engine.get<std::string>(-1));
     });
-    lua::engine.ClearStack(1);
+    lua::engine.pop(1);
 }
 
 COMMAND(prepareentityclasses, "");

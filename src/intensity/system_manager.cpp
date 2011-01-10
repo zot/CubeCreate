@@ -23,7 +23,7 @@ void SystemManager::init()
 {
     printf("SystemManager::init()\r\n");
 
-    lua::engine.Create(); // init lua engine if required. It'll simply return if already initialized
+    lua::engine.create(); // init lua engine if required. It'll simply return if already initialized
 
     printf("SystemManager::MessageSystem setup\r\n");
     MessageSystem::MessageManager::registerAll();
@@ -42,7 +42,7 @@ void SystemManager::init()
 
 void SystemManager::quit()
 {
-    lua::engine.Destroy();
+    lua::engine.destroy();
 }
 
 // XXX Not used, deprecated

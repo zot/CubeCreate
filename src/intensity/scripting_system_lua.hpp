@@ -59,6 +59,16 @@ namespace lua
     typedef void (*lua_Binding) (lua_Engine);
 
     /**
+     * @struct LE_reg
+     * A struct storing the binded function plus its name in Lua.
+     */
+    struct LE_reg
+    {
+        const char *n;
+        lua_Binding f;
+    };
+
+    /**
      * @class lua_Engine
      * Base class storing engine state and various get/set/... functions.
      */
@@ -147,7 +157,7 @@ namespace lua
          * int a = e.get<int>(1);
          * bool b = e.get<bool>(2);
          * double c = e.get<double>(3);
-         * const char *d = e.Get<const char*>(4);
+         * const char *d = e.get<const char*>(4);
          * @endcode
          */
         template<typename T>
@@ -662,13 +672,6 @@ namespace lua
 
         /* map containing non-lua engine params */
         hashtable<const char*, const char*> m_params;
-
-        /* A struct containing a name of reg plus the function. Meant to be stored in array and passed to reg. */
-        struct LE_reg
-        {
-            const char *n;
-            lua_Binding f;
-        };
 
         /* A struct containing a string and its size */
         struct LE_rs

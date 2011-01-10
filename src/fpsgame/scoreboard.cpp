@@ -20,12 +20,12 @@ namespace game
             g.background(0x808080, 5);
 
             using namespace lua;
-            engine.GetGlobal("ApplicationManager").GetTableRaw("instance");
-            engine.GetTableRaw("getScoreboardText").PushIndex(-2).Call(1, 1);
+            engine.getg("ApplicationManager").t_getraw("instance");
+            engine.t_getraw("getScoreboardText").push_index(-2).call(1, 1);
             // we get a table here
             LUA_TABLE_FOREACH(engine, {
-                int lineUniqueId = engine.GetTable<int>(1);
-                std::string lineText = engine.GetTable<std::string>(2);
+                int lineUniqueId = engine.t_get<int>(1);
+                std::string lineText = engine.t_get<std::string>(2);
                 if (lineUniqueId != -1)
                 {
                     LogicEntityPtr entity = LogicSystem::getLogicEntity(lineUniqueId);
@@ -49,7 +49,7 @@ namespace game
                 }
                 g.text(lineText.c_str(), 0xFFFFDD, NULL);
             });
-            engine.ClearStack(3);
+            engine.pop(3);
 
         g.poplist();
         g.poplist();

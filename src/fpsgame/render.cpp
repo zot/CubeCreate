@@ -46,7 +46,7 @@ namespace game
 #else // lua rendering system
 //        fpsent *exclude = isthirdperson() ? NULL : followingplayer(), *d; // XXX: Apply this!
 //        if(isthirdperson() && !followingplayer()) // XXX Apply this!
-        lua::engine.GetGlobal("renderDynamic").Push(isthirdperson()).Call(1, 0);
+        lua::engine.getg("renderDynamic").push(isthirdperson()).call(1, 0);
 #endif
 
 //        ExtraRendering::renderShadowingMapmodels(); // Kripken: Mapmodels with dynamic shadows, we draw them now
@@ -74,7 +74,7 @@ namespace game
 
     void renderavatar()
     {
-        lua::engine.GetGlobal("renderHUDModels").Call(0, 0);
+        lua::engine.getg("renderHUDModels").call(0, 0);
     }
 }
 

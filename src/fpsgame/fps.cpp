@@ -254,7 +254,7 @@ namespace game
 
 #if (SERVER_DRIVEN_PLAYERS == 1)
             // Enable this to let server drive client movement
-            engine.RunString(
+            engine.exec(
                 "getEntity(" + Utility::toString(d->uniqueId) + ").position = {" +
                 "getEntity(" + Utility::toString(d->uniqueId) + ").position.x," +
                 "getEntity(" + Utility::toString(d->uniqueId) + ").position.y," +
@@ -269,8 +269,8 @@ namespace game
 #ifdef CLIENT
         if ( ClientSystem::playerLogicEntity.get() )
         {
-            engine.GetRef(ClientSystem::playerLogicEntity.get()->luaRef);
-            if (engine.GetTable<bool>("initialized"))
+            engine.getref(ClientSystem::playerLogicEntity.get()->luaRef);
+            if (engine.t_get<bool>("initialized"))
             {
                 Logging::log(Logging::INFO, "Player %d (%lu) is initialized, run moveplayer(): %f,%f,%f.\r\n",
                     player1->uniqueId, (unsigned long)player1,
@@ -301,7 +301,7 @@ namespace game
             } else
                 Logging::log(Logging::INFO, "Player is not yet initialized, do not run moveplayer() etc.\r\n");
 
-            engine.ClearStack(1);
+            engine.pop(1);
         }
         else
             Logging::log(Logging::INFO, "Player does not yet exist, or scenario not started, do not run moveplayer() etc.\r\n");
@@ -357,7 +357,7 @@ namespace game
 #ifdef CLIENT
         bool runWorld = ClientSystem::scenarioStarted();
 #else
-        bool runWorld = engine.HasHandle();
+        bool runWorld = engine.hashandle();
 #endif
         static Benchmarker physicsBenchmarker;
 
@@ -377,11 +377,11 @@ namespace game
 
                 // If triggering collisions can be done by the lua library code, use that
 
-                engine.GetGlobal("manageTriggeringCollisions");
-                if (!engine.Is<void>(-1)) engine.Call(0, 0);
+                engine.getg("manageTriggeringCollisions");
+                if (!engine.is<void>(-1)) engine.call(0, 0);
                 else
                 {
-                    engine.ClearStack(1);
+                    engine.pop(1);
                     loopv(players)
                     {
                         fpsent* fpsEntity = players[i];
@@ -407,7 +407,7 @@ namespace game
         actionsBenchmarker.start();
             if (runWorld)
             {
-                engine.GetGlobal("startFrame").Call(0, 0);
+                engine.getg("startFrame").call(0, 0);
                 LogicSystem::manageActions(curtime);
             }
         actionsBenchmarker.stop();
@@ -621,10 +621,10 @@ namespace game
 
     std::string scriptname(fpsent *d)
     {
-        engine.GetGlobal("getEntity").Push(LogicSystem::getUniqueId(d)).Call(1, 1);
+        engine.getg("getEntity").push(LogicSystem::getUniqueId(d)).call(1, 1);
         // got class here
-        std::string ret = engine.GetTable<std::string>("_name");
-        engine.ClearStack(1);
+        std::string ret = engine.t_get<std::string>("_name");
+        engine.pop(1);
         return ret;
     }
 

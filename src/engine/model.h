@@ -106,10 +106,10 @@ struct model
                         // This is necessary because these are values cached from lua, unlike normal
                         // Sauer C++ variables that are managed in C++. Here, the *true* values are in lua
         {
-            lua::engine.GetRef(entity->luaRef);
-            width = lua::engine.GetTable<double>("collisionRadiusWidth");
-            height = lua::engine.GetTable<double>("collisionRadiusHeight");
-            lua::engine.ClearStack(1);
+            lua::engine.getref(entity->luaRef);
+            width = lua::engine.t_get<double>("collisionRadiusWidth");
+            height = lua::engine.t_get<double>("collisionRadiusHeight");
+            lua::engine.pop(1);
         }
 
         center[0] = center[1] = 0;

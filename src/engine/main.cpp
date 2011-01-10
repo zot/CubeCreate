@@ -572,16 +572,16 @@ void setfullscreen(bool enable)
 void setScreenScriptValues() // INTENSITY: New function
 {
     using namespace lua;
-    if (engine.HasHandle())
+    if (engine.hashandle())
     {
-        engine.GetGlobal("Global");
-        engine.SetTable("aspectRatio", float(GETIV(scr_w))/float(GETIV(scr_h)));
-        engine.SetTable("screenWidth", GETIV(scr_w));
-        engine.SetTable("screenHeight", GETIV(scr_h));
-        engine.SetTable("fontHeight", FONTH);
-        engine.SetTable("cameraDistance", GETIV(cam_dist));
-        engine.SetTable("cameraHeight", GETFV(cameraheight));
-        engine.ClearStack(1);
+        engine.getg("Global");
+        engine.t_set("aspectRatio", float(GETIV(scr_w))/float(GETIV(scr_h)));
+        engine.t_set("screenWidth", GETIV(scr_w));
+        engine.t_set("screenHeight", GETIV(scr_h));
+        engine.t_set("fontHeight", FONTH);
+        engine.t_set("cameraDistance", GETIV(cam_dist));
+        engine.t_set("cameraHeight", GETFV(cameraheight));
+        engine.pop(1);
     }
 }
 
@@ -1119,8 +1119,8 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     // initialize Lua early so everything is available at the beginning.
     initlog("lua");
-    lua::engine.Create();
-    if (!lua::engine.HasHandle()) fatal("cannot initialize lua script engine");
+    lua::engine.create();
+    if (!lua::engine.hashandle()) fatal("cannot initialize lua script engine");
 
     for(int i = 1; i<argc; i++)
     {
@@ -1209,8 +1209,8 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     initlog("console");
     EngineVariables::persistVars = false;
-    if(!lua::engine.RunFile("data/stdlib.lua")) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
-    if(!lua::engine.RunFile("data/font.lua")) fatal("cannot find font definitions");
+    if(!lua::engine.execf("data/stdlib.lua")) fatal("cannot find data files (you are running from the wrong directory - you must run CubeCreate from root directory)");   // this is the first file we load.
+    if(!lua::engine.execf("data/font.lua")) fatal("cannot find font definitions");
     if(!setfont("default")) fatal("no default font specified");
 
     inbetweenframes = true;
@@ -1230,23 +1230,23 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
 
     initlog("cfg");
 
-    lua::engine.RunFile("data/keymap.lua");
-    lua::engine.RunFile("data/sounds.lua");
-    lua::engine.RunFile("data/stdedit.lua");
-    lua::engine.RunFile("data/menus.lua");
-    lua::engine.RunFile("data/brush.lua");
-    lua::engine.RunFile("mybrushes.lua");
-    if(game::savedservers()) lua::engine.RunFile(std::string(game::savedservers()));
+    lua::engine.execf("data/keymap.lua");
+    lua::engine.execf("data/sounds.lua");
+    lua::engine.execf("data/stdedit.lua");
+    lua::engine.execf("data/menus.lua");
+    lua::engine.execf("data/brush.lua");
+    lua::engine.execf("mybrushes.lua");
+    if(game::savedservers()) lua::engine.execf(std::string(game::savedservers()));
     
     EngineVariables::persistVars = true;
     
     initing = INIT_LOAD;
     if(!config_exec_json(game::savedconfig(), false)) 
     {
-        lua::engine.RunFile(std::string(game::defaultconfig()));
+        lua::engine.execf(std::string(game::defaultconfig()));
         writecfg(game::restoreconfig());
     }
-    lua::engine.RunFile(std::string(game::autoexec()));
+    lua::engine.execf(std::string(game::autoexec()));
     initing = NOT_INITING;
 
     EngineVariables::persistVars = false;

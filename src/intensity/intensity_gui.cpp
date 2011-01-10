@@ -61,10 +61,10 @@ void showInputDialog(std::string title, std::string content)
 
 void input_callback(char *input)
 {
-    lua::engine.GetGlobal("UserInterface")
-        .GetTableRaw("inputDialogCallback")
-        .Push(input)
-        .Call(1, 0)
+    lua::engine.getg("UserInterface")
+        .t_getraw("inputDialogCallback")
+        .push(input)
+        .call(1, 0)
         .ClearStack(1);
 }
 

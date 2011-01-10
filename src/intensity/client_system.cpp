@@ -144,11 +144,11 @@ bool ClientSystem::scenarioStarted()
     // If not already started, test if indeed started
     if (_mapCompletelyReceived && !_scenarioStarted)
     {
-        if (engine.HasHandle())
+        if (engine.hashandle())
         {
-            engine.GetGlobal("testScenarioStarted").Call(0, 1);
-            _scenarioStarted = engine.Get<bool>(-1);
-            engine.ClearStack(1);
+            engine.getg("testScenarioStarted").call(0, 1);
+            _scenarioStarted = engine.get<bool>(-1);
+            engine.pop(1);
         }
     }
 
@@ -468,23 +468,23 @@ void upload_texture_data(std::string name, int x, int y, int w, int h, long long
 }
 
 // wrappers for boost exports
-inline void wrapLuaEngineCreate() { lua::engine.Create(); }
-inline bool wrapLuaEngineExists() { return lua::engine.HasHandle(); }
-inline bool wrapLuaEngineRunScript(const std::string& s)
+inline void wrapLuaEngineCreate() { lua::engine.create(); }
+inline bool wrapLuaEngineExists() { return lua::engine.hashandle(); }
+inline bool wrapLuaEngineRunScript(const char *s)
 {
-    return lua::engine.RunString(s);
+    return lua::engine.exec(s);
 }
-inline std::string wrapLuaEngineRunScriptString(const std::string& s)
+inline const char *wrapLuaEngineRunScriptString(const char *s)
 {
-    return lua::engine.RunString<std::string>(s);
+    return lua::engine.exec<const char*>(s);
 }
-inline int wrapLuaEngineRunScriptInt(const std::string& s)
+inline int wrapLuaEngineRunScriptInt(const char *s)
 {
-    return lua::engine.RunString<int>(s);
+    return lua::engine.exec<int>(s);
 }
-inline double wrapLuaEngineRunScriptDouble(const std::string& s)
+inline double wrapLuaEngineRunScriptDouble(const char *s)
 {
-    return lua::engine.RunString<double>(s);
+    return lua::engine.exec<double>(s);
 }
 
 //! Main starting point - initialize Python, set up the embedding, and
@@ -613,9 +613,9 @@ bool ClientSystem::isAdmin()
     if (!loggedIn) return isAdmin;
     if (!playerLogicEntity.get()) return isAdmin;
 
-    engine.GetRef(playerLogicEntity.get()->luaRef);
-    isAdmin = engine.GetTable<bool>("_canEdit");
-    engine.ClearStack(1);
+    engine.getref(playerLogicEntity.get()->luaRef);
+    isAdmin = engine.t_get<bool>("_canEdit");
+    engine.pop(1);
 
    // return isAdmin;
    return true;
@@ -692,7 +692,7 @@ void show_instances()
 
     Logging::log(Logging::DEBUG, "Instances GUI: %s\r\n", command.c_str());
 
-    engine.RunString(command);
+    engine.exec(command);
 }
 
 COMMAND(show_instances, "");
@@ -702,9 +702,9 @@ COMMAND(show_instances, "");
 bool checkCompile(std::string filename)
 {
     std::string script = Utility::readFile(filename);
-    if (!engine.LoadString(script))
+    if (!engine.load(script))
     {
-        IntensityGUI::showMessage("Compilation failed", engine.GetLastError());
+        IntensityGUI::showMessage("Compilation failed", engine.getLastError());
         return false;
     } else {
         return true;

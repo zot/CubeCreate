@@ -627,7 +627,7 @@ LUA_BIND_CLIENT(playSoundByName, {
 LUA_BIND_STD_CLIENT(stopSoundByName, stopsoundbyid, getsoundid(e.get<const char*>(1), e.get<int>(2)))
 LUA_BIND_STD_CLIENT(music, startmusic, (char*)e.get<const char*>(1), (char*)"Sound.musicCallback()")
 LUA_BIND_CLIENT(preloadSound, {
-    defformatstring(str)("preloading sound '%s'...", e.Get<const char*>(1));
+    defformatstring(str)("preloading sound '%s'...", e.get<const char*>(1));
     renderprogress(0, str);
 
     e.push(preload_sound((char*)e.get<const char*>(1), min(e.get<int>(2), 100)));
@@ -1043,7 +1043,7 @@ LUA_BIND_CLIENT(getTargetEntity, {
     TargetingControl::determineMouseTarget(true); // Force a determination, if needed
     LogicEntityPtr target = TargetingControl::targetLogicEntity;
     if (target.get() && !target->isNone() && target->luaRef >= 0)
-        e.getRef(target->luaRef);
+        e.getref(target->luaRef);
     else
         e.push();
 })
@@ -1072,8 +1072,8 @@ void prepareRagdoll(int& anim, LogicEntityPtr self)
         if (fpsEntity->ragdoll || !GETIV(ragdoll) || !PhysicsManager::getEngine()->prepareRagdoll(self))
         {
             anim &= ~ANIM_RAGDOLL;
-            engine.getRef(self.get()->luaRef).GetTableRaw("setLocalAnimation").PushIndex(-2).Push(anim).Call(2, 0);
-            engine.ClearStack(1);
+            engine.getref(self.get()->luaRef).t_getraw("setLocalAnimation").push_index(-2).push(anim).call(2, 0);
+            engine.pop(1);
         }
     }
     else
@@ -1093,8 +1093,8 @@ void prepareRagdoll(int& anim, LogicEntityPtr self)
 
 fpsent* getProxyFpsEntityLua(LogicEntityPtr self)
 {
-    engine.getRef(self.get()->luaRef).GetTableRaw("renderingHashHint");
-    if (!engine.Is<void>(-1))
+    engine.getref(self.get()->luaRef).t_getraw("renderingHashHint");
+    if (!engine.is<void>(-1))
     {
         static bool initialized = false;
         static fpsent* fpsEntitiesForRendering[1024];
@@ -1108,14 +1108,14 @@ fpsent* getProxyFpsEntityLua(LogicEntityPtr self)
         }
 
         int renderingHashHint = engine.get<int>(-1);
-        engine.ClearStack(2);
+        engine.pop(2);
         renderingHashHint = renderingHashHint & 1023;
         assert(renderingHashHint >= 0 && renderingHashHint < 1024);
         return fpsEntitiesForRendering[renderingHashHint];
     }
     else
     {
-        engine.ClearStack(2);
+        engine.pop(2);
         return NULL;
     }
 }
@@ -1187,11 +1187,11 @@ LUA_BIND_STD_CLIENT(forceFov, CameraControl::forceFov, e.get<float>(1))
 LUA_BIND_STD_CLIENT(resetCamera, CameraControl::positionCamera, CameraControl::getCamera())
 LUA_BIND_CLIENT(getCamera, {
     physent *camera = CameraControl::getCamera();
-    e.NewTable()
-        .SetTable("position", camera->o)
-        .SetTable("yaw", camera->yaw)
-        .SetTable("pitch", camera->pitch)
-        .SetTable("roll", camera->roll);
+    e.t_new()
+        .t_set("position", camera->o)
+        .t_set("yaw", camera->yaw)
+        .t_set("pitch", camera->pitch)
+        .t_set("roll", camera->roll);
 })
 LUA_BIND_CLIENT(getCameraPosition, {
     physent *camera = CameraControl::getCamera();
@@ -1231,7 +1231,7 @@ LUA_BIND_STD(editing_pushCubeCorner, EditingSystem::pushCubeCorner,
 )
 LUA_BIND_DEF(editing_getSelectedEntity, {
     LogicEntityPtr ret = EditingSystem::getSelectedEntity();
-    if (ret.get() && !ret->isNone() && ret->luaRef >= 0) e.getRef(ret.get()->luaRef);
+    if (ret.get() && !ret->isNone() && ret->luaRef >= 0) e.getref(ret.get()->luaRef);
     else e.push();
 })
 LUA_BIND_STD(renderProgress, renderprogress, e.get<float>(1), e.get<const char*>(2))
@@ -1250,7 +1250,7 @@ LUA_BIND_DEF(modelBoundingBox, {
     vec radius;
     theModel->boundbox(0, center, radius);
 
-    e.NewTable().SetTable("center", center).SetTable("radius", radius);
+    e.t_new().t_set("center", center).t_set("radius", radius);
 });
 
 LUA_BIND_DEF(modelCollisionBox, {
@@ -1264,7 +1264,7 @@ LUA_BIND_DEF(modelCollisionBox, {
     vec radius;
     theModel->collisionbox(0, center, radius);
 
-    e.NewTable().SetTable("center", center).SetTable("radius", radius);
+    e.t_new().t_set("center", center).t_set("radius", radius);
 });
 
 LUA_BIND_DEF(modelMesh, {
@@ -1279,17 +1279,17 @@ LUA_BIND_DEF(modelMesh, {
     theModel->gentris(0, tris2);
     vector<BIH::tri>& tris = tris2[0];
 
-    e.NewTable().SetTable("length", tris.length());
+    e.t_new().t_set("length", tris.length());
     for (int i = 0; i < tris.length(); i++)
     {
         BIH::tri& bt = tris[i];
 
         e.push(Utility::toString(i))
-            .NewTable()
-            .SetTable("a", bt.a)
-            .SetTable("b", bt.b)
-            .SetTable("c", bt.c)
-        .SetTable();
+            .t_new()
+            .t_set("a", bt.a)
+            .t_set("b", bt.b)
+            .t_set("c", bt.c)
+        .t_set();
     }
 });
 
@@ -1298,7 +1298,7 @@ LUA_BIND_DEF(modelMesh, {
 LUA_BIND_SERVER(addNPC, {
     int _ref = NPC::add(std::string(e.get<const char*>(1)));
     if (_ref >= 0)
-        e.getRef(_ref);
+        e.getref(_ref);
     else
         e.push();
 })
@@ -1376,7 +1376,7 @@ LUA_BIND_DEF(startStopLocalServer, {
     else
     {
         defformatstring(cmd)("intensity.components.server_runner.run_server('%s'%s)",
-                             e.Get<const char*>(1),
+                             e.get<const char*>(1),
                              !_EV_logged_into_master->getInteger() ? ", False" : ""
                             )
         run_python((char*)cmd);
@@ -1562,12 +1562,12 @@ LUA_BIND_TEXT(textLoad, {
 LUA_BIND_TEXT(textInit, {
     editor *ed = NULL;
     const char *arg2 = e.get<const char*>(2);
-    loopv(editors) if(!strcmp(e.Get<const char*>(1), editors[i]->name))
+    loopv(editors) if(!strcmp(e.get<const char*>(1), editors[i]->name))
     {
         ed = editors[i];
         break;
     }
-    if(ed && ed->rendered && !ed->filename && arg2 && (ed->lines.empty() || (ed->lines.length() == 1 && !strcmp(e.Get<const char*>(3), ed->lines[0].text))))
+    if(ed && ed->rendered && !ed->filename && arg2 && (ed->lines.empty() || (ed->lines.length() == 1 && !strcmp(e.get<const char*>(3), ed->lines[0].text))))
     {
         ed->setfile(path(arg2, true));
         ed->load();

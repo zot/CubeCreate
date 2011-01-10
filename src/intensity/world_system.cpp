@@ -72,13 +72,13 @@ void WorldSystem::triggerCollide(LogicEntityPtr mapmodel, physent* d, bool ellip
         return; // Most likely a raycasting collision, or camera, etc. - not things we trigger events for
     }
 
-    engine.GetRef(mapmodel.get()->luaRef);
+    engine.getref(mapmodel.get()->luaRef);
     #ifdef SERVER
-    engine.GetTableRaw("onCollision");
+    engine.t_getraw("onCollision");
     #else
-    engine.GetTableRaw("clientOnCollision");
+    engine.t_getraw("clientOnCollision");
     #endif
-    engine.PushIndex(-2).GetRef(colliderEntity.get()->luaRef).Call(2, 0).ClearStack(1);
+    engine.push_index(-2).getref(colliderEntity.get()->luaRef).call(2, 0).ClearStack(1);
 }
 
 int numExpectedEntities = 0;

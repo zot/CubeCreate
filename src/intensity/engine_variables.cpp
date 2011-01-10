@@ -117,7 +117,7 @@ EngineVariable::EngineVariable(const std::string& aname, int val, bool alias)
     type = "IVAR";
     alias = true;
     override = false;
-    if (lua::engine.HasHandle()) registerLuaIVAR();
+    if (lua::engine.hashandle()) registerLuaIVAR();
 }
 
 // float alias
@@ -132,7 +132,7 @@ EngineVariable::EngineVariable(const std::string& aname, float val, bool alias)
     type = "FVAR";
     alias = true;
     override = false;
-    if (lua::engine.HasHandle()) registerLuaFVAR();
+    if (lua::engine.hashandle()) registerLuaFVAR();
 }
 
 // string alias
@@ -147,7 +147,7 @@ EngineVariable::EngineVariable(const std::string& aname, const std::string& val,
     type = "SVAR";
     alias = true;
     override = false;
-    if (lua::engine.HasHandle()) registerLuaSVAR();
+    if (lua::engine.hashandle()) registerLuaSVAR();
 }
 
 /*
@@ -217,36 +217,36 @@ bool EngineVariable::isAlias()
 // these are used for registration of Lua variables after one is registered in C++
 void EngineVariable::registerLuaIVAR()
 {
-    lua::engine.GetGlobal("ivar")
-        .Push(name)
-        .Push(anyint(minv))
-        .Push(anyint(curv))
-        .Push(anyint(maxv))
-        .Push(readOnly)
-        .Push(alias)
-        .Call(6, 0);
+    lua::engine.getg("ivar")
+        .push(name)
+        .push(anyint(minv))
+        .push(anyint(curv))
+        .push(anyint(maxv))
+        .push(readOnly)
+        .push(alias)
+        .call(6, 0);
 }
 
 void EngineVariable::registerLuaFVAR()
 {
-    lua::engine.GetGlobal("fvar")
-        .Push(name)
-        .Push(anyfloat(minv))
-        .Push(anyfloat(curv))
-        .Push(anyfloat(maxv))
-        .Push(readOnly)
-        .Push(alias)
-        .Call(6, 0);
+    lua::engine.getg("fvar")
+        .push(name)
+        .push(anyfloat(minv))
+        .push(anyfloat(curv))
+        .push(anyfloat(maxv))
+        .push(readOnly)
+        .push(alias)
+        .call(6, 0);
 }
 
 void EngineVariable::registerLuaSVAR()
 {
-    lua::engine.GetGlobal("svar")
-        .Push(name)
-        .Push(anystring(curv))
-        .Push(readOnly)
-        .Push(alias)
-        .Call(4, 0);
+    lua::engine.getg("svar")
+        .push(name)
+        .push(anystring(curv))
+        .push(readOnly)
+        .push(alias)
+        .call(4, 0);
 }
 
 /*
@@ -257,8 +257,8 @@ void EngineVariable::registerLuaSVAR()
 void EngineVariable::callCB(bool luaSync, bool forceCB)
 {
     #define SYNCV(val) \
-    if ((luaSync || alias) && lua::engine.HasHandle()) \
-        lua::engine.GetGlobal("EV").SetTable(name + "_ns", val).ClearStack(1);
+    if ((luaSync || alias) && lua::engine.hashandle()) \
+        lua::engine.getg("EV").t_set(name + "_ns", val).ClearStack(1);
 
     switch (type[0])
     {

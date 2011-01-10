@@ -208,7 +208,7 @@ struct md3 : vertmodel
 
         loadingmd3 = this;
         EngineVariables::persistVars = false;
-        if(lua::engine.RunFile(std::string(path(cfgname))) && parts.length()) // INTENSITY configured md3, will call the md3* commands below
+        if(lua::engine.execf(std::string(path(cfgname))) && parts.length()) // INTENSITY configured md3, will call the md3* commands below
         {
             EngineVariables::persistVars = true;
             loadingmd3 = NULL;

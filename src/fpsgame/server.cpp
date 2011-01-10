@@ -126,8 +126,8 @@ namespace server
         // Also do not do this if the uniqueId is negative - it means we are disconnecting this client *before* a lua
         // entity is actually created for them (this can happen in the rare case of a network error causing a disconnect
         // between ENet connection and completing the login process).
-        if (engine.HasHandle() && !_ci->local && uniqueId >= 0)
-            engine.GetGlobal("removeEntity").Push(uniqueId).Call(1, 0); // Will also disconnect from FPSClient
+        if (engine.hashandle() && !_ci->local && uniqueId >= 0)
+            engine.getg("removeEntity").push(uniqueId).call(1, 0); // Will also disconnect from FPSClient
         
 //        // Remove from internal mini FPSclient as well
 //        FPSClientInterface::clientDisconnected(_ci->clientnum); // XXX No - do in parallel to character
@@ -556,17 +556,17 @@ namespace server
                 REFLECT_PYTHON( signal_text_message );
                 signal_text_message(sender, text);
 
-                if (!engine.HasHandle())
+                if (!engine.hashandle())
                 {
                     QUEUE_INT(type);
                     QUEUE_STR(text);
                     break;
                 }
 
-                engine.GetGlobal("ApplicationManager").GetTableRaw("instance");
-                engine.GetTableRaw("handleTextMessage").PushIndex(-2).Push(ci->uniqueId).Push(text).Call(3, 1);
-                bool handleTextMessage = engine.Get<bool>(-1);
-                engine.ClearStack(3);
+                engine.getg("ApplicationManager").t_getraw("instance");
+                engine.t_getraw("handleTextMessage").push_index(-2).push(ci->uniqueId).push(text).call(3, 1);
+                bool handleTextMessage = engine.get<bool>(-1);
+                engine.pop(3);
 
                 if (!handleTextMessage)
                 {
@@ -701,7 +701,7 @@ namespace server
         ci->isAdmin = isAdmin;
 
         if (ci->isAdmin && ci->uniqueId >= 0) // If an entity was already created, update it
-            engine.RunString("getEntity(" + Utility::toString(ci->uniqueId) + ")._canEdit = true");
+            engine.exec("getEntity(" + Utility::toString(ci->uniqueId) + ")._canEdit = true");
     }
 
     bool isAdmin(int clientNumber)
@@ -761,11 +761,11 @@ namespace server
         }
 
         // Use the PC class, unless told otherwise
-        if (_class == "") _class = engine.RunString<std::string>("return ApplicationManager.instance:getPcClass()");
+        if (_class == "") _class = engine.exec<std::string>("return ApplicationManager.instance:getPcClass()");
 
         Logging::log(Logging::DEBUG, "Creating player entity: %s, %d", _class.c_str(), cn);
 
-        int uniqueId = engine.RunString<int>("return getNewUniqueId()");
+        int uniqueId = engine.exec<int>("return getNewUniqueId()");
 
         // Notify of uniqueId *before* creating the entity, so when the entity is created, player realizes it is them
         // and does initial connection correctly
@@ -774,20 +774,20 @@ namespace server
 
         ci->uniqueId = uniqueId;
 
-        engine.RunString(
+        engine.exec(
             "newEntity('" + _class + "', { clientNumber = " + Utility::toString(cn) + " }, " + Utility::toString(uniqueId) + ", true)"
         );
 
-        assert(engine.RunString<int>("return getEntity(" + Utility::toString(uniqueId) + ").clientNumber") == cn);
+        assert(engine.exec<int>("return getEntity(" + Utility::toString(uniqueId) + ").clientNumber") == cn);
 
         // Add admin status, if relevant
         if (ci->isAdmin)
-            engine.RunString("getEntity(" + Utility::toString(uniqueId) + ")._canEdit = true");
+            engine.exec("getEntity(" + Utility::toString(uniqueId) + ")._canEdit = true");
 
         // Add nickname
-        engine.GetGlobal("getEntity").Push(uniqueId).Call(1, 1);
+        engine.getg("getEntity").push(uniqueId).call(1, 1);
         // got class here
-        engine.SetTable("_name", getUsername(cn)).ClearStack(1);
+        engine.t_set("_name", getUsername(cn)).ClearStack(1);
 
         // For NPCs/Bots, mark them as such and prepare them, exactly as the players do on the client for themselves
         if (ci->local)
@@ -800,8 +800,8 @@ namespace server
             FPSClientInterface::spawnPlayer(fpsEntity);
         }
 
-        engine.GetGlobal("getEntity").Push(uniqueId).Call(1, 1);
-        int ret = engine.Ref();
+        engine.getg("getEntity").push(uniqueId).call(1, 1);
+        int ret = engine.ref();
 
         return ret;
 #endif

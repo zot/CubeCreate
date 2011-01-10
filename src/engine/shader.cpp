@@ -53,7 +53,7 @@ void loadshaders()
 
     initshaders = true;
     standardshader = true;
-    lua::engine.RunFile("data/glsl.lua");
+    lua::engine.execf("data/glsl.lua");
     standardshader = false;
     initshaders = false;
     defaultshader = lookupshaderbyname("default");
@@ -1418,7 +1418,7 @@ void defershader(int *type, const char *name, const char *contents)
 {
     Shader *exists = shaders.access(name);
     if(exists && !(exists->type&SHADER_INVALID)) return;
-    if(!GETIV(defershaders)) { lua::engine.RunString(contents); return; } // CubeCreate: lua
+    if(!GETIV(defershaders)) { lua::engine.exec(contents); return; } // CubeCreate: lua
     char *rname = exists ? exists->name : newstring(name);
     Shader &s = shaders[rname];
     s.name = rname;
@@ -1439,7 +1439,7 @@ void useshader(Shader *s)
     forceshaders = false;
     EngineVariables::persistVars = false;
     curparams.shrink(0);
-    lua::engine.RunString(defer); // CubeCreate: lua
+    lua::engine.exec(defer); // CubeCreate: lua
     EngineVariables::persistVars = waspersisting;
     forceshaders = wasforcing;
     standardshader = wasstandard;

@@ -624,7 +624,7 @@ void gl_checkextensions()
 void glext(char *ext)
 {
     const char *exts = (const char *)glGetString(GL_EXTENSIONS);
-    lua::engine.Push(strstr(exts, ext) ? 1 : 0);
+    lua::engine.push(strstr(exts, ext) ? 1 : 0);
 }
 
 void gl_init(int w, int h, int bpp, int depth, int fsaa)
@@ -808,17 +808,17 @@ void mousemove(int dx, int dy)
 
     // INTENSITY: Let scripts customize mousemoving
     using namespace lua;
-    if (engine.HasHandle())
+    if (engine.hashandle())
     {
-        engine.GetGlobal("ApplicationManager").GetTableRaw("instance").GetTableRaw("performMousemove");
-        engine.PushIndex(-2).Push(dx * cursens).Push(-dy * cursens * (GETIV(invmouse) ? -1 : 1)).Call(3, 1);
+        engine.getg("ApplicationManager").t_getraw("instance").t_getraw("performMousemove");
+        engine.push_index(-2).push(dx * cursens).push(-dy * cursens * (GETIV(invmouse) ? -1 : 1)).call(3, 1);
 
-        engine.GetTableRaw("yaw");
-        if (!engine.Is<void>(-1))
+        engine.t_getraw("yaw");
+        if (!engine.is<void>(-1))
         {
-            camera1->yaw += engine.Get<double>(-1);
-            engine.ClearStack(1).GetTableRaw("pitch");
-            camera1->pitch += engine.Get<double>(-1);
+            camera1->yaw += engine.get<double>(-1);
+            engine.pop(1).t_getraw("pitch");
+            camera1->pitch += engine.get<double>(-1);
 
             fixcamerarange();
             if(camera1!=player && !detachedcamera)
@@ -827,7 +827,7 @@ void mousemove(int dx, int dy)
                 player->pitch = camera1->pitch;
             }
         }
-        engine.ClearStack(4);
+        engine.pop(4);
     }
 }
 
@@ -2011,12 +2011,12 @@ void drawcrosshair(int w, int h)
     { 
         std::string crosshairName = ""; // INTENSITY: Start script-controlled crosshairs
         using namespace lua;
-        if (engine.HasHandle())
+        if (engine.hashandle())
         {
-            engine.GetGlobal("ApplicationManager").GetTableRaw("instance").GetTableRaw("getCrosshair");
-            engine.PushIndex(-2).Call(1, 1);
-            crosshairName = engine.Get(-1, "data/crosshair.png");
-            engine.ClearStack(3);
+            engine.getg("ApplicationManager").t_getraw("instance").t_getraw("getCrosshair");
+            engine.push_index(-2).call(1, 1);
+            crosshairName = engine.get(-1, "data/crosshair.png");
+            engine.pop(3);
         }
         crosshair = textureload(crosshairName.c_str(), 3, true, false);
         if (crosshair == notexture) return;

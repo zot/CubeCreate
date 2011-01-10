@@ -942,19 +942,19 @@ void entpaste()
         std::string _class = entity->getClass();
 
         using namespace lua;
-        engine.GetRef(entity->luaRef).GetTableRaw("createStateDataDict");
-        engine.PushIndex(-2).Call(1, 1);
-        engine.Push("__intensityentcopy__TEMP").ShiftValues();
-        engine.SetGlobal().ClearStack(1);
+        engine.getref(entity->luaRef).t_getraw("createStateDataDict");
+        engine.push_index(-2).call(1, 1);
+        engine.push("__intensityentcopy__TEMP").shift();
+        engine.setg().ClearStack(1);
 
-        engine.RunString("__intensityentcopy__TEMP.position = '[" +
+        engine.exec("__intensityentcopy__TEMP.position = '[" +
             Utility::toString(o.x) + "|" + Utility::toString(o.y) + "|" + Utility::toString(o.z) +
         "]'"); // Fix position
 
-        engine.GetGlobal("encodeJSON");
-        engine.GetGlobal("__intensityentcopy__TEMP").Call(1, 1);
-        std::string stateData = engine.Get(-1, "{}");
-        engine.ClearStack(1);
+        engine.getg("encodeJSON");
+        engine.getg("__intensityentcopy__TEMP").call(1, 1);
+        std::string stateData = engine.get(-1, "{}");
+        engine.pop(1);
 
         EditingSystem::newEntity(_class, stateData);
         // INTENSITY: end Create entity using new system
@@ -1047,19 +1047,19 @@ void intensityentcopy() // INTENSITY
     intensityCopiedClass = entity->getClass();
 
     using namespace lua;
-    engine.GetRef(entity->luaRef).GetTableRaw("createStateDataDict");
-    engine.PushIndex(-2).Call(1, 1);
-    engine.Push("__intensityentcopy__TEMP").ShiftValues().SetGlobal();
-    engine.ClearStack(1);
+    engine.getref(entity->luaRef).t_getraw("createStateDataDict");
+    engine.push_index(-2).call(1, 1);
+    engine.push("__intensityentcopy__TEMP").shift().setg();
+    engine.pop(1);
 
-    engine.RunString("__intensityentcopy__TEMP.position = nil"); // Position is determined at paste time
+    engine.exec("__intensityentcopy__TEMP.position = nil"); // Position is determined at paste time
 
-    engine.GetGlobal("encodeJSON");
-    engine.GetGlobal("__intensityentcopy__TEMP").Call(1, 1);
-    intensityCopiedStateData = engine.Get(-1, "{}");
-    engine.ClearStack(1);
+    engine.getg("encodeJSON");
+    engine.getg("__intensityentcopy__TEMP").call(1, 1);
+    intensityCopiedStateData = engine.get(-1, "{}");
+    engine.pop(1);
 
-    engine.RunString("__intensityentcopy__TEMP = nil");
+    engine.exec("__intensityentcopy__TEMP = nil");
 }
 COMMAND(intensityentcopy, ""); // INTENSITY
 
@@ -1188,7 +1188,7 @@ bool emptymap(int scale, bool force, const char *mname, bool usecfg)    // main 
     if (usecfg)
     {
         EngineVariables::overrideVars = true;
-        lua::engine.RunFile("data/default_map_settings.lua");
+        lua::engine.execf("data/default_map_settings.lua");
         EngineVariables::overrideVars = false;
     }
 
@@ -1315,7 +1315,7 @@ int getmapversion() { return GETIV(mapversion); }
 void finish_dragging()
 {
     groupeditpure(
-        lua::engine.RunString(
+        lua::engine.exec(
             "getEntity(" + Utility::toString(LogicSystem::getUniqueId(&e)) + ").position = " +
             "{" + Utility::toString(e.o[0]) + "," + Utility::toString(e.o[1]) + "," + Utility::toString(e.o[2]) + "}"
         );
