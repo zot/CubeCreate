@@ -39,11 +39,7 @@
 
 #include <cstdlib>
 #include <cstring>
-extern "C"
-{
-    #include <lua.h>
-    #include <lualib.h>
-}
+#include <lua.hpp>
 #include <typeinfo>
 
 namespace lua
@@ -57,6 +53,8 @@ namespace lua
     class lua_Engine;
     /// A typedef for nice code when passing binding functions.
     typedef void (*lua_Binding) (lua_Engine);
+    /// A hashtable typedef for params
+    typedef hashtable<const char*, const char*> LE_params;
 
     /**
      * @struct LE_reg
@@ -609,7 +607,8 @@ namespace lua
             m_rantests(false),
             m_scriptdir("src/lua/"),
             m_version("0.0"),
-            m_lasterror(NULL) {}
+            m_lasterror(NULL),
+            m_params(NULL) {}
         /**
          * Constructor for lua_Engine with existing state handler.
          * Useful for constructing temporary classes for use in binds.
@@ -623,7 +622,8 @@ namespace lua
             m_rantests(false),
             m_scriptdir(NULL),
             m_version(NULL),
-            m_lasterror(NULL) { m_retcount = gettop(); }
+            m_lasterror(NULL),
+            m_params(NULL) { m_retcount = gettop(); }
 
         ~lua_Engine()
         {
@@ -668,29 +668,19 @@ namespace lua
         const char *m_lasterror;
 
         /* map containing non-lua engine params */
-        hashtable<const char*, const char*> m_params;
-
-        /* A struct containing a string and its size */
-        struct LE_rs
-        {
-            const char *s;
-            size_t sz;
-        };
+        LE_params *m_params;
 
         /* Loads all needed Lua modules */
         void setup_libs();
         /* Passing name and map of binds, this method registers a table of binds in Lua */
-        void setup_namespace(const char *n, const vector<LE_reg> &v);
+        void setup_namespace(const char *n, const LE_reg *r);
         /* Loads a "module" - that is a lua script in m_scriptDir. */
         void setup_module(const char *n, bool t = false);
         /* Registers the Lua namespaces, handles CubeCreate Lua modules and tests. */
         lua_Engine& bind();
 
         /* Static methods for Lua */
-        static void       *l_alloc(void*, void *p, size_t, size_t n);
-        static int         l_panic(lua_State *L);
-        static const char *l_reads(lua_State *L, void *d, size_t *s);
-        static int         l_disp (lua_State *L);
+        static int l_disp (lua_State *L);
     };
 
     /*

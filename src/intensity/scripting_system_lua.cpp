@@ -60,8 +60,9 @@
 
 namespace lua
 {
-    /* our bindvectors */
-    vector<LE_reg> CAPI, LAPI;
+    /* our binds */
+    using namespace lua_binds;
+    #include "scripting_system_lua_exp.hpp"
     /* externed in header */
     lua_Engine engine;
 
@@ -88,11 +89,13 @@ namespace lua
         #undef openlib
     }
 
-    void lua_Engine::setup_namespace(const char *n, const vector<LE_reg> &v)
+    void lua_Engine::setup_namespace(const char *n, const LE_reg *r)
     {
         Logging::log(Logging::DEBUG, "Setting up Lua embed namespace \"%s\"\n", n);
 
-        int size = v.length();
+        int size = 0;
+        for (; r->n; r++) size++;
+        r = r - size;
         Logging::log(Logging::DEBUG, "Future namespace size: %i\n", size);
 
         lua_pushvalue(m_handle, LUA_REGISTRYINDEX);
@@ -139,13 +142,14 @@ namespace lua
         lua_insert(m_handle, -1);
 
         Logging::log(Logging::DEBUG, "Registering functions into namespace.\n");
-        loopv(v)
+        for (; r->n; r++)
         {
-            Logging::log(Logging::INFO, "Registering: %s\n", v[i].n);
-            lua_pushlightuserdata(m_handle, (void*)&v[i]);
+            Logging::log(Logging::INFO, "Registering: %s\n", r->n);
+            lua_pushlightuserdata(m_handle, (void*)r);
             lua_pushcclosure(m_handle, l_disp, 1);
-            lua_setfield(m_handle, -2, v[i].n);
+            lua_setfield(m_handle, -2, r->n);
         }
+        r = r - size;
 
         Logging::log(Logging::DEBUG, "Namespace \"%s\" registration went properly, leaving on stack.\n", n);
     }
@@ -162,7 +166,6 @@ namespace lua
     {
         if (!m_hashandle) return *this;
 
-        using namespace lua_binds;
         Logging::log(Logging::DEBUG, "Setting up lua engine embedding\n");
 
         //m_runtests = Utility::Config::getInt("Logging", "lua_tests", 1);
@@ -174,8 +177,6 @@ namespace lua
             execf(f);
         }
 
-        LAPI.add({ "log", _bind_log });
-        LAPI.add({ "echo", _bind_echo });
         setup_namespace("Logging", LAPI);
         #define PUSHLEVEL(l) t_set(#l, Logging::l);
         PUSHLEVEL(INFO)
@@ -201,7 +202,6 @@ namespace lua
 
         getg("Global").t_set("version", m_version).pop(1);
 
-        #include "scripting_system_lua_exp.hpp"
         setup_namespace("CAPI", CAPI);
         pop(1);
 
@@ -236,33 +236,6 @@ namespace lua
     /*
      * LUA ENGINE STATIC METHODS
      */
-
-    void *lua_Engine::l_alloc(void*, void *p, size_t, size_t n)
-    {
-        if (!n)
-        {
-            free(p);
-            return NULL;
-        }
-        else return realloc(p, n);
-    }
-
-    int lua_Engine::l_panic(lua_State *L)
-    {
-        fprintf(stderr, "[lua_Engine PANIC] - unprotected error in call to lua_Engine API (%s)\n", lua_tostring(L, -1));
-        return 0;
-    }
-
-    const char *lua_Engine::l_reads(lua_State *L, void *d, size_t *s)
-    {
-        LE_rs *ls = (LE_rs*)d;
-
-        if (!ls->sz) return NULL;
-        *s = ls->sz;
-        ls->sz = 0;
-
-        return ls->s;
-    }
 
     int lua_Engine::l_disp(lua_State *L)
     {
@@ -453,15 +426,16 @@ namespace lua
 
         Logging::log(Logging::DEBUG, "Creating lua_Engine state handler.\n");
 
+        // initialize params on engine create
+        m_params = new LE_params;
+
         // before even opening lua, register internal variables
         EngineVariables::fill();
 
-        m_handle = lua_newstate(l_alloc, NULL);
+        m_handle = luaL_newstate();
         if (m_handle)
         {
             m_hashandle = true;
-
-            lua_atpanic(m_handle, l_panic);
 
             Logging::log(Logging::DEBUG, "Handler created properly, finalizing.\n");
 
@@ -483,6 +457,9 @@ namespace lua
     {
         if (!m_hashandle) return -1;
         if (m_retcount >= 0) return lua_gettop(m_handle) - m_retcount;
+
+        // free m_params on destroy
+        delete m_params;
 
         Logging::log_noformat(Logging::DEBUG, "Destroying lua_Engine class and its handler.");
         lua_close(m_handle);
@@ -638,43 +615,20 @@ namespace lua
     {
         if (!m_hashandle) return false;
 
-        unsigned long int fs;
-        size_t rs;
-        FILE *f = fopen(s, "r");
-        if (!f) return false;
-        fseek(f, 0, SEEK_END);
-        fs = ftell(f);
-        rewind(f);
-
-        char *fc = new char[fs];
-        if (!fc)
+        bool ret = luaL_loadfile(m_handle, s);
+        if (ret)
         {
-            fclose(f);
-            return false;
+            m_lasterror = geterror();
+            Logging::log(Logging::ERROR, "%s", m_lasterror);
         }
-
-        rs = fread(fc, 1, fs, f);
-        if (fs != rs)
-        {
-            fclose(f);
-            delete[] fc;
-            return false;
-        }
-
-        bool r = load(fc);
-        delete[] fc;
-        return r;
+        return !ret;
     }
 
     bool lua_Engine::load(const char *s)
     {
         if (!m_hashandle) return false;
 
-        LE_rs ls;
-        ls.s = s;
-        ls.sz = strlen(s);
-
-        bool ret = lua_load(m_handle, l_reads, &ls, ls.s);
+        bool ret = luaL_loadstring(m_handle, s);
         if (ret)
         {
             m_lasterror = geterror();
@@ -833,7 +787,7 @@ namespace lua
 
     const char *&lua_Engine::operator[](const char *n)
     {
-        return m_params[n];
+        return (*m_params)[n];
     }
 
 }

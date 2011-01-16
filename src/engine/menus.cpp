@@ -235,8 +235,8 @@ void guinoautotab(char *contents)
 void guibutton(char *name, char *action, char *icon)
 {
     if(!cgui) return;
-    bool hideicon = !strcmp(icon, "0");
-    int ret = cgui->button(name, GUI_BUTTON_COLOR, hideicon ? NULL : (icon[0] ? icon : (strstr(action, "showgui") ? "menu" : "action")));
+    bool hideicon = (icon ? !strcmp(icon, "0") : false);
+    int ret = cgui->button(name, GUI_BUTTON_COLOR, hideicon ? NULL : (icon ? icon : (strstr(action, "showgui") ? "menu" : "action")));
     if(ret&G3D_UP) 
     {
         updateLater.push_back(delayedUpdate());
